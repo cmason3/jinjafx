@@ -50,7 +50,7 @@ usnh-pe-1a, pe
 usnh-pe-1b, pe
 ```
 
-The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ A }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
+The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
 ### JinjaFx Templates
 
