@@ -57,7 +57,7 @@ The `-o` argument is used to specify the output file, as by default the output i
 JinjaFx templates are Jinja2 templates with one exception - they support a JinjaFx specific syntax that allows you to specify a different output file within a Jinja2 template to override the value of `-o`:
 
 ```
-<output "<output file>">
+<output "output file">
 ...
 </output>
 ```
