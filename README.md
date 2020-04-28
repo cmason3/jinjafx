@@ -1,6 +1,5 @@
 ![Release](https://img.shields.io/github/v/release/cmason3/jinjafx)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-![Hits](https://img.shields.io/github/search/cmason3/jinjafx/goto?label=hits)
 ![Downloads](https://img.shields.io/github/downloads/cmason3/jinjafx/total)
 # JinjaFx
 ## Jinja Templating Tool
