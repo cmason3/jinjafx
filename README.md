@@ -104,7 +104,7 @@ This function is used to expand a string that contains static character classes 
 
 This function is used to provide a persistent counter within a row or between rows. If you specify a `key` then it is a global counter that will persist between rows, but if you don't or you include `jinjafx.row` within the `key`, then the counter only persists within the template of the current row.
 
-- <b><code>jinjafx.first([fields[]], [{ filter_field: "regex" }])</code></b>
+- <b><code>jinjafx.first([fields[]], [{ filter_field: "regex", ... }])</code></b>
 
 This function is used to determine whether this is the first row where you have seen this particular field value or not - if you don't specify any fields then it will return `True` for the first row and `False` for the rest.
 
@@ -119,7 +119,7 @@ If we take the above example, then `jinjafx.first(['A'])` would return `True` fo
 
 There is also an optional `filter_field` argument that allows you to filter the data using a regular expression to match certain rows before performing the check. For example, `jinjafx.first(['A'], { 'B': '3' })` would return `True` for row 3 only as it is the only row which matches the filter.
 
-- <b><code>jinjafx.last([fields[]], [{ filter_field: "regex" }])</code></b>
+- <b><code>jinjafx.last([fields[]], [{ filter_field: "regex", ... }])</code></b>
 
 This function is used to determine whether this is the last row where you have seen this particular field value or not - if you don't specify any fields then it will return 'True' for the last row and 'False' for the rest.
 
