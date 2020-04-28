@@ -11,7 +11,7 @@ JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.co
   jinjafx.py
     -t <template.j2>             - specify a Jinja2 template
     [-d <data.csv>]              - specify row based data (comma or tab separated)
-    [-g <vars.yml>, [-g ...]]    - specify global variables in yaml (supports ansible vaulted files)
+    [-g <vars.yml>[, -g ...]]    - specify global variables in yaml (supports ansible vaulted files)
     [-o <output file>]           - specify the output file (supports Jinja2 variables) (default is stdout)
     [--ask-vault-pass]           - prompt for vault password (use with -g) (or use ANSIBLE_VAULT_PASS env)
 ```
