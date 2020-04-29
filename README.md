@@ -76,6 +76,18 @@ lstrip_blocks = True
 keep_trailing_newline = True
 ```
 
+### Jinja2 Extensions
+
+Jinja2 supports the ability to provide extended functionality through [extensions] (https://jinja.palletsprojects.com/en/2.11.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja_extensions` global variable, which you can set within one of your "vars.yml" files (it expects a list):
+
+```yaml
+---
+jinja_extensions:
+  - 'jinja2.ext.i18n'
+```
+
+JinjaFx will then attempt to load and enable the extensions that will then be used when processing your Jinja2 templates. You also have the ability to check whether an extensions is loaded within your template by querying `jinja_extensions` directly.
+
 ### JinjaFx Built-Ins
 
 Templates should be written using Jinja2 template syntax to make them compatible with Ansible and other tools which use Jinja2. However, there are a few JinjaFx specific extensions that have been added to make JinjaFx much more powerful when dealing with rows of data, as well as providing some much needed functionality which isn't currently present in Jinja2 (e.g. being able to store persistent variables across templates). These are used within a template like any other variable or function (e.g. `{{ jinjafx.version }}`).
