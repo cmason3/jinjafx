@@ -18,7 +18,7 @@
 from __future__ import print_function
 import sys, os, jinja2, yaml, argparse, re
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 g_datarows = []
 g_dict = {}
@@ -163,11 +163,14 @@ def jinjafx(template, data, gvars, output):
     if len(g_datarows) <= 1:
       raise Exception('not enough data rows - need at least two')
 
+  if 'jinja_extensions' not in gvars:
+    gvars.update({ 'jinja_extensions': [] })
+
   if isinstance(template, str):
-    env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+    env = jinja2.Environment(extensions=gvars['jinja_extensions'], undefined=jinja2.StrictUndefined)
     template = env.from_string(template)
   else:
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), undefined=jinja2.StrictUndefined)
+    env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), undefined=jinja2.StrictUndefined)
     template = env.get_template(os.path.basename(template.name))
 
   env.trim_blocks = True
