@@ -78,7 +78,7 @@ keep_trailing_newline = True
 
 ### Jinja2 Extensions
 
-Jinja2 supports the ability to provide extended functionality through [extensions] (https://jinja.palletsprojects.com/en/2.11.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja_extensions` global variable, which you can set within one of your "vars.yml" files (it expects a list):
+Jinja2 supports the ability to provide extended functionality through [extensions](https://jinja.palletsprojects.com/en/2.11.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja_extensions` global variable, which you can set within one of your "vars.yml" files (it expects a list):
 
 ```yaml
 ---
