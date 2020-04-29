@@ -87,7 +87,6 @@ def main():
       if len(output.strip()) > 0:
         if o[0] != '_stdout_':
           ofile = re.sub(r'/+', '/', re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', o[0])))
-          flag = 'changed' if os.path.isfile(ofile) else 'ok'
 
           if os.path.dirname(ofile) != '':
             if not os.path.isdir(os.path.dirname(ofile)):
@@ -96,7 +95,7 @@ def main():
           with open(ofile, 'w') as file:
             file.write(output)
 
-          print(flag + ': ' + ofile)
+          print('> ' + ofile)
           ocount += 1
 
         else:
