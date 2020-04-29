@@ -18,7 +18,7 @@
 from __future__ import print_function
 import sys, os, jinja2, yaml, argparse, re
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 g_datarows = []
 g_dict = {}
@@ -26,7 +26,8 @@ g_row = 0
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
-    self.print_usage(sys.stderr)
+    print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
+    print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
     raise Exception(message)
 
 
@@ -41,7 +42,6 @@ def main():
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-o', metavar='<output file>', type=str)
     parser.add_argument('--ask-vault-pass', action='store_true')
-    parser.usage = 'https://github.com/cmason3/jinjafx\n\n' + parser.format_usage()
     args = parser.parse_args()
 
     data = None
