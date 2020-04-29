@@ -15,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import print_function
+from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re
 
 __version__ = '1.0.2'
@@ -95,13 +95,16 @@ def main():
           with open(ofile, 'w') as file:
             file.write(output)
 
-          print('> ' + ofile)
+          print(format_bytes(len(output)) + ' > ' + ofile)
           ocount += 1
 
         else:
           if ocount > 0:
             print('\n-\n')
           print(output)
+
+    if ocount > 0 and '_stdout_' not in outputs:
+      print()
 
   except KeyboardInterrupt:
     sys.exit(-1)
@@ -114,6 +117,14 @@ def main():
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print('error[' + str(exc_tb.tb_lineno) + ']: ' + str(e), file=sys.stderr)
     sys.exit(-2)
+
+
+def format_bytes(b):
+  for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
+    if b >= 1000:
+      b /= 1000
+    else:
+      return '{:.2f}'.format(b).rstrip('0').rstrip('.') + u + 'B'
 
 
 def jinjafx(template, data, gvars, output):
