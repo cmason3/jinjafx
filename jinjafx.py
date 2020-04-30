@@ -96,15 +96,19 @@ def main():
             file.write(output)
 
           print(format_bytes(len(output)) + ' > ' + ofile)
-          ocount += 1
 
         else:
           if ocount > 0:
             print('\n-\n')
           print(output)
 
-    if ocount > 0 and '_stdout_' not in outputs:
-      print()
+        ocount += 1
+
+    if ocount > 0:
+      if '_stdout_' not in outputs:
+        print()
+    else:
+      raise Exception('nothing to output')
 
   except KeyboardInterrupt:
     sys.exit(-1)
