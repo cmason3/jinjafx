@@ -133,7 +133,13 @@ def format_bytes(b):
 
 def jinjafx(template, data, gvars, output):
   global g_datarows
+  global g_dict
   global g_row
+
+  g_datarows = []
+  g_dict = {}
+  g_row = 0
+
   outputs = {}
   delim = None
 
