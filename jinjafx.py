@@ -135,9 +135,12 @@ class JinjaFx():
 
     outputs = {}
     delim = None
+    
+    if isinstance(data, bytes):
+      data = data.decode('utf-8')
 
     if data is not None and len(data.strip()) > 0:
-      for l in iter(data.strip().splitlines()):
+      for l in data.strip().splitlines():
         if len(l.strip()) > 0:
           if len(self.g_datarows) == 0:
             delim = r'[ \t]*,[ \t]*' if l.count(',') > l.count('\t') else r' *\t *'
@@ -179,9 +182,12 @@ class JinjaFx():
     if 'jinja_extensions' not in gvars:
       gvars.update({ 'jinja_extensions': [] })
 
+    if isinstance(template, bytes):
+      template = template.decode('utf-8')
+    
     if isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], undefined=jinja2.StrictUndefined)
-      template = env.from_string(template)
+      template = env.from_string(str(template))
     else:
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), undefined=jinja2.StrictUndefined)
       template = env.get_template(os.path.basename(template.name))
