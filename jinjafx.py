@@ -20,10 +20,6 @@ import sys, os, jinja2, yaml, argparse, re
 
 __version__ = '1.0.2'
 
-g_datarows = []
-g_dict = {}
-g_row = 0
-
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
     print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
@@ -79,7 +75,7 @@ def main():
     if args.o is None:
       args.o = '_stdout_'
 
-    outputs = jinjafx(args.t, data, gvars, args.o)
+    outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
     ocount = 0
 
     for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
@@ -131,244 +127,237 @@ def format_bytes(b):
       return '{:.2f}'.format(b).rstrip('0').rstrip('.') + u + 'B'
 
 
-def jinjafx(template, data, gvars, output):
-  global g_datarows
-  global g_dict
-  global g_row
+class JinjaFx():
+  def jinjafx(self, template, data, gvars, output):
+    self.g_datarows = []
+    self.g_dict = {}
+    self.g_row = 0 
 
-  g_datarows = []
-  g_dict = {}
-  g_row = 0
+    outputs = {}
+    delim = None
 
-  outputs = {}
-  delim = None
+    if data is not None and len(data.strip()) > 0:
+      for l in iter(data.strip().splitlines()):
+        if len(l.strip()) > 0:
+          if len(self.g_datarows) == 0:
+            delim = r'[ \t]*,[ \t]*' if l.count(',') > l.count('\t') else r' *\t *'
+            fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l))
+            fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
 
-  if data is not None and len(data.strip()) > 0:
-    for l in iter(data.strip().splitlines()):
-      if len(l.strip()) > 0:
-        if len(g_datarows) == 0:
-          delim = r'[ \t]*,[ \t]*' if l.count(',') > l.count('\t') else r' *\t *'
-          fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l))
-          fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
-
-          if '' in fields:
-            raise Exception('empty column header detected in data')
-          elif len(set(fields)) != len(fields):
-            raise Exception('duplicate column header detected in data')
-          else:
-            g_datarows.append(fields)
-
-        else:
-          n = len(g_datarows[0])
-          fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l)]
-          fields = [list(map(jfx_expand, fields[:n] + [''] * (n - len(fields))))]
-
-          row = 0
-          while row < len(fields):
-            if any(isinstance(col, list) for col in fields[row]):
-              for col in range(len(fields[row])):
-                if isinstance(fields[row][col], list):
-                  for val in fields[row][col]:
-                    nrow = list(fields[row])
-                    nrow[col] = val
-                    fields.append(nrow)
-
-                  fields.pop(row)
-                  break
-
+            if '' in fields:
+              raise Exception('empty column header detected in data')
+            elif len(set(fields)) != len(fields):
+              raise Exception('duplicate column header detected in data')
             else:
-              g_datarows.append(fields[row])
-              row += 1
+              self.g_datarows.append(fields)
 
-    if len(g_datarows) <= 1:
-      raise Exception('not enough data rows - need at least two')
+          else:
+            n = len(self.g_datarows[0])
+            fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l)]
+            fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields))))]
 
-  if 'jinja_extensions' not in gvars:
-    gvars.update({ 'jinja_extensions': [] })
+            row = 0
+            while row < len(fields):
+              if any(isinstance(col, list) for col in fields[row]):
+                for col in range(len(fields[row])):
+                  if isinstance(fields[row][col], list):
+                    for val in fields[row][col]:
+                      nrow = list(fields[row])
+                      nrow[col] = val
+                      fields.append(nrow)
 
-  if isinstance(template, str):
-    env = jinja2.Environment(extensions=gvars['jinja_extensions'], undefined=jinja2.StrictUndefined)
-    template = env.from_string(template)
-  else:
-    env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), undefined=jinja2.StrictUndefined)
-    template = env.get_template(os.path.basename(template.name))
+                    fields.pop(row)
+                    break
 
-  env.trim_blocks = True
-  env.lstrip_blocks = True
-  env.keep_trailing_newline = True
+              else:
+                self.g_datarows.append(fields[row])
+                row += 1
 
-  env.globals.update({ 'jinjafx': {
-    'version': __version__,
-    'jinja_version': jinja2.__version__,
-    'expand': jfx_expand,
-    'counter': jfx_counter,
-    'first': jfx_first,
-    'last': jfx_last,
-    'setg': jfx_setg,
-    'getg': jfx_getg,
-    'rows': max([0, len(g_datarows) - 1]),
-    'data': g_datarows
-  }})
+      if len(self.g_datarows) <= 1:
+        raise Exception('not enough data rows - need at least two')
 
-  if len(gvars) > 0:
-    env.globals.update(gvars)
+    if 'jinja_extensions' not in gvars:
+      gvars.update({ 'jinja_extensions': [] })
 
-  for row in range(1, max(2, len(g_datarows))):
-    rowdata = {}
-
-    if len(g_datarows) > 0:
-      for col in range(len(g_datarows[0])):
-        rowdata.update({ g_datarows[0][col]: g_datarows[row][col] })
-
-      env.globals['jinjafx'].update({ 'row': row })
-      g_row = row
-
+    if isinstance(template, str):
+      env = jinja2.Environment(extensions=gvars['jinja_extensions'], undefined=jinja2.StrictUndefined)
+      template = env.from_string(template)
     else:
-      env.globals['jinjafx'].update({ 'row': 0 })
-      g_row = 0
+      env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), undefined=jinja2.StrictUndefined)
+      template = env.get_template(os.path.basename(template.name))
 
-    content = template.render(rowdata)
+    env.trim_blocks = True
+    env.lstrip_blocks = True
+    env.keep_trailing_newline = True
 
-    stack = [ env.from_string(output).render(rowdata) ]
-    for l in iter(content.splitlines()):
-      block_begin = re.search(r'<output[\t ]+["\']*(.+?)["\']*[\t ]*>', l, re.IGNORECASE)
-      if block_begin:
-        stack.append(block_begin.group(1).strip())
+    env.globals.update({ 'jinjafx': {
+      'version': __version__,
+      'jinja_version': jinja2.__version__,
+      'expand': self.jfx_expand,
+      'counter': self.jfx_counter,
+      'first': self.jfx_first,
+      'last': self.jfx_last,
+      'setg': self.jfx_setg,
+      'getg': self.jfx_getg,
+      'rows': max([0, len(self.g_datarows) - 1]),
+      'data': self.g_datarows
+    }})
+
+    if len(gvars) > 0:
+      env.globals.update(gvars)
+
+    for row in range(1, max(2, len(self.g_datarows))):
+      rowdata = {}
+
+      if len(self.g_datarows) > 0:
+        for col in range(len(self.g_datarows[0])):
+          rowdata.update({ self.g_datarows[0][col]: self.g_datarows[row][col] })
+
+        env.globals['jinjafx'].update({ 'row': row })
+        self.g_row = row
+
       else:
-        block_end = re.search(r'</output[\t ]*>', l, re.IGNORECASE)
-        if block_end:
-          if len(stack) > 1:
-            stack.pop()
-          else:
-            raise Exception('unbalanced output tags')
+        env.globals['jinjafx'].update({ 'row': 0 })
+        self.g_row = 0
+
+      content = template.render(rowdata)
+
+      stack = [ env.from_string(output).render(rowdata) ]
+      for l in iter(content.splitlines()):
+        block_begin = re.search(r'<output[\t ]+["\']*(.+?)["\']*[\t ]*>', l, re.IGNORECASE)
+        if block_begin:
+          stack.append(block_begin.group(1).strip())
         else:
-          if stack[-1] not in outputs:
-            outputs[stack[-1]] = []
-          outputs[stack[-1]].append(l)
-
-    if len(stack) != 1:
-      raise Exception('unbalanced output tags')
-
-  return outputs
-
-
-def jfx_expand(s):
-  pofa = [s]
-
-  if re.search(r'(?<!\\)[\(\[]', pofa[0]):
-    i = 0
-    while i < len(pofa):
-      m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
-      if m:
-        for g in m.group(1).split('|'):
-          pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
-        
-        pofa.pop(i)
-
-      else:
-        i += 1
-
-    i = 0
-    while i < len(pofa):
-      m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
-      if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
-        clist = []
-
-        for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
-          if x[1] != '':
-            e = sorted(x[0].split('-'))
-            for c in range(ord(e[0]), ord(e[1]) + 1):
-              clist.append(chr(c))
+          block_end = re.search(r'</output[\t ]*>', l, re.IGNORECASE)
+          if block_end:
+            if len(stack) > 1:
+              stack.pop()
+            else:
+              raise Exception('unbalanced output tags')
           else:
-            clist.append(x[0])
+            if stack[-1] not in outputs:
+              outputs[stack[-1]] = []
+            outputs[stack[-1]].append(l)
 
-        for c in clist:
-          pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
+      if len(stack) != 1:
+        raise Exception('unbalanced output tags')
 
-        pofa.pop(i)
-
-      else:
-        i += 1
-
-  pofa = [re.sub(r'\\([\(\[\)\]])', r'\1', i) for i in pofa]
-  return pofa
+    return outputs
 
 
-def jfx_fandl(forl, fields, ffilter):
-  fpos = []
+  def jfx_expand(self, s):
+    pofa = [s]
 
-  if g_row == 0:
-    return True
+    if re.search(r'(?<!\\)[\(\[]', pofa[0]):
+      i = 0
+      while i < len(pofa):
+        m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
+        if m:
+          for g in m.group(1).split('|'):
+            pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
+      
+          pofa.pop(i)
 
-  if fields is not None:
-    for f in fields:
-      if f in g_datarows[0]:
-        fpos.append(g_datarows[0].index(f))
-      else:
-        raise Exception('invalid field \'' + f + '\' passed to jinjafx.' + forl + '()')
-  elif forl == 'first':
-    return True if g_row == 1 else False
-  else:
-    return True if g_row == (len(g_datarows) - 1) else False
+        else:
+          i += 1
 
-  tv = ':'.join([g_datarows[g_row][i] for i in fpos])
+      i = 0
+      while i < len(pofa):
+        m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
+        if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
+          clist = []
 
-  if forl == 'first':
-    rows = range(1, len(g_datarows))
-  else:
-    rows = range(len(g_datarows) - 1, 0, -1)
+          for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
+            if x[1] != '':
+              e = sorted(x[0].split('-'))
+              for c in range(ord(e[0]), ord(e[1]) + 1):
+                clist.append(chr(c))
+            else:
+              clist.append(x[0])
 
-  for r in rows:
-    fmatch = True
+          for c in clist:
+            pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
 
-    for f in ffilter:
-      if f in g_datarows[0]:
-        try:
-          if not re.match(ffilter[f], g_datarows[r][g_datarows[0].index(f)]):
-            fmatch = False
-            break
-        except Exception:
-          raise Exception('invalid filter regex \'' + ffilter[f] + '\' for field \'' + f + '\' passed to jinjafx.' + forl + '()')
-      else:
-        raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.' + forl + '()')
+          pofa.pop(i)
 
-    if fmatch:
-      if tv == ':'.join([g_datarows[r][i] for i in fpos]):
-        return True if g_row == r else False
+        else:
+          i += 1
 
-  return False
+    pofa = [re.sub(r'\\([\(\[\)\]])', r'\1', i) for i in pofa]
+    return pofa
 
 
-def jfx_first(fields=None, ffilter={}):
-  return jfx_fandl('first', fields, ffilter)
+  def jfx_fandl(self, forl, fields, ffilter):
+    fpos = []
+
+    if self.g_row == 0:
+      return True
+
+    if fields is not None:
+      for f in fields:
+        if f in self.g_datarows[0]:
+          fpos.append(self.g_datarows[0].index(f))
+        else:
+          raise Exception('invalid field \'' + f + '\' passed to jinjafx.' + forl + '()')
+    elif forl == 'first':
+      return True if self.g_row == 1 else False
+    else:
+      return True if self.g_row == (len(self.g_datarows) - 1) else False
+
+    tv = ':'.join([self.g_datarows[self.g_row][i] for i in fpos])
+
+    if forl == 'first':
+      rows = range(1, len(self.g_datarows))
+    else:
+      rows = range(len(self.g_datarows) - 1, 0, -1)
+
+    for r in rows:
+      fmatch = True
+
+      for f in ffilter:
+        if f in self.g_datarows[0]:
+          try:
+            if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f)]):
+              fmatch = False
+              break
+          except Exception:
+            raise Exception('invalid filter regex \'' + ffilter[f] + '\' for field \'' + f + '\' passed to jinjafx.' + forl + '()')
+        else:
+          raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.' + forl + '()')
+
+      if fmatch:
+        if tv == ':'.join([self.g_datarows[r][i] for i in fpos]):
+          return True if self.g_row == r else False
+
+    return False
 
 
-def jfx_last(fields=None, ffilter={}):
-  return jfx_fandl('last', fields, ffilter)
+  def jfx_first(self, fields=None, ffilter={}):
+    return self.jfx_fandl('first', fields, ffilter)
 
 
-def jfx_counter(key=None, increment=1, start=1):
-  global g_dict
-
-  if key is None:
-    key = '_cnt_r_' + str(g_row)
-  else:
-    key = '_cnt_k_' + str(key)
-
-  n = g_dict.get(key, int(start) - int(increment))
-  g_dict[key] = n + int(increment)
-  return g_dict[key]
+  def jfx_last(self, fields=None, ffilter={}):
+    return self.jfx_fandl('last', fields, ffilter)
 
 
-def jfx_setg(key, value):
-  global g_dict
+  def jfx_counter(self, key=None, increment=1, start=1):
+    if key is None:
+      key = '_cnt_r_' + str(self.g_row)
+    else:
+      key = '_cnt_k_' + str(key)
 
-  g_dict['_val_' + str(key)] = value
-  return ''
+    n = self.g_dict.get(key, int(start) - int(increment))
+    self.g_dict[key] = n + int(increment)
+    return self.g_dict[key]
 
 
-def jfx_getg(key, default=None):
-  return g_dict.get('_val_' + str(key), default)
+  def jfx_setg(self, key, value):
+    self.g_dict['_val_' + str(key)] = value
+    return ''
+
+
+  def jfx_getg(self, key, default=None):
+    return self.g_dict.get('_val_' + str(key), default)
 
 
 if __name__ == '__main__':
