@@ -82,7 +82,7 @@ def main():
       output = '\n'.join(o[1]) + '\n'
       if len(output.strip()) > 0:
         if o[0] != '_stdout_':
-          ofile = re.sub(r'/+', '/', re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', o[0])))
+          ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o[0])))
 
           if os.path.dirname(ofile) != '':
             if not os.path.isdir(os.path.dirname(ofile)):
