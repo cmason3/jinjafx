@@ -182,9 +182,12 @@ class JinjaFx():
     if 'jinja_extensions' not in gvars:
       gvars.update({ 'jinja_extensions': [] })
 
-    if isinstance(template, str) or isinstance(template, bytes):
+    if isinstance(template, bytes):
+      template = template.decode('utf-8')
+
+    if isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], undefined=jinja2.StrictUndefined)
-      template = env.from_string(str(template))
+      template = env.from_string(template)
     else:
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), undefined=jinja2.StrictUndefined)
       template = env.get_template(os.path.basename(template.name))
