@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <title>Generating...</title>
+    <link rel="shortcut icon" href="jinjafx.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="jinjafx_o.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+      if (window.opener != null) {
+        var dt = window.opener.dt;
+        window.opener.reset_dt();
+        var obj = null;
+  
+        function download_outputs() {
+          if (obj != null) {
+            var xHR = new XMLHttpRequest();
+            xHR.open("POST", "download", true);
+  
+            xHR.onload = function() {
+              if (this.status === 200) {
+                var filename = xHR.getResponseHeader("X-Download-Filename");
+  
+                if (window.navigator.msSaveOrOpenBlob) {
+                  window.navigator.msSaveOrOpenBlob(new Blob([ xHR.response ], { type: xHR.getResponseHeader("Content-Type") }), filename);
+                }
+                else {
+                  var link = document.createElement('a');
+                  link.href = window.URL.createObjectURL(xHR.response);
+                  link.download = filename;
+                  link.click();
+                }
+              }
+            };
+            xHR.responseType = "blob";
+            xHR.setRequestHeader("Content-Type", "application/json");
+            xHR.send(JSON.stringify(obj.outputs));
+          }
+        }
+      
+        window.onload = function() {
+          if (Object.keys(dt).length !== 0) {
+            var xHR = new XMLHttpRequest();
+            xHR.open("POST", "jinjafx", true);
+  
+            xHR.onload = function() {
+              if (this.status === 200) {
+                try {
+                  obj = JSON.parse(xHR.responseText);
+                  if (obj.status === "ok") {
+                    var navBar = "<ul class=\"nav nav-tabs\">";
+                    var tabContent = "<div id=\"tabcontent\" class=\"tab-content\">";
+                    var oid = 1;
+  
+                    navBar += "<li class=\"dropdown active\">";
+                    navBar += "<a id=\"group\" class=\"dropdown-toggle active\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">";
+                    navBar += "Outputs <span class=\"caret\"></span></a>";
+  
+                    navBar += "<ul class=\"dropdown-menu\" role=\"menu\" aria-labelledby=\"group\">";
+
+                    if (Object.keys(obj.outputs).length > 1) {
+                      navBar += "<li><a href=\"#\" onclick=\"download_outputs();\">Download Outputs</a></li>";
+                      navBar += "<li class=\"divider\"></li>";
+                    }
+  
+                    Object.keys(obj.outputs).sort(function(a, b) {
+                      if (a == 'Output') {
+                        return -1;
+                      }
+                      return a > b ? 1 : b > a ? -1 : 0;
+                    }).forEach(function(output) {
+                      var g = window.opener.quote(output)
+  
+                      navBar += "<li" + ((oid == 1) ? " class=\"active\"" : "") + "><a data-toggle=\"tab\" href=\"#" + oid + "\">" + g + "</a></li>";
+                      tabContent += "<div id=\"" + oid + "\" class=\"tab-pane " + ((oid == 1) ? "active" : "fade") + "\" style=\"height: 100%; margin: 10px;\">";
+
+                      tabContent += "<h4><strong>" + g + "</strong></h4>";
+
+                      var tc = window.atob(obj.outputs[output]);
+                      if (tc.match(/<html.*?>[\s\S]+<\/html>/i)) {
+                        tabContent += "<iframe class=\"output\" doc=\"" + tc.replace(/"/g, "&quot;") + "\" src=\"javascript: window.frameElement.getAttribute('doc');\"></iframe>";
+                      }
+                      else {
+                        tabContent += "<textarea class=\"output\" readonly>" + window.opener.quote(tc) + "</textarea>";
+                      }
+                      tabContent += "</div>";
+                      oid += 1;
+                    });
+  
+                    document.title = 'Output';
+                    var ts = "<span style=\"margin-right: 10px; width=100px;\" class=\"pull-right text-right\"><small>Generated at " + new Date().toTimeString().substring(0, 17) + "<br />in " + Math.ceil(obj.elapsed).toLocaleString() + " milliseconds</small></span>";
+                    document.body.innerHTML = ts + navBar + "</ul></li></ul>" + tabContent + "</div>";
+  
+                    window.onresize = function() {
+                      document.getElementById("tabcontent").style.height = (window.innerHeight - 150) + "px";
+                    };
+  
+                    window.onresize();
+                  }
+                  else {
+                    document.title = "Error";
+                    document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx ERROR</h4></strong>"+ obj.error + "</div>";
+                  }
+                }
+                catch (e) {
+                  document.title = "Error";
+                  document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>INTERNAL ERROR</h4></strong>" + e + "</div>";
+                }
+              }
+              else {
+                document.title = "Error";
+                document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>HTTP ERROR " + this.status + "</h4></strong>"+ this.statusText + "</div>";
+              }
+            };
+            xHR.timeout = 0;
+            xHR.onerror = function() {
+              document.title = "Error";
+              document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx ERROR</h4></strong>XMLHttpRequest.onError()</div>";
+            };
+            xHR.setRequestHeader("Content-Type", "application/json");
+            xHR.send(JSON.stringify(dt));
+          }
+          else {
+            document.title = "Error";
+            document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx ERROR</h4></strong>DataTemplate Expired</div>";
+          }
+        };
+      }
+      else {
+        document.title = "Error";
+        document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx ERROR</h4></strong>DataTemplate Expired</div>";
+      }
+    </script>
+  </head>
+  <body>
+    <div id="status" class="alert alert-info wait"><strong>Generating Output...</strong></div>
+  </body>
+</html>

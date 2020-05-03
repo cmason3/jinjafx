@@ -1,0 +1,77 @@
+* {
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+html, body {
+  height: 100%;
+}
+body {
+  display: none;
+}
+svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+#wrap {
+  min-height: 100%;
+  height: auto !important;
+  margin: 0 auto -50px;
+  background-color: #eee;
+}
+#header {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0px;
+  background-color: #eee;
+}
+#main {
+  padding-bottom: 30px;
+}
+#content {
+  min-height: 125px;
+  background-color: #eee;
+}
+#push, #footer {
+  height: 15px;
+}
+.title {
+  color: black;
+}
+.title:link, .title:hover, .title:visited, .title:active {
+  color: black;
+  text-decoration: none;
+}
+.gutter {
+  background-color: #eee;
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+.gutter.gutter-vertical {
+  cursor: ns-resize;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=");
+}
+.gutter.gutter-horizontal {
+  cursor: ew-resize;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==')
+}
+.split-horizontal, .gutter.gutter-horizontal {
+  height: 100%;
+  float: left;
+}
+.CodeMirror {
+  border: 1px solid lightgray;
+  height: 100%;
+  font-size: 12px;
+}
+.CodeMirror-selectedtext {
+  color: green !important;
+}
+.CodeMirror-cursor {
+ border-left: 1.4px solid #000;
+}
+.CodeMirror span {
+  display: inline-block;
+}
+.cm-jfx-header {
+  background: #99ccff;
+}

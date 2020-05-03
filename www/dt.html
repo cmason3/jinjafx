@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <title>DataTemplate</title>
+    <link rel="shortcut icon" href="jinjafx.png">
+    <style>
+      .title { color: #0074D9; }
+      .tags { color: #FF4136; }
+    </style>
+    <script>
+      window.onload = function() {
+        var dt = window.opener.dt;
+        window.opener.reset_dt();
+
+        if (Object.keys(dt).length !== 0) {
+          var _data = window.opener.quote(dt.data.match(/\S/) ? dt.data.trim() + "\n" : "");
+          var _template = window.opener.quote(dt.template.match(/\S/) ? dt.template.trim() + "\n" : "");
+          var _vars = window.opener.quote(dt.vars.match(/\S/) ? dt.vars.trim() + "\n" : "");
+
+          var dtx = "<span class=\"title\"># JinjaFx DataTemplate\n# https://github.com/cmason3/jinjafx</span>\n\n";
+          dtx += "<span class=\"tags\">&lt;data.csv&gt;</span>\n" + _data + "<span class=\"tags\">&lt;/data.csv&gt;</span>\n\n";
+          dtx += "<span class=\"tags\">&lt;template.j2&gt;</span>\n" + _template + "<span class=\"tags\">&lt;/template.j2&gt;</span>\n\n";
+          dtx += "<span class=\"tags\">&lt;vars.yml&gt;</span>\n" + _vars + "<span class=\"tags\">&lt;/vars.yml&gt;</span>\n";
+          document.body.innerHTML = "<pre>" + dtx + "</pre>";
+        }
+      };
+    </script>
+  </head>
+</html>
