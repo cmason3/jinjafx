@@ -1,3 +1,3 @@
-### Docker for JinjaFx Server
+## Docker for JinjaFx Server
 
 Work in progress - not finished yet
