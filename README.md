@@ -1,10 +1,12 @@
 ![Release](https://img.shields.io/github/v/release/cmason3/jinjafx)
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-# JinjaFx
+# JinjaFx / JinjaFx Server
 ## Jinja Templating Tool
 
 JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files. It should work using both Python 2.7 and Python 3 without modification.
+
+JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface.
 
 ### JinjaFx Usage
 
@@ -53,9 +55,20 @@ usnh-pe-1b, pe
 
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
+### JinjaFx Server Usage
+
+Once JinjaFx Server has been started with the "-s" argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify "data.csv", "template.j2" and "vars.yml" and then generate outputs.
+
+```
+ jinjafx_server.py
+   -s                          - start the JinjaFx Server
+   [-l <address>]              - specify a listen address (default is '127.0.0.1')
+   [-p <port>]                 - specify a listen port (default is 8080)
+```
+
 ### JinjaFx Templates
 
-JinjaFx templates are Jinja2 templates with one exception - they support a JinjaFx specific syntax that allows you to specify a different output file within a Jinja2 template to override the value of `-o`:
+JinjaFx templates are Jinja2 templates with one exception - they support a JinjaFx specific syntax that allows you to specify a different output file within a Jinja2 template to override the value of `-o` (or output name if being used with the JinjaFx Server):
 
 ```
 <output "output file">
