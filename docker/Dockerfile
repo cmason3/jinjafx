@@ -3,8 +3,8 @@ MAINTAINER Chris Mason <chris@jinjafx.org>
 
 ARG VERSION="1.0.2"
 
-RUN pip3 install jinja2
-RUN curl -Ls https://github.com/cmason3/jinjafx/archive/v${VERSION}.tar.gz | tar -zx -C /opt --transform="s/jinjafx-[0-9\.]*/jinjafx/"
+RUN pip3 install jinja2 && \
+curl -Ls https://github.com/cmason3/jinjafx/archive/v${VERSION}.tar.gz | tar -zx -C /opt --transform="s/jinjafx-[0-9\.]*/jinjafx/"
 
 USER nobody
 
