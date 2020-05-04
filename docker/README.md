@@ -1,10 +1,8 @@
 ## Docker for JinjaFx Server
 
-Work in progress - not finished yet
-
 ### Build Docker Image
 ```
-docker image build --no-cache -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile
+docker image build -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile
 ```
 
 ### Run Docker Container
