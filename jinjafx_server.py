@@ -45,12 +45,11 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         if 'Content-Type' in self.headers:
           ctype = ' (' + self.headers['Content-Type'] + ')'
 
-      with lock:
-        if self.command == 'POST':
-          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
+      if self.command == 'POST':
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
-        elif self.command != None:
-          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
+      elif self.command != None:
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
 
         
   def do_GET(self):
@@ -253,7 +252,8 @@ def main(rflag=False):
 
 
 def log(t):
-  print('[' + datetime.datetime.now().strftime('%b %d %H:%M:%S.%f')[:19] + '] {' + str(os.getpid()) + '} ' + t)
+  with lock:
+    print('[' + datetime.datetime.now().strftime('%b %d %H:%M:%S.%f')[:19] + '] {' + str(os.getpid()) + '} ' + t)
 
 
 if __name__ == '__main__':
