@@ -11,3 +11,14 @@ docker image build -t jinjafx:latest https://raw.githubusercontent.com/cmason3/j
 ```
 docker container run -d --name jinjafx --restart unless-stopped -p 0.0.0.0:8080:8080 jinjafx:latest
 ```
+
+### Stop and Remove Docker Containers
+```
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
+```
+
+### Remove Docker Images
+```
+docker rmi -f $(docker images -q)
+```
