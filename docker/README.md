@@ -4,21 +4,10 @@ Work in progress - not finished yet
 
 ### Build Docker Image
 ```
-docker image build -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile
+docker image build --no-cache -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile
 ```
 
 ### Run Docker Container
 ```
 docker container run -d --name jinjafx --restart unless-stopped -p 0.0.0.0:8080:8080 jinjafx:latest
-```
-
-### Stop and Remove Docker Containers
-```
-docker stop $(docker ps -aq)
-docker rm $(docker ps -aq)
-```
-
-### Remove Docker Images
-```
-docker rmi -f $(docker images -q)
 ```
