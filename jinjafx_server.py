@@ -19,6 +19,8 @@ from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile
 
+lock = threading.Lock()
+
 class JinjaFxServer(HTTPServer):
   def handle_error(self, request, client_address):
     pass
@@ -43,11 +45,12 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         if 'Content-Type' in self.headers:
           ctype = ' (' + self.headers['Content-Type'] + ')'
 
-      if self.command == 'POST':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
+      with lock:
+        if self.command == 'POST':
+          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
-      elif self.command != None:
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
+        elif self.command != None:
+          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
 
         
   def do_GET(self):
