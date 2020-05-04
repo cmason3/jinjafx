@@ -68,6 +68,8 @@ Once JinjaFx Server has been started with the "-s" argument then point your web 
    [-p <port>]                 - specify a listen port (default is 8080)
 ```
 
+For health checking purposes, if you specify the URL "/ping" then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs).
+
 ### JinjaFx Templates
 
 JinjaFx templates are Jinja2 templates with one exception - they support a JinjaFx specific syntax that allows you to specify a different output file within a Jinja2 template to override the value of `-o` (or output name if being used with the JinjaFx Server):
