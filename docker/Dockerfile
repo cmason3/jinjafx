@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.7
 MAINTAINER Chris Mason <chris@jinjafx.org>
 
 ARG VERSION="1.0.2"
