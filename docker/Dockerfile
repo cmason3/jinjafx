@@ -13,4 +13,4 @@ EXPOSE 8080
 
 WORKDIR /opt/jinjafx
 
-CMD [ "python3", "jinjafx_server.py", "-s" ]
+CMD [ "/usr/local/bin/python3", "jinjafx_server.py", "-s" ]
