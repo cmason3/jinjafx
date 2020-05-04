@@ -8,6 +8,8 @@ JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.co
 
 JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface.
 
+JinjaFx Server running at https://jinjafx.io
+
 ### JinjaFx Usage
 
 ```
