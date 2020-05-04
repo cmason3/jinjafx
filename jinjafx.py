@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -182,16 +182,19 @@ class JinjaFx():
     if 'jinja_extensions' not in gvars:
       gvars.update({ 'jinja_extensions': [] })
 
+    jinja2_options = {
+      'undefined': jinja2.StrictUndefined,
+      'trim_blocks': True,
+      'lstrip_blocks': True,
+      'keep_trailing_newline': True
+    }
+
     if isinstance(template, bytes):
-      env = jinja2.Environment(extensions=gvars['jinja_extensions'], undefined=jinja2.StrictUndefined)
+      env = jinja2.Environment(extensions=gvars['jinja_extensions'], **jinja2_options)
       template = env.from_string(template.decode('utf-8'))
     else:
-      env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), undefined=jinja2.StrictUndefined)
+      env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       template = env.get_template(os.path.basename(template.name))
-
-    env.trim_blocks = True
-    env.lstrip_blocks = True
-    env.keep_trailing_newline = True
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
