@@ -7,7 +7,7 @@ docker image build -t jinjafx:latest https://raw.githubusercontent.com/cmason3/j
 
 ### Run Docker Container
 ```
-docker container run -d --name jinjafx --restart unless-stopped -p 127.0.0.1:8080:8080 jinjafx:latest
+docker container run -d --name jinjafx --restart unless-stopped -e TZ=Europe/London -p 127.0.0.1:8080:8080 jinjafx:latest
 ```
 
 ### /etc/haproxy/haproxy.cfg
