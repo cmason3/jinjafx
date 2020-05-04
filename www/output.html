@@ -10,38 +10,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script>
-      if (window.opener != null) {
-        var dt = window.opener.dt;
-        window.opener.reset_dt();
-        var obj = null;
+      window.onload = function() {
+        if (window.opener != null) {
+          var dt = window.opener.dt;
+          window.opener.reset_dt();
+          var obj = null;
   
-        function download_outputs() {
-          if (obj != null) {
-            var xHR = new XMLHttpRequest();
-            xHR.open("POST", "download", true);
+          function download_outputs() {
+            if (obj != null) {
+              var xHR = new XMLHttpRequest();
+              xHR.open("POST", "download", true);
   
-            xHR.onload = function() {
-              if (this.status === 200) {
-                var filename = xHR.getResponseHeader("X-Download-Filename");
+              xHR.onload = function() {
+                if (this.status === 200) {
+                  var filename = xHR.getResponseHeader("X-Download-Filename");
   
-                if (window.navigator.msSaveOrOpenBlob) {
-                  window.navigator.msSaveOrOpenBlob(new Blob([ xHR.response ], { type: xHR.getResponseHeader("Content-Type") }), filename);
+                  if (window.navigator.msSaveOrOpenBlob) {
+                    window.navigator.msSaveOrOpenBlob(new Blob([ xHR.response ], { type: xHR.getResponseHeader("Content-Type") }), filename);
+                  }
+                  else {
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(xHR.response);
+                    link.download = filename;
+                    link.click();
+                  }
                 }
-                else {
-                  var link = document.createElement('a');
-                  link.href = window.URL.createObjectURL(xHR.response);
-                  link.download = filename;
-                  link.click();
-                }
-              }
-            };
-            xHR.responseType = "blob";
-            xHR.setRequestHeader("Content-Type", "application/json");
-            xHR.send(JSON.stringify(obj.outputs));
+              };
+              xHR.responseType = "blob";
+              xHR.setRequestHeader("Content-Type", "application/json");
+              xHR.send(JSON.stringify(obj.outputs));
+            }
           }
-        }
       
-        window.onload = function() {
           if (Object.keys(dt).length !== 0) {
             var xHR = new XMLHttpRequest();
             xHR.open("POST", "jinjafx", true);
@@ -127,12 +127,12 @@
             document.title = "Error";
             document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx ERROR</h4></strong>DataTemplate Expired</div>";
           }
-        };
-      }
-      else {
-        document.title = "Error";
-        document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx ERROR</h4></strong>DataTemplate Expired</div>";
-      }
+        }
+        else {
+          document.title = "Error";
+          document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx ERROR</h4></strong>DataTemplate Expired</div>";
+        }
+      };
     </script>
   </head>
   <body>
