@@ -1,7 +1,7 @@
 FROM python:3.8-slim-buster
 MAINTAINER Chris Mason <chris@jinjafx.org>
 
-ARG VERSION="1.0.2"
+ARG VERSION="1.0.3"
 
 RUN apt-get update; apt-get install -y curl; apt-get clean
 RUN pip3 --no-cache-dir install jinja2 pyyaml
