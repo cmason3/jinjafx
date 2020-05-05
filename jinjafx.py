@@ -191,9 +191,11 @@ class JinjaFx():
 
     if isinstance(template, bytes):
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], **jinja2_options)
+      [env.filters.update(f) for f in jinja2_filters]
       template = env.from_string(template.decode('utf-8'))
     else:
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
+      [env.filters.update(f) for f in jinja2_filters]
       template = env.get_template(os.path.basename(template.name))
 
     env.globals.update({ 'jinjafx': {
@@ -364,6 +366,14 @@ class JinjaFx():
 
   def jfx_getg(self, key, default=None):
     return self.g_dict.get('_val_' + str(key), default)
+
+
+try:
+  jinja2_filters = []
+  from ansible.plugins.filter import ipaddr
+  jinja2_filters.append(ipaddr.FilterModule().filters())
+except:
+  pass
 
 
 if __name__ == '__main__':
