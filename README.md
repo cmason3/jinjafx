@@ -4,7 +4,7 @@
 # JinjaFx / JinjaFx Server
 ## Jinja Templating Tool
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files. It should work using both Python 2.7 and Python 3 without modification.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and [netaddr](https://pypi.org/project/netaddr/) with ansible if you want to use the "ipaddr" filters. It should work using both Python 2.7 and Python 3 without modification.
 
 JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface.
 
