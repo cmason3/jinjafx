@@ -153,6 +153,10 @@ There is also an optional `filter_field` argument that allows you to filter the 
 
 This function is used to determine whether this is the last row where you have seen this particular field value or not - if you don't specify any fields then it will return 'True' for the last row and 'False' for the rest.
 
+- <b><code>jinjafx.fields(field, [{ filter_field: "regex", ... }])</code></b>
+
+This function is used to return a unique list of non-empty field values for a specific header field. It also allows the ability to limit what values are included in the list by specifying an optional `filter_field` argument that allows you to filter the data using a regular expression to match certain rows.
+
 - <b><code>jinjafx.setg("key", value)</code></b>
 
 This function is used to set a global variable that will persist throughout the processing of all rows.
