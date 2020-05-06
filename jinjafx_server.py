@@ -95,7 +95,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       if self.path == '/jinjafx':
         if self.headers['Content-Type'] == 'application/json':
           try:
-            jsr = {}
             gvars = {}
 
             dt = json.loads(postdata)
@@ -105,38 +104,34 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             if 'vars' in dt and len(dt['vars'].strip()) > 0:
               gvars.update(yaml.load(base64.b64decode(dt['vars']), Loader=yaml.FullLoader))
 
-            try:
-              st = datetime.datetime.now()
-              outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
-              ocount = 0
+            st = datetime.datetime.now()
+            outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
+            ocount = 0
 
-              jsr = {
-                'status': 'ok',
-                'elapsed': (datetime.datetime.now().microsecond - st.microsecond) / 1000,
-                'outputs': {}
-              }
+            jsr = {
+              'status': 'ok',
+              'elapsed': (datetime.datetime.now().microsecond - st.microsecond) / 1000,
+              'outputs': {}
+            }
 
-              for o in outputs:
-                output = '\n'.join(outputs[o]) + '\n'
-                if len(output.strip()) > 0:
-                  jsr['outputs'].update({ o: base64.b64encode(output.encode('utf-8')).decode('utf-8') })
-                  ocount += 1
+            for o in outputs:
+              output = '\n'.join(outputs[o]) + '\n'
+              if len(output.strip()) > 0:
+                jsr['outputs'].update({ o: base64.b64encode(output.encode('utf-8')).decode('utf-8') })
+                ocount += 1
 
-              if ocount == 0:
-                raise Exception('nothing to output')
-
-            except Exception as e:
-              exc_type, exc_obj, exc_tb = sys.exc_info()
-              jsr = {
-                'status': 'error',
-                'error': 'error[' + str(exc_tb.tb_lineno) + ']: ' + str(e)
-              }
-
-            r = [ 'application/json', 200, json.dumps(jsr) ]
+            if ocount == 0:
+              raise Exception('nothing to output')
 
           except Exception as e:
-            log('error: ' + str(e))
-            r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            jsr = {
+              'status': 'error',
+              'error': '<pre>error[' + str(exc_tb.tb_lineno) + ']: ' + str(e) + '</pre>'
+            }
+            log('error[' + str(exc_tb.tb_lineno) + ']: ' + str(e))
+
+          r = [ 'application/json', 200, json.dumps(jsr) ]
 
         else:
           r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
