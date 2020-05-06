@@ -45,7 +45,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         if 'Content-Type' in self.headers:
           ctype = ' (' + self.headers['Content-Type'] + ')'
 
-      if self.command == 'POST':
+      if str(args[1]) == 'ERR':
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + str(args[2]))
+          
+      elif self.command == 'POST':
         log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
       elif self.command != None:
@@ -129,7 +132,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               'status': 'error',
               'error': '<pre>error[' + str(exc_tb.tb_lineno) + ']: ' + str(e) + '</pre>'
             }
-            log('error[' + str(exc_tb.tb_lineno) + ']: ' + str(e))
+            self.log_request('ERR', 'error[' + str(exc_tb.tb_lineno) + ']: ' + str(e))
 
           r = [ 'application/json', 200, json.dumps(jsr) ]
 
