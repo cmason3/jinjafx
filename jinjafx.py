@@ -205,6 +205,7 @@ class JinjaFx():
       'counter': self.jfx_counter,
       'first': self.jfx_first,
       'last': self.jfx_last,
+      'fields': self.jfx_fields,
       'setg': self.jfx_setg,
       'getg': self.jfx_getg,
       'rows': max([0, len(self.g_datarows) - 1]),
@@ -347,7 +348,40 @@ class JinjaFx():
   def jfx_last(self, fields=None, ffilter={}):
     return self.jfx_fandl('last', fields, ffilter)
 
+  
+  def jfx_fields(self, field=None, ffilter={}):
+    if field is not None:
+      if field in self.g_datarows[0]:
+        fpos = self.g_datarows[0].index(field)
+      else:
+        raise Exception('invalid field \'' + field + '\' passed to jinjafx.fields()')
+    else:
+      return None
+    
+    field_values = []
+        
+    for r in range(1, len(self.g_datarows)):
+      fmatch = True
+      field_value = self.g_datarows[r][fpos]
 
+      if field_value not in field_values and len(field_value.strip()) > 0:
+        for f in ffilter:
+          if f in self.g_datarows[0]:
+            try:
+              if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f)]):
+                fmatch = False
+                break
+            except Exception:
+              raise Exception('invalid filter regex \'' + ffilter[f] + '\' for field \'' + f + '\' passed to jinjafx.fields()')
+          else:
+            raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.fields()')
+
+        if fmatch:
+          field_values.append(field_value)
+    
+    return field_values
+
+ 
   def jfx_counter(self, key=None, increment=1, start=1):
     if key is None:
       key = '_cnt_r_' + str(self.g_row)
@@ -372,7 +406,7 @@ try:
   jinja2_filters = []
   from ansible.plugins.filter import ipaddr
   jinja2_filters.append(ipaddr.FilterModule().filters())
-except:
+except Exception:
   pass
 
 
