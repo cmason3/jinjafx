@@ -92,7 +92,7 @@ keep_trailing_newline = True
 
 ### Ansible Filters
 
-Jinja2 is commonly used with Ansible which has a wide variety of [https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html](custom filters) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
+Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
 
 - <b><code>core</code></b>
 
@@ -100,7 +100,7 @@ This contains the "Core" Ansible filters like `regexp_search`, `regex_replace`, 
 
 - <b><code>ipaddr</code></b>
 
-This filter allows IP address manipulation and is documented at https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html. To enable this set of filters you will also need to install the [https://pypi.org/project/netaddr/](netaddr) Python module.
+This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module.
 
 ### Jinja2 Extensions
 
