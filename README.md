@@ -4,7 +4,7 @@
 # JinjaFx / JinjaFx Server
 ## Jinja Templating Tool
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and [netaddr](https://pypi.org/project/netaddr/) with ansible if you want to use the [ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html) filters. It should work using both Python 2.7 and Python 3 without modification.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files or use Ansible filters. It should work using both Python 2.7 and Python 3 without modification.
 
 JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface.
 
@@ -89,6 +89,18 @@ trim_blocks = True
 lstrip_blocks = True
 keep_trailing_newline = True
 ```
+
+### Ansible Filters
+
+Jinja2 is commonly used with Ansible which has a wide variety of [https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html](custom filters) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
+
+- <b><code>core</code></b>
+
+This contains the "Core" Ansible filters like `regexp_search`, `regex_replace`, `regex_findall`, `to_yaml`, `to_json`, etc 
+
+- <b><code>ipaddr</code></b>
+
+This filter allows IP address manipulation and is documented at https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html. To enable this set of filters you will also need to install the [https://pypi.org/project/netaddr/](netaddr) Python module.
 
 ### Jinja2 Extensions
 
