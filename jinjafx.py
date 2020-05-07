@@ -404,8 +404,13 @@ class JinjaFx():
 
 try:
   jinja2_filters = []
+
+  from ansible.plugins.filter import core
+  jinja2_filters.append(core.FilterModule().filters())
+
   from ansible.plugins.filter import ipaddr
   jinja2_filters.append(ipaddr.FilterModule().filters())
+
 except Exception:
   pass
 
