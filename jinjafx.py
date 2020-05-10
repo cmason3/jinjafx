@@ -157,22 +157,28 @@ class JinjaFx():
           else:
             n = len(self.g_datarows[0])
             fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l)]
-            fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields))))]
+            fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
             row = 0
             while row < len(fields):
-              if any(isinstance(col, list) for col in fields[row]):
+              if any(isinstance(col[0], list) for col in fields[row]):
                 for col in range(len(fields[row])):
-                  if isinstance(fields[row][col], list):
-                    for val in fields[row][col]:
+                  if isinstance(fields[row][col][0], list):
+                    for v in range(len(fields[row][col][0])):
                       nrow = list(fields[row])
-                      nrow[col] = val
+                      nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
                       fields.append(nrow)
 
                     fields.pop(row)
                     break
 
               else:
+                groups = dict(enumerate(sum([col[1] for col in fields[row]], ['$0'])))
+
+                for col in range(len(fields[row])):
+                  fields[row][col] = re.sub(r'(?<!\\)\$([0-9]+)', lambda m: groups.get(int(m.group(1)), '$' + m.group(1)), fields[row][col][0])
+                  fields[row][col] = re.sub(r'\\\$', r'$', fields[row][col])
+
                 self.g_datarows.append(fields[row])
                 row += 1
 
