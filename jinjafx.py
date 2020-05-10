@@ -173,11 +173,10 @@ class JinjaFx():
                     break
 
               else:
-                groups = dict(enumerate(sum([col[1] for col in fields[row]], ['$0'])))
+                groups = dict(enumerate(sum([col[1] for col in fields[row]], ['\\0'])))
 
                 for col in range(len(fields[row])):
-                  fields[row][col] = re.sub(r'(?<!\\)\$([0-9]+)', lambda m: groups.get(int(m.group(1)), '$' + m.group(1)), fields[row][col][0])
-                  fields[row][col] = re.sub(r'\\\$', r'$', fields[row][col])
+                  fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
 
                 self.g_datarows.append(fields[row])
                 row += 1
