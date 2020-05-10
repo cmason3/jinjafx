@@ -254,22 +254,11 @@ class JinjaFx():
     return outputs
 
 
-  def jfx_expand(self, s):
+  def jfx_expand(self, s, rg=False):
     pofa = [s]
+    groups = [[]]
 
     if re.search(r'(?<!\\)[\(\[]', pofa[0]):
-      i = 0
-      while i < len(pofa):
-        m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
-        if m:
-          for g in m.group(1).split('|'):
-            pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
-      
-          pofa.pop(i)
-
-        else:
-          i += 1
-
       i = 0
       while i < len(pofa):
         m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
@@ -286,14 +275,30 @@ class JinjaFx():
 
           for c in clist:
             pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
+            groups.append(groups[i])
 
           pofa.pop(i)
+          groups.pop(i)
+
+        else:
+          i += 1
+
+      i = 0
+      while i < len(pofa):
+        m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
+        if m:
+          for g in m.group(1).split('|'):
+            pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
+            groups.append(groups[i] + [g])
+
+          pofa.pop(i)
+          groups.pop(i)
 
         else:
           i += 1
 
     pofa = [re.sub(r'\\([\(\[\)\]])', r'\1', i) for i in pofa]
-    return pofa
+    return [pofa, groups] if rg else pofa
 
 
   def jfx_fandl(self, forl, fields, ffilter):
