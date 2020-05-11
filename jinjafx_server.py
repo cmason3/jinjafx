@@ -107,13 +107,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             if 'vars' in dt and len(dt['vars'].strip()) > 0:
               gvars.update(yaml.load(base64.b64decode(dt['vars']), Loader=yaml.FullLoader))
 
-            st = datetime.datetime.now()
+            st = round(time.time() * 1000)
             outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
             ocount = 0
 
             jsr = {
               'status': 'ok',
-              'elapsed': (datetime.datetime.now().microsecond - st.microsecond) / 1000,
+              'elapsed': round(time.time() * 1000) - st,
               'outputs': {}
             }
 
