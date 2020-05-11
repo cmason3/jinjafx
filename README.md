@@ -55,6 +55,31 @@ usnh-pe-1a, pe
 usnh-pe-1b, pe
 ```
 
+It also supports the ability to use regex style capture groups in combination with static groups, which allows the following syntax where we have used "\1" to reference the first capture group that appears within the row:
+
+```
+DEVICE, INTERFACE, HOST
+spine-0[1-3], et-0/0/\1, leaf-0([1-4])
+```
+
+The above would then be expanded to the following, where the INTERFACE has been populated with the leaf number:
+
+```
+DEVICE, INTERFACE, HOST
+spine-01, et-0/0/1, leaf-01
+spine-01, et-0/0/2, leaf-02
+spine-01, et-0/0/3, leaf-03
+spine-01, et-0/0/4, leaf-04
+spine-02, et-0/0/1, leaf-01
+spine-02, et-0/0/2, leaf-02
+spine-02, et-0/0/3, leaf-03
+spine-02, et-0/0/4, leaf-04
+spine-03, et-0/0/1, leaf-01
+spine-03, et-0/0/2, leaf-02
+spine-03, et-0/0/3, leaf-03
+spine-03, et-0/0/4, leaf-04
+```
+
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
 ### JinjaFx Server Usage
