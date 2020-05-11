@@ -34,6 +34,11 @@ svg {
 #push, #footer {
   height: 15px;
 }
+#csv {
+  border: 1px solid lightgray;
+  background-color: #fff;
+  font-size: 12px;
+}
 .title {
   color: black;
 }
