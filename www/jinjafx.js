@@ -102,6 +102,18 @@ window.onload = function() {
     window.cmVars.on("focus", function() { fe = window.cmVars });
     window.cmTemplate.on("focus", function() { fe = window.cmTemplate });
 
+    window.cmData.on("blur", function() {
+      document.getElementById("csv").innerHTML = get_csv_astable();
+      document.getElementById("csv").style.display = 'block';
+      window.cmData.getWrapperElement().style.display = 'none';
+    });
+
+    document.getElementById("csv").onclick = function() {
+      window.cmData.getWrapperElement().style.display = 'block';
+      document.getElementById("csv").style.display = 'none';
+      window.cmData.focus()
+    };
+    
     window.cmData.on("beforeChange", onPaste);
     window.cmTemplate.on("beforeChange", onPaste);
     window.cmVars.on("beforeChange", onPaste);
@@ -183,6 +195,32 @@ function escapeRegExp(s) {
 
 function reset_dt() {
   dt = {};
+}
+
+function get_csv_astable() {
+  var table = '<table class="table table-condensed">';
+  table += '<thead>';
+  table += '<tr>';
+  table += '<th>DEVICE</th>';
+  table += '<th>INTERFACE</th>';
+  table += '<th>HOST</th>';
+  table += '<th>PORT</th>';
+  table += '<th>TAG</th>';
+  table += '<th>AE</th>';
+  table += '</tr>';
+  table += '</thead>';
+  table += '<tbody>';
+  table += '<tr>';
+  table += '<td>spine-01</td>';
+  table += '<td>et-0/0/1</td>';
+  table += '<td>leaf-01</td>';
+  table += '<td>et-0/0/48</td>';
+  table += '<td>Underlay</td>';
+  table += '<td>-</td>';
+  table += '</tr>';
+  table += '</tbody>';
+  table += '</table>';
+  return table;
 }
 
 function onPaste(cm, change) {
