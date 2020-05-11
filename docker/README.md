@@ -1,8 +1,11 @@
 ## Docker for JinjaFx Server
 
 ### Build Docker Image
+
+There are two Dockerfiles - `Dockerfile.Release` will build the Docker containter from the latest release and `Dockerfile.Master` will build the Docker container by performing a clone of the `master` branch. It is recommended that `Dockerfile.Release` is used as it is more likely to be stable.
+
 ```
-docker image build -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile
+docker image build -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile.Release
 ```
 
 ### Run Docker Container
