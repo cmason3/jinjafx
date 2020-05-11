@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re
 
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -157,22 +157,27 @@ class JinjaFx():
           else:
             n = len(self.g_datarows[0])
             fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l)]
-            fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields))))]
+            fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
             row = 0
             while row < len(fields):
-              if any(isinstance(col, list) for col in fields[row]):
+              if any(isinstance(col[0], list) for col in fields[row]):
                 for col in range(len(fields[row])):
-                  if isinstance(fields[row][col], list):
-                    for val in fields[row][col]:
+                  if isinstance(fields[row][col][0], list):
+                    for v in range(len(fields[row][col][0])):
                       nrow = list(fields[row])
-                      nrow[col] = val
+                      nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
                       fields.append(nrow)
 
                     fields.pop(row)
                     break
 
               else:
+                groups = dict(enumerate(sum([col[1] for col in fields[row]], ['\\0'])))
+
+                for col in range(len(fields[row])):
+                  fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
+
                 self.g_datarows.append(fields[row])
                 row += 1
 
@@ -205,6 +210,7 @@ class JinjaFx():
       'counter': self.jfx_counter,
       'first': self.jfx_first,
       'last': self.jfx_last,
+      'fields': self.jfx_fields,
       'setg': self.jfx_setg,
       'getg': self.jfx_getg,
       'rows': max([0, len(self.g_datarows) - 1]),
@@ -253,22 +259,11 @@ class JinjaFx():
     return outputs
 
 
-  def jfx_expand(self, s):
+  def jfx_expand(self, s, rg=False):
     pofa = [s]
+    groups = [[]]
 
     if re.search(r'(?<!\\)[\(\[]', pofa[0]):
-      i = 0
-      while i < len(pofa):
-        m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
-        if m:
-          for g in m.group(1).split('|'):
-            pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
-      
-          pofa.pop(i)
-
-        else:
-          i += 1
-
       i = 0
       while i < len(pofa):
         m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
@@ -285,14 +280,30 @@ class JinjaFx():
 
           for c in clist:
             pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
+            groups.append(groups[i])
 
           pofa.pop(i)
+          groups.pop(i)
+
+        else:
+          i += 1
+
+      i = 0
+      while i < len(pofa):
+        m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
+        if m:
+          for g in m.group(1).split('|'):
+            pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
+            groups.append(groups[i] + [g])
+
+          pofa.pop(i)
+          groups.pop(i)
 
         else:
           i += 1
 
     pofa = [re.sub(r'\\([\(\[\)\]])', r'\1', i) for i in pofa]
-    return pofa
+    return [pofa, groups] if rg else pofa
 
 
   def jfx_fandl(self, forl, fields, ffilter):
@@ -347,7 +358,40 @@ class JinjaFx():
   def jfx_last(self, fields=None, ffilter={}):
     return self.jfx_fandl('last', fields, ffilter)
 
+  
+  def jfx_fields(self, field=None, ffilter={}):
+    if field is not None:
+      if field in self.g_datarows[0]:
+        fpos = self.g_datarows[0].index(field)
+      else:
+        raise Exception('invalid field \'' + field + '\' passed to jinjafx.fields()')
+    else:
+      return None
+    
+    field_values = []
+        
+    for r in range(1, len(self.g_datarows)):
+      fmatch = True
+      field_value = self.g_datarows[r][fpos]
 
+      if field_value not in field_values and len(field_value.strip()) > 0:
+        for f in ffilter:
+          if f in self.g_datarows[0]:
+            try:
+              if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f)]):
+                fmatch = False
+                break
+            except Exception:
+              raise Exception('invalid filter regex \'' + ffilter[f] + '\' for field \'' + f + '\' passed to jinjafx.fields()')
+          else:
+            raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.fields()')
+
+        if fmatch:
+          field_values.append(field_value)
+    
+    return field_values
+
+ 
   def jfx_counter(self, key=None, increment=1, start=1):
     if key is None:
       key = '_cnt_r_' + str(self.g_row)
@@ -370,8 +414,13 @@ class JinjaFx():
 
 try:
   jinja2_filters = []
+
+  from ansible.plugins.filter import core
+  jinja2_filters.append(core.FilterModule().filters())
+
   from ansible.plugins.filter import ipaddr
   jinja2_filters.append(ipaddr.FilterModule().filters())
+
 except Exception:
   pass
 

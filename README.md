@@ -4,7 +4,7 @@
 # JinjaFx / JinjaFx Server
 ## Jinja Templating Tool
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and [netaddr](https://pypi.org/project/netaddr/) with ansible if you want to use the [ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html) filters. It should work using both Python 2.7 and Python 3 without modification.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files or use custom Ansible filters. It should work using both Python 2.7 and Python 3 without modification.
 
 JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface.
 
@@ -55,6 +55,31 @@ usnh-pe-1a, pe
 usnh-pe-1b, pe
 ```
 
+It also supports the ability to use regex style capture groups in combination with static groups, which allows the following syntax where we have used "\1" to reference the first capture group that appears within the row:
+
+```
+DEVICE, INTERFACE, HOST
+spine-0[1-3], et-0/0/\1, leaf-0([1-4])
+```
+
+The above would then be expanded to the following, where the INTERFACE has been populated with the leaf number:
+
+```
+DEVICE, INTERFACE, HOST
+spine-01, et-0/0/1, leaf-01
+spine-01, et-0/0/2, leaf-02
+spine-01, et-0/0/3, leaf-03
+spine-01, et-0/0/4, leaf-04
+spine-02, et-0/0/1, leaf-01
+spine-02, et-0/0/2, leaf-02
+spine-02, et-0/0/3, leaf-03
+spine-02, et-0/0/4, leaf-04
+spine-03, et-0/0/1, leaf-01
+spine-03, et-0/0/2, leaf-02
+spine-03, et-0/0/3, leaf-03
+spine-03, et-0/0/4, leaf-04
+```
+
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
 ### JinjaFx Server Usage
@@ -89,6 +114,18 @@ trim_blocks = True
 lstrip_blocks = True
 keep_trailing_newline = True
 ```
+
+### Ansible Filters
+
+Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
+
+- <b><code>core</code></b>
+
+This contains the "Core" Ansible filters like `regexp_search`, `regex_replace`, `regex_findall`, `to_yaml`, `to_json`, etc 
+
+- <b><code>ipaddr</code></b>
+
+This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module.
 
 ### Jinja2 Extensions
 
@@ -152,6 +189,10 @@ There is also an optional `filter_field` argument that allows you to filter the 
 - <b><code>jinjafx.last([fields[]], [{ filter_field: "regex", ... }])</code></b>
 
 This function is used to determine whether this is the last row where you have seen this particular field value or not - if you don't specify any fields then it will return 'True' for the last row and 'False' for the rest.
+
+- <b><code>jinjafx.fields("field", [{ filter_field: "regex", ... }])</code></b>
+
+This function is used to return a unique list of non-empty field values for a specific header field. It also allows the ability to limit what values are included in the list by specifying an optional `filter_field` argument that allows you to filter the data using a regular expression to match certain rows.
 
 - <b><code>jinjafx.setg("key", value)</code></b>
 
