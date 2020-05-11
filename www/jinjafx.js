@@ -9,10 +9,12 @@ var qs = {};
 function jinjafx(method) {
   sobj.innerHTML = "";
 
-  if (!data_isvalid()) {
-    window.cmData.focus();
-    set_status("darkred", "ERROR", "Not Enough Rows in Data");
-    return false;
+  if (window.cmData.getValue().trim().length !== 0) {
+    if (!window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) { 
+      window.cmData.focus();
+      set_status("darkred", "ERROR", "Not Enough Rows in Data");
+      return false;
+    }
   }
 
   if (window.cmTemplate.getValue().length === 0) {
@@ -23,7 +25,7 @@ function jinjafx(method) {
 
   fe.focus();
 
-  dt.data = window.cmData.getValue().replace(/^[ \t]+/gm, function(m) {
+  dt.data = _data.replace(/^[ \t]+/gm, function(m) {
     var ns = ((m.match(/\t/g) || []).length * 2) + (m.match(/ /g) || []).length;
     return Array(ns + 1).join(" ");
   });
@@ -101,7 +103,7 @@ window.onload = function() {
     window.cmTemplate.on("focus", function() { fe = window.cmTemplate });
 
     window.cmData.on("blur", function() {
-      if (data_isvalid()) {
+      if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) {
         document.getElementById("csv").innerHTML = get_csv_astable();
         document.getElementById("csv").style.display = 'block';
         window.cmData.getWrapperElement().style.display = 'none';
@@ -195,13 +197,6 @@ function escapeRegExp(s) {
 
 function reset_dt() {
   dt = {};
-}
-
-function data_isvalid() {
-  if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/i)) {
-    return true;
-  }
-  return false;
 }
 
 function get_csv_astable() {
