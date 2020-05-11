@@ -1,0 +1,15 @@
+FROM python:3.8-slim-buster
+MAINTAINER Chris Mason <chris@jinjafx.org>
+
+RUN apt-get update; apt-get install -y git; apt-get clean
+RUN pip3 --no-cache-dir install ansible netaddr
+RUN git clone https://github.com/cmason3/jinjafx.git /opt/jinjafx
+
+RUN useradd -m jinjafx
+USER jinjafx
+
+EXPOSE 8080
+
+WORKDIR /opt/jinjafx
+
+CMD [ "/usr/local/bin/python3", "-u", "jinjafx_server.py", "-s", "-l", "0.0.0.0", "-p", "8080" ]
