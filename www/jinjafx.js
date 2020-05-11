@@ -25,7 +25,7 @@ function jinjafx(method) {
 
   fe.focus();
 
-  dt.data = _data.replace(/^[ \t]+/gm, function(m) {
+  dt.data = window.cmData.getValue().replace(/^[ \t]+/gm, function(m) {
     var ns = ((m.match(/\t/g) || []).length * 2) + (m.match(/ /g) || []).length;
     return Array(ns + 1).join(" ");
   });
