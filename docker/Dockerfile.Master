@@ -3,7 +3,7 @@ MAINTAINER Chris Mason <chris@jinjafx.org>
 
 RUN apt-get update; apt-get install -y git; apt-get clean
 RUN pip3 --no-cache-dir install ansible netaddr
-RUN git clone https://github.com/cmason3/jinjafx.git /opt/jinjafx
+RUN git clone -b "master" https://github.com/cmason3/jinjafx.git /opt/jinjafx
 
 RUN useradd -m jinjafx
 USER jinjafx
