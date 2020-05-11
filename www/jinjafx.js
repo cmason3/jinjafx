@@ -9,12 +9,10 @@ var qs = {};
 function jinjafx(method) {
   sobj.innerHTML = "";
 
-  if (window.cmData.getValue().length !== 0) {
-    if (!window.cmData.getValue().match(/\w.*[\r\n]+.*\w/i)) {
-      window.cmData.focus();
-      set_status("darkred", "ERROR", "Not Enough Rows in Data");
-      return false;
-    }
+  if (!data_isvalid()) {
+    window.cmData.focus();
+    set_status("darkred", "ERROR", "Not Enough Rows in Data");
+    return false;
   }
 
   if (window.cmTemplate.getValue().length === 0) {
@@ -103,9 +101,11 @@ window.onload = function() {
     window.cmTemplate.on("focus", function() { fe = window.cmTemplate });
 
     window.cmData.on("blur", function() {
-      document.getElementById("csv").innerHTML = get_csv_astable();
-      document.getElementById("csv").style.display = 'block';
-      window.cmData.getWrapperElement().style.display = 'none';
+      if (data_isvalid()) {
+        document.getElementById("csv").innerHTML = get_csv_astable();
+        document.getElementById("csv").style.display = 'block';
+        window.cmData.getWrapperElement().style.display = 'none';
+      }
     });
 
     document.getElementById("csv").onclick = function() {
@@ -197,29 +197,37 @@ function reset_dt() {
   dt = {};
 }
 
+function data_isvalid() {
+  if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/i)) {
+    return true;
+  }
+  return false;
+}
+
 function get_csv_astable() {
+  var datarows = window.cmData.getValue().trim().split(/\r?\n/);
+  var tc = (datarows[0].match(/\t/g) || []).length;
+  var cc = (datarows[0].match(/,/g) || []).length;
+  var delim = new RegExp(cc > tc ? '[ \\t]*,[ \\t]*' : ' *\\t *');
+  var hrow = datarows[0].split(delim);
+
   var table = '<table class="table table-condensed">';
-  table += '<thead>';
-  table += '<tr>';
-  table += '<th>DEVICE</th>';
-  table += '<th>INTERFACE</th>';
-  table += '<th>HOST</th>';
-  table += '<th>PORT</th>';
-  table += '<th>TAG</th>';
-  table += '<th>AE</th>';
-  table += '</tr>';
-  table += '</thead>';
-  table += '<tbody>';
-  table += '<tr>';
-  table += '<td>spine-01</td>';
-  table += '<td>et-0/0/1</td>';
-  table += '<td>leaf-01</td>';
-  table += '<td>et-0/0/48</td>';
-  table += '<td>Underlay</td>';
-  table += '<td>-</td>';
-  table += '</tr>';
-  table += '</tbody>';
-  table += '</table>';
+  table += '<thead><tr>';
+  for (var col = 0; col < hrow.length; col++) {
+    table += '<th>' + quote(hrow[col]) + '</th>';
+  }
+  table += '</tr></thead><tbody>';
+
+  for (var row = 1; row < datarows.length; row++) {
+    var rowdata = datarows[row].split(delim);
+
+    table += '<tr>';
+    for (var col = 0; col < hrow.length; col++) {
+      table += '<td>' + ((col < rowdata.length) ? quote(rowdata[col]) : '') + '</td>';
+    }
+    table += '</tr>';
+  }
+  table += '</tbody></table>';
   return table;
 }
 
