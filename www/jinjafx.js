@@ -70,7 +70,6 @@ window.onload = function() {
     CodeMirror.defineMode("data", cmDataMode);    
     window.cmData = CodeMirror.fromTextArea(data, {
       tabSize: 2,
-      autofocus: true,
       scrollbarStyle: "null",
       styleSelectedText: true,
       extraKeys: gExtraKeys,
@@ -90,6 +89,7 @@ window.onload = function() {
     window.cmTemplate = CodeMirror.fromTextArea(template, {
       lineNumbers: true,
       tabSize: 2,
+      autofocus: true,
       scrollbarStyle: "null",
       styleSelectedText: true,
       extraKeys: gExtraKeys,
@@ -97,7 +97,7 @@ window.onload = function() {
       smartIndent: false
     });
 
-    fe = window.cmData;
+    fe = window.cmTemplate;
     window.cmData.on("focus", function() { fe = window.cmData });
     window.cmVars.on("focus", function() { fe = window.cmVars });
     window.cmTemplate.on("focus", function() { fe = window.cmTemplate });
