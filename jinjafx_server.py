@@ -130,7 +130,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             jsr = {
               'status': 'error',
-              'error': '<pre>error[' + str(exc_tb.tb_lineno) + ']: ' + str(e) + '</pre>'
+              'error': '<pre>error: ' + str(e) + '</pre>'
             }
             self.log_request('ERR', 'error[' + str(exc_tb.tb_lineno) + ']: ' + str(e))
 
