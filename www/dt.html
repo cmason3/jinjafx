@@ -15,14 +15,23 @@
         window.opener.reset_dt();
 
         if (Object.keys(dt).length !== 0) {
-          var _data = window.opener.quote(dt.data.match(/\S/) ? dt.data.trim() + "\n" : "");
-          var _template = window.opener.quote(dt.template.match(/\S/) ? dt.template.trim() + "\n" : "");
-          var _vars = window.opener.quote(dt.vars.match(/\S/) ? dt.vars.trim() + "\n" : "");
+          dt.data = dt.data.match(/\S/) ? dt.data.trim() + "\n" : "";
+          dt.template = dt.template.match(/\S/) ? dt.template.trim() + "\n" : "";
+          dt.vars = dt.vars.match(/\S/) ? dt.vars.trim() + "\n" : "";
 
+          var qs = [];
+          for (var k in dt) {
+            if (dt[k].length > 0) {
+              qs.push(k + '=' + window.btoa(dt[k]));
+            }
+          }
+
+          var url = window.location.origin + '/?' + qs.join('&');
           var dtx = "<span class=\"title\"># JinjaFx DataTemplate\n# https://github.com/cmason3/jinjafx</span>\n\n";
-          dtx += "<span class=\"tags\">&lt;data.csv&gt;</span>\n" + _data + "<span class=\"tags\">&lt;/data.csv&gt;</span>\n\n";
-          dtx += "<span class=\"tags\">&lt;template.j2&gt;</span>\n" + _template + "<span class=\"tags\">&lt;/template.j2&gt;</span>\n\n";
-          dtx += "<span class=\"tags\">&lt;vars.yml&gt;</span>\n" + _vars + "<span class=\"tags\">&lt;/vars.yml&gt;</span>\n";
+          dtx += "<span class=\"title\"># Data URL</span> <a href=\"" + url + "\">" + ((url.length > 96) ? url.slice(0, 96) + "..." : url) + "</a>\n\n";
+          dtx += "<span class=\"tags\">&lt;data.csv&gt;</span>\n" + window.opener.quote(dt.data) + "<span class=\"tags\">&lt;/data.csv&gt;</span>\n\n";
+          dtx += "<span class=\"tags\">&lt;template.j2&gt;</span>\n" + window.opener.quote(dt.template) + "<span class=\"tags\">&lt;/template.j2&gt;</span>\n\n";
+          dtx += "<span class=\"tags\">&lt;vars.yml&gt;</span>\n" + window.opener.quote(dt.vars) + "<span class=\"tags\">&lt;/vars.yml&gt;</span>\n";
           document.body.innerHTML = "<pre>" + dtx + "</pre>";
         }
       };
