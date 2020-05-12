@@ -261,33 +261,9 @@ class JinjaFx():
 
   def jfx_expand(self, s, rg=False):
     pofa = [s]
-    groups = [[]]
+    groups = [[s]]
 
     if re.search(r'(?<!\\)[\(\[]', pofa[0]):
-      i = 0
-      while i < len(pofa):
-        m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
-        if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
-          clist = []
-
-          for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
-            if x[1] != '':
-              e = sorted(x[0].split('-'))
-              for c in range(ord(e[0]), ord(e[1]) + 1):
-                clist.append(chr(c))
-            else:
-              clist.append(x[0])
-
-          for c in clist:
-            pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
-            groups.append(groups[i])
-
-          pofa.pop(i)
-          groups.pop(i)
-
-        else:
-          i += 1
-
       i = 0
       while i < len(pofa):
         m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
@@ -301,6 +277,44 @@ class JinjaFx():
 
         else:
           i += 1
+
+      i = 0
+      while i < len(pofa):
+        m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
+        if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
+          clist = []
+
+          mpos = groups[i][0].index(m.group())
+          nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
+          ncb = len(re.findall(r'(?<!\\)\)', groups[i][0][:mpos]))
+          groups[i][0] = groups[i][0].replace(m.group(), 'x', 1)
+          group = max(0, (nob - ncb) * nob)
+
+          for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
+            if x[1] != '':
+              e = sorted(x[0].split('-'))
+              for c in range(ord(e[0]), ord(e[1]) + 1):
+                clist.append(chr(c))
+            else:
+              clist.append(x[0])
+
+          for c in clist:
+            pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
+            ngroups = list(groups[i])
+
+            if group > 0 and group < len(ngroups):
+              ngroups[group] = ngroups[group].replace(m.group(), c, 1)
+            
+            groups.append(ngroups)
+
+          pofa.pop(i)
+          groups.pop(i)
+
+        else:
+          i += 1
+
+    for g in groups:
+      g.pop(0)
 
     pofa = [re.sub(r'\\([\(\[\)\]])', r'\1', i) for i in pofa]
     return [pofa, groups] if rg else pofa
