@@ -102,14 +102,7 @@ window.onload = function() {
     window.cmVars.on("focus", function() { fe = window.cmVars });
     window.cmTemplate.on("focus", function() { fe = window.cmTemplate });
 
-    window.cmData.on("blur", function() {
-      if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) {
-        document.getElementById("csv").innerHTML = get_csv_astable();
-        document.getElementById("csv").style.display = 'block';
-        window.cmData.getWrapperElement().style.display = 'none';
-      }
-    });
-
+    window.cmData.on("blur", onDataBlur);
     document.getElementById("csv").onclick = function() {
       window.cmData.getWrapperElement().style.display = 'block';
       document.getElementById("csv").style.display = 'none';
@@ -171,6 +164,9 @@ window.onload = function() {
         set_status("darkred", "ERROR", ex);
         loaded = true; onChange(true);
       }
+      if (fe != window.cmData) {
+        onDataBlur();
+      }
     }
     else {
       loaded = true;
@@ -226,6 +222,14 @@ function get_csv_astable() {
   return table;
 }
 
+function onDataBlur() {
+  if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) {
+    document.getElementById("csv").innerHTML = get_csv_astable();
+    document.getElementById("csv").style.display = 'block';
+    window.cmData.getWrapperElement().style.display = 'none';
+  }
+}
+
 function onPaste(cm, change) {
   if (change.origin === "paste") {
     var _dt = parse_datatemplate(change.text.join('\n'), false);
@@ -272,6 +276,9 @@ function load_datatemplate(_dt, _qs) {
   catch (ex) {
     set_status("darkred", "ERROR", ex);
     loaded = true; onChange(true);
+  }
+  if (fe != window.cmData) {
+    onDataBlur();
   }
 }
 
