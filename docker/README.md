@@ -8,6 +8,8 @@ There are two Dockerfiles - `Dockerfile.Release` and `Dockerfile.Master`. The fi
 docker image build -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile.Release
 ```
 
+If you are building from `Dockerfile.Master` then it is recommended to include `--no-cache` in the build command to ensure it pulls the latest Git repository.
+
 ### Run Docker Container
 ```
 docker container run -d --name jinjafx --restart unless-stopped -e TZ=Europe/London -p 127.0.0.1:8080:8080 jinjafx:latest
