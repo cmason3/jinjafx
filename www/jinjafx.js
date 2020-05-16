@@ -210,13 +210,15 @@ function get_csv_astable() {
   table += '</tr></thead><tbody>';
 
   for (var row = 1; row < datarows.length; row++) {
-    var rowdata = datarows[row].split(delim);
+    if (datarows[row].match(/\S/)) {
+      var rowdata = datarows[row].split(delim);
 
-    table += '<tr>';
-    for (var col = 0; col < hrow.length; col++) {
-      table += '<td>' + ((col < rowdata.length) ? quote(rowdata[col]) : '') + '</td>';
+      table += '<tr>';
+      for (var col = 0; col < hrow.length; col++) {
+        table += '<td>' + ((col < rowdata.length) ? quote(rowdata[col]) : '') + '</td>';
+      }
+      table += '</tr>';
     }
-    table += '</tr>';
   }
   table += '</tbody></table>';
   return table;
