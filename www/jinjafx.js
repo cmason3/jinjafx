@@ -70,7 +70,6 @@ window.onload = function() {
     CodeMirror.defineMode("data", cmDataMode);    
     window.cmData = CodeMirror.fromTextArea(data, {
       tabSize: 2,
-      autofocus: true,
       scrollbarStyle: "null",
       styleSelectedText: true,
       extraKeys: gExtraKeys,
@@ -90,6 +89,7 @@ window.onload = function() {
     window.cmTemplate = CodeMirror.fromTextArea(template, {
       lineNumbers: true,
       tabSize: 2,
+      autofocus: true,
       scrollbarStyle: "null",
       styleSelectedText: true,
       extraKeys: gExtraKeys,
@@ -97,19 +97,12 @@ window.onload = function() {
       smartIndent: false
     });
 
-    fe = window.cmData;
+    fe = window.cmTemplate;
     window.cmData.on("focus", function() { fe = window.cmData });
     window.cmVars.on("focus", function() { fe = window.cmVars });
     window.cmTemplate.on("focus", function() { fe = window.cmTemplate });
 
-    window.cmData.on("blur", function() {
-      if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) {
-        document.getElementById("csv").innerHTML = get_csv_astable();
-        document.getElementById("csv").style.display = 'block';
-        window.cmData.getWrapperElement().style.display = 'none';
-      }
-    });
-
+    window.cmData.on("blur", onDataBlur);
     document.getElementById("csv").onclick = function() {
       window.cmData.getWrapperElement().style.display = 'block';
       document.getElementById("csv").style.display = 'none';
@@ -171,6 +164,9 @@ window.onload = function() {
         set_status("darkred", "ERROR", ex);
         loaded = true; onChange(true);
       }
+      if (fe != window.cmData) {
+        onDataBlur();
+      }
     }
     else {
       loaded = true;
@@ -214,16 +210,26 @@ function get_csv_astable() {
   table += '</tr></thead><tbody>';
 
   for (var row = 1; row < datarows.length; row++) {
-    var rowdata = datarows[row].split(delim);
+    if (datarows[row].match(/\S/)) {
+      var rowdata = datarows[row].split(delim);
 
-    table += '<tr>';
-    for (var col = 0; col < hrow.length; col++) {
-      table += '<td>' + ((col < rowdata.length) ? quote(rowdata[col]) : '') + '</td>';
+      table += '<tr>';
+      for (var col = 0; col < hrow.length; col++) {
+        table += '<td>' + ((col < rowdata.length) ? quote(rowdata[col]) : '') + '</td>';
+      }
+      table += '</tr>';
     }
-    table += '</tr>';
   }
   table += '</tbody></table>';
   return table;
+}
+
+function onDataBlur() {
+  if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) {
+    document.getElementById("csv").innerHTML = get_csv_astable();
+    document.getElementById("csv").style.display = 'block';
+    window.cmData.getWrapperElement().style.display = 'none';
+  }
 }
 
 function onPaste(cm, change) {
@@ -272,6 +278,9 @@ function load_datatemplate(_dt, _qs) {
   catch (ex) {
     set_status("darkred", "ERROR", ex);
     loaded = true; onChange(true);
+  }
+  if (fe != window.cmData) {
+    onDataBlur();
   }
 }
 
