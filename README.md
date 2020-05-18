@@ -107,6 +107,15 @@ JinjaFx templates are Jinja2 templates with one exception - they support a Jinja
 
 The above syntax is transparent to Jinja2 and will be ignored, but JinjaFx will parse it and use a different output file for the contents of that specific block. Full Jinja2 syntax is supported within the block as well as supporting nested blocks.
 
+This data could then be used in a template as follows, which would output a different text file per "DEVICE":
+
+```
+<output "{{ DEVICE|lower }}.txt">
+edit interfaces {{ INTERFACE}}
+set description "## Link to {{ HOST }} ##"
+</output>
+```
+
 By default the following Jinja2 templating options are enabled, but they can be overridden as required in the template:
 
 ```
