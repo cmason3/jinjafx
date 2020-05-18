@@ -111,7 +111,7 @@ This data could then be used in a template as follows, which would output a diff
 
 ```
 <output "{{ DEVICE|lower }}.txt">
-edit interfaces {{ INTERFACE}}
+edit interfaces {{ INTERFACE }}
 set description "## Link to {{ HOST }} ##"
 </output>
 ```
