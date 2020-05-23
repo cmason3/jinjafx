@@ -19,16 +19,7 @@
           dt.template = dt.template.match(/\S/) ? dt.template.trim() + "\n" : "";
           dt.vars = dt.vars.match(/\S/) ? dt.vars.trim() + "\n" : "";
 
-          var qs = [];
-          for (var k in dt) {
-            if (dt[k].length > 0) {
-              qs.push(k + '=' + window.btoa(dt[k]));
-            }
-          }
-
-          var url = window.location.origin + '/?' + qs.join('&');
           var dtx = "<span class=\"title\"># JinjaFx DataTemplate\n# https://github.com/cmason3/jinjafx</span>\n\n";
-          dtx += "<span class=\"title\"># Data URL</span> <a href=\"" + url + "\">" + ((url.length > 96) ? url.slice(0, 96) + "..." : url) + "</a>\n\n";
           dtx += "<span class=\"tags\">&lt;data.csv&gt;</span>\n" + window.opener.quote(dt.data) + "<span class=\"tags\">&lt;/data.csv&gt;</span>\n\n";
           dtx += "<span class=\"tags\">&lt;template.j2&gt;</span>\n" + window.opener.quote(dt.template) + "<span class=\"tags\">&lt;/template.j2&gt;</span>\n\n";
           dtx += "<span class=\"tags\">&lt;vars.yml&gt;</span>\n" + window.opener.quote(dt.vars) + "<span class=\"tags\">&lt;/vars.yml&gt;</span>\n";
