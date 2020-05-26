@@ -135,6 +135,7 @@ class JinjaFx():
 
     outputs = {}
     delim = None
+    rowkey = 1
     
     if isinstance(data, bytes):
       data = data.decode('utf-8')
@@ -161,8 +162,12 @@ class JinjaFx():
 
             row = 0
             while row < len(fields):
-              if any(isinstance(col[0], list) for col in fields[row]):
-                for col in range(len(fields[row])):
+              if not isinstance(fields[row][0], int):
+                fields[row].insert(0, rowkey)
+                rowkey += 1
+
+              if any(isinstance(col[0], list) for col in fields[row][1:]):
+                for col in range(1, len(fields[row])):
                   if isinstance(fields[row][col][0], list):
                     for v in range(len(fields[row][col][0])):
                       nrow = list(fields[row])
@@ -173,12 +178,13 @@ class JinjaFx():
                     break
 
               else:
-                groups = dict(enumerate(sum([col[1] for col in fields[row]], ['\\0'])))
+                groups = dict(enumerate(sum([col[1] for col in fields[row][1:]], ['\\0'])))
 
-                for col in range(len(fields[row])):
+                for col in range(1, len(fields[row])):
                   fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
+                  fields[row][col] = re.sub(r'{[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*}', lambda m: self.jfx_data_counter(m, fields[row][0], col), fields[row][col])
 
-                self.g_datarows.append(fields[row])
+                self.g_datarows.append(fields[row][1:])
                 row += 1
 
       if len(self.g_datarows) <= 1:
@@ -257,6 +263,18 @@ class JinjaFx():
         raise Exception('unbalanced output tags')
 
     return outputs
+
+
+  def jfx_data_counter(self, m, row, col):
+    start = m.group(1)
+    increment = m.group(2)
+    pad = int(m.group(3)) if m.lastindex == 3 else 0
+
+    key = '_datacnt_r_' + str(row) + '_' + str(col) + '_' + m.group()
+
+    n = self.g_dict.get(key, int(start) - int(increment))
+    self.g_dict[key] = n + int(increment)
+    return str(self.g_dict[key]).zfill(pad)
 
 
   def jfx_expand(self, s, rg=False):
