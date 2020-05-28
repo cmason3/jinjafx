@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, jinja2, yaml, argparse, re
+import sys, os, jinja2, yaml, argparse, re, copy
 
 __version__ = '1.0.8'
 
@@ -160,6 +160,8 @@ class JinjaFx():
             fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l)]
             fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
+            recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'
+
             row = 0
             while row < len(fields):
               if not isinstance(fields[row][0], int):
@@ -170,7 +172,7 @@ class JinjaFx():
                 for col in range(1, len(fields[row])):
                   if isinstance(fields[row][col][0], list):
                     for v in range(len(fields[row][col][0])):
-                      nrow = list(fields[row])
+                      nrow = copy.deepcopy(fields[row])
                       nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
                       fields.append(nrow)
 
@@ -178,11 +180,21 @@ class JinjaFx():
                     break
 
               else:
-                groups = dict(enumerate(sum([col[1] for col in fields[row][1:]], ['\\0'])))
+                groups = []
+
+                for col in range(1, len(fields[row])):
+                  fields[row][col][0] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, True), fields[row][col][0])
+
+                  for g in range(len(fields[row][col][1])):
+                    fields[row][col][1][g] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, False), fields[row][col][1][g])
+
+                  groups.append(fields[row][col][1])
+
+                groups = dict(enumerate(sum(groups, ['\\0'])))
 
                 for col in range(1, len(fields[row])):
                   fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
-                  fields[row][col] = re.sub(r'{[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*}', lambda m: self.jfx_data_counter(m, fields[row][0], col), fields[row][col])
+                  fields[row][col] = re.sub(r'\\([}{])', r'\1', fields[row][col])
 
                 self.g_datarows.append(fields[row][1:])
                 row += 1
@@ -265,7 +277,7 @@ class JinjaFx():
     return outputs
 
 
-  def jfx_data_counter(self, m, row, col):
+  def jfx_data_counter(self, m, row, col, incflag):
     start = m.group(1)
     increment = m.group(2)
     pad = int(m.group(3)) if m.lastindex == 3 else 0
@@ -273,7 +285,8 @@ class JinjaFx():
     key = '_datacnt_r_' + str(row) + '_' + str(col) + '_' + m.group()
 
     n = self.g_dict.get(key, int(start) - int(increment))
-    self.g_dict[key] = n + int(increment)
+    if incflag:
+      self.g_dict[key] = n + int(increment)
     return str(self.g_dict[key]).zfill(pad)
 
 
