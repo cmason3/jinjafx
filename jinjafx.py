@@ -183,10 +183,10 @@ class JinjaFx():
                 groups = []
 
                 for col in range(1, len(fields[row])):
-                  fields[row][col][0] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, True), fields[row][col][0])
+                  fields[row][col][0] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
 
                   for g in range(len(fields[row][col][1])):
-                    fields[row][col][1][g] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, False), fields[row][col][1][g])
+                    fields[row][col][1][g] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
 
                   groups.append(fields[row][col][1])
 
@@ -277,16 +277,17 @@ class JinjaFx():
     return outputs
 
 
-  def jfx_data_counter(self, m, row, col, incflag):
+  def jfx_data_counter(self, m, orow, col, row):
     start = m.group(1)
     increment = m.group(2)
     pad = int(m.group(3)) if m.lastindex == 3 else 0
 
-    key = '_datacnt_r_' + str(row) + '_' + str(col) + '_' + m.group()
+    key = '_datacnt_r_' + str(orow) + '_' + str(col) + '_' + m.group()
 
-    n = self.g_dict.get(key, int(start) - int(increment))
-    if incflag:
+    if self.g_dict.get(key + '_' + str(row), True):
+      n = self.g_dict.get(key, int(start) - int(increment))
       self.g_dict[key] = n + int(increment)
+      self.g_dict[key + '_' + str(row)] = False
     return str(self.g_dict[key]).zfill(pad)
 
 
