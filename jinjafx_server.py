@@ -17,9 +17,10 @@
 
 from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile
+import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile, hashlib
 
 lock = threading.Lock()
+repository = None
 
 class JinjaFxServer(HTTPServer):
   def handle_error(self, request, client_address):
@@ -64,6 +65,25 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     if fpath == '/ping':
       r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8') ]
 
+    elif re.search(r'^/dt/[a-f0-9]{24}$', fpath):
+      if repository != None:
+        fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.json')
+
+        with lock:
+          if os.path.isfile(fpath):
+            try:
+              with open(fpath, 'rb') as file:
+                r = [ 'application/json', 200, file.read() ]
+
+            except Exception:
+              r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
+
+          else:
+            r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+
+      else:
+        r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
+
     elif not re.search(r'[^A-Za-z0-9_./-]', fpath) and not re.search(r'\.{2,}', fpath) and os.path.isfile('www' + fpath):
       if fpath.endswith('.js'):
         ctype = 'text/javascript'
@@ -95,91 +115,124 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     if 'Content-Length' in self.headers:
       postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
 
-      if self.path == '/jinjafx':
-        if self.headers['Content-Type'] == 'application/json':
-          try:
-            gvars = {}
-
-            dt = json.loads(postdata)
-            template = base64.b64decode(dt['template']) if 'template' in dt and len(dt['template'].strip()) > 0 else ''
-            data = base64.b64decode(dt['data']) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
-
-            if 'vars' in dt and len(dt['vars'].strip()) > 0:
-              gvars.update(yaml.load(base64.b64decode(dt['vars']), Loader=yaml.FullLoader))
-
-            st = round(time.time() * 1000)
-            outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
-            ocount = 0
-
-            jsr = {
-              'status': 'ok',
-              'elapsed': round(time.time() * 1000) - st,
-              'outputs': {}
-            }
-
-            for o in outputs:
-              output = '\n'.join(outputs[o]) + '\n'
-              if len(output.strip()) > 0:
-                jsr['outputs'].update({ o: base64.b64encode(output.encode('utf-8')).decode('utf-8') })
-                ocount += 1
-
-            if ocount == 0:
-              raise Exception('nothing to output')
-
-          except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            jsr = {
-              'status': 'error',
-              'error': '<pre>error: ' + str(e) + '</pre>'
-            }
-            self.log_request('ERR', 'error[' + str(exc_tb.tb_lineno) + ']: ' + str(e))
-
-          r = [ 'application/json', 200, json.dumps(jsr) ]
-
-        else:
-          r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
-
-      elif self.path == '/download':
-        if self.headers['Content-Type'] == 'application/json':
-          lterminator = '\r\n' if 'User-Agent' in self.headers and 'windows' in self.headers['User-Agent'].lower() else '\n'
-
-          try:
-            outputs = json.loads(postdata)
-
-            zfile = io.BytesIO()
-            z = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
-
-            for o in outputs:
-              ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o)))
-              outputs[o] = re.sub(r'\r?\n', lterminator, base64.b64decode(outputs[o]).decode('utf-8'))
-
-              if '.' not in ofile:
-                if re.search(r'<html.*?>[\s\S]+<\/html>', outputs[o], re.IGNORECASE):
-                  ofile += '.html'
-                else:
-                  ofile += '.txt'
-
-              z.writestr(ofile, outputs[o])
-
-            z.close()
-
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/zip')
-            self.send_header('Content-Length', str(len(zfile.getvalue())))
-            self.send_header('X-Download-Filename', 'Outputs.' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.zip')
-            self.end_headers()
-            self.wfile.write(zfile.getvalue())
-            return
-
-          except Exception as e:
-            log('error: ' + str(e))
+      if len(postdata) < (256 * 1024):
+        if self.path == '/jinjafx':
+          if self.headers['Content-Type'] == 'application/json':
+            try:
+              gvars = {}
+  
+              dt = json.loads(postdata)
+              template = base64.b64decode(dt['template']) if 'template' in dt and len(dt['template'].strip()) > 0 else ''
+              data = base64.b64decode(dt['data']) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
+  
+              if 'vars' in dt and len(dt['vars'].strip()) > 0:
+                gvars.update(yaml.load(base64.b64decode(dt['vars']), Loader=yaml.FullLoader))
+  
+              st = round(time.time() * 1000)
+              outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
+              ocount = 0
+  
+              jsr = {
+                'status': 'ok',
+                'elapsed': round(time.time() * 1000) - st,
+                'outputs': {}
+              }
+  
+              for o in outputs:
+                output = '\n'.join(outputs[o]) + '\n'
+                if len(output.strip()) > 0:
+                  jsr['outputs'].update({ o: base64.b64encode(output.encode('utf-8')).decode('utf-8') })
+                  ocount += 1
+  
+              if ocount == 0:
+                raise Exception('nothing to output')
+  
+            except Exception as e:
+              exc_type, exc_obj, exc_tb = sys.exc_info()
+              jsr = {
+                'status': 'error',
+                'error': '<pre>error: ' + str(e) + '</pre>'
+              }
+              self.log_request('ERR', 'error[' + str(exc_tb.tb_lineno) + ']: ' + str(e))
+  
+            r = [ 'application/json', 200, json.dumps(jsr) ]
+  
+          else:
+            r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+  
+        elif self.path == '/download':
+          if self.headers['Content-Type'] == 'application/json':
+            lterminator = '\r\n' if 'User-Agent' in self.headers and 'windows' in self.headers['User-Agent'].lower() else '\n'
+  
+            try:
+              outputs = json.loads(postdata)
+  
+              zfile = io.BytesIO()
+              z = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
+  
+              for o in outputs:
+                ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o)))
+                outputs[o] = re.sub(r'\r?\n', lterminator, base64.b64decode(outputs[o]).decode('utf-8'))
+  
+                if '.' not in ofile:
+                  if re.search(r'<html.*?>[\s\S]+<\/html>', outputs[o], re.IGNORECASE):
+                    ofile += '.html'
+                  else:
+                    ofile += '.txt'
+  
+                z.writestr(ofile, outputs[o])
+  
+              z.close()
+  
+              self.send_response(200)
+              self.send_header('Content-Type', 'application/zip')
+              self.send_header('Content-Length', str(len(zfile.getvalue())))
+              self.send_header('X-Download-Filename', 'Outputs.' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.zip')
+              self.end_headers()
+              self.wfile.write(zfile.getvalue())
+              return
+  
+            except Exception as e:
+              log('error: ' + str(e))
+              r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+  
+          else:
             r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
 
+        elif self.path == '/get_link':
+          if repository != None:
+            if self.headers['Content-Type'] == 'application/json':
+              try:
+                dt = json.dumps(json.loads(postdata), indent=2, sort_keys=True)
+                dt_id = hashlib.sha256(dt.encode('utf-8')).hexdigest()[:24]
+                fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.json')
+
+                with lock:
+                  try:
+                    with open(fpath, 'w') as file:
+                      file.write(dt)
+
+                    r = [ 'text/plain', 200, dt_id + '\r\n' ]
+
+                  except Exception as e:
+                    log('error: ' + str(e))
+                    r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+
+              except Exception as e:
+                log('error: ' + str(e))
+                r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+
+            else:
+              r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+
+          else:
+            r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
+
         else:
-          r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+          r = [ 'text/plain', 404, '404 Not Found\r\n' ]
 
       else:
-        r = [ 'text/plain', 404, '404 Not Found\r\n' ]
+        r = [ 'text/plain', 413, '413 Request Entity Too Large\r\n' ]
 
     else:
       r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
@@ -208,6 +261,8 @@ class JinjaFxThread(threading.Thread):
 
 
 def main(rflag=False):
+  global repository
+
   try:
     print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja Templating Tool')
     print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
@@ -216,6 +271,7 @@ def main(rflag=False):
     parser.add_argument('-s', action='store_true', required=True)
     parser.add_argument('-l', metavar='<address>', default='127.0.0.1', type=str)
     parser.add_argument('-p', metavar='<port>', default=8080, type=int)
+    parser.add_argument('-r', metavar='<repository>', type=w_directory)
     args = parser.parse_args()
 
     log('Starting JinjaFx Server on http://' + args.l + ':' + str(args.p) + '...')
@@ -227,6 +283,7 @@ def main(rflag=False):
 
     threads = []
     rflag = True
+    repository = args.r
 
     for i in range(64):
       threads.append(JinjaFxThread(s, (args.l, args.p)))
@@ -252,6 +309,12 @@ def main(rflag=False):
 def log(t):
   with lock:
     print('[' + datetime.datetime.now().strftime('%b %d %H:%M:%S.%f')[:19] + '] {' + str(os.getpid()) + '} ' + t)
+
+
+def w_directory(d):
+  if not os.path.isdir(d) or not os.access(d, os.W_OK):
+    raise argparse.ArgumentTypeError("repository directory must be writable")
+  return d
 
 
 if __name__ == '__main__':

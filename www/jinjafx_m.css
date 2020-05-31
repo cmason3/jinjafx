@@ -39,6 +39,10 @@ svg {
   background-color: #fff;
   font-size: 12px;
 }
+.btn:active:focus {
+  outline: none;
+  box-shadow: none;
+}
 .title {
   color: black;
 }

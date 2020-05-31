@@ -32,12 +32,36 @@ function jinjafx(method) {
   dt.template = window.cmTemplate.getValue().replace(/\t/g, "  ");
   dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
 
-  if (method === "generate") {
+  if ((method === "generate") || (method === "get_link")) {
     try {
       dt.data = window.btoa(dt.data);
       dt.template = window.btoa(dt.template);
       dt.vars = window.btoa(dt.vars);
-      window.open("output.html", "_blank");
+
+      if (method === "generate") {
+        window.open("output.html", "_blank");
+      }
+      else {
+        var xHR = new XMLHttpRequest();
+        xHR.open("POST", "get_link", true);
+
+        xHR.onload = function() {
+          if (this.status === 200) {
+            window.removeEventListener('beforeunload', onBeforeUnload);
+            window.location.href = window.location.pathname + "?dt=" + this.responseText;
+          }
+          else {
+            set_status("darkred", "HTTP ERROR " + this.status, this.statusText);
+          }
+        };
+
+        xHR.onerror = function() {
+          set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+        };
+
+        xHR.setRequestHeader("Content-Type", "application/json");
+        xHR.send(JSON.stringify(dt));
+      }
     }
     catch (ex) {
       set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
@@ -133,6 +157,7 @@ window.onload = function() {
       minSize: 100
     });
 
+    /*
     document.getElementById("import").onchange = function() {
       var r = new FileReader();
       r.onload = function (e) {
@@ -147,6 +172,7 @@ window.onload = function() {
       r.filename = this.files[0].name;
       r.readAsText(this.files[0]);
     };
+    */
 
     if (window.location.href.indexOf('?') > -1) {
       var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
@@ -157,8 +183,39 @@ window.onload = function() {
       }
 
       try {
-        update_from_qs();
-        loaded = true;
+        if (qs.hasOwnProperty('dt')) {
+          var xHR = new XMLHttpRequest();
+          xHR.open("GET", "dt/" + qs.dt, true);
+
+          xHR.onload = function() {
+            if (this.status === 200) {
+              try {
+                var dt = JSON.parse(this.responseText);
+                dt.data = dt.hasOwnProperty('data') ? window.atob(dt.data) : '';
+                dt.template = dt.hasOwnProperty('template') ? window.atob(dt.template) : '';
+                dt.vars = dt.hasOwnProperty('vars') ? window.atob(dt.vars) : '';
+                load_datatemplate(dt, qs);
+              }
+              catch (e) {
+                set_status("darkred", "INTERNAL ERROR", e);
+              }
+            }
+            else {
+              set_status("darkred", "HTTP ERROR " + this.status, this.statusText);
+            }
+            loaded = true;
+          };
+
+          xHR.onerror = function() {
+            set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+            loaded = true;
+          };
+          xHR.send(null);
+        }
+        else {
+          update_from_qs();
+          loaded = true;
+        }
       }
       catch (ex) {
         set_status("darkred", "ERROR", ex);
@@ -242,12 +299,14 @@ function onPaste(cm, change) {
   }
 }
 
+function onBeforeUnload(e) {
+  e.returnValue = 'Are you sure?';
+}
+
 function onChange(errflag) {
   if (loaded) {
     if (!dirty && (errflag !== true)) {
-      window.addEventListener('beforeunload', function (e) {
-        e.returnValue = 'Are you sure?';
-      });
+      window.addEventListener('beforeunload', onBeforeUnload);
       dirty = true;
     }
     if (window.location.href.indexOf('?') > -1) {
