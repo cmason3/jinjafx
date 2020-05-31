@@ -157,23 +157,6 @@ window.onload = function() {
       minSize: 100
     });
 
-    /*
-    document.getElementById("import").onchange = function() {
-      var r = new FileReader();
-      r.onload = function (e) {
-        var _dt = parse_datatemplate(e.target.result, true);
-        if (_dt != null) {
-          load_datatemplate(_dt, null);
-          lfn = e.target.filename;
-        }
-        document.getElementById("import").value = '';
-        fe.focus();
-      };
-      r.filename = this.files[0].name;
-      r.readAsText(this.files[0]);
-    };
-    */
-
     if (window.location.href.indexOf('?') > -1) {
       var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
 

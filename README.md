@@ -114,6 +114,7 @@ Once JinjaFx Server has been started with the "-s" argument then point your web 
    -s                          - start the JinjaFx Server
    [-l <address>]              - specify a listen address (default is '127.0.0.1')
    [-p <port>]                 - specify a listen port (default is 8080)
+   [-r <repository>]           - specify a repository directory (allows 'Get Link')
 ```
 
 For health checking purposes, if you specify the URL "/ping" then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs).

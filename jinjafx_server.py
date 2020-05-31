@@ -75,6 +75,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               with open(fpath, 'rb') as file:
                 r = [ 'application/json', 200, file.read() ]
 
+              os.utime(fpath, None)
+
             except Exception:
               r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
