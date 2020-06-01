@@ -181,16 +181,19 @@ window.onload = function() {
               }
               catch (e) {
                 set_status("darkred", "INTERNAL ERROR", e);
+                window.history.replaceState({}, document.title, window.location.pathname);
               }
             }
             else {
               set_status("darkred", "HTTP ERROR " + this.status, this.statusText);
+              window.history.replaceState({}, document.title, window.location.pathname);
             }
             loaded = true;
           };
 
           xHR.onerror = function() {
             set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+            window.history.replaceState({}, document.title, window.location.pathname);
             loaded = true;
           };
           xHR.send(null);
