@@ -19,7 +19,7 @@ By default it won't enable a repository directory so 'Get Link' won't work - it 
 sudo mkdir /var/lib/jinjafx
 sudo chmod a+rwx /var/lib/jinjafx
 
-docker run -d --name jinjafx --restart unless-stopped -e TZ=Europe/London -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx jinjafx:latest "-r /var/lib/jinjafx"
+docker run -d --name jinjafx --restart unless-stopped -e TZ=Europe/London -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx jinjafx:latest -r /var/lib/jinjafx
 ```
 
 ### /etc/haproxy/haproxy.cfg
