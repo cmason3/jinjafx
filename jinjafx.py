@@ -16,9 +16,9 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, jinja2, yaml, argparse, re
+import sys, os, jinja2, yaml, argparse, re, copy
 
-__version__ = '1.0.7'
+__version__ = '1.0.8'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -135,6 +135,7 @@ class JinjaFx():
 
     outputs = {}
     delim = None
+    rowkey = 1
     
     if isinstance(data, bytes):
       data = data.decode('utf-8')
@@ -159,13 +160,19 @@ class JinjaFx():
             fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l)]
             fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
+            recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'
+
             row = 0
             while row < len(fields):
-              if any(isinstance(col[0], list) for col in fields[row]):
-                for col in range(len(fields[row])):
+              if not isinstance(fields[row][0], int):
+                fields[row].insert(0, rowkey)
+                rowkey += 1
+
+              if any(isinstance(col[0], list) for col in fields[row][1:]):
+                for col in range(1, len(fields[row])):
                   if isinstance(fields[row][col][0], list):
                     for v in range(len(fields[row][col][0])):
-                      nrow = list(fields[row])
+                      nrow = copy.deepcopy(fields[row])
                       nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
                       fields.append(nrow)
 
@@ -173,12 +180,23 @@ class JinjaFx():
                     break
 
               else:
-                groups = dict(enumerate(sum([col[1] for col in fields[row]], ['\\0'])))
+                groups = []
 
-                for col in range(len(fields[row])):
+                for col in range(1, len(fields[row])):
+                  fields[row][col][0] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
+
+                  for g in range(len(fields[row][col][1])):
+                    fields[row][col][1][g] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
+
+                  groups.append(fields[row][col][1])
+
+                groups = dict(enumerate(sum(groups, ['\\0'])))
+
+                for col in range(1, len(fields[row])):
                   fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
+                  fields[row][col] = re.sub(r'\\([}{])', r'\1', fields[row][col])
 
-                self.g_datarows.append(fields[row])
+                self.g_datarows.append(fields[row][1:])
                 row += 1
 
       if len(self.g_datarows) <= 1:
@@ -257,6 +275,20 @@ class JinjaFx():
         raise Exception('unbalanced output tags')
 
     return outputs
+
+
+  def jfx_data_counter(self, m, orow, col, row):
+    start = m.group(1)
+    increment = m.group(2)
+    pad = int(m.group(3)) if m.lastindex == 3 else 0
+
+    key = '_datacnt_r_' + str(orow) + '_' + str(col) + '_' + m.group()
+
+    if self.g_dict.get(key + '_' + str(row), True):
+      n = self.g_dict.get(key, int(start) - int(increment))
+      self.g_dict[key] = n + int(increment)
+      self.g_dict[key + '_' + str(row)] = False
+    return str(self.g_dict[key]).zfill(pad)
 
 
   def jfx_expand(self, s, rg=False):

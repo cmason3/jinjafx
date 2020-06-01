@@ -80,17 +80,41 @@ spine-03, et-0/0/3, leaf-03
 spine-03, et-0/0/4, leaf-04
 ```
 
+Finally we also support the ability to use dynamic counters during data expansion with the `{ start:increment[:pad] }` syntax. In instances where static character classes or static groups have been used, you can also specify a counter which will increment as the data is expanded into multiple rows (the counter doesn't persist between the original rows and doesn't play any part in determining the range of the expansion).
+
+```
+INTERFACE, HOST, LAG
+et-0/0/[0-9], r740-{33:1:3}, {100:1}
+```
+
+The above would then be expanded to the following (the optional "pad" element is used to specify the zero padding width):
+
+```
+INTERFACE, HOST, LAG
+et-0/0/0, r740-033, 100
+et-0/0/1, r740-034, 101
+et-0/0/2, r740-035, 102
+et-0/0/3, r740-036, 103
+et-0/0/4, r740-037, 104
+et-0/0/5, r740-038, 105
+et-0/0/6, r740-039, 106
+et-0/0/7, r740-040, 107
+et-0/0/8, r740-041, 108
+et-0/0/9, r740-042, 109
+```
+
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
 ### JinjaFx Server Usage
 
-Once JinjaFx Server has been started with the "-s" argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify "data.csv", "template.j2" and "vars.yml" and then generate outputs.
+Once JinjaFx Server has been started with the "-s" argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify "data.csv", "template.j2" and "vars.yml" and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
 
 ```
  jinjafx_server.py
    -s                          - start the JinjaFx Server
    [-l <address>]              - specify a listen address (default is '127.0.0.1')
    [-p <port>]                 - specify a listen port (default is 8080)
+   [-r <repository>]           - specify a repository directory (allows 'Get Link')
 ```
 
 For health checking purposes, if you specify the URL "/ping" then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs).
