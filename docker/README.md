@@ -10,7 +10,13 @@ docker image build --no-cache -t jinjafx:latest https://raw.githubusercontent.co
 
 ### Run Docker Container
 ```
-docker container run -d --name jinjafx --restart unless-stopped -e TZ=Europe/London -p 127.0.0.1:8080:8080 jinjafx:latest
+docker run -d --name jinjafx --restart unless-stopped -e TZ=Europe/London -p 127.0.0.1:8080:8080 jinjafx:latest
+```
+
+By default it won't enable a repository directory so 'Get Link' won't work - it will return 503 Service Unavailable. To enable this functionaility you need to specify `-r` with a directory - the following example will demonstarte how you can use "/tmp" on the local filesystem, which is outside the Docker container and will persist if the container is reloaded:
+
+```
+docker run -d --name jinjafx --restart unless-stopped -e TZ=Europe/London -p 127.0.0.1:8080:8080 jinjafx:latest
 ```
 
 ### /etc/haproxy/haproxy.cfg
