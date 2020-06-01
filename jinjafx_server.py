@@ -315,7 +315,6 @@ def log(t):
 
 def w_directory(d):
   if not os.path.isdir(d):
-    print("Checking for " + str(d))
     raise argparse.ArgumentTypeError("repository directory must exist")
   elif not os.access(d, os.W_OK):
     raise argparse.ArgumentTypeError("repository directory must be writable")
