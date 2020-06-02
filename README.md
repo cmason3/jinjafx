@@ -59,7 +59,7 @@ It also supports the ability to use regex style capture groups in combination wi
 
 ```
 DEVICE, INTERFACE, HOST
-spine-0[1-3], et-0/0/\1, leaf-0([1-4])
+spine-0[1-3], et-0/0/([1-4]), leaf-0\1
 ```
 
 The above would then be expanded to the following, where the INTERFACE has been populated with the leaf number:
