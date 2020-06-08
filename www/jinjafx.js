@@ -268,11 +268,15 @@ function get_csv_astable() {
 }
 
 function onDataBlur(cm, e) {
-  if ((e != null) && (e.relatedTarget.tagName != 'INPUT')) {
-    if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) {
-      document.getElementById("csv").innerHTML = get_csv_astable();
-      document.getElementById("csv").style.display = 'block';
-      window.cmData.getWrapperElement().style.display = 'none';
+  if (e != null) {
+    if (e.relatedTarget != null) {
+      if (e.relatedTarget.tagName != 'INPUT') {
+        if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) {
+          document.getElementById("csv").innerHTML = get_csv_astable();
+          document.getElementById("csv").style.display = 'block';
+          window.cmData.getWrapperElement().style.display = 'none';
+        }
+      }
     }
   }
 }
