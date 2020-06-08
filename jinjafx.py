@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy
 
-__version__ = '1.0.8'
+__version__ = '1.0.9'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
