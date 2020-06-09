@@ -117,7 +117,7 @@ Once JinjaFx Server has been started with the "-s" argument then point your web 
    [-r <repository>]           - specify a repository directory (allows 'Get Link')
 ```
 
-For health checking purposes, if you specify the URL "/ping" then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs).
+For health checking purposes, if you specify the URL "/ping" then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
 
 ### JinjaFx Templates
 
