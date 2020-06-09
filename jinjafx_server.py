@@ -17,7 +17,7 @@
 
 from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile, hashlib
+import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile, hashlib, traceback
 
 lock = threading.Lock()
 repository = None
@@ -150,12 +150,20 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 raise Exception('nothing to output')
   
             except Exception as e:
-              exc_type, exc_obj, exc_tb = sys.exc_info()
+              tb = traceback.format_exc()
+              match = re.search(r'[\s\S]*File "<(?:template|unknown)>", line ([0-9]+), in.*template', tb, re.IGNORECASE)
+              if match:
+                error = 'error[template.j2:' + match.group(1) + ']: ' + type(e).__name__ + ': ' + str(e)
+              elif 'yaml.FullLoader' in tb:
+                error = 'error[vars.yml]: ' + type(e).__name__ + ': ' + str(e)
+              else:
+                error = 'error[' + str(sys.exc_info()[2].tb_lineno) + ']: ' + type(e).__name__ + ': ' + str(e)
+
               jsr = {
                 'status': 'error',
-                'error': '<pre>error: ' + str(e) + '</pre>'
+                'error': '<pre>' + error + '</pre>'
               }
-              self.log_request('ERR', 'error[' + str(exc_tb.tb_lineno) + ']: ' + str(e))
+              self.log_request('ERR', error);
   
             r = [ 'application/json', 200, json.dumps(jsr) ]
   
