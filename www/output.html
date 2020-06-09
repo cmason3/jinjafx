@@ -112,7 +112,8 @@
               }
               else {
                 document.title = "Error";
-                document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>HTTP ERROR " + this.status + "</h4></strong>"+ this.statusText + "</div>";
+                var sT = (this.statusText.length == 0) ? window.opener.getStatusText(this.status) : this.statusText;
+                document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>HTTP ERROR " + this.status + "</h4></strong>"+ sT + "</div>";
               }
             };
             xHR.timeout = 0;

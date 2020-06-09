@@ -16,9 +16,9 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, jinja2, yaml, argparse, re, copy
+import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.0.8'
+__version__ = '1.0.9'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -109,13 +109,14 @@ def main():
   except KeyboardInterrupt:
     sys.exit(-1)
 
-  except jinja2.exceptions.UndefinedError as e:
-    print('error: template variable ' + str(e), file=sys.stderr)
-    sys.exit(-3)
-
   except Exception as e:
-    exc_type, exc_obj, exc_tb = sys.exc_info()
-    print('error[' + str(exc_tb.tb_lineno) + ']: ' + str(e), file=sys.stderr)
+    tb = traceback.format_exc()
+    match = re.search(r'[\s\S]*File "(.+)", line ([0-9]+), in.*template', tb, re.IGNORECASE)
+    if match:
+      print('error[' + match.group(1) + ':' + match.group(2) + ']: ' + type(e).__name__ + ': ' + str(e), file=sys.stderr)
+    else:
+      print('error[' + str(sys.exc_info()[2].tb_lineno) + ']: ' + type(e).__name__ + ': ' + str(e), file=sys.stderr)
+
     sys.exit(-2)
 
 

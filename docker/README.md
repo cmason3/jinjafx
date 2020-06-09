@@ -36,3 +36,12 @@ backend be_jinjafx
   mode http
   server jinjafx 127.0.0.1:8080
 ```
+
+HAProxy also has the ability to rate limit connections, although it doesn't make it easy to understand the syntax. The following example can be used to limit POST requests to `/get_link` to a maximum of 5 requests within a 30 minute sliding window per source IP - any requests that exceed this limit will be presented with a HTTP 429 (Too Many Requests) error.
+
+```
+frontend fe_jinjafx
+  stick-table type ip size 100k expire 30m store http_req_rate(30m)
+  http-request track-sc0 src if METH_POST { path -i -m beg /get_link }
+  http-request deny deny_status 429 if { sc_http_req_rate(0) gt 5 }
+```
