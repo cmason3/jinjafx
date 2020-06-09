@@ -6,6 +6,22 @@ var tid = 0;
 var dt = {};
 var qs = {};
 
+function getStatusText(code) {
+  var statusText = {
+    400: 'Bad Request',
+    404: 'Not Found',
+    413: 'Request Entity Too Large',
+    429: 'Too Many Requests',
+    500: 'Internal Server Error',
+    503: 'Service Unavailable'
+  };
+
+  if (statusText.hasOwnProperty(code)) {
+    return statusText[code];
+  }
+  return '';
+}
+
 function jinjafx(method) {
   sobj.innerHTML = "";
 
@@ -51,7 +67,8 @@ function jinjafx(method) {
             window.location.href = window.location.pathname + "?dt=" + this.responseText;
           }
           else {
-            set_status("darkred", "HTTP ERROR " + this.status, this.statusText);
+            var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+            set_status("darkred", "HTTP ERROR " + this.status, sT);
           }
         };
 
@@ -185,7 +202,8 @@ window.onload = function() {
               }
             }
             else {
-              set_status("darkred", "HTTP ERROR " + this.status, this.statusText);
+              var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+              set_status("darkred", "HTTP ERROR " + this.status, sT);
               window.history.replaceState({}, document.title, window.location.pathname);
             }
             loaded = true;
