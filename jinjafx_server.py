@@ -65,7 +65,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     if fpath == '/ping':
       r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8') ]
 
-    elif re.search(r'^/dt/[a-f0-9]{24}$', fpath):
+    elif re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
       if repository != None:
         fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.json')
 
