@@ -25,12 +25,14 @@ function getStatusText(code) {
 function jinjafx(method) {
   sobj.innerHTML = "";
 
-  if (window.cmData.getValue().trim().length !== 0) {
-    if (!window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) { 
-      window.cmData.focus();
-      set_status("darkred", "ERROR", "Not Enough Rows in Data");
-      return false;
-    }
+  var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
+    return !e.match(/^[ \t]*#/) && e.match(/\S/);
+  });
+
+  if (datarows.length < 2) {
+    window.cmData.focus();
+    set_status("darkred", "ERROR", "Not Enough Rows in Data");
+    return false;
   }
 
   if (window.cmTemplate.getValue().length === 0) {
@@ -41,10 +43,7 @@ function jinjafx(method) {
 
   fe.focus();
 
-  dt.data = window.cmData.getValue().replace(/^[ \t]+/gm, function(m) {
-    var ns = ((m.match(/\t/g) || []).length * 2) + (m.match(/ /g) || []).length;
-    return Array(ns + 1).join(" ");
-  });
+  dt.data = datarows.join("\n");
   dt.template = window.cmTemplate.getValue().replace(/\t/g, "  ");
   dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
 
@@ -256,30 +255,27 @@ function reset_dt() {
   dt = {};
 }
 
-function get_csv_astable() {
-  var datarows = window.cmData.getValue().trim().split(/\r?\n/);
+function get_csv_astable(datarows) {
   var tc = (datarows[0].match(/\t/g) || []).length;
   var cc = (datarows[0].match(/,/g) || []).length;
   var delim = new RegExp(cc > tc ? '[ \\t]*,[ \\t]*' : ' *\\t *');
   var hrow = datarows[0].split(delim);
 
   var table = '<table class="table table-condensed">';
-  table += '<thead><tr>';
+  table += '<thead><tr class="info">';
   for (var col = 0; col < hrow.length; col++) {
     table += '<th>' + quote(hrow[col]) + '</th>';
   }
   table += '</tr></thead><tbody>';
 
   for (var row = 1; row < datarows.length; row++) {
-    if (datarows[row].match(/\S/)) {
-      var rowdata = datarows[row].split(delim);
+    var rowdata = datarows[row].split(delim);
 
-      table += '<tr>';
-      for (var col = 0; col < hrow.length; col++) {
-        table += '<td>' + ((col < rowdata.length) ? quote(rowdata[col]) : '') + '</td>';
-      }
-      table += '</tr>';
+    table += '<tr>';
+    for (var col = 0; col < hrow.length; col++) {
+      table += '<td>' + ((col < rowdata.length) ? quote(rowdata[col]) : '') + '</td>';
     }
+    table += '</tr>';
   }
   table += '</tbody></table>';
   return table;
@@ -289,8 +285,11 @@ function onDataBlur(cm, e) {
   if (e != null) {
     if (e.relatedTarget != null) {
       if (e.relatedTarget.tagName != 'INPUT') {
-        if (window.cmData.getValue().match(/\w.*[\r\n]+.*\w/)) {
-          document.getElementById("csv").innerHTML = get_csv_astable();
+        var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
+          return !e.match(/^[ \t]*#/) && e.match(/\S/);
+        });
+        if (datarows.length > 1) {
+          document.getElementById("csv").innerHTML = get_csv_astable(datarows);
           document.getElementById("csv").style.display = 'block';
           window.cmData.getWrapperElement().style.display = 'none';
         }
@@ -411,8 +410,13 @@ function cmDataMode() {
       return { n: 0 };
     },
     token: function(stream, state) {
-      if (!state.n && stream.match(/.+/)) {
+      if (stream.sol() && stream.match(/[ \t]*#/)) {
+        stream.skipToEnd();
+        return "comment";
+      }
+      if (!state.n && stream.sol() && stream.match(/[ \t]*\S/)) {
         state.n = 1;
+        stream.skipToEnd();
         return "jfx-header";
       }
       stream.next();

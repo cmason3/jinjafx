@@ -82,5 +82,6 @@ svg {
   display: inline-block;
 }
 .cm-jfx-header {
-  background: #99ccff;
+  font-weight: bold;
+  background: #d9edf7;
 }
