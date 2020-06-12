@@ -282,18 +282,14 @@ function get_csv_astable(datarows) {
 }
 
 function onDataBlur(cm, e) {
-  if (e != null) {
-    if (e.relatedTarget != null) {
-      if (e.relatedTarget.tagName != 'INPUT') {
-        var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
-          return !e.match(/^[ \t]*#/) && e.match(/\S/);
-        });
-        if (datarows.length > 1) {
-          document.getElementById("csv").innerHTML = get_csv_astable(datarows);
-          document.getElementById("csv").style.display = 'block';
-          window.cmData.getWrapperElement().style.display = 'none';
-        }
-      }
+  if ((e == null) || ((e.relatedTarget != null) && (e.relatedTarget.tagName != 'INPUT'))) {
+    var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
+      return !e.match(/^[ \t]*#/) && e.match(/\S/);
+    });
+    if (datarows.length > 1) {
+      document.getElementById("csv").innerHTML = get_csv_astable(datarows);
+      document.getElementById("csv").style.display = 'block';
+      window.cmData.getWrapperElement().style.display = 'none';
     }
   }
 }
