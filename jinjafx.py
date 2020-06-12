@@ -143,16 +143,20 @@ class JinjaFx():
 
     if data is not None and len(data.strip()) > 0:
       for l in data.strip().splitlines():
-        if len(l.strip()) > 0:
+        if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
           if len(self.g_datarows) == 0:
             delim = r'[ \t]*,[ \t]*' if l.count(',') > l.count('\t') else r' *\t *'
             fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l))
             fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
 
-            if '' in fields:
-              raise Exception('empty column header detected in data')
-            elif len(set(fields)) != len(fields):
-              raise Exception('duplicate column header detected in data')
+            for i in range(len(fields)):
+              if fields[i] == '':
+                raise Exception('empty header field detected at column position ' + str(i + 1))
+              elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
+                raise Exception('header field at column position ' + str(i + 1) + ' contains invalid characters')
+
+            if len(set(fields)) != len(fields):
+              raise Exception('duplicate header field detected in data')
             else:
               self.g_datarows.append(fields)
 
