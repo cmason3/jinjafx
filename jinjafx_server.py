@@ -229,7 +229,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             if self.headers['Content-Type'] == 'application/json':
               try:
                 dt = json.dumps(json.loads(postdata), indent=2, sort_keys=True)
-                # dt_id = hashlib.sha256(dt.encode('utf-8')).hexdigest()[:24]
                 dt_id = self.encode_link(hashlib.sha256(dt.encode('utf-8')).digest()[:12])
                 fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.json')
 
