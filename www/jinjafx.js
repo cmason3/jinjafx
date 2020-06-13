@@ -25,25 +25,30 @@ function getStatusText(code) {
 function jinjafx(method) {
   sobj.innerHTML = "";
 
-  var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
-    return !e.match(/^[ \t]*#/) && e.match(/\S/);
-  });
-
-  if (datarows.length < 2) {
-    window.cmData.focus();
-    set_status("darkred", "ERROR", "Not Enough Rows in Data");
-    return false;
-  }
-
   if (window.cmTemplate.getValue().length === 0) {
     window.cmTemplate.focus();
     set_status("darkred", "ERROR", "No Template");
     return false;
   }
 
+  var datarows = window.cmData.getValue();
+
+  if (method == "generate") {
+    datarows = datarows.split(/\r?\n/).filter(function(e) {
+      return !e.match(/^[ \t]*#/) && e.match(/\S/);
+    });
+
+    if (datarows.length == 1) {
+      window.cmData.focus();
+      set_status("darkred", "ERROR", "Not Enough Rows in Data");
+      return false;
+    }
+    datarows = datarows.join("\n");
+  }
+
   fe.focus();
 
-  dt.data = datarows.join("\n");
+  dt.data = datarows;
   dt.template = window.cmTemplate.getValue().replace(/\t/g, "  ");
   dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
 

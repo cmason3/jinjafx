@@ -142,11 +142,17 @@ class JinjaFx():
       data = data.decode('utf-8')
 
     if data is not None and len(data.strip()) > 0:
-      for l in data.strip().splitlines():
+      for l in data.splitlines():
         if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
           if len(self.g_datarows) == 0:
-            delim = r'[ \t]*,[ \t]*' if l.count(',') > l.count('\t') else r' *\t *'
-            fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l))
+            if l.count(',') > l.count('\t'):
+              delim = r'[ \t]*,[ \t]*'
+              schars = ' \t'
+            else:
+              delim = r' *\t *'
+              schars = ' '
+
+            fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l.strip(schars)))
             fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
 
             for i in range(len(fields)):
@@ -162,7 +168,7 @@ class JinjaFx():
 
           else:
             n = len(self.g_datarows[0])
-            fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l)]
+            fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l.strip(schars))]
             fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
             recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'

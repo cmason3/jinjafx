@@ -56,6 +56,21 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
 
         
+  def encode_link(self, bhash):
+    alphabet = b'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz'
+    string = ''
+    i = 0
+
+    for offset, byte in enumerate(reversed(bytearray(bhash))):
+      i += byte << (offset * 8)
+
+    while i:
+      i, idx = divmod(i, len(alphabet))
+      string = alphabet[idx:idx + 1].decode('utf') + string
+
+    return string
+
+
   def do_GET(self):
     fpath = self.path.split('?', 1)[0]
 
@@ -214,7 +229,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             if self.headers['Content-Type'] == 'application/json':
               try:
                 dt = json.dumps(json.loads(postdata), indent=2, sort_keys=True)
-                dt_id = hashlib.sha256(dt.encode('utf-8')).hexdigest()[:24]
+                # dt_id = hashlib.sha256(dt.encode('utf-8')).hexdigest()[:24]
+                dt_id = self.encode_link(hashlib.sha256(dt.encode('utf-8')).digest()[:12])
                 fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.json')
 
                 with lock:
