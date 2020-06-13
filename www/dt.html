@@ -15,9 +15,9 @@
         window.opener.reset_dt();
 
         if (Object.keys(dt).length !== 0) {
-          dt.data = dt.data.match(/\S/) ? dt.data.trim() + "\n" : "";
-          dt.template = dt.template.match(/\S/) ? dt.template.trim() + "\n" : "";
-          dt.vars = dt.vars.match(/\S/) ? dt.vars.trim() + "\n" : "";
+          dt.data = dt.data.match(/\S/) ? dt.data + "\n" : "";
+          dt.template = dt.template.match(/\S/) ? dt.template + "\n" : "";
+          dt.vars = dt.vars.match(/\S/) ? dt.vars + "\n" : "";
 
           var dtx = "<span class=\"title\"># JinjaFx DataTemplate\n# https://github.com/cmason3/jinjafx</span>\n\n";
           dtx += "<span class=\"tags\">&lt;data.csv&gt;</span>\n" + window.opener.quote(dt.data) + "<span class=\"tags\">&lt;/data.csv&gt;</span>\n\n";
