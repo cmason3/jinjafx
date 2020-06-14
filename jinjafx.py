@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.0.9'
+__version__ = '1.0.10'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -142,23 +142,33 @@ class JinjaFx():
       data = data.decode('utf-8')
 
     if data is not None and len(data.strip()) > 0:
-      for l in data.strip().splitlines():
-        if len(l.strip()) > 0:
+      for l in data.splitlines():
+        if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
           if len(self.g_datarows) == 0:
-            delim = r'[ \t]*,[ \t]*' if l.count(',') > l.count('\t') else r' *\t *'
-            fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l))
+            if l.count(',') > l.count('\t'):
+              delim = r'[ \t]*,[ \t]*'
+              schars = ' \t'
+            else:
+              delim = r' *\t *'
+              schars = ' '
+
+            fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l.strip(schars)))
             fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
 
-            if '' in fields:
-              raise Exception('empty column header detected in data')
-            elif len(set(fields)) != len(fields):
-              raise Exception('duplicate column header detected in data')
+            for i in range(len(fields)):
+              if fields[i] == '':
+                raise Exception('empty header field detected at column position ' + str(i + 1))
+              elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
+                raise Exception('header field at column position ' + str(i + 1) + ' contains invalid characters')
+
+            if len(set(fields)) != len(fields):
+              raise Exception('duplicate header field detected in data')
             else:
               self.g_datarows.append(fields)
 
           else:
             n = len(self.g_datarows[0])
-            fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l)]
+            fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l.strip(schars))]
             fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
             recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'
