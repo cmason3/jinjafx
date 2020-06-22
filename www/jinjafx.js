@@ -24,6 +24,7 @@ function getStatusText(code) {
 
 function jinjafx(method) {
   sobj.innerHTML = "";
+  dt = {};
 
   if (window.cmTemplate.getValue().length === 0) {
     window.cmTemplate.focus();
@@ -54,12 +55,19 @@ function jinjafx(method) {
 
   if ((method === "generate") || (method === "get_link")) {
     try {
+      var vaulted_vars = dt.vars.includes('$ANSIBLE_VAULT;');
+
       dt.data = window.btoa(dt.data);
       dt.template = window.btoa(dt.template);
       dt.vars = window.btoa(dt.vars);
 
       if (method === "generate") {
-        window.open("output.html", "_blank");
+        if (vaulted_vars) {
+          $("#vault_input").modal("show")
+        }
+        else {
+          window.open("output.html", "_blank");
+        }
       }
       else {
         var xHR = new XMLHttpRequest();
@@ -151,6 +159,7 @@ window.onload = function() {
     document.getElementById("csv").onclick = function() {
       window.cmData.getWrapperElement().style.display = 'block';
       document.getElementById("csv").style.display = 'none';
+      window.cmData.refresh()
       window.cmData.focus()
     };
     
@@ -178,6 +187,21 @@ window.onload = function() {
       minSize: 100
     });
 
+    $('#vault_input').on('shown.bs.modal', function() {
+      document.getElementById("vault").focus();
+    });
+
+    document.getElementById('ml-ok').onclick = function() {
+      dt.vault_password = window.btoa(document.getElementById("vault").value);
+      window.open("output.html", "_blank");
+    };
+
+    document.getElementById('vault').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-ok').click();
+      }
+    };
+
     if (window.location.href.indexOf('?') > -1) {
       var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
 
@@ -194,10 +218,7 @@ window.onload = function() {
           xHR.onload = function() {
             if (this.status === 200) {
               try {
-                var dt = JSON.parse(this.responseText);
-                dt.data = dt.hasOwnProperty('data') ? window.atob(dt.data) : '';
-                dt.template = dt.hasOwnProperty('template') ? window.atob(dt.template) : '';
-                dt.vars = dt.hasOwnProperty('vars') ? window.atob(dt.vars) : '';
+                var dt = jsyaml.safeLoad(this.responseText, 'utf8')['dt'];
                 load_datatemplate(dt, qs);
               }
               catch (e) {
@@ -297,14 +318,18 @@ function onDataBlur(cm, e) {
       window.cmData.getWrapperElement().style.display = 'none';
     }
   }
-}
+} 
 
 function onPaste(cm, change) {
   if (change.origin === "paste") {
-    var _dt = parse_datatemplate(change.text.join('\n'), false);
-    if (_dt != null) {
-      load_datatemplate(_dt, null);
-      change.cancel();
+    var t = change.text.join('\n');
+
+    if (t.includes('---\ndt:\n')) {
+      var obj = jsyaml.safeLoad(t, 'utf8');
+      if (obj != null) {
+        load_datatemplate(obj['dt'], null);
+        change.cancel();
+      }
     }
   }
 }
@@ -351,30 +376,6 @@ function load_datatemplate(_dt, _qs) {
   if (fe != window.cmData) {
     onDataBlur();
   }
-}
-
-function parse_datatemplate(request, us) {
-  var _dt = {};
-
-  if (request.match(/<(?:data\.csv|template\.j2|vars\.yml)>/i)) {
-    var m = request.match(/<data\.csv>([\s\S]*?)<\/data\.csv>/i);
-    if (m != null) {
-      _dt.data = m[1].trim();
-    }
-    m = request.match(/<template\.j2>([\s\S]*?)<\/template\.j2>/i);
-    if (m != null) {
-      _dt.template = m[1].trim();
-    }
-    m = request.match(/<vars\.yml>([\s\S]*?)<\/vars\.yml>/i);
-    if (m != null) {
-      _dt.vars = m[1].trim();
-    }
-    return _dt;
-  }
-  else if (us) {
-    set_status("darkred", "ERROR", "Invalid DataTemplate Format");
-  }
-  return null;
 }
 
 function update_from_qs() {

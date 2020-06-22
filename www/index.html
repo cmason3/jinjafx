@@ -7,17 +7,18 @@
     <title>JinjaFx</title>
     <link rel="shortcut icon" href="jinjafx.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/addon/dialog/dialog.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/dialog/dialog.min.css">
     <link rel="stylesheet" href="jinjafx_m.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.5.11/split.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/addon/selection/mark-selection.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/addon/dialog/dialog.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/addon/search/search.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/addon/search/searchcursor.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/jinja2/jinja2.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/yaml/yaml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.14.0/js-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/selection/mark-selection.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/dialog/dialog.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/mode/jinja2/jinja2.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/mode/yaml/yaml.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="jinjafx.js"></script>
@@ -103,6 +104,24 @@
       <div class="container-fluid">
         <span id="status" class="pull-left" style="font-size: large;"></span>
         <p class="text-right"><small>JinjaFx - Jinja Templating Tool<br />by Chris Mason (<a href="mailto:chris@jinjafx.org">chris@jinjafx.org</a>)</small></p>
+      </div>
+    </div>
+    <div id="vault_input" class="modal fade">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 id="ml-title" style="margin-top: 0px;">Ansible Vault</h4>
+          </div>
+          <div class="form-group row modal-body">
+            <label for="vault" class="col-sm-12 col-form-label">Vault Password</label>
+            <div class="col-sm-12">
+              <input type="password" class="form-control" id="vault">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button id="ml-ok" type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+          </div>
+        </div>
       </div>
     </div>
   </body>
