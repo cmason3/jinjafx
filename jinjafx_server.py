@@ -123,7 +123,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           r = [ ctype, 200, file.read() ]
 
           if fpath == '/index.html':
-            r[2] = r[2].replace('{{ jinjafx.version }}', jinjafx.__version__);
+            r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).encode('utf-8')
 
       except Exception:
         r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
