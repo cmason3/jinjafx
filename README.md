@@ -18,7 +18,6 @@ JinjaFx Server running at https://jinjafx.io
    [-d <data.csv>]             - specify row based data (comma or tab separated)
    [-g <vars.yml>[, -g ...]]   - specify global variables in yaml (supports Ansible vaulted files)
    [-o <output file>]          - specify the output file (supports Jinja2 variables) (default is stdout)
-   [--ask-vault-pass]          - prompt for vault password (use with -g) (or use ANSIBLE_VAULT_PASS env)
 ```
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
