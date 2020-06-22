@@ -19,6 +19,13 @@ from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile, hashlib, traceback
 
+try:
+  from ansible.constants import DEFAULT_VAULT_ID_MATCH
+  from ansible.parsing.vault import VaultLib
+  from ansible.parsing.vault import VaultSecret
+except Exception:
+  pass
+
 lock = threading.Lock()
 repository = None
 
@@ -82,7 +89,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
     elif re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
       if repository != None:
-        fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.json')
+        fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.yml')
 
         with lock:
           if os.path.isfile(fpath):
@@ -115,6 +122,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         with open('www' + fpath, 'rb') as file:
           r = [ ctype, 200, file.read() ]
 
+          if fpath == '/index.html':
+            r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).encode('utf-8')
+
       except Exception:
         r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
@@ -143,7 +153,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               data = base64.b64decode(dt['data']) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
   
               if 'vars' in dt and len(dt['vars'].strip()) > 0:
-                gvars.update(yaml.load(base64.b64decode(dt['vars']), Loader=yaml.FullLoader))
+                gyaml = base64.b64decode(dt['vars'])
+
+                if 'vault_password' in dt:
+                  vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(base64.b64decode(dt['vault_password']).encode('utf-8')))])
+                  gyaml = vault.decrypt(gyaml.encode('utf8'))
+
+                gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
   
               st = round(time.time() * 1000)
               outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
@@ -228,14 +244,41 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           if repository != None:
             if self.headers['Content-Type'] == 'application/json':
               try:
-                dt = json.dumps(json.loads(postdata), indent=2, sort_keys=True)
-                dt_id = self.encode_link(hashlib.sha256(dt.encode('utf-8')).digest()[:12])
-                fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.json')
+                dt = json.loads(postdata)
+
+                vdt = {}
+                vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
+                vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
+                vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
+
+                dt_yml = '---\n'
+                dt_yml += 'dt:\n'
+
+                if vdt['data'] == '':
+                  dt_yml += '  data: ""\n\n'
+                else:
+                  dt_yml += '  data: |2\n'
+                  dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                if vdt['template'] == '':
+                  dt_yml += '  template: ""\n\n'
+                else:
+                  dt_yml += '  template: |2\n'
+                  dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                if vdt['vars'] == '':
+                  dt_yml += '  vars: ""\n'
+                else:
+                  dt_yml += '  vars: |2\n'
+                  dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
+
+                dt_id = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
+                fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
 
                 with lock:
                   try:
                     with open(fpath, 'w') as file:
-                      file.write(dt)
+                      file.write(dt_yml)
 
                     r = [ 'text/plain', 200, dt_id + '\r\n' ]
 

@@ -5,24 +5,45 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <title>DataTemplate</title>
     <link rel="shortcut icon" href="jinjafx.png">
-    <style>
-      .title { color: #0074D9; }
-      .tags { color: #FF4136; }
-    </style>
     <script>
       window.onload = function() {
         var dt = window.opener.dt;
         window.opener.reset_dt();
 
         if (Object.keys(dt).length !== 0) {
-          dt.data = dt.data.match(/\S/) ? dt.data + "\n" : "";
-          dt.template = dt.template.match(/\S/) ? dt.template + "\n" : "";
-          dt.vars = dt.vars.match(/\S/) ? dt.vars + "\n" : "";
+          dt.data = dt.data.match(/\S/) ? dt.data.trimEnd() : "";
+          dt.template = dt.template.match(/\S/) ? dt.template.trimEnd() : "";
+          dt.vars = dt.vars.match(/\S/) ? dt.vars.trimEnd() : "";
 
-          var dtx = "<span class=\"title\"># JinjaFx DataTemplate\n# https://github.com/cmason3/jinjafx</span>\n\n";
-          dtx += "<span class=\"tags\">&lt;data.csv&gt;</span>\n" + window.opener.quote(dt.data) + "<span class=\"tags\">&lt;/data.csv&gt;</span>\n\n";
-          dtx += "<span class=\"tags\">&lt;template.j2&gt;</span>\n" + window.opener.quote(dt.template) + "<span class=\"tags\">&lt;/template.j2&gt;</span>\n\n";
-          dtx += "<span class=\"tags\">&lt;vars.yml&gt;</span>\n" + window.opener.quote(dt.vars) + "<span class=\"tags\">&lt;/vars.yml&gt;</span>\n";
+          var dtx = '<span style="color: #0074D9;"># JinjaFx DataTemplate\n# https://github.com/cmason3/jinjafx</span>\n\n';
+
+          dtx += '---\n';
+          dtx += 'dt:\n';
+
+          if (dt.data == '') {
+            dtx += '  data: ""\n\n';
+          }
+          else {
+            dtx += '  data: |2\n';
+            dtx += window.opener.quote(dt.data.replace(/^/gm, '    ')) + '\n\n';
+          }
+
+          if (dt.template == '') {
+            dtx += '  template: ""\n\n';
+          }
+          else {
+            dtx += '  template: |2\n';
+            dtx += window.opener.quote(dt.template.replace(/^/gm, '    ')) + '\n\n';
+          }
+
+          if (dt.vars == '') {
+            dtx += '  vars: ""\n';
+          }
+          else {
+            dtx += '  vars: |2\n';
+            dtx += window.opener.quote(dt.vars.replace(/^/gm, '    ')) + '\n';
+          }
+
           document.body.innerHTML = "<pre>" + dtx + "</pre>";
         }
       };

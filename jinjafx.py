@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.0.10'
+__version__ = '1.1.0'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -37,7 +37,6 @@ def main():
     parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-o', metavar='<output file>', type=str)
-    parser.add_argument('--ask-vault-pass', action='store_true')
     args = parser.parse_args()
 
     data = None
@@ -53,18 +52,18 @@ def main():
         with open(g.name) as file:
           gyaml = file.read()
 
-          if gyaml.startswith('$ANSIBLE_VAULT'):
+          if '$ANSIBLE_VAULT;' in gyaml:
             if vault is None:
               from ansible.constants import DEFAULT_VAULT_ID_MATCH
               from ansible.parsing.vault import VaultLib
               from ansible.parsing.vault import VaultSecret
               from getpass import getpass
 
-              if args.ask_vault_pass:
+              vpw = os.getenv('ANSIBLE_VAULT_PASS')
+
+              if vpw == None:
                 vpw = getpass('Vault Password: ')
                 print()
-              else:
-                vpw = os.getenv('ANSIBLE_VAULT_PASS', '')
 
               vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(vpw.encode('utf-8')))])
 
