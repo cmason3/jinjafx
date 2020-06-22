@@ -21,19 +21,19 @@
           dtx += 'dt:\n';
 
           if (dt.data == '') {
-            dtx += '  data: ""\n';
+            dtx += '  data: ""\n\n';
           }
           else {
             dtx += '  data: |2\n';
-            dtx += window.opener.quote(dt.data.replace(/^/gm, '    ')) + '\n';
+            dtx += window.opener.quote(dt.data.replace(/^/gm, '    ')) + '\n\n';
           }
 
           if (dt.template == '') {
-            dtx += '  template: ""\n';
+            dtx += '  template: ""\n\n';
           }
           else {
             dtx += '  template: |2\n';
-            dtx += window.opener.quote(dt.template.replace(/^/gm, '    ')) + '\n';
+            dtx += window.opener.quote(dt.template.replace(/^/gm, '    ')) + '\n\n';
           }
 
           if (dt.vars == '') {

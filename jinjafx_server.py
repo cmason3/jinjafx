@@ -247,24 +247,24 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 dt = json.loads(postdata)
 
                 vdt = {}
-                vdt['data'] = base64.b64decode(dt['data']) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
-                vdt['template'] = base64.b64decode(dt['template']) if 'template' in dt and len(dt['template'].strip()) > 0 else ''
-                vdt['vars'] = base64.b64decode(dt['vars']) if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
+                vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
+                vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
+                vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
 
                 dt_yml = '---\n'
                 dt_yml += 'dt:\n'
 
                 if vdt['data'] == '':
-                  dt_yml += '  data: ""\n'
+                  dt_yml += '  data: ""\n\n'
                 else:
                   dt_yml += '  data: |2\n'
-                  dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n'
+                  dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
 
                 if vdt['template'] == '':
-                  dt_yml += '  template: ""\n'
+                  dt_yml += '  template: ""\n\n'
                 else:
                   dt_yml += '  template: |2\n'
-                  dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n'
+                  dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n\n'
 
                 if vdt['vars'] == '':
                   dt_yml += '  vars: ""\n'
