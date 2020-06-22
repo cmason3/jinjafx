@@ -122,6 +122,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         with open('www' + fpath, 'rb') as file:
           r = [ ctype, 200, file.read() ]
 
+          if fpath == '/index.html':
+            r[2] = r[2].replace('{{ jinjafx.version }}', jinjafx.__version__);
+
       except Exception:
         r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
