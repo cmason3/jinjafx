@@ -3,6 +3,7 @@ var dirty = false;
 var sobj = undefined;
 var fe = undefined;
 var tid = 0;
+var dt_id = '';
 var dt = {};
 var qs = {};
 
@@ -60,6 +61,7 @@ function jinjafx(method) {
       dt.data = window.btoa(dt.data);
       dt.template = window.btoa(dt.template);
       dt.vars = window.btoa(dt.vars);
+      dt.id = dt_id;
 
       if (method === "generate") {
         if (vaulted_vars) {
@@ -232,6 +234,7 @@ window.onload = function() {
               window.history.replaceState({}, document.title, window.location.pathname);
             }
             loaded = true;
+            dt_id = qs.dt;
           };
 
           xHR.onerror = function() {
@@ -347,6 +350,7 @@ function onChange(errflag) {
     if (window.location.href.indexOf('?') > -1) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+    dt_id = '';
   }
 }
 

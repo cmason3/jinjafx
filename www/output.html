@@ -10,41 +10,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script>
+      var obj = null;
+      var dt_id = '';
+
+      function download_outputs() {
+        console.log("about to download");
+        if (obj != null) {
+          var xHR = new XMLHttpRequest();
+          xHR.open("POST", "download" + ((dt_id != '') ? '?dt=' + dt_id : ''), true);
+  
+          xHR.onload = function() {
+            if (this.status === 200) {
+              var filename = xHR.getResponseHeader("X-Download-Filename");
+  
+              if (window.navigator.msSaveOrOpenBlob) {
+                window.navigator.msSaveOrOpenBlob(new Blob([ xHR.response ], { type: xHR.getResponseHeader("Content-Type") }), filename);
+              }
+              else {
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(xHR.response);
+                link.download = filename;
+                link.click();
+              }
+            }
+          };
+          xHR.responseType = "blob";
+          xHR.setRequestHeader("Content-Type", "application/json");
+          xHR.send(JSON.stringify(obj.outputs));
+        }
+      }
+
       window.onload = function() {
         if (window.opener != null) {
           var dt = window.opener.dt;
           window.opener.reset_dt();
-          var obj = null;
   
-          function download_outputs() {
-            if (obj != null) {
-              var xHR = new XMLHttpRequest();
-              xHR.open("POST", "download", true);
-  
-              xHR.onload = function() {
-                if (this.status === 200) {
-                  var filename = xHR.getResponseHeader("X-Download-Filename");
-  
-                  if (window.navigator.msSaveOrOpenBlob) {
-                    window.navigator.msSaveOrOpenBlob(new Blob([ xHR.response ], { type: xHR.getResponseHeader("Content-Type") }), filename);
-                  }
-                  else {
-                    var link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(xHR.response);
-                    link.download = filename;
-                    link.click();
-                  }
-                }
-              };
-              xHR.responseType = "blob";
-              xHR.setRequestHeader("Content-Type", "application/json");
-              xHR.send(JSON.stringify(obj.outputs));
-            }
-          }
-      
           if (Object.keys(dt).length !== 0) {
             var xHR = new XMLHttpRequest();
-            xHR.open("POST", "jinjafx", true);
+            xHR.open("POST", "jinjafx" + ((dt.id != '') ? '?dt=' + dt.id : ''), true);
   
             xHR.onload = function() {
               if (this.status === 200) {
@@ -54,6 +57,8 @@
                     var navBar = "<ul class=\"nav nav-tabs\">";
                     var tabContent = "<div id=\"tabcontent\" class=\"tab-content\">";
                     var oid = 1;
+
+                    dt_id = dt.id;
   
                     navBar += "<li class=\"dropdown active\">";
                     navBar += "<a id=\"group\" class=\"dropdown-toggle active\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">";
