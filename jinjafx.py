@@ -130,8 +130,6 @@ def main():
     sys.exit(-1)
 
   except Exception as e:
-    traceback.print_exc()
-
     tb = traceback.format_exc()
     match = re.search(r'[\s\S]*File "(.+)", line ([0-9]+), in.*template', tb, re.IGNORECASE)
     if match:
