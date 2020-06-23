@@ -32,7 +32,7 @@ def main():
     print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
     print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
 
-    jinjafx_usage = '(-dt <datatemplate.yml> | -t <template.j2> [-d <data.csv>]) [-g <vars.yml>] [-o <output file>]'
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>]'
 
     parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
