@@ -44,7 +44,7 @@ def main():
     args = parser.parse_args()
 
     if args.dt is not None and args.d is not None:
-      raise Exception("argument -d: not allowed with argument -dt")
+      parser.error("argument -d: not allowed with argument -dt")
 
     data = None
     vault = [ None ]
