@@ -95,8 +95,8 @@ def main():
     if args.o is None:
       args.o = '_stdout_'
 
-    ocount = 0
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
+    ocount = 0
 
     for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
       output = '\n'.join(o[1]) + '\n'
