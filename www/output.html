@@ -14,7 +14,6 @@
       var dt_id = '';
 
       function download_outputs() {
-        console.log("about to download");
         if (obj != null) {
           var xHR = new XMLHttpRequest();
           xHR.open("POST", "download" + ((dt_id != '') ? '?dt=' + dt_id : ''), true);
