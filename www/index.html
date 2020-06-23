@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=1024, user-scalable=no">
     <title>JinjaFx</title>
     <link rel="shortcut icon" href="jinjafx.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/dialog/dialog.min.css">
     <link rel="stylesheet" href="jinjafx_m.css">
@@ -19,8 +19,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/search/searchcursor.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/mode/jinja2/jinja2.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/mode/yaml/yaml.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
     <script src="jinjafx.js"></script>
   </head>
   <body>
@@ -83,17 +83,17 @@
         <div id="content">
           <div id="top">
             <div id="cdata" class="split-horizontal">
-              <div style="height: 100%;" class="label label-primary pull-left">D<br />A<br />T<br />A<br />.<br />C<br />S<br />V<br /></div>
+              <div style="height: 100%;" class="badge badge-primary float-left">D<br />A<br />T<br />A<br />.<br />C<br />S<br />V<br /></div>
               <textarea id="data"></textarea>
               <div id="csv" class="table-responsive" style="overflow:auto; width: auto; height: 100%; display: none;"></div>
             </div>
             <div id="cvars" class="split-horizontal">
-              <div style="height: 100%;" class="label label-danger pull-left">V<br />A<br />R<br />S<br />.<br />Y<br />M<br />L<br /></div>
+              <div style="height: 100%;" class="badge badge-danger float-left">V<br />A<br />R<br />S<br />.<br />Y<br />M<br />L<br /></div>
               <textarea id="vars"></textarea>
             </div>
           </div>
           <div id="ctemplate">
-            <div style="height: 100%;" class="label label-info pull-left">T<br />E<br />M<br />P<br />L<br />A<br />T<br />E<br />.<br />J<br />2<br /></div>
+            <div style="height: 100%;" class="badge badge-info float-left">T<br />E<br />M<br />P<br />L<br />A<br />T<br />E<br />.<br />J<br />2<br /></div>
             <textarea id="template"></textarea>
           </div>
         </div>
@@ -102,7 +102,7 @@
     </div>
     <div id="footer">
       <div class="container-fluid">
-        <span id="status" class="pull-left" style="font-size: large;"></span>
+        <span id="status" class="float-left" style="font-size: large;"></span>
         <p class="text-right"><small>JinjaFx v{{ jinjafx.version }} - Jinja Templating Tool<br />by Chris Mason (<a href="mailto:chris@jinjafx.org">chris@jinjafx.org</a>)</small></p>
       </div>
     </div>

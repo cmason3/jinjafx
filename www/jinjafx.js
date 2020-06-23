@@ -108,7 +108,7 @@ window.onload = function() {
     sobj = document.getElementById("status");
 
     window.onresize = function() {
-      document.getElementById("content").style.height = (window.innerHeight - 155) + "px";
+      document.getElementById("content").style.height = (window.innerHeight - 165) + "px";
     };
 
     window.onresize();

@@ -5,16 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <title>Generating...</title>
     <link rel="shortcut icon" href="jinjafx.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="jinjafx_o.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
     <script>
       var obj = null;
       var dt_id = '';
 
       function download_outputs() {
-        console.log("about to download");
         if (obj != null) {
           var xHR = new XMLHttpRequest();
           xHR.open("POST", "download" + ((dt_id != '') ? '?dt=' + dt_id : ''), true);
@@ -60,15 +59,15 @@
 
                     dt_id = dt.id;
   
-                    navBar += "<li class=\"dropdown active\">";
-                    navBar += "<a id=\"group\" class=\"dropdown-toggle active\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">";
+                    navBar += "<li class=\"dropdown active nav-item\">";
+                    navBar += "<a id=\"group\" class=\"dropdown-toggle active nav-link\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">";
                     navBar += "Outputs <span class=\"caret\"></span></a>";
   
                     navBar += "<ul class=\"dropdown-menu\" role=\"menu\" aria-labelledby=\"group\">";
 
                     if (Object.keys(obj.outputs).length > 1) {
-                      navBar += "<li><a href=\"#\" onclick=\"download_outputs();\">Download Outputs</a></li>";
-                      navBar += "<li class=\"divider\"></li>";
+                      navBar += "<li class=\"dropdown-item\"><a href=\"#\" onclick=\"download_outputs();\">Download Outputs</a></li>";
+                      navBar += "<li class=\"divider dropdown-item\"></li>";
                     }
   
                     Object.keys(obj.outputs).sort(function(a, b) {
@@ -79,7 +78,7 @@
                     }).forEach(function(output) {
                       var g = window.opener.quote(output)
   
-                      navBar += "<li" + ((oid == 1) ? " class=\"active\"" : "") + "><a data-toggle=\"tab\" href=\"#" + oid + "\">" + g + "</a></li>";
+                      navBar += "<li class=\"dropdown-item\"><a data-toggle=\"tab\" " + ((oid == 1) ? "class=\"active\"" : "") + "href=\"#" + oid + "\">" + g + "</a></li>";
                       tabContent += "<div id=\"" + oid + "\" class=\"tab-pane " + ((oid == 1) ? "active" : "fade") + "\" style=\"height: 100%; margin: 10px;\">";
 
                       tabContent += "<h4><strong>" + g + "</strong></h4>";
@@ -96,7 +95,7 @@
                     });
   
                     document.title = 'Output';
-                    var ts = "<span style=\"margin-right: 10px; width=100px;\" class=\"pull-right text-right\"><small>Generated at " + new Date().toTimeString().substring(0, 17) + "<br />in " + Math.ceil(obj.elapsed).toLocaleString() + " milliseconds</small></span>";
+                    var ts = "<span style=\"margin-right: 10px; width=100px;\" class=\"float-right text-right\"><small>Generated at " + new Date().toTimeString().substring(0, 17) + "<br />in " + Math.ceil(obj.elapsed).toLocaleString() + " milliseconds</small></span>";
                     document.body.innerHTML = ts + navBar + "</ul></li></ul>" + tabContent + "</div>";
   
                     window.onresize = function() {
