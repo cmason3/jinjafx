@@ -150,6 +150,24 @@ lstrip_blocks = True
 keep_trailing_newline = True
 ```
 
+### JinjaFx DataTemplates
+
+JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
+
+```
+---
+dt:
+  data: |2
+    ... DATA.CSV ...
+
+  template: |2
+    ... TEMPLATE.J2 ...
+
+  vars: |2
+    ... VARS.YML ...
+```
+
+
 ### Ansible Filters
 
 Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
