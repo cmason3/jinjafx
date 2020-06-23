@@ -158,8 +158,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 gyaml = base64.b64decode(dt['vars'])
 
                 if 'vault_password' in dt:
-                  vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(base64.b64decode(dt['vault_password']).encode('utf-8')))])
-                  gyaml = vault.decrypt(gyaml.encode('utf8'))
+                  vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(base64.b64decode(dt['vault_password'])))])
+                  gyaml = vault.decrypt(gyaml)
 
                 gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
   
