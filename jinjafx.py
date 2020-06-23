@@ -130,6 +130,8 @@ def main():
     sys.exit(-1)
 
   except Exception as e:
+    traceback.print_exc()
+
     tb = traceback.format_exc()
     match = re.search(r'[\s\S]*File "(.+)", line ([0-9]+), in.*template', tb, re.IGNORECASE)
     if match:
@@ -243,10 +245,13 @@ class JinjaFx():
       'keep_trailing_newline': True
     }
 
-    if isinstance(template, bytes):
+    if isinstance(template, bytes) or isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
-      template = env.from_string(template.decode('utf-8'))
+      if isinstance(template, bytes):
+        template = env.from_string(template.decode('utf-8'))
+      else:
+        template = env.from_string(template)
     else:
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
