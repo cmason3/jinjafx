@@ -14,7 +14,7 @@ svg {
 #wrap {
   min-height: 100%;
   height: auto !important;
-  margin: 0 auto -65px;
+  margin: 0 auto -55px;
   background-color: #eee;
 }
 #header {
@@ -39,16 +39,15 @@ svg {
   background-color: #fff;
   font-size: 12px;
 }
+.labels {
+  height: 100%;
+  width: 20px;
+  line-height: 0.7rem;
+  font-size: 60%;
+}
 .btn:active:focus {
   outline: none;
   box-shadow: none;
-}
-.title {
-  color: black;
-}
-.title:link, .title:hover, .title:visited, .title:active {
-  color: black;
-  text-decoration: none;
 }
 .gutter {
   background-color: #eee;
@@ -72,16 +71,6 @@ svg {
   height: 100%;
   font-size: 12px;
 }
-.CodeMirror-selectedtext {
-  color: green !important;
-}
-.CodeMirror-cursor {
- border-left: 1.4px solid #000;
-}
-.CodeMirror span {
-  display: inline-block;
-}
 .cm-jfx-header {
   font-weight: bold;
-  background: #d9edf7;
 }

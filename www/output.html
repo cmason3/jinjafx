@@ -59,15 +59,15 @@
 
                     dt_id = dt.id;
   
-                    navBar += "<li class=\"dropdown active nav-item\">";
-                    navBar += "<a id=\"group\" class=\"dropdown-toggle active nav-link\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">";
-                    navBar += "Outputs <span class=\"caret\"></span></a>";
+                    navBar += "<li class=\"dropdown nav-item\">";
+                    navBar += "<a id=\"group\" class=\"dropdown-toggle nav-link\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">";
+                    navBar += "Outputs</a>";
   
-                    navBar += "<ul class=\"dropdown-menu\" role=\"menu\" aria-labelledby=\"group\">";
+                    navBar += "<div class=\"dropdown-menu\" aria-labelledby=\"group\">";
 
                     if (Object.keys(obj.outputs).length > 1) {
-                      navBar += "<li class=\"dropdown-item\"><a href=\"#\" onclick=\"download_outputs();\">Download Outputs</a></li>";
-                      navBar += "<li class=\"divider dropdown-item\"></li>";
+                      navBar += "<a class=\"dropdown-item\"><a href=\"#\" onclick=\"download_outputs();\">Download Outputs</a>";
+                      navBar += "<div class=\"dropdown-divider\"></div>";
                     }
   
                     Object.keys(obj.outputs).sort(function(a, b) {
@@ -78,7 +78,7 @@
                     }).forEach(function(output) {
                       var g = window.opener.quote(output)
   
-                      navBar += "<li class=\"dropdown-item\"><a data-toggle=\"tab\" " + ((oid == 1) ? "class=\"active\"" : "") + "href=\"#" + oid + "\">" + g + "</a></li>";
+                      navBar += "<div class=\"dropdown-item\"><a data-toggle=\"tab\" " + ((oid == 1) ? "class=\"active\"" : "") + "href=\"#" + oid + "\">" + g + "</a></li>";
                       tabContent += "<div id=\"" + oid + "\" class=\"tab-pane " + ((oid == 1) ? "active" : "fade") + "\" style=\"height: 100%; margin: 10px;\">";
 
                       tabContent += "<h4><strong>" + g + "</strong></h4>";
