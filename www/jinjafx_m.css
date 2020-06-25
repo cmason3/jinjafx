@@ -1,38 +1,5 @@
-* {
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-html, body {
-  height: 100%;
-}
 body {
   display: none;
-}
-svg {
-  display: inline-block;
-  vertical-align: middle;
-}
-#wrap {
-  min-height: 100%;
-  height: auto !important;
-  margin: 0 auto -55px;
-  background-color: #eee;
-}
-#header {
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  margin-bottom: 0px;
-  background-color: #eee;
-}
-#main {
-  padding-bottom: 30px;
-}
-#content {
-  min-height: 125px;
-  background-color: #eee;
-}
-#push, #footer {
-  height: 15px;
 }
 #csv {
   border: 1px solid lightgray;
@@ -44,10 +11,6 @@ svg {
   width: 20px;
   line-height: 0.7rem;
   font-size: 60%;
-}
-.btn:active:focus {
-  outline: none;
-  box-shadow: none;
 }
 .gutter {
   background-color: #eee;
