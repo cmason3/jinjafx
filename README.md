@@ -13,11 +13,12 @@ JinjaFx Server running at https://jinjafx.io
 ### JinjaFx Usage
 
 ```
- jinjafx.py
+ jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>]
    -t <template.j2>            - specify a Jinja2 template
-   [-d <data.csv>]             - specify row based data (comma or tab separated)
-   [-g <vars.yml>[, -g ...]]   - specify global variables in yaml (supports Ansible vaulted files)
-   [-o <output file>]          - specify the output file (supports Jinja2 variables) (default is stdout)
+   -d <data.csv>               - specify row based data (comma or tab separated)
+   -dt <datatemplate.yml>      - specify a JinjaFx DataTemplate (contains template and data)
+   -g <vars.yml>[, -g ...]     - specify global variables in yaml (supports Ansible vaulted files)
+   -o <output file>            - specify the output file (supports Jinja2 variables) (default is stdout)
 ```
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
@@ -109,11 +110,11 @@ The `-o` argument is used to specify the output file, as by default the output i
 Once JinjaFx Server has been started with the "-s" argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify "data.csv", "template.j2" and "vars.yml" and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
 
 ```
- jinjafx_server.py
+ jinjafx_server.py -s [-l <address>] [-p <port>] [-r <repository>]
    -s                          - start the JinjaFx Server
-   [-l <address>]              - specify a listen address (default is '127.0.0.1')
-   [-p <port>]                 - specify a listen port (default is 8080)
-   [-r <repository>]           - specify a repository directory (allows 'Get Link')
+   -l <address>                - specify a listen address (default is '127.0.0.1')
+   -p <port>                   - specify a listen port (default is 8080)
+   -r <repository>             - specify a repository directory (allows 'Get Link')
 ```
 
 For health checking purposes, if you specify the URL "/ping" then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
@@ -148,6 +149,24 @@ trim_blocks = True
 lstrip_blocks = True
 keep_trailing_newline = True
 ```
+
+### JinjaFx DataTemplates
+
+JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
+
+```
+---
+dt:
+  data: |2
+    ... DATA.CSV ...
+
+  template: |2
+    ... TEMPLATE.J2 ...
+
+  vars: |2
+    ... VARS.YML ...
+```
+
 
 ### Ansible Filters
 

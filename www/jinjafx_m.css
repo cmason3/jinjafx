@@ -1,54 +1,15 @@
-* {
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-html, body {
-  height: 100%;
-}
 body {
   display: none;
-}
-svg {
-  display: inline-block;
-  vertical-align: middle;
-}
-#wrap {
-  min-height: 100%;
-  height: auto !important;
-  margin: 0 auto -50px;
-  background-color: #eee;
-}
-#header {
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  margin-bottom: 0px;
-  background-color: #eee;
-}
-#main {
-  padding-bottom: 30px;
-}
-#content {
-  min-height: 125px;
-  background-color: #eee;
-}
-#push, #footer {
-  height: 15px;
 }
 #csv {
   border: 1px solid lightgray;
   background-color: #fff;
   font-size: 12px;
 }
-.btn:active:focus {
-  outline: none;
-  box-shadow: none;
-}
-.title {
-  color: black;
-}
-.title:link, .title:hover, .title:visited, .title:active {
-  color: black;
-  text-decoration: none;
+.labels {
+  height: 100%;
+  width: 20px;
+  line-height: 0.8rem;
 }
 .gutter {
   background-color: #eee;
@@ -72,16 +33,6 @@ svg {
   height: 100%;
   font-size: 12px;
 }
-.CodeMirror-selectedtext {
-  color: green !important;
-}
-.CodeMirror-cursor {
- border-left: 1.4px solid #000;
-}
-.CodeMirror span {
-  display: inline-block;
-}
 .cm-jfx-header {
   font-weight: bold;
-  background: #d9edf7;
 }

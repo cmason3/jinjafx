@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -32,16 +32,55 @@ def main():
     print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
     print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
 
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'), required=True)
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>]'
+
+    parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
+    group_ex = parser.add_mutually_exclusive_group(required=True)
+    group_ex.add_argument('-dt', metavar='<datatemplate.yml>', type=argparse.FileType('r'))
+    group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
     parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-o', metavar='<output file>', type=str)
     args = parser.parse_args()
 
+    if args.dt is not None and args.d is not None:
+      parser.error("argument -d: not allowed with argument -dt")
+
     data = None
-    vault = None
+    vault = [ None ]
     gvars = {}
+    dt = {}
+
+    def decrypt_vault(string):
+      if '$ANSIBLE_VAULT;' in string:
+        if vault[0] is None:
+          from ansible.constants import DEFAULT_VAULT_ID_MATCH
+          from ansible.parsing.vault import VaultLib
+          from ansible.parsing.vault import VaultSecret
+          from getpass import getpass
+
+          vpw = os.getenv('ANSIBLE_VAULT_PASS')
+
+          if vpw == None:
+            vpw = getpass('Vault Password: ')
+            print()
+
+          vault[0] = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(vpw.encode('utf-8')))])
+
+        return vault[0].decrypt(string.encode('utf8'))
+      return string
+
+    if args.dt is not None:
+      with open(args.dt.name) as file:
+        dt.update(yaml.load(file.read(), Loader=yaml.FullLoader)['dt'])
+        args.t = dt['template']
+
+        if 'data' in dt:
+          data = dt['data']
+
+        if 'vars' in dt:
+          gyaml = decrypt_vault(dt['vars'])
+          gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
     if args.d is not None:
       with open(args.d.name) as file:
@@ -50,25 +89,7 @@ def main():
     if args.g is not None:
       for g in args.g:
         with open(g.name) as file:
-          gyaml = file.read()
-
-          if '$ANSIBLE_VAULT;' in gyaml:
-            if vault is None:
-              from ansible.constants import DEFAULT_VAULT_ID_MATCH
-              from ansible.parsing.vault import VaultLib
-              from ansible.parsing.vault import VaultSecret
-              from getpass import getpass
-
-              vpw = os.getenv('ANSIBLE_VAULT_PASS')
-
-              if vpw == None:
-                vpw = getpass('Vault Password: ')
-                print()
-
-              vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(vpw.encode('utf-8')))])
-
-            gyaml = vault.decrypt(gyaml.encode('utf8'))
-
+          gyaml = decrypt_vault(file.read())
           gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
     if args.o is None:
@@ -222,10 +243,13 @@ class JinjaFx():
       'keep_trailing_newline': True
     }
 
-    if isinstance(template, bytes):
+    if isinstance(template, bytes) or isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
-      template = env.from_string(template.decode('utf-8'))
+      if isinstance(template, bytes):
+        template = env.from_string(template.decode('utf-8'))
+      else:
+        template = env.from_string(template)
     else:
       env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]

@@ -139,11 +139,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
 
   def do_POST(self):
+    fpath = self.path.split('?', 1)[0]
+
     if 'Content-Length' in self.headers:
       postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
 
       if len(postdata) < (256 * 1024):
-        if self.path == '/jinjafx':
+        if fpath == '/jinjafx':
           if self.headers['Content-Type'] == 'application/json':
             try:
               gvars = {}
@@ -156,8 +158,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 gyaml = base64.b64decode(dt['vars'])
 
                 if 'vault_password' in dt:
-                  vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(base64.b64decode(dt['vault_password']).encode('utf-8')))])
-                  gyaml = vault.decrypt(gyaml.encode('utf8'))
+                  vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(base64.b64decode(dt['vault_password'])))])
+                  gyaml = vault.decrypt(gyaml)
 
                 gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
   
@@ -201,7 +203,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           else:
             r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
   
-        elif self.path == '/download':
+        elif fpath == '/download':
           if self.headers['Content-Type'] == 'application/json':
             lterminator = '\r\n' if 'User-Agent' in self.headers and 'windows' in self.headers['User-Agent'].lower() else '\n'
   
@@ -240,7 +242,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           else:
             r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
 
-        elif self.path == '/get_link':
+        elif fpath == '/get_link':
           if repository != None:
             if self.headers['Content-Type'] == 'application/json':
               try:

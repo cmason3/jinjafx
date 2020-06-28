@@ -6,10 +6,13 @@
     <meta name="viewport" content="width=1024, user-scalable=no">
     <title>JinjaFx</title>
     <link rel="shortcut icon" href="jinjafx.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/dialog/dialog.min.css">
+    <link rel="stylesheet" href="jinjafx.css">
     <link rel="stylesheet" href="jinjafx_m.css">
+    <!-- Required by Internet Explorer 11 for js.yaml.min.js :( -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.5/es6-shim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.5.11/split.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.14.0/js-yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/codemirror.min.js"></script>
@@ -19,8 +22,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/search/searchcursor.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/mode/jinja2/jinja2.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/mode/yaml/yaml.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
     <script src="jinjafx.js"></script>
   </head>
   <body>
@@ -34,15 +37,15 @@
             <rect x="304" y="304" width="177" height="177" fill="#0074d9" stroke="#001f3f" />
           </svg>
         </a>
-        <h4 id="title" style="color: black; float: left; margin: 0px 10px 0px 0px;">
-          <a class="title" href="./">
-            <strong>JinjaFx</strong><br />
-            <small style="color: black;">&nbsp;Jinja&nbsp;Templating&nbsp;Tool</small>
+        <h5 id="title" style="color: black; float: left; margin: 0px 10px 0px 0px;">
+          <a class="text-decoration-none text-reset" href="./">
+            <span class="font-weight-bold">JinjaFx</span><br />
+            <span class="small" style="color: black;">&nbsp;Jinja&nbsp;Templating&nbsp;Tool</span>
           </a>
-        </h4>
+        </h5>
         <!-- https://github.com/feathericons/feather/tree/master/icons -->
-        <div class="btn-group" role="group" style="margin-left: auto; display: flex;">
-          <a id="help" href="https://github.com/cmason3/jinjafx" target="_blank" onclick="fe.focus();" class="btn btn-success" title="Help">
+        <div class="btn-toolbar" role="group" style="margin-left: auto; display: flex;">
+          <a id="help" href="https://github.com/cmason3/jinjafx" target="_blank" onclick="fe.focus();" class="btn btn-success mr-2" title="Help">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10" />
               <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
@@ -50,14 +53,14 @@
             </svg>&nbsp;Help
           </a>
 
-          <button id="export" type="button" class="btn btn-info align-middle" onclick="jinjafx('get_link');" title="Get Link">
+          <button id="export" type="button" class="btn btn-info align-middle mr-2" onclick="jinjafx('get_link');" title="Get Link">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
             </svg>&nbsp;Get Link
           </button>
 
-          <button id="export" type="button" class="btn btn-info align-middle" onclick="jinjafx('export');" title="Export DataTemplate">
+          <button id="export" type="button" class="btn btn-info align-middle mr-2" onclick="jinjafx('export');" title="Export DataTemplate">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
@@ -67,7 +70,7 @@
             </svg>&nbsp;Export
           </button>
 
-          <button id="generate" type="button" class="btn btn-primary" onclick="jinjafx('generate');" title="Generate">
+          <button id="generate" type="button" class="btn btn-secondary mr-2" onclick="jinjafx('generate');" title="Generate">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 3 21 3 21 8" />
               <line x1="4" y1="20" x2="21" y2="3" />
@@ -83,17 +86,17 @@
         <div id="content">
           <div id="top">
             <div id="cdata" class="split-horizontal">
-              <div style="height: 100%;" class="label label-primary pull-left">D<br />A<br />T<br />A<br />.<br />C<br />S<br />V<br /></div>
+              <div class="badge badge-secondary float-left labels">D<br />A<br />T<br />A<br />.<br />C<br />S<br />V<br /></div>
               <textarea id="data"></textarea>
               <div id="csv" class="table-responsive" style="overflow:auto; width: auto; height: 100%; display: none;"></div>
             </div>
             <div id="cvars" class="split-horizontal">
-              <div style="height: 100%;" class="label label-danger pull-left">V<br />A<br />R<br />S<br />.<br />Y<br />M<br />L<br /></div>
+              <div class="badge badge-danger float-left labels">V<br />A<br />R<br />S<br />.<br />Y<br />M<br />L<br /></div>
               <textarea id="vars"></textarea>
             </div>
           </div>
           <div id="ctemplate">
-            <div style="height: 100%;" class="label label-info pull-left">T<br />E<br />M<br />P<br />L<br />A<br />T<br />E<br />.<br />J<br />2<br /></div>
+            <div class="badge badge-info float-left labels">T<br />E<br />M<br />P<br />L<br />A<br />T<br />E<br />.<br />J<br />2<br /></div>
             <textarea id="template"></textarea>
           </div>
         </div>
@@ -102,8 +105,8 @@
     </div>
     <div id="footer">
       <div class="container-fluid">
-        <span id="status" class="pull-left" style="font-size: large;"></span>
-        <p class="text-right"><small>JinjaFx v{{ jinjafx.version }} - Jinja Templating Tool<br />by Chris Mason (<a href="mailto:chris@jinjafx.org">chris@jinjafx.org</a>)</small></p>
+        <h5 id="status" class="float-left"></h5>
+        <p class="text-right" style="font-size: 85%;">JinjaFx v{{ jinjafx.version }} - Jinja Templating Tool<br />by Chris Mason (<a href="mailto:chris@jinjafx.org">chris@jinjafx.org</a>)</p>
       </div>
     </div>
     <div id="vault_input" class="modal fade">

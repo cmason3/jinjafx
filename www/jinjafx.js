@@ -3,6 +3,7 @@ var dirty = false;
 var sobj = undefined;
 var fe = undefined;
 var tid = 0;
+var dt_id = '';
 var dt = {};
 var qs = {};
 
@@ -55,11 +56,12 @@ function jinjafx(method) {
 
   if ((method === "generate") || (method === "get_link")) {
     try {
-      var vaulted_vars = dt.vars.includes('$ANSIBLE_VAULT;');
+      var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
 
       dt.data = window.btoa(dt.data);
       dt.template = window.btoa(dt.template);
       dt.vars = window.btoa(dt.vars);
+      dt.id = dt_id;
 
       if (method === "generate") {
         if (vaulted_vars) {
@@ -124,7 +126,7 @@ window.onload = function() {
     window.cmData = CodeMirror.fromTextArea(data, {
       tabSize: 2,
       scrollbarStyle: "null",
-      styleSelectedText: true,
+      styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "data",
       smartIndent: false
@@ -133,7 +135,7 @@ window.onload = function() {
     window.cmVars = CodeMirror.fromTextArea(vars, {
       tabSize: 2,
       scrollbarStyle: "null",
-      styleSelectedText: true,
+      styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "yaml",
       smartIndent: false
@@ -144,7 +146,7 @@ window.onload = function() {
       tabSize: 2,
       autofocus: true,
       scrollbarStyle: "null",
-      styleSelectedText: true,
+      styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "jinja2",
       smartIndent: false
@@ -184,7 +186,7 @@ window.onload = function() {
       cursor: "row-resize",
       sizes: [30, 70],
       snapOffset: 0,
-      minSize: 100
+      minSize: 130
     });
 
     $('#vault_input').on('shown.bs.modal', function() {
@@ -232,6 +234,7 @@ window.onload = function() {
               window.history.replaceState({}, document.title, window.location.pathname);
             }
             loaded = true;
+            dt_id = qs.dt;
           };
 
           xHR.onerror = function() {
@@ -287,8 +290,8 @@ function get_csv_astable(datarows) {
   var delim = new RegExp(cc > tc ? '[ \\t]*,[ \\t]*' : ' *\\t *');
   var hrow = datarows[0].split(delim);
 
-  var table = '<table class="table table-condensed">';
-  table += '<thead><tr class="info">';
+  var table = '<table class="table table-sm">';
+  table += '<thead><tr class="table-secondary">';
   for (var col = 0; col < hrow.length; col++) {
     table += '<th>' + quote(hrow[col]) + '</th>';
   }
@@ -307,8 +310,8 @@ function get_csv_astable(datarows) {
   return table;
 }
 
-function onDataBlur(cm, e) {
-  if ((e == null) || ((e.relatedTarget != null) && (e.relatedTarget.tagName != 'INPUT'))) {
+function onDataBlur(cm, evt) {
+  if ((evt == null) || ((evt.relatedTarget != null) && (evt.relatedTarget.tagName != 'INPUT'))) {
     var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
       return !e.match(/^[ \t]*#/) && e.match(/\S/);
     });
@@ -324,7 +327,7 @@ function onPaste(cm, change) {
   if (change.origin === "paste") {
     var t = change.text.join('\n');
 
-    if (t.includes('---\ndt:\n')) {
+    if (t.indexOf('---\ndt:\n') > -1) {
       var obj = jsyaml.safeLoad(t, 'utf8');
       if (obj != null) {
         load_datatemplate(obj['dt'], null);
@@ -347,6 +350,7 @@ function onChange(errflag) {
     if (window.location.href.indexOf('?') > -1) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+    dt_id = '';
   }
 }
 
