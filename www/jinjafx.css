@@ -1,6 +1,9 @@
 * {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
 }
+html {
+  font-size: 14px;
+}
 html, body {
   height: 100%;
 }

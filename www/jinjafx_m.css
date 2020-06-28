@@ -9,8 +9,7 @@ body {
 .labels {
   height: 100%;
   width: 20px;
-  line-height: 0.7rem;
-  font-size: 60%;
+  line-height: 0.8rem;
 }
 .gutter {
   background-color: #eee;
