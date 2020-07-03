@@ -17,7 +17,7 @@
 
 from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile, hashlib, traceback
+import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile, hashlib, traceback, glob
 
 try:
   from ansible.constants import DEFAULT_VAULT_ID_MATCH
@@ -139,7 +139,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
 
   def do_POST(self):
-    fpath = self.path.split('?', 1)[0]
+    uc = self.path.split('?', 1)
+    params = { x[0]: x[1] for x in [x.split('=') for x in uc[1].split('&') ] } if len(uc) > 1 else { }
+    fpath = uc[0]
 
     if 'Content-Length' in self.headers:
       postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
@@ -274,10 +276,32 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   dt_yml += '  vars: |2\n'
                   dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
 
-                dt_id = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
-                fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
+                dt_hash = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
 
                 with lock:
+                  if 'id' in params:
+                    dt_id = params['id']
+
+                    if re.search(r'^[A-Za-z0-9_-]{1,24}$', dt_id):
+                      fpath = os.path.abspath(repository + '/jfx_' + dt_id + '.yml')
+
+                      if os.path.exists(fpath):
+                        os.rename(fpath, fpath + '.' + dt_hash + '.bak')
+                      else:
+                        print("FAIL 1")
+                        raise Exception("FAIL")
+
+                    else:
+                      print("FAIL 2")
+                      raise Exception("FAIL")
+
+                  else:
+                    dt_id = dt_hash
+                    fpath = os.path.abspath(repository + '/jfx_' + dt_id + '.yml')
+
+                    if glob.glob(fpath + '*.bak'):
+                      raise Exception("FORBIDDEN")
+
                   try:
                     with open(fpath, 'w') as file:
                       file.write(dt_yml)
