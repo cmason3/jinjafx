@@ -87,6 +87,8 @@ function jinjafx(method) {
           if (this.status === 200) {
             if (method == "update_link") {
               set_status("green", "OK", "Link Updated");
+              window.removeEventListener('beforeunload', onBeforeUnload);
+              dirty = false;
             }
             else {
               window.removeEventListener('beforeunload', onBeforeUnload);

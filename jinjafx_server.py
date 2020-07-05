@@ -279,20 +279,20 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 dt_hash = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
 
                 if 'id' in params:
-                  dt_yml += '\n  rev_id: 1\n'
+                  dt_yml += '\nrev_id: 1\n'
                 else:
-                  dt_yml += '\n  rev_id: 0\n'
+                  dt_yml += '\nrev_id: 0\n'
 
-                dt_yml += '  created: "dd/mm/yy at hh:mm"\n'
-                dt_yml += '  user-agent: "ddddd"\n'
-                dt_yml += '  remote-addr: "192.0.2.1"\n'
+                dt_yml += 'created: "' + datetime.datetime.now().strftime('%b %d, %Y at %H:%M:%S') + '"\n'
+                dt_yml += 'user-agent: "ddddd"\n'
+                dt_yml += 'remote-addr: "192.0.2.1"\n'
 
                 with lock:
                   if 'id' in params:
                     dt_id = params['id']
 
                     if re.search(r'^[A-Za-z0-9_-]{1,24}$', dt_id):
-                      fpath = os.path.abspath(repository + '/jfx_' + dt_id + '.yml')
+                      fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
 
                       if os.path.exists(fpath):
                         os.rename(fpath, fpath + '.' + dt_hash + '.bak')
@@ -306,12 +306,12 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   else:
                     while True:
                       dt_id = dt_hash
-                      fpath = os.path.abspath(repository + '/jfx_' + dt_id + '.yml')
+                      fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
 
                       if os.path.exists(fpath):
                         try:
-                          with open(fpath), 'r') as f:
-                            if '  rev_id: 1' in f.read():
+                          with open(fpath, 'r') as f:
+                            if '\nrev_id: 1' in f.read():
                               dt_hash = self.encode_link(hashlib.sha256(dt_hash.encode('utf-8')).digest()[:12])
                               continue
                         except:
@@ -323,7 +323,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                   try:
                     if fpath != None:
-                      with open(fpath), 'w') as f:
+                      with open(fpath, 'w') as f:
                         f.write(dt_yml)
 
                     r = [ 'text/plain', 200, dt_id + '\r\n' ]

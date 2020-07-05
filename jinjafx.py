@@ -71,8 +71,8 @@ def main():
       return string
 
     if args.dt is not None:
-      with open(args.dt.name) as file:
-        dt.update(yaml.load(file.read(), Loader=yaml.FullLoader)['dt'])
+      with open(args.dt.name) as f:
+        dt.update(yaml.load(f.read(), Loader=yaml.FullLoader)['dt'])
         args.t = dt['template']
 
         if 'data' in dt:
@@ -83,13 +83,13 @@ def main():
           gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
     if args.d is not None:
-      with open(args.d.name) as file:
-        data = file.read()
+      with open(args.d.name) as f:
+        data = f.read()
 
     if args.g is not None:
       for g in args.g:
-        with open(g.name) as file:
-          gyaml = decrypt_vault(file.read())
+        with open(g.name) as f:
+          gyaml = decrypt_vault(f.read())
           gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
     if args.o is None:
@@ -108,8 +108,8 @@ def main():
             if not os.path.isdir(os.path.dirname(ofile)):
               os.makedirs(os.path.dirname(ofile))
 
-          with open(ofile, 'w') as file:
-            file.write(output)
+          with open(ofile, 'w') as f:
+            f.write(output)
 
           print(format_bytes(len(output)) + ' > ' + ofile)
 
