@@ -85,8 +85,13 @@ function jinjafx(method) {
 
         xHR.onload = function() {
           if (this.status === 200) {
-            window.removeEventListener('beforeunload', onBeforeUnload);
-            window.location.href = window.location.pathname + "?dt=" + this.responseText;
+            if (method == "update_link") {
+              set_status("green", "OK", "Link Updated");
+            }
+            else {
+              window.removeEventListener('beforeunload', onBeforeUnload);
+              window.location.href = window.location.pathname + "?dt=" + this.responseText;
+            }
           }
           else {
             var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;

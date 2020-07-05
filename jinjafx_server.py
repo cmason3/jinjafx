@@ -94,8 +94,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         with lock:
           if os.path.isfile(fpath):
             try:
-              with open(fpath, 'rb') as file:
-                r = [ 'application/json', 200, file.read() ]
+              with open(fpath, 'rb') as f:
+                r = [ 'application/json', 200, f.read() ]
 
               os.utime(fpath, None)
 
@@ -119,8 +119,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         ctype = 'text/html'
 
       try:
-        with open('www' + fpath, 'rb') as file:
-          r = [ ctype, 200, file.read() ]
+        with open('www' + fpath, 'rb') as f:
+          r = [ ctype, 200, f.read() ]
 
           if fpath == '/index.html':
             r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).encode('utf-8')
@@ -278,6 +278,15 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                 dt_hash = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
 
+                if 'id' in params:
+                  dt_yml += '\n  rev_id: 1\n'
+                else:
+                  dt_yml += '\n  rev_id: 0\n'
+
+                dt_yml += '  created: "dd/mm/yy at hh:mm"\n'
+                dt_yml += '  user-agent: "ddddd"\n'
+                dt_yml += '  remote-addr: "192.0.2.1"\n'
+
                 with lock:
                   if 'id' in params:
                     dt_id = params['id']
@@ -287,24 +296,35 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                       if os.path.exists(fpath):
                         os.rename(fpath, fpath + '.' + dt_hash + '.bak')
+
                       else:
-                        print("FAIL 1")
-                        raise Exception("FAIL")
+                        raise Exception("link doesn't exist")
 
                     else:
-                      print("FAIL 2")
-                      raise Exception("FAIL")
+                      raise Exception("invalid link format")
 
                   else:
-                    dt_id = dt_hash
-                    fpath = os.path.abspath(repository + '/jfx_' + dt_id + '.yml')
+                    while True:
+                      dt_id = dt_hash
+                      fpath = os.path.abspath(repository + '/jfx_' + dt_id + '.yml')
 
-                    if glob.glob(fpath + '*.bak'):
-                      raise Exception("FORBIDDEN")
+                      if os.path.exists(fpath):
+                        try:
+                          with open(fpath), 'r') as f:
+                            if '  rev_id: 1' in f.read():
+                              dt_hash = self.encode_link(hashlib.sha256(dt_hash.encode('utf-8')).digest()[:12])
+                              continue
+                        except:
+                          pass
+
+                        fpath = None
+
+                      break
 
                   try:
-                    with open(fpath, 'w') as file:
-                      file.write(dt_yml)
+                    if fpath != None:
+                      with open(fpath), 'w') as f:
+                        f.write(dt_yml)
 
                     r = [ 'text/plain', 200, dt_id + '\r\n' ]
 
