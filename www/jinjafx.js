@@ -102,6 +102,8 @@ function jinjafx(method) {
         };
 
         xHR.onerror = function() {
+          console.log("status is " + this.status);
+          console.log("text is " + this.responseText);
           set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
         };
 
