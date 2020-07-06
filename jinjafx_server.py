@@ -284,8 +284,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   dt_yml += '\nrev_id: 0\n'
 
                 dt_yml += 'created: "' + datetime.datetime.now().strftime('%b %d, %Y at %H:%M:%S') + '"\n'
-                dt_yml += 'user-agent: "ddddd"\n'
-                dt_yml += 'remote-addr: "192.0.2.1"\n'
+
+                if hasattr(self, 'headers'):
+                  if 'User-Agent' in self.headers:
+                    dt_yml += 'user-agent: "' + self.headers['User-Agent'] + '"\n'
+                  if 'X-Forwarded-For' in self.headers:
+                    dt_yml += 'remote-addr: "' + self.headers['X-Forwarded-For'] + '"\n'
+                  else:
+                    dt_yml += 'remote-addr: "' + str(self.client_address[0]) + '"\n'
 
                 with lock:
                   if 'id' in params:
