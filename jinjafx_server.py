@@ -276,7 +276,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   dt_yml += '  vars: |2\n'
                   dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
 
-                dt_hash = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
+                dt_link = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
+                dt_sha256 = hashlib.sha256(dt_yml.encode('utf-8')).hexdigest()
 
                 if 'id' in params:
                   dt_yml += '\nrev_id: 1\n'
@@ -284,6 +285,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   dt_yml += '\nrev_id: 0\n'
 
                 dt_yml += 'created: "' + datetime.datetime.now().strftime('%b %d, %Y at %H:%M:%S') + '"\n'
+                dt_yml += 'sha256: "' + dt_sha256 + '"\n'
 
                 if hasattr(self, 'headers'):
                   if 'User-Agent' in self.headers:
@@ -301,7 +303,15 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
 
                       if os.path.exists(fpath):
-                        os.rename(fpath, fpath + '.' + dt_hash + '.bak')
+                        try:
+                          with open(fpath, 'r') as f:
+                            if '\nsha256: "' + dt_sha256 + '"' in f.read():
+                              fpath = None
+                        except:
+                          pass
+
+                        if fpath != None:
+                          os.rename(fpath, fpath + '.' + dt_link + '.bak')
 
                       else:
                         raise Exception("link doesn't exist")
@@ -311,14 +321,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                   else:
                     while True:
-                      dt_id = dt_hash
+                      dt_id = dt_link
                       fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
 
                       if os.path.exists(fpath):
                         try:
                           with open(fpath, 'r') as f:
                             if '\nrev_id: 1' in f.read():
-                              dt_hash = self.encode_link(hashlib.sha256(dt_hash.encode('utf-8')).digest()[:12])
+                              dt_link = self.encode_link(hashlib.sha256(dt_link.encode('utf-8')).digest()[:12])
                               continue
                         except:
                           pass

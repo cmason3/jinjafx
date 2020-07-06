@@ -33,7 +33,7 @@ svg {
 #push, #footer {
   height: 15px;
 }
-.btn:active:focus {
-  outline: none;
-  box-shadow: none;
+.btn:focus, .btn:active:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
