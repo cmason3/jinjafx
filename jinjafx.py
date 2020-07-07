@@ -286,7 +286,12 @@ class JinjaFx():
         env.globals['jinjafx'].update({ 'row': 0 })
         self.g_row = 0
 
-      content = template.render(rowdata)
+      try:
+        content = template.render(rowdata)
+      except Exception as e:
+        if len(e.args) >= 1:
+          e.args = ('[data.csv:' + str(self.g_row) + '] ' + e.args[0],) + e.args[1:]
+        raise
 
       stack = [ env.from_string(output).render(rowdata) ]
       for l in iter(content.splitlines()):
