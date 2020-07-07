@@ -290,7 +290,7 @@ class JinjaFx():
         content = template.render(rowdata)
       except Exception as e:
         if len(e.args) >= 1 and self.g_row != 0:
-          e.args = (e.args[0] + ' at data row ' + str(self.g_row) + ':\n' + str(rowdata),) + e.args[1:]
+          e.args = (e.args[0] + ' at data row ' + str(self.g_row) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
       stack = [ env.from_string(output).render(rowdata) ]
