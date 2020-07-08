@@ -334,7 +334,7 @@ class JinjaFx():
     pofa = [s]
     groups = [[s]]
 
-    if re.search(r'(?<!\\)[\(\[]', pofa[0]):
+    if re.search(r'(?<!\\)[\(\[\{]', pofa[0]):
       i = 0
       while i < len(pofa):
         m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
@@ -351,38 +351,61 @@ class JinjaFx():
 
       i = 0
       while i < len(pofa):
-        m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
-        if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
-          clist = []
-
+        m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)\}', pofa[i])
+        if m:
           mpos = groups[i][0].index(m.group())
           nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
           ncb = len(re.findall(r'(?<!\\)\)', groups[i][0][:mpos]))
           groups[i][0] = groups[i][0].replace(m.group(), 'x', 1)
           group = max(0, (nob - ncb) * nob)
 
-          for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
-            if x[1] != '':
-              e = sorted(x[0].split('-'))
-              for c in range(ord(e[0]), ord(e[1]) + 1):
-                clist.append(chr(c))
-            else:
-              clist.append(x[0])
+          e = sorted(map(int, m.group(1).split('-')))
+          for n in range(int(e[0]), int(e[1]) + 1, int(m.group(2))):
+            n = str(n).zfill(int(m.group(3)) if m.lastindex == 3 else 0)
+            pofa.append(pofa[i][:m.start(1) - 1] + n + pofa[i][m.end(m.lastindex) + 1:])
 
-          for c in clist:
-            pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
             ngroups = list(groups[i])
-
             if group > 0 and group < len(ngroups):
-              ngroups[group] = ngroups[group].replace(m.group(), c, 1)
-            
+              ngroups[group] = ngroups[group].replace(m.group(), n, 1)
+
             groups.append(ngroups)
 
           pofa.pop(i)
           groups.pop(i)
 
         else:
-          i += 1
+          m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
+          if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
+            clist = []
+  
+            mpos = groups[i][0].index(m.group())
+            nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
+            ncb = len(re.findall(r'(?<!\\)\)', groups[i][0][:mpos]))
+            groups[i][0] = groups[i][0].replace(m.group(), 'x', 1)
+            group = max(0, (nob - ncb) * nob)
+  
+            for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
+              if x[1] != '':
+                e = sorted(x[0].split('-'))
+                for c in range(ord(e[0]), ord(e[1]) + 1):
+                  clist.append(chr(c))
+              else:
+                clist.append(x[0])
+  
+            for c in clist:
+              pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
+              ngroups = list(groups[i])
+  
+              if group > 0 and group < len(ngroups):
+                ngroups[group] = ngroups[group].replace(m.group(), c, 1)
+              
+              groups.append(ngroups)
+  
+            pofa.pop(i)
+            groups.pop(i)
+
+          else:
+            i += 1
 
     for g in groups:
       g.pop(0)
