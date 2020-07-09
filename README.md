@@ -225,7 +225,7 @@ This list of lists will contain all the row and column data that JinjaFx is curr
 
 - <b><code>jinjafx.expand("string")</code></b>
 
-This function is used to expand a string that contains static character classes (i.e. "[0-9]") or static groups (i.e. "(a|b)") into a list of all the different permutations. You are permitted to use as many classes or groups within the same string - if it doesn't detect any classes or groups within the string then the "string" will be returned as the only list element. Character classes support "A-Z", "a-z" and "0-9" characters, whereas static groups allow any string of characters (including static character classes). If you wish to include "[", "]", "(" or ")" literals within the string then they will need to be escaped.
+This function is used to expand a string that contains static character classes (i.e. `[0-9]`), static groups (i.e. `(a|b)`) or active counters (i.e. `{ start-end:increment[:pad] }`) into a list of all the different permutations. You are permitted to use as many classes, groups or counters within the same string - if it doesn't detect any classes, groups or counters within the string then the "string" will be returned as the only list element. Character classes support "A-Z", "a-z" and "0-9" characters, whereas static groups allow any string of characters (including static character classes). If you wish to include "[", "]", "(", ")", "{" or "}" literals within the string then they will need to be escaped.
 
 - <b><code>jinjafx.counter(["key"], [increment], [start])</code></b>
 
