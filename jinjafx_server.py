@@ -17,7 +17,7 @@
 
 from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile, hashlib, traceback
+import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile, hashlib, traceback, glob
 
 try:
   from ansible.constants import DEFAULT_VAULT_ID_MATCH
@@ -94,8 +94,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         with lock:
           if os.path.isfile(fpath):
             try:
-              with open(fpath, 'rb') as file:
-                r = [ 'application/json', 200, file.read() ]
+              with open(fpath, 'rb') as f:
+                r = [ 'application/json', 200, f.read() ]
 
               os.utime(fpath, None)
 
@@ -119,8 +119,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         ctype = 'text/html'
 
       try:
-        with open('www' + fpath, 'rb') as file:
-          r = [ ctype, 200, file.read() ]
+        with open('www' + fpath, 'rb') as f:
+          r = [ ctype, 200, f.read() ]
 
           if fpath == '/index.html':
             r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).encode('utf-8')
@@ -139,7 +139,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
 
   def do_POST(self):
-    fpath = self.path.split('?', 1)[0]
+    uc = self.path.split('?', 1)
+    params = { x[0]: x[1] for x in [x.split('=') for x in uc[1].split('&') ] } if len(uc) > 1 else { }
+    fpath = uc[0]
 
     if 'Content-Length' in self.headers:
       postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
@@ -274,13 +276,71 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   dt_yml += '  vars: |2\n'
                   dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
 
-                dt_id = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
-                fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
+                dt_link = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
+                dt_sha256 = hashlib.sha256(dt_yml.encode('utf-8')).hexdigest()
+
+                if 'id' in params:
+                  dt_yml += '\nrev_id: 1\n'
+                else:
+                  dt_yml += '\nrev_id: 0\n'
+
+                dt_yml += 'created: "' + datetime.datetime.now().strftime('%b %d, %Y at %H:%M:%S') + '"\n'
+                dt_yml += 'sha256: "' + dt_sha256 + '"\n'
+
+                if hasattr(self, 'headers'):
+                  if 'User-Agent' in self.headers:
+                    dt_yml += 'user-agent: "' + self.headers['User-Agent'] + '"\n'
+                  if 'X-Forwarded-For' in self.headers:
+                    dt_yml += 'remote-addr: "' + self.headers['X-Forwarded-For'] + '"\n'
+                  else:
+                    dt_yml += 'remote-addr: "' + str(self.client_address[0]) + '"\n'
 
                 with lock:
+                  if 'id' in params:
+                    dt_id = params['id']
+
+                    if re.search(r'^[A-Za-z0-9_-]{1,24}$', dt_id):
+                      fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
+
+                      if os.path.exists(fpath):
+                        try:
+                          with open(fpath, 'r') as f:
+                            if '\nsha256: "' + dt_sha256 + '"' in f.read():
+                              fpath = None
+                        except:
+                          pass
+
+                        if fpath != None:
+                          os.rename(fpath, fpath + '.' + dt_link + '.bak')
+
+                      else:
+                        raise Exception("link doesn't exist")
+
+                    else:
+                      raise Exception("invalid link format")
+
+                  else:
+                    while True:
+                      dt_id = dt_link
+                      fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
+
+                      if os.path.exists(fpath):
+                        try:
+                          with open(fpath, 'r') as f:
+                            if '\nrev_id: 1' in f.read():
+                              dt_link = self.encode_link(hashlib.sha256(dt_link.encode('utf-8')).digest()[:12])
+                              continue
+                        except:
+                          pass
+
+                        fpath = None
+
+                      break
+
                   try:
-                    with open(fpath, 'w') as file:
-                      file.write(dt_yml)
+                    if fpath != None:
+                      with open(fpath, 'w') as f:
+                        f.write(dt_yml)
 
                     r = [ 'text/plain', 200, dt_id + '\r\n' ]
 

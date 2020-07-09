@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -71,8 +71,8 @@ def main():
       return string
 
     if args.dt is not None:
-      with open(args.dt.name) as file:
-        dt.update(yaml.load(file.read(), Loader=yaml.FullLoader)['dt'])
+      with open(args.dt.name) as f:
+        dt.update(yaml.load(f.read(), Loader=yaml.FullLoader)['dt'])
         args.t = dt['template']
 
         if 'data' in dt:
@@ -83,13 +83,13 @@ def main():
           gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
     if args.d is not None:
-      with open(args.d.name) as file:
-        data = file.read()
+      with open(args.d.name) as f:
+        data = f.read()
 
     if args.g is not None:
       for g in args.g:
-        with open(g.name) as file:
-          gyaml = decrypt_vault(file.read())
+        with open(g.name) as f:
+          gyaml = decrypt_vault(f.read())
           gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
     if args.o is None:
@@ -108,8 +108,8 @@ def main():
             if not os.path.isdir(os.path.dirname(ofile)):
               os.makedirs(os.path.dirname(ofile))
 
-          with open(ofile, 'w') as file:
-            file.write(output)
+          with open(ofile, 'w') as f:
+            f.write(output)
 
           print(format_bytes(len(output)) + ' > ' + ofile)
 
@@ -286,7 +286,12 @@ class JinjaFx():
         env.globals['jinjafx'].update({ 'row': 0 })
         self.g_row = 0
 
-      content = template.render(rowdata)
+      try:
+        content = template.render(rowdata)
+      except Exception as e:
+        if len(e.args) >= 1 and self.g_row != 0:
+          e.args = (e.args[0] + ' at data row ' + str(self.g_row) + ':\n - ' + str(rowdata),) + e.args[1:]
+        raise
 
       stack = [ env.from_string(output).render(rowdata) ]
       for l in iter(content.splitlines()):
@@ -329,7 +334,7 @@ class JinjaFx():
     pofa = [s]
     groups = [[s]]
 
-    if re.search(r'(?<!\\)[\(\[]', pofa[0]):
+    if re.search(r'(?<!\\)[\(\[\{]', pofa[0]):
       i = 0
       while i < len(pofa):
         m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
@@ -346,38 +351,61 @@ class JinjaFx():
 
       i = 0
       while i < len(pofa):
-        m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
-        if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
-          clist = []
-
+        m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)\}', pofa[i])
+        if m:
           mpos = groups[i][0].index(m.group())
           nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
           ncb = len(re.findall(r'(?<!\\)\)', groups[i][0][:mpos]))
           groups[i][0] = groups[i][0].replace(m.group(), 'x', 1)
           group = max(0, (nob - ncb) * nob)
 
-          for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
-            if x[1] != '':
-              e = sorted(x[0].split('-'))
-              for c in range(ord(e[0]), ord(e[1]) + 1):
-                clist.append(chr(c))
-            else:
-              clist.append(x[0])
+          e = sorted(map(int, m.group(1).split('-')))
+          for n in range(int(e[0]), int(e[1]) + 1, int(m.group(2))):
+            n = str(n).zfill(int(m.group(3)) if m.lastindex == 3 else 0)
+            pofa.append(pofa[i][:m.start(1) - 1] + n + pofa[i][m.end(m.lastindex) + 1:])
 
-          for c in clist:
-            pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
             ngroups = list(groups[i])
-
             if group > 0 and group < len(ngroups):
-              ngroups[group] = ngroups[group].replace(m.group(), c, 1)
-            
+              ngroups[group] = ngroups[group].replace(m.group(), n, 1)
+
             groups.append(ngroups)
 
           pofa.pop(i)
           groups.pop(i)
 
         else:
-          i += 1
+          m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
+          if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
+            clist = []
+  
+            mpos = groups[i][0].index(m.group())
+            nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
+            ncb = len(re.findall(r'(?<!\\)\)', groups[i][0][:mpos]))
+            groups[i][0] = groups[i][0].replace(m.group(), 'x', 1)
+            group = max(0, (nob - ncb) * nob)
+  
+            for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
+              if x[1] != '':
+                e = sorted(x[0].split('-'))
+                for c in range(ord(e[0]), ord(e[1]) + 1):
+                  clist.append(chr(c))
+              else:
+                clist.append(x[0])
+  
+            for c in clist:
+              pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
+              ngroups = list(groups[i])
+  
+              if group > 0 and group < len(ngroups):
+                ngroups[group] = ngroups[group].replace(m.group(), c, 1)
+              
+              groups.append(ngroups)
+  
+            pofa.pop(i)
+            groups.pop(i)
+
+          else:
+            i += 1
 
     for g in groups:
       g.pop(0)

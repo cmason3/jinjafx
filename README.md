@@ -80,27 +80,34 @@ spine-03, et-0/0/3, leaf-03
 spine-03, et-0/0/4, leaf-04
 ```
 
-Finally we also support the ability to use dynamic counters during data expansion with the `{ start:increment[:pad] }` syntax. In instances where static character classes or static groups have been used, you can also specify a counter which will increment as the data is expanded into multiple rows (the counter doesn't persist between the original rows and doesn't play any part in determining the range of the expansion).
+Finally we also support the ability to use active and passive counters during data expansion with the `{ start[-end]:increment[:pad] }` syntax (increment must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
 
 ```
-INTERFACE, HOST, LAG
-et-0/0/[0-9], r740-{33:1:3}, {100:1}
+INTERFACE
+et-0/0/{0-9:1}
 ```
 
-The above would then be expanded to the following (the optional "pad" element is used to specify the zero padding width):
+Passive counters (i.e. counters where you don't specify an end) don't actually create any additional rows or determine the range of the expansion (they are unbounded). They are used in combination with static character classes, static groups or active counters to increment as the data is expanded into multiple rows. If we take our previous example and modify it to allocate a HOST field to each interface, which uses a number starting at 33 (the optional "pad" element is used to specify the zero padding width), then the following:
 
 ```
-INTERFACE, HOST, LAG
-et-0/0/0, r740-033, 100
-et-0/0/1, r740-034, 101
-et-0/0/2, r740-035, 102
-et-0/0/3, r740-036, 103
-et-0/0/4, r740-037, 104
-et-0/0/5, r740-038, 105
-et-0/0/6, r740-039, 106
-et-0/0/7, r740-040, 107
-et-0/0/8, r740-041, 108
-et-0/0/9, r740-042, 109
+INTERFACE, HOST
+et-0/0/{0-9:1}, {33:1:3}
+```
+
+Would be expanded to the following (we haven't actually specified 42 as the end number, but it will increment based on the number of rows it is being expanded into):
+
+```
+INTERFACE, HOST
+et-0/0/0, r740-033
+et-0/0/1, r740-034
+et-0/0/2, r740-035
+et-0/0/3, r740-036
+et-0/0/4, r740-037
+et-0/0/5, r740-038
+et-0/0/6, r740-039
+et-0/0/7, r740-040
+et-0/0/8, r740-041
+et-0/0/9, r740-042
 ```
 
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
@@ -218,7 +225,7 @@ This list of lists will contain all the row and column data that JinjaFx is curr
 
 - <b><code>jinjafx.expand("string")</code></b>
 
-This function is used to expand a string that contains static character classes (i.e. "[0-9]") or static groups (i.e. "(a|b)") into a list of all the different permutations. You are permitted to use as many classes or groups within the same string - if it doesn't detect any classes or groups within the string then the "string" will be returned as the only list element. Character classes support "A-Z", "a-z" and "0-9" characters, whereas static groups allow any string of characters (including static character classes). If you wish to include "[", "]", "(" or ")" literals within the string then they will need to be escaped.
+This function is used to expand a string that contains static character classes (i.e. `[0-9]`), static groups (i.e. `(a|b)`) or active counters (i.e. `{ start-end:increment[:pad] }`) into a list of all the different permutations. You are permitted to use as many classes, groups or counters within the same string - if it doesn't detect any classes, groups or counters within the string then the "string" will be returned as the only list element. Character classes support "A-Z", "a-z" and "0-9" characters, whereas static groups allow any string of characters (including static character classes). If you wish to include "[", "]", "(", ")", "{" or "}" literals within the string then they will need to be escaped.
 
 - <b><code>jinjafx.counter(["key"], [increment], [start])</code></b>
 

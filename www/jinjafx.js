@@ -54,7 +54,9 @@ function jinjafx(method) {
   dt.template = window.cmTemplate.getValue().replace(/\t/g, "  ");
   dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
 
-  if ((method === "generate") || (method === "get_link")) {
+  var alias = "myalias";
+
+  if ((method === "generate") || (method === "get_link") || (method == "update_link")) {
     try {
       var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
 
@@ -73,12 +75,25 @@ function jinjafx(method) {
       }
       else {
         var xHR = new XMLHttpRequest();
-        xHR.open("POST", "get_link", true);
+
+        if (method == "update_link") {
+          xHR.open("POST", "get_link?id=" + dt_id, true);
+        }
+        else {
+          xHR.open("POST", "get_link", true);
+        }
 
         xHR.onload = function() {
           if (this.status === 200) {
-            window.removeEventListener('beforeunload', onBeforeUnload);
-            window.location.href = window.location.pathname + "?dt=" + this.responseText;
+            if (method == "update_link") {
+              set_status("green", "OK", "Link Updated");
+              window.removeEventListener('beforeunload', onBeforeUnload);
+              dirty = false;
+            }
+            else {
+              window.removeEventListener('beforeunload', onBeforeUnload);
+              window.location.href = window.location.pathname + "?dt=" + this.responseText;
+            }
           }
           else {
             var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
@@ -222,6 +237,8 @@ window.onload = function() {
               try {
                 var dt = jsyaml.safeLoad(this.responseText, 'utf8')['dt'];
                 load_datatemplate(dt, qs);
+                dt_id = qs.dt;
+                document.getElementById('update').disabled = false;
               }
               catch (e) {
                 set_status("darkred", "INTERNAL ERROR", e);
@@ -234,7 +251,6 @@ window.onload = function() {
               window.history.replaceState({}, document.title, window.location.pathname);
             }
             loaded = true;
-            dt_id = qs.dt;
           };
 
           xHR.onerror = function() {
@@ -332,6 +348,12 @@ function onPaste(cm, change) {
       if (obj != null) {
         load_datatemplate(obj['dt'], null);
         change.cancel();
+
+        if (window.location.href.indexOf('?') > -1) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        dt_id = '';
+        document.getElementById('update').disabled = true;
       }
     }
   }
@@ -347,10 +369,6 @@ function onChange(errflag) {
       window.addEventListener('beforeunload', onBeforeUnload);
       dirty = true;
     }
-    if (window.location.href.indexOf('?') > -1) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    dt_id = '';
   }
 }
 
