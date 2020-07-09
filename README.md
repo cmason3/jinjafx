@@ -90,8 +90,8 @@ et-0/0/{0-9:1}
 Passive counters (i.e. counters where you don't specify an end) don't actually create any additional rows or determine the range of the expansion (they are unbounded). They are used in combination with static character classes, static groups or active counters to increment as the data is expanded into multiple rows. If we take our previous example and modify it to allocate a HOST field to each interface, which uses a number starting at 33 (the optional "pad" element is used to specify the zero padding width), then the following:
 
 ```
-INTERFACE, LAG
-et-0/0/{0-9:1}, {100:1:3}
+INTERFACE, HOST
+et-0/0/{0-9:1}, {33:1:3}
 ```
 
 Would be expanded to the following (we haven't actually specified 42 as the end number, but it will increment based on the number of rows it is being expanded into):
