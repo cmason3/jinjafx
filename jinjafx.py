@@ -359,7 +359,7 @@ class JinjaFx():
           groups[i][0] = groups[i][0].replace(m.group(), 'x', 1)
           group = max(0, (nob - ncb) * nob)
 
-          e = map(int, m.group(1).split('-'))
+          e = list(map(int, m.group(1).split('-')))
 
           start = e[0]
           end = e[1] + 1 if e[1] >= e[0] else e[1] - 1
