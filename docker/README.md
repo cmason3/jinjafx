@@ -44,4 +44,6 @@ frontend fe_jinjafx
   stick-table type ip size 100k expire 30m store http_req_rate(30m)
   http-request track-sc0 src if METH_POST { path -i -m beg /get_link }
   http-request deny deny_status 429 if { sc_http_req_rate(0) gt 15 }
+  option http-buffer-request
+  timeout http-request 5s
 ```
