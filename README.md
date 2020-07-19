@@ -23,7 +23,7 @@ JinjaFx Server running at https://jinjafx.io
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
 
-This tool allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored.
+This tool allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
 
 ```
 A, B, C    <- HEADER ROW
@@ -80,7 +80,7 @@ spine-03, et-0/0/3, leaf-03
 spine-03, et-0/0/4, leaf-04
 ```
 
-Finally we also support the ability to use active and passive counters during data expansion with the `{ start[-end]:increment[:pad] }` syntax (increment must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
+Finally we also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step[:pad] }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
 
 ```
 INTERFACE
@@ -130,7 +130,7 @@ The "-r" argument allows you to specify a directory that will be used to store D
 
 ### JinjaFx Templates
 
-JinjaFx templates are Jinja2 templates with one exception - they support a JinjaFx specific syntax that allows you to specify a different output file within a Jinja2 template to override the value of `-o` (or output name if being used with the JinjaFx Server):
+JinjaFx templates are Jinja2 templates with one exception - they support a JinjaFx specific syntax that allows you to specify a different output file (or `_stdout_` for stdout) within a Jinja2 template to override the value of `-o` (or output name if being used with the JinjaFx Server):
 
 ```
 <output "output file">

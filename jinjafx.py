@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -359,8 +359,13 @@ class JinjaFx():
           groups[i][0] = groups[i][0].replace(m.group(), 'x', 1)
           group = max(0, (nob - ncb) * nob)
 
-          e = sorted(map(int, m.group(1).split('-')))
-          for n in range(int(e[0]), int(e[1]) + 1, int(m.group(2))):
+          e = list(map(int, m.group(1).split('-')))
+
+          start = e[0]
+          end = e[1] + 1 if e[1] >= e[0] else e[1] - 1
+          step = int(m.group(2)) if end > start else 0 - int(m.group(2))
+
+          for n in range(start, end, step):
             n = str(n).zfill(int(m.group(3)) if m.lastindex == 3 else 0)
             pofa.append(pofa[i][:m.start(1) - 1] + n + pofa[i][m.end(m.lastindex) + 1:])
 
@@ -386,8 +391,13 @@ class JinjaFx():
   
             for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
               if x[1] != '':
-                e = sorted(x[0].split('-'))
-                for c in range(ord(e[0]), ord(e[1]) + 1):
+                e = x[0].split('-')
+
+                start = ord(e[0])
+                end = ord(e[1]) + 1 if ord(e[1]) >= ord(e[0]) else ord(e[1]) - 1
+                step = 1 if end > start else -1
+
+                for c in range(start, end, step):
                   clist.append(chr(c))
               else:
                 clist.append(x[0])
