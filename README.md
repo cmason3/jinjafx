@@ -199,6 +199,34 @@ jinja_extensions:
 
 JinjaFx will then attempt to load and enable the extensions that will then be used when processing your Jinja2 templates. You also have the ability to check whether an extensions is loaded within your template by querying `jinja_extensions` directly.
 
+Unfortunately writing Jinja2 Extensions isn't that obvious - well, I didn't find it that obvious as it took me quite a while to work out how to write a custom filter. Let's assume we want to write a custom filter called `add` that simply adds a value to a number, for example:
+
+```
+{{ 10|add(1) }}
+```
+
+We start off by creating our Extension in a file called `jinjafx_extensions.py` (the name of the file is arbitrary) - this file basically defines a new class which extends Extension and an `_add` method that is mapped to a new filter called `add`:
+
+```python
+from jinja2.ext import Extension
+
+class AddExtension(Extension):
+  def _add(self, number, value):
+    return number + value
+
+  def __init__(self, environment):
+    Extension.__init__(self, environment)
+    environment.filters['add'] = self._add
+```
+
+We would then use the new Extension by adding the following YAML to our `vars.yml` file - based on the name it will automatically look in `jinjafx_extensions.py` for the `AddExtension` class and will then load and enable the `add` filter.
+
+```yaml
+---
+jinja_extensions:
+  - 'jinjafx_extensions.AddExtension'
+```
+
 ### JinjaFx Built-Ins
 
 Templates should be written using Jinja2 template syntax to make them compatible with Ansible and other tools which use Jinja2. However, there are a few JinjaFx specific extensions that have been added to make JinjaFx much more powerful when dealing with rows of data, as well as providing some much needed functionality which isn't currently present in Jinja2 (e.g. being able to store persistent variables across templates). These are used within a template like any other variable or function (e.g. `{{ jinjafx.version }}`).
