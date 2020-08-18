@@ -162,11 +162,11 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 if 'vault_password' in dt:
                   vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(base64.b64decode(dt['vault_password'])))])
 
-                  if gyaml.startswith('$ANSIBLE_VAULT;'):
-                    gyaml = vault.decrypt(gyaml)
+                  if gyaml.decode('utf-8').startswith('$ANSIBLE_VAULT;'):
+                    gyaml = vault.decrypt(gyaml).decode('utf-8')
 
                   def yaml_vault_tag(loader, node):
-                    return vault.decrypt(node.value)
+                    return vault.decrypt(node.value).decode('utf-8')
 
                   yaml.add_constructor('!vault', yaml_vault_tag, yaml.FullLoader)
 

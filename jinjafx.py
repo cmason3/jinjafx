@@ -67,7 +67,7 @@ def main():
 
           vault[0] = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(vpw.encode('utf-8')))])
 
-        return vault[0].decrypt(string.encode('utf8'))
+        return vault[0].decrypt(string.encode('utf-8')).decode('utf-8')
       return string
 
     def yaml_vault_tag(loader, node):
