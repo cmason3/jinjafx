@@ -10,5 +10,4 @@ USER jinjafx
 
 WORKDIR /opt/jinjafx
 
-HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost:8080/ping || exit 1
 ENTRYPOINT [ "/usr/local/bin/python3", "-u", "jinjafx_server.py", "-s", "-l", "0.0.0.0", "-p", "8080" ]
