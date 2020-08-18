@@ -52,7 +52,7 @@ def main():
     dt = {}
 
     def decrypt_vault(string):
-      if '$ANSIBLE_VAULT;' in string:
+      if string.startswith('$ANSIBLE_VAULT;'):
         if vault[0] is None:
           from ansible.constants import DEFAULT_VAULT_ID_MATCH
           from ansible.parsing.vault import VaultLib
@@ -69,6 +69,11 @@ def main():
 
         return vault[0].decrypt(string.encode('utf8'))
       return string
+
+    def yaml_vault_tag(loader, node):
+      return decrypt_vault(node.value)
+
+    yaml.add_constructor('!vault', yaml_vault_tag, yaml.FullLoader)
 
     if args.dt is not None:
       with open(args.dt.name) as f:
