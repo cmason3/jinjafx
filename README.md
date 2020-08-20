@@ -4,7 +4,7 @@
 # JinjaFx / JinjaFx Server
 ## Jinja Templating Tool
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files or use custom Ansible filters. It should work using both Python 2.7 and Python 3 without modification.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and strings or use custom Ansible filters. It should work using both Python 2.7 and Python 3 without modification.
 
 JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface.
 
@@ -17,7 +17,7 @@ JinjaFx Server running at https://jinjafx.io
    -t <template.j2>            - specify a Jinja2 template
    -d <data.csv>               - specify row based data (comma or tab separated)
    -dt <datatemplate.yml>      - specify a JinjaFx DataTemplate (contains template and data)
-   -g <vars.yml>[, -g ...]     - specify global variables in yaml (supports Ansible vaulted files)
+   -g <vars.yml>[, -g ...]     - specify global variables in yaml (supports Ansible vaulted files and strings)
    -o <output file>            - specify the output file (supports Jinja2 variables) (default is stdout)
 ```
 

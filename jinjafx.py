@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.1.3'
+__version__ = '1.1.4'
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
@@ -52,7 +52,7 @@ def main():
     dt = {}
 
     def decrypt_vault(string):
-      if '$ANSIBLE_VAULT;' in string:
+      if string.startswith('$ANSIBLE_VAULT;'):
         if vault[0] is None:
           from ansible.constants import DEFAULT_VAULT_ID_MATCH
           from ansible.parsing.vault import VaultLib
@@ -67,8 +67,13 @@ def main():
 
           vault[0] = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(vpw.encode('utf-8')))])
 
-        return vault[0].decrypt(string.encode('utf8'))
+        return vault[0].decrypt(string.encode('utf-8')).decode('utf-8')
       return string
+
+    def yaml_vault_tag(loader, node):
+      return decrypt_vault(node.value)
+
+    yaml.add_constructor('!vault', yaml_vault_tag, yaml.FullLoader)
 
     if args.dt is not None:
       with open(args.dt.name) as f:
