@@ -176,8 +176,8 @@ window.onload = function() {
     document.getElementById("csv").onclick = function() {
       window.cmData.getWrapperElement().style.display = 'block';
       document.getElementById("csv").style.display = 'none';
-      window.cmData.refresh()
-      window.cmData.focus()
+      window.cmData.refresh();
+      window.cmData.focus();
     };
     
     window.cmData.on("beforeChange", onPaste);
@@ -188,21 +188,38 @@ window.onload = function() {
     window.cmVars.on("change", onChange);
     window.cmTemplate.on("change", onChange);
 
-    Split(["#cdata", "#cvars"], {
+    var hsplit = Split(["#cdata", "#cvars"], {
       direction: "horizontal",
       cursor: "col-resize",
       sizes: [75, 25],
       snapOffset: 0,
-      minSize: 100
+      minSize: 50 
     });
 
-    Split(["#top", "#ctemplate"], {
+    var vsplit = Split(["#top", "#ctemplate"], {
       direction: "vertical",
       cursor: "row-resize",
       sizes: [30, 70],
       snapOffset: 0,
       minSize: 130
     });
+
+    document.getElementById('ldata').onclick = function() {
+      hsplit.setSizes([100, 0]);
+      vsplit.setSizes([100, 0]);
+      window.cmData.focus();
+    };
+
+    document.getElementById('lvars').onclick = function() {
+      hsplit.setSizes([0, 100]);
+      vsplit.setSizes([100, 0]);
+      window.cmVars.focus();
+    };
+
+    document.getElementById('ltemplate').onclick = function() {
+      vsplit.setSizes([0, 100]);
+      window.cmTemplate.focus();
+    };
 
     $('#vault_input').on('shown.bs.modal', function() {
       document.getElementById("vault").focus();
