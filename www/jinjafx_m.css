@@ -6,6 +6,17 @@ body {
   background-color: #fff;
   font-size: 12px;
 }
+.expand {
+  position: absolute;
+  z-index: 10;
+  right: 4px;
+  top: 0px;
+  cursor: pointer;
+  stroke: gray;
+}
+.expand:hover {
+  stroke: black;
+}
 .labels {
   height: 100%;
   width: 20px;
