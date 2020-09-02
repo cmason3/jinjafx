@@ -37,11 +37,3 @@ svg {
   outline: none !important;
   box-shadow: none !important;
 }
-.nosb {
-  overflow-y: scroll;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.nosb::-webkit-scrollbar {
-  width: 0px;
-}
