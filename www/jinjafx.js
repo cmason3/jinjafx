@@ -176,6 +176,7 @@ window.onload = function() {
     document.getElementById("csv").onclick = function() {
       window.cmData.getWrapperElement().style.display = 'block';
       document.getElementById("csv").style.display = 'none';
+      document.getElementById("ldata").style.display = 'block';
       window.cmData.refresh();
       window.cmData.focus();
     };
@@ -214,11 +215,13 @@ window.onload = function() {
       hsplit.setSizes([0, 100]);
       vsplit.setSizes([100, 0]);
       window.cmVars.focus();
+      onDataBlur();
     };
 
     document.getElementById('ltemplate').onclick = function() {
       vsplit.setSizes([0, 100]);
       window.cmTemplate.focus();
+      onDataBlur();
     };
 
     $('#vault_input').on('shown.bs.modal', function() {
@@ -350,6 +353,7 @@ function onDataBlur(cm, evt) {
     });
     if (datarows.length > 1) {
       document.getElementById("csv").innerHTML = get_csv_astable(datarows);
+      document.getElementById("ldata").style.display = 'none';
       document.getElementById("csv").style.display = 'block';
       window.cmData.getWrapperElement().style.display = 'none';
     }

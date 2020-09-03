@@ -9,7 +9,7 @@ body {
 .expand {
   position: absolute;
   z-index: 10;
-  right: 4px;
+  right: 3px;
   top: 0px;
   cursor: pointer;
   stroke: gray;
