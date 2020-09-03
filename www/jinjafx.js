@@ -194,7 +194,7 @@ window.onload = function() {
       cursor: "col-resize",
       sizes: [75, 25],
       snapOffset: 0,
-      minSize: 50 
+      minSize: 45
     });
 
     var vsplit = Split(["#top", "#ctemplate"], {
