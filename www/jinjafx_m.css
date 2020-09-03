@@ -21,6 +21,7 @@ body {
   height: 100%;
   width: 20px;
   line-height: 0.8rem;
+  overflow-y: hidden;
 }
 .gutter {
   background-color: #eee;
