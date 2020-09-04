@@ -11,6 +11,9 @@ svg {
   display: inline-block;
   vertical-align: middle;
 }
+.expand svg {
+  vertical-align: top;
+}
 #wrap {
   min-height: 100%;
   height: auto !important;

@@ -8,9 +8,14 @@ body {
 }
 .expand {
   position: absolute;
+  background: white;
   z-index: 10;
-  right: 3px;
-  top: 0px;
+  right: 1px;
+  top: 1px;
+  padding-top: 2px;
+  padding-right: 2px;
+  padding-bottom: 0px;
+  padding-left: 3px;
   cursor: pointer;
   stroke: gray;
 }
