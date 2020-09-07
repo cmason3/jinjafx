@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="jinjafx_m.css">
     <!-- Required by Internet Explorer 11 for js.yaml.min.js :( -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.5/es6-shim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.5.11/split.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.2/split.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.14.0/js-yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.55.0/addon/selection/mark-selection.min.js"></script>
@@ -93,19 +93,34 @@
       <div id="main" class="container-fluid">
         <div id="content">
           <div id="top">
-            <div id="cdata" class="split-horizontal">
+            <div id="cdata" class="split-horizontal" style="position: relative;">
               <div class="badge badge-secondary float-left labels">D<br />A<br />T<br />A<br />.<br />C<br />S<br />V<br /></div>
               <textarea id="data"></textarea>
               <div id="csv" class="table-responsive" style="overflow:auto; width: auto; height: 100%; display: none;"></div>
+              <span id="ldata" class="expand" title="Maximise">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+              </span>
             </div>
-            <div id="cvars" class="split-horizontal">
+            <div id="cvars" class="split-horizontal" style="position: relative;">
               <div class="badge badge-danger float-left labels">V<br />A<br />R<br />S<br />.<br />Y<br />M<br />L<br /></div>
               <textarea id="vars"></textarea>
+              <span id="lvars" class="expand" title="Maximise">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+              </span>
             </div>
           </div>
-          <div id="ctemplate">
+          <div id="ctemplate" style="position: relative;">
             <div class="badge badge-info float-left labels">T<br />E<br />M<br />P<br />L<br />A<br />T<br />E<br />.<br />J<br />2<br /></div>
             <textarea id="template"></textarea>
+            <span id="ltemplate" class="expand" title="Maximise">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+            </span>
           </div>
         </div>
       </div>

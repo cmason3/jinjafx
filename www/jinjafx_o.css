@@ -25,11 +25,11 @@ iframe.output {
   height: 100%;
   width: 100%;
 }
-#olinks {
+.nosb {
   overflow-y: scroll;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-#olinks::-webkit-scrollbar {
+.nosb::-webkit-scrollbar {
   width: 0px;
 }

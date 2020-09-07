@@ -411,6 +411,8 @@ def main(rflag=False):
     parser.add_argument('-r', metavar='<repository>', type=w_directory)
     args = parser.parse_args()
 
+    jinjafx.import_filters()
+
     log('Starting JinjaFx Server on http://' + args.l + ':' + str(args.p) + '...')
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

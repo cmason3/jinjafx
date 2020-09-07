@@ -6,10 +6,27 @@ body {
   background-color: #fff;
   font-size: 12px;
 }
+.expand {
+  position: absolute;
+  background: white;
+  z-index: 10;
+  right: 1px;
+  top: 1px;
+  padding-top: 2px;
+  padding-right: 2px;
+  padding-bottom: 0px;
+  padding-left: 3px;
+  cursor: pointer;
+  stroke: gray;
+}
+.expand:hover {
+  stroke: black;
+}
 .labels {
   height: 100%;
   width: 20px;
   line-height: 0.8rem;
+  overflow-y: hidden;
 }
 .gutter {
   background-color: #eee;

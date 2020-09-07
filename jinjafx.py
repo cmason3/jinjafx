@@ -18,13 +18,34 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.1.4'
+__version__ = '1.1.5'
+jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
     print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
     print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
     raise Exception(message)
+
+
+def import_filters(errc = 0):
+  try:
+    from ansible.plugins.filter import core
+    jinja2_filters.append(core.FilterModule().filters())
+  except Exception:
+    print('warning: unable to import ansible \'core\' filters - requires ansible', file=sys.stderr)
+    errc += 1
+      
+  try:
+    import netaddr
+    from ansible.plugins.filter import ipaddr
+    jinja2_filters.append(ipaddr.FilterModule().filters())
+  except Exception:
+    print('warning: unable to import ansible \'ipaddr\' filter - requires ansible and netaddr', file=sys.stderr)
+    errc += 1
+
+  if errc > 0:
+    print()
 
 
 def main():
@@ -100,6 +121,7 @@ def main():
     if args.o is None:
       args.o = '_stdout_'
 
+    import_filters()
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
     ocount = 0
 
@@ -533,19 +555,6 @@ class JinjaFx():
 
   def jfx_getg(self, key, default=None):
     return self.g_dict.get('_val_' + str(key), default)
-
-
-try:
-  jinja2_filters = []
-
-  from ansible.plugins.filter import core
-  jinja2_filters.append(core.FilterModule().filters())
-
-  from ansible.plugins.filter import ipaddr
-  jinja2_filters.append(ipaddr.FilterModule().filters())
-
-except Exception:
-  pass
 
 
 if __name__ == '__main__':
