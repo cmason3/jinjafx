@@ -22,6 +22,21 @@ sudo chmod a+rwx /var/lib/jinjafx
 docker run -d --name jinjafx --restart unless-stopped -e TZ=Europe/London -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx jinjafx:latest -r /var/lib/jinjafx
 ```
 
+### Podman Equivalent using Systemd
+
+```
+sudo podman build --no-cache -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile.Release
+
+sudo mkdir /var/lib/jinjafx
+sudo chmod a+rwx /var/lib/jinjafx
+
+sudo podman create --name jinjafx -e TZ=Europe/London -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx:Z jinjafx:latest -r /var/lib/jinjafx
+sudo podman generate systemd -n --restart-policy=always jinjafx | sudo tee /etc/systemd/system/jinjafx.service
+
+sudo systemctl enable jinjafx
+sudo systemctl start jinjafx
+```
+
 ### /etc/haproxy/haproxy.cfg
 
 The preferred way to use JinjaFx Server is with HAProxy running in front of it. Please see https://ssl-config.mozilla.org/#server=haproxy for TLS termination options, but the following will forward port 80 requests to JinjaFx running in Docker that has been exposed on 127.0.0.1:8080.
