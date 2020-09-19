@@ -10,7 +10,7 @@ docker build --no-cache -t jinjafx:latest https://raw.githubusercontent.com/cmas
 
 ### Run Docker Container
 ```
-docker run -d --name jinjafx --restart unless-stopped -e TZ=&lt;TIMEZONE&gt; -p 127.0.0.1:8080:8080 jinjafx:latest
+docker run -d --name jinjafx --restart unless-stopped -e TZ=<TIMEZONE> -p 127.0.0.1:8080:8080 jinjafx:latest
 ```
 
 By default it won't enable a repository directory so 'Get Link' won't work - it will return 503 Service Unavailable. To enable this functionality you need to specify `-r` with a directory - the following example will demonstrate how you can use "/var/lib/jinjafx" on the local filesystem (exposed inside the container as "/var/lib/jinjafx"), which will persist if the container is reloaded:
@@ -19,7 +19,7 @@ By default it won't enable a repository directory so 'Get Link' won't work - it 
 sudo mkdir /var/lib/jinjafx
 sudo chmod a+rwx /var/lib/jinjafx
 
-docker run -d --name jinjafx --restart unless-stopped -e TZ= &lt;TIMEZONE&gt; -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx jinjafx:latest -r /var/lib/jinjafx
+docker run -d --name jinjafx --restart unless-stopped -e TZ=<TIMEZONE> -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx jinjafx:latest -r /var/lib/jinjafx
 ```
 
 ### Podman Equivalent using Systemd
@@ -30,7 +30,7 @@ sudo podman build --no-cache -t jinjafx:latest https://raw.githubusercontent.com
 sudo mkdir /var/lib/jinjafx
 sudo chmod a+rwx /var/lib/jinjafx
 
-sudo podman create --name jinjafx -e TZ= &lt;TIMEZONE&gt; -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx:Z jinjafx:latest -r /var/lib/jinjafx
+sudo podman create --name jinjafx -e TZ=<TIMEZONE> -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx:Z jinjafx:latest -r /var/lib/jinjafx
 sudo podman generate systemd -n --restart-policy=always jinjafx | sudo tee /etc/systemd/system/jinjafx.service
 
 sudo systemctl enable jinjafx
