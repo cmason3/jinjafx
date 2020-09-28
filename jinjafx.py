@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -38,7 +38,15 @@ def import_filters(errc = 0):
       
   try:
     import netaddr
-    from ansible.plugins.filter import ipaddr
+
+    try:
+      from ansible.plugins.filter import ipaddr
+    except Exception:
+      try:
+        from ansible_collections.ansible.netcommon.plugins.filter import ipaddr
+      except Exception:
+        raise Exception()
+
     jinja2_filters.append(ipaddr.FilterModule().filters())
   except Exception:
     print('warning: unable to import ansible \'ipaddr\' filter - requires ansible and netaddr', file=sys.stderr)
@@ -53,7 +61,7 @@ def main():
     print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
     print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>]'
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>]'
 
     parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
@@ -62,10 +70,14 @@ def main():
     parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-o', metavar='<output file>', type=str)
+    parser.add_argument('-od', metavar='<output dir>', type=str)
     args = parser.parse_args()
 
     if args.dt is not None and args.d is not None:
       parser.error("argument -d: not allowed with argument -dt")
+
+    if args.od is not None and not os.access(args.od, os.W_OK):
+      parser.error("argument -od: unable to write to output directory")
 
     data = None
     vault = [ None ]
@@ -124,6 +136,9 @@ def main():
     import_filters()
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
     ocount = 0
+
+    if args.od is not None:
+      os.chdir(args.od)
 
     for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
       output = '\n'.join(o[1]) + '\n'

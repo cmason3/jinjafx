@@ -258,7 +258,13 @@ window.onload = function() {
                 var dt = jsyaml.safeLoad(this.responseText, 'utf8')['dt'];
                 load_datatemplate(dt, qs);
                 dt_id = qs.dt;
-                document.getElementById('update').disabled = false;
+
+                if (this.getResponseHeader('X-Read-Only') != null) {
+                  document.getElementById('update').disabled = true;
+                }
+                else {
+                  document.getElementById('update').disabled = false;
+                }
               }
               catch (e) {
                 set_status("darkred", "INTERNAL ERROR", e);

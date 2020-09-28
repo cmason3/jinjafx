@@ -26,7 +26,7 @@ try:
 except Exception:
   pass
 
-lock = threading.Lock()
+lock = threading.RLock()
 repository = None
 
 class JinjaFxServer(HTTPServer):
@@ -80,6 +80,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def do_GET(self):
     fpath = self.path.split('?', 1)[0]
+    ro = False
 
     if fpath == '/':
       fpath = '/index.html'
@@ -96,6 +97,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             try:
               with open(fpath, 'rb') as f:
                 r = [ 'application/json', 200, f.read() ]
+
+              if not os.access(fpath, os.W_OK):
+                ro = True
 
               os.utime(fpath, None)
 
@@ -134,6 +138,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
+    if ro:
+      self.send_header('X-Read-Only', 'yes');  
     self.end_headers()
     self.wfile.write(r[2])
 
@@ -302,58 +308,80 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   else:
                     dt_yml += 'remote-addr: "' + str(self.client_address[0]) + '"\n'
 
-                with lock:
-                  if 'id' in params:
-                    dt_id = params['id']
+                if os.access(repository, os.W_OK):
+                  with lock:
+                    maxiter = 10
 
-                    if re.search(r'^[A-Za-z0-9_-]{1,24}$', dt_id):
-                      fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
-
-                      if os.path.exists(fpath):
-                        try:
-                          with open(fpath, 'r') as f:
-                            if '\nsha256: "' + dt_sha256 + '"' in f.read():
-                              fpath = None
-                        except:
-                          pass
-
-                        if fpath != None:
-                          os.rename(fpath, fpath + '.' + dt_link + '.bak')
-
+                    if 'id' in params:
+                      dt_id = params['id']
+  
+                      if re.search(r'^[A-Za-z0-9_-]{1,24}$', dt_id):
+                        fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
+  
+                        if os.path.exists(fpath):
+                          if os.access(fpath, os.W_OK):
+                            try:
+                              with open(fpath, 'r') as f:
+                                if '\nsha256: "' + dt_sha256 + '"' in f.read():
+                                  fpath = None
+                            except:
+                              pass
+  
+                            if fpath != None:
+                              os.rename(fpath, fpath + '.' + dt_link + '.bak')
+  
+                          else:
+                            raise Exception("link is read only")
+  
+                        else:
+                          raise Exception("link doesn't exist")
+  
                       else:
-                        raise Exception("link doesn't exist")
+                        raise Exception("invalid link format")
+  
+                    else:
+                      while maxiter > 0:
+                        dt_id = dt_link
+                        fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
+  
+                        if os.path.exists(fpath):
+                          if not os.access(fpath, os.W_OK):
+                            dt_link = self.encode_link(hashlib.sha256(dt_link.encode('utf-8')).digest()[:12])
+                            maxiter -= 1
+                            continue
+  
+                          try:
+                            with open(fpath, 'r') as f:
+                              if '\nrev_id: 1' in f.read():
+                                dt_link = self.encode_link(hashlib.sha256(dt_link.encode('utf-8')).digest()[:12])
+                                maxiter -= 1
+                                continue
+                          except:
+                            pass
+  
+                          fpath = None
+  
+                        break
+
+                    if maxiter == 0:
+                      log('error: unable to generate unique link')
+                      r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
                     else:
-                      raise Exception("invalid link format")
+                      try:
+                        if fpath != None:
+                          with open(fpath, 'w') as f:
+                            f.write(dt_yml)
+  
+                        r = [ 'text/plain', 200, dt_id + '\r\n' ]
+  
+                      except Exception as e:
+                        log('error: ' + str(e))
+                        r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
-                  else:
-                    while True:
-                      dt_id = dt_link
-                      fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
-
-                      if os.path.exists(fpath):
-                        try:
-                          with open(fpath, 'r') as f:
-                            if '\nrev_id: 1' in f.read():
-                              dt_link = self.encode_link(hashlib.sha256(dt_link.encode('utf-8')).digest()[:12])
-                              continue
-                        except:
-                          pass
-
-                        fpath = None
-
-                      break
-
-                  try:
-                    if fpath != None:
-                      with open(fpath, 'w') as f:
-                        f.write(dt_yml)
-
-                    r = [ 'text/plain', 200, dt_id + '\r\n' ]
-
-                  except Exception as e:
-                    log('error: ' + str(e))
-                    r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+                else:
+                  log('error: unable to write to repository')
+                  r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
               except Exception as e:
                 log('error: ' + str(e))
