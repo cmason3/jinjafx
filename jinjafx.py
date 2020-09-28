@@ -38,7 +38,15 @@ def import_filters(errc = 0):
       
   try:
     import netaddr
-    from ansible.plugins.filter import ipaddr
+
+    try:
+      from ansible.plugins.filter import ipaddr
+    except Exception:
+      try:
+        from ansible_collections.ansible.netcommon.plugins.filter import ipaddr
+      except Exception:
+        raise Exception()
+
     jinja2_filters.append(ipaddr.FilterModule().filters())
   except Exception:
     print('warning: unable to import ansible \'ipaddr\' filter - requires ansible and netaddr', file=sys.stderr)
