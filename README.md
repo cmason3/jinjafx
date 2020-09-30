@@ -81,7 +81,7 @@ spine-03, et-0/0/3, leaf-03
 spine-03, et-0/0/4, leaf-04
 ```
 
-Finally we also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step[:pad] }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
+We also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step[:pad] }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
 
 ```
 INTERFACE
@@ -111,11 +111,18 @@ et-0/0/8, r740-041
 et-0/0/9, r740-042
 ```
 
+While data is normally processed in the order in which it is provided, it can be sorted through the use of the `jinjafx_sort` key when specified within `vars.yml`. It takes a case-sensitive list of the fields you wish to sort by, which will then sort the data before it is processed, e.g to sort by "HOST" followed by "INTERFACE" you would specify the following:
+
+```yaml
+---
+  jinjafx_sort: [ "HOST", "INTERFACE" ]
+```
+
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
 ### JinjaFx Server Usage
 
-Once JinjaFx Server has been started with the "-s" argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify "data.csv", "template.j2" and "vars.yml" and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
+Once JinjaFx Server has been started with the `-s` argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify `data.csv`, `template.j2` and `vars.yml` and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
 
 ```
  jinjafx_server.py -s [-l <address>] [-p <port>] [-r <repository>]
@@ -125,7 +132,7 @@ Once JinjaFx Server has been started with the "-s" argument then point your web 
    -r <repository>             - specify a repository directory (allows 'Get Link')
 ```
 
-For health checking purposes, if you specify the URL "/ping" then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
+For health checking purposes, if you specify the URL `/ping` then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
 
 The "-r" argument allows you to specify a directory that will be used to store DataTemplates on the server via the "Get Link" button. The link is basically a cryptographic hash of your DataTemplate, which means the same DataTemplate will always result in the same link being generated - if you change any item within the DataTemplate then a different link would be generated.
 
@@ -162,7 +169,7 @@ keep_trailing_newline = True
 
 JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
 
-```
+```yaml
 ---
 dt:
   data: |2
@@ -174,7 +181,6 @@ dt:
   vars: |2
     ... VARS.YML ...
 ```
-
 
 ### Ansible Filters
 
