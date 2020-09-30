@@ -190,15 +190,15 @@ This filter allows IP address manipulation and is documented in [playbooks_filte
 
 ### Jinja2 Extensions
 
-Jinja2 supports the ability to provide extended functionality through [extensions](https://jinja.palletsprojects.com/en/2.11.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja_extensions` global variable, which you can set within one of your "vars.yml" files (it expects a list):
+Jinja2 supports the ability to provide extended functionality through [extensions](https://jinja.palletsprojects.com/en/2.11.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja2_extensions` global variable, which you can set within one of your "vars.yml" files (it expects a list):
 
 ```yaml
 ---
-jinja_extensions:
+jinja2_extensions:
   - 'jinja2.ext.i18n'
 ```
 
-JinjaFx will then attempt to load and enable the extensions that will then be used when processing your Jinja2 templates. You also have the ability to check whether an extensions is loaded within your template by querying `jinja_extensions` directly.
+JinjaFx will then attempt to load and enable the extensions that will then be used when processing your Jinja2 templates. You also have the ability to check whether an extensions is loaded within your template by querying `jinja2_extensions` directly.
 
 Unfortunately writing Jinja2 Extensions isn't that obvious - well, I didn't find it that obvious as it took me quite a while to work out how to write a custom filter. Let's assume we want to write a custom filter called `add` that simply adds a value to a number, for example:
 
@@ -224,7 +224,7 @@ We would then use the new Extension by adding the following YAML to our `vars.ym
 
 ```yaml
 ---
-jinja_extensions:
+jinja2_extensions:
   - 'jinjafx_extensions.AddExtension'
 ```
 
