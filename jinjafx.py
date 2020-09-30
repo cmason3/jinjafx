@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.1.6'
+__version__ = '1.1.7'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -275,8 +275,8 @@ class JinjaFx():
       if len(self.g_datarows) <= 1:
         raise Exception('not enough data rows - need at least two')
 
-    if 'jinja_extensions' not in gvars:
-      gvars.update({ 'jinja_extensions': [] })
+    if 'jinja2_extensions' not in gvars:
+      gvars.update({ 'jinja2_extensions': [] })
 
     jinja2_options = {
       'undefined': jinja2.StrictUndefined,
@@ -286,14 +286,14 @@ class JinjaFx():
     }
 
     if isinstance(template, bytes) or isinstance(template, str):
-      env = jinja2.Environment(extensions=gvars['jinja_extensions'], **jinja2_options)
+      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
       if isinstance(template, bytes):
         template = env.from_string(template.decode('utf-8'))
       else:
         template = env.from_string(template)
     else:
-      env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
+      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
       template = env.get_template(os.path.basename(template.name))
 
