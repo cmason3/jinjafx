@@ -118,6 +118,16 @@ While data is normally processed in the order in which it is provided, it can be
   jinjafx_sort: [ "HOST", "INTERFACE" ]
 ```
 
+By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" following sorting. If you have a field where all the values are numbers and you wish them to be sorted numerically then you can designate the field as containing numbers by prefixing ":int" onto the field name (if it detects an "int" field that doesn't contain a valid number then an error will occur), e.g:
+
+```
+NUMBER:int, NAME
+1, one
+10, ten
+2, two
+20, twenty
+```
+
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
 ### JinjaFx Server Usage

@@ -199,6 +199,7 @@ class JinjaFx():
     outputs = {}
     delim = None
     rowkey = 1
+    int_indices = []
     
     if isinstance(data, bytes):
       data = data.decode('utf-8')
@@ -218,6 +219,10 @@ class JinjaFx():
             fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
 
             for i in range(len(fields)):
+              if fields[i].lower().endswith(':int'):
+                int_indices.append(i + 1)
+                fields[i] = fields[i][:-4]
+
               if fields[i] == '':
                 raise Exception('empty header field detected at column position ' + str(i + 1))
               elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
@@ -268,6 +273,9 @@ class JinjaFx():
                 for col in range(1, len(fields[row])):
                   fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
                   fields[row][col] = re.sub(r'\\([}{])', r'\1', fields[row][col])
+
+                  if col in int_indices:
+                    fields[row][col] = int(fields[row][col])
 
                 self.g_datarows.append(fields[row][1:])
                 row += 1
