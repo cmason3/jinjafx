@@ -118,7 +118,7 @@ While data is normally processed in the order in which it is provided, it can be
   jinjafx_sort: [ "HOST", "INTERFACE" ]
 ```
 
-By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" following sorting. If you have a field where all the values are numbers and you wish them to be sorted numerically then you can designate the field as containing numbers by prefixing ":int" onto the field name (if it detects an "int" field that doesn't contain a valid number then an error will occur), e.g:
+By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted. If you have a field where all the values are numbers and you wish them to be sorted numerically then you can designate the field as numerical by suffixing ":int" onto the field name (if it detects a non numerical value then an error will occur), e.g:
 
 ```
 NUMBER:int, NAME
