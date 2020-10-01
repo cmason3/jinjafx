@@ -491,7 +491,7 @@ class JinjaFx():
     if fields is not None:
       for f in fields:
         if f in self.g_datarows[0]:
-          fpos.append(self.g_datarows[0].index(f))
+          fpos.append(self.g_datarows[0].index(f) + 1)
         else:
           raise Exception('invalid field \'' + f + '\' passed to jinjafx.' + forl + '()')
     elif forl == 'first':
@@ -512,7 +512,7 @@ class JinjaFx():
       for f in ffilter:
         if f in self.g_datarows[0]:
           try:
-            if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f)]):
+            if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f) + 1]):
               fmatch = False
               break
           except Exception:
@@ -538,7 +538,7 @@ class JinjaFx():
   def jfx_fields(self, field=None, ffilter={}):
     if field is not None:
       if field in self.g_datarows[0]:
-        fpos = self.g_datarows[0].index(field)
+        fpos = self.g_datarows[0].index(field) + 1
       else:
         raise Exception('invalid field \'' + field + '\' passed to jinjafx.fields()')
     else:
@@ -554,7 +554,7 @@ class JinjaFx():
         for f in ffilter:
           if f in self.g_datarows[0]:
             try:
-              if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f)]):
+              if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f) + 1]):
                 fmatch = False
                 break
             except Exception:
