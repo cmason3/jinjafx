@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback, operator
 
-__version__ = '1.1.7'
+__version__ = '1.2.0'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -283,6 +283,11 @@ class JinjaFx():
       if len(self.g_datarows) <= 1:
         raise Exception('not enough data rows - need at least two')
 
+
+
+
+
+
     if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
       field_indices = []
 
@@ -290,6 +295,13 @@ class JinjaFx():
         field_indices.append(self.g_datarows[0].index(field) + 1)
 
       self.g_datarows[1:] = sorted(self.g_datarows[1:], key=operator.itemgetter(*field_indices))
+
+
+
+
+
+
+
 
     if 'jinja2_extensions' not in gvars:
       gvars.update({ 'jinja2_extensions': [] })
