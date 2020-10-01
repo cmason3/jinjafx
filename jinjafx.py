@@ -205,6 +205,8 @@ class JinjaFx():
       data = data.decode('utf-8')
 
     if data is not None and len(data.strip()) > 0:
+      jinjafx_filter = {}
+
       for l in data.splitlines():
         if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
           if len(self.g_datarows) == 0:
@@ -232,6 +234,10 @@ class JinjaFx():
               raise Exception('duplicate header field detected in data')
             else:
               self.g_datarows.append(fields)
+
+            if 'jinjafx_filter' in gvars and len(gvars['jinjafx_filter']) > 0:
+              for field in gvars['jinjafx_filter']:
+                jinjafx_filter[self.g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
 
           else:
             n = len(self.g_datarows[0])
@@ -277,7 +283,16 @@ class JinjaFx():
                   if col in int_indices:
                     fields[row][col] = int(fields[row][col])
 
-                self.g_datarows.append(fields[row])
+                include_row = True
+                if len(jinjafx_filter) > 0:
+                  for index in jinjafx_filter:
+                    if not re.search(jinjafx_filter[index], fields[row][index], re.IGNORECASE):
+                      include_row = False
+                      break
+
+                if include_row:
+                  self.g_datarows.append(fields[row])
+
                 row += 1
 
       if len(self.g_datarows) <= 1:

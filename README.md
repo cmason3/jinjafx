@@ -121,15 +121,6 @@ NUMBER:int, NAME
 20, twenty
 ```
 
-While data is normally processed in the order in which it is provided, it can be sorted through the use of the `jinjafx_sort` key when specified within `vars.yml`. It takes a case-sensitive list of the fields you wish to sort by, which will then sort the data before it is processed, e.g to sort by "HOST" followed by "INTERFACE" you would specify the following:
-
-```yaml
----
-  jinjafx_sort: [ "HOST", "INTERFACE" ]
-```
-
-Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using `:int` on the field name.
-
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
 ### JinjaFx Server Usage
@@ -193,6 +184,30 @@ dt:
   vars: |2
     ... VARS.YML ...
 ```
+
+### Filtering and Sorting
+
+JinjaFx supports the ability to filter as well as sort the data within `data.csv` before it is passed to the templating engine. From a filtering perspective, while you could include and exclude certain rows within your `template.j2` with a conditional `if` statement, it won't allow you to use `jinjafx.first()` and `jinjafx.last()` on the reduced data set. This is where the `jinjafx_filter` key which can be specified in `vars.yml` comes into play - it lets you specify using regular expresions what field values you wish to include in your data, e.g:
+
+```yaml
+---
+  jinjafx_filter:
+    "HOST": "^r740"
+    "INTERFACE": "^et"
+```
+
+The above will filter `data.csv` and only include rows where the "HOST" field value starts with "r740" and where the "INTERFACE" field value starts with "et".
+
+While data is normally processed in the order in which it is provided, it can be sorted through the use of the `jinjafx_sort` key when specified within `vars.yml`. It takes a case-sensitive list of the fields you wish to sort by, which will then sort the data before it is processed, e.g to sort by "HOST" followed by "INTERFACE" you would specify the following:
+
+```yaml
+---
+  jinjafx_sort: [ "HOST", "INTERFACE" ]
+```
+
+Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using `:int` on the field name.
+
+
 
 ### Ansible Filters
 
