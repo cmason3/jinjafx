@@ -202,7 +202,9 @@ While data is normally processed in the order in which it is provided, it can be
 
 ```yaml
 ---
-  jinjafx_sort: [ "HOST", "INTERFACE" ]
+  jinjafx_sort:
+    - "HOST"
+    - "INTERFACE"
 ```
 
 Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using `:int` on the field name.
