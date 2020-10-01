@@ -111,14 +111,7 @@ et-0/0/8, r740-041
 et-0/0/9, r740-042
 ```
 
-While data is normally processed in the order in which it is provided, it can be sorted through the use of the `jinjafx_sort` key when specified within `vars.yml`. It takes a case-sensitive list of the fields you wish to sort by, which will then sort the data before it is processed, e.g to sort by "HOST" followed by "INTERFACE" you would specify the following:
-
-```yaml
----
-  jinjafx_sort: [ "HOST", "INTERFACE" ]
-```
-
-By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted. If you have a field where all the values are numbers and you wish them to be sorted numerically then you can designate the field as numerical by suffixing ":int" onto the field name (if it detects a non numerical value then an error will occur), e.g:
+By default all field values are treated as strings which means you need to use the "int" filter (e.g. `{{ NUMBER|int }}`) if you wish to perform mathematical functions on them (e.g. `{{ NUMBER|int + 1 }}`). If you have a field where all the values are numbers and you wish them to be treated as "int" values without having to use the "int" filter, then you can suffix ":int" onto the field name (if it detects a non numerical value in the data then an error will occur), e.g:
 
 ```
 NUMBER:int, NAME
@@ -127,6 +120,15 @@ NUMBER:int, NAME
 2, two
 20, twenty
 ```
+
+While data is normally processed in the order in which it is provided, it can be sorted through the use of the `jinjafx_sort` key when specified within `vars.yml`. It takes a case-sensitive list of the fields you wish to sort by, which will then sort the data before it is processed, e.g to sort by "HOST" followed by "INTERFACE" you would specify the following:
+
+```yaml
+---
+  jinjafx_sort: [ "HOST", "INTERFACE" ]
+```
+
+Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using ":int" on the field name.
 
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 

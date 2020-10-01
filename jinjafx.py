@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, jinja2, yaml, argparse, re, copy, traceback, operator
+import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
 __version__ = '1.2.0'
 jinja2_filters = []
@@ -283,25 +283,12 @@ class JinjaFx():
       if len(self.g_datarows) <= 1:
         raise Exception('not enough data rows - need at least two')
 
-
-
-
-
-
     if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
-      field_indices = []
-
-      for field in gvars['jinjafx_sort']:
-        field_indices.append(self.g_datarows[0].index(field) + 1)
-
-      self.g_datarows[1:] = sorted(self.g_datarows[1:], key=operator.itemgetter(*field_indices))
-
-
-
-
-
-
-
+      for field in reversed(gvars['jinjafx_sort']):
+        if field.startswith('-'):
+          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:]) + 1], reverse=True)
+        else:
+          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:] if field.startswith('+') else field) + 1])
 
     if 'jinja2_extensions' not in gvars:
       gvars.update({ 'jinja2_extensions': [] })
