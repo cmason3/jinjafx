@@ -277,7 +277,7 @@ class JinjaFx():
                   if col in int_indices:
                     fields[row][col] = int(fields[row][col])
 
-                self.g_datarows.append(fields[row][1:])
+                self.g_datarows.append(fields[row])
                 row += 1
 
       if len(self.g_datarows) <= 1:
@@ -287,7 +287,7 @@ class JinjaFx():
       field_indices = []
 
       for field in gvars['jinjafx_sort']:
-        field_indices.append(self.g_datarows[0].index(field))
+        field_indices.append(self.g_datarows[0].index(field) + 1)
 
       self.g_datarows[1:] = sorted(self.g_datarows[1:], key=operator.itemgetter(*field_indices))
 
@@ -324,7 +324,7 @@ class JinjaFx():
       'setg': self.jfx_setg,
       'getg': self.jfx_getg,
       'rows': max([0, len(self.g_datarows) - 1]),
-      'data': self.g_datarows
+      'data': [r[1:] if isinstance(r[0], int) else r for r in self.g_datarows]
     }})
 
     if len(gvars) > 0:
@@ -335,7 +335,7 @@ class JinjaFx():
 
       if len(self.g_datarows) > 0:
         for col in range(len(self.g_datarows[0])):
-          rowdata.update({ self.g_datarows[0][col]: self.g_datarows[row][col] })
+          rowdata.update({ self.g_datarows[0][col]: self.g_datarows[row][col + 1] })
 
         env.globals['jinjafx'].update({ 'row': row })
         self.g_row = row
@@ -346,9 +346,10 @@ class JinjaFx():
 
       try:
         content = template.render(rowdata)
+
       except Exception as e:
         if len(e.args) >= 1 and self.g_row != 0:
-          e.args = (e.args[0] + ' at data row ' + str(self.g_row) + ':\n - ' + str(rowdata),) + e.args[1:]
+          e.args = (e.args[0] + ' at data row ' + str(self.g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
       stack = [ env.from_string(output).render(rowdata) ]
