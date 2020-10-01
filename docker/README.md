@@ -42,8 +42,8 @@ sudo systemctl start jinjafx
 sudo podman build ...
 
 sudo systemctl stop jinjafx
-
 sudo podman rm jinjafx
+
 sudo podman create ...
 sudo podman generate systemd ...
 
