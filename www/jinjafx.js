@@ -202,7 +202,7 @@ window.onload = function() {
       cursor: "row-resize",
       sizes: [30, 70],
       snapOffset: 0,
-      minSize: 25 
+      minSize: 30
     });
 
     document.getElementById('ldata').onclick = function() {
