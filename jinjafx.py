@@ -73,6 +73,7 @@ def main():
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-o', metavar='<output file>', type=str)
     parser.add_argument('-od', metavar='<output dir>', type=str)
+    parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
 
     if args.dt is not None and args.d is not None:
