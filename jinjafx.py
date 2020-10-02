@@ -23,8 +23,9 @@ jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
-    print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
-    print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
+    if '-q' not in sys.argv:
+      print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
+      print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
     raise Exception(message)
 
 
@@ -58,10 +59,11 @@ def import_filters(errc = 0):
 
 def main():
   try:
-    print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
-    print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
+    if '-q' not in sys.argv:
+      print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
+      print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>]'
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
 
     parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
