@@ -124,22 +124,6 @@ NUMBER:int, NAME
 
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
-### JinjaFx Server Usage
-
-Once JinjaFx Server has been started with the `-s` argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify `data.csv`, `template.j2` and `vars.yml` and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
-
-```
- jinjafx_server.py -s [-l <address>] [-p <port>] [-r <repository>]
-   -s                          - start the JinjaFx Server
-   -l <address>                - specify a listen address (default is '127.0.0.1')
-   -p <port>                   - specify a listen port (default is 8080)
-   -r <repository>             - specify a repository directory (allows 'Get Link')
-```
-
-For health checking purposes, if you specify the URL `/ping` then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
-
-The "-r" argument allows you to specify a directory that will be used to store DataTemplates on the server via the "Get Link" button. The link is basically a cryptographic hash of your DataTemplate, which means the same DataTemplate will always result in the same link being generated - if you change any item within the DataTemplate then a different link would be generated.
-
 ### JinjaFx Templates
 
 JinjaFx templates are Jinja2 templates with one exception - they support a JinjaFx specific syntax that allows you to specify a different output file (or `_stdout_` for stdout) within a Jinja2 template to override the value of `-o` (or output name if being used with the JinjaFx Server):
@@ -168,6 +152,22 @@ trim_blocks = True
 lstrip_blocks = True
 keep_trailing_newline = True
 ```
+
+### JinjaFx Server Usage
+
+Once JinjaFx Server has been started with the `-s` argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify `data.csv`, `template.j2` and `vars.yml` and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
+
+```
+ jinjafx_server.py -s [-l <address>] [-p <port>] [-r <repository>]
+   -s                          - start the JinjaFx Server
+   -l <address>                - specify a listen address (default is '127.0.0.1')
+   -p <port>                   - specify a listen port (default is 8080)
+   -r <repository>             - specify a repository directory (allows 'Get Link')
+```
+
+For health checking purposes, if you specify the URL `/ping` then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
+
+The "-r" argument allows you to specify a directory that will be used to store DataTemplates on the server via the "Get Link" button. The link is basically a cryptographic hash of your DataTemplate, which means the same DataTemplate will always result in the same link being generated - if you change any item within the DataTemplate then a different link would be generated.
 
 ### JinjaFx DataTemplates
 
