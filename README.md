@@ -13,13 +13,14 @@ JinjaFx Server running at https://jinjafx.io
 ### JinjaFx Usage
 
 ```
- jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>]
+ jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]
    -t <template.j2>            - specify a Jinja2 template
    -d <data.csv>               - specify row based data (comma or tab separated)
    -dt <datatemplate.yml>      - specify a JinjaFx DataTemplate (contains template and data)
    -g <vars.yml>[, -g ...]     - specify global variables in yaml (supports Ansible vaulted files and strings)
    -o <output file>            - specify the output file (supports Jinja2 variables) (default is stdout)
    -od <output dir>            - change the output dir for output files with a relative path (default is ".")
+   -q                          - quiet mode - don't output version or usage information
 ```
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
@@ -81,7 +82,7 @@ spine-03, et-0/0/3, leaf-03
 spine-03, et-0/0/4, leaf-04
 ```
 
-Finally we also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step[:pad] }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
+We also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step[:pad] }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
 
 ```
 INTERFACE
@@ -111,11 +112,21 @@ et-0/0/8, r740-041
 et-0/0/9, r740-042
 ```
 
+By default all field values are treated as strings which means you need to use the `int` filter (e.g. `{{ NUMBER|int }}`) if you wish to perform mathematical functions on them (e.g. `{{ NUMBER|int + 1 }}`). If you have a field where all the values are numbers and you wish them to be treated as numerical values without having to use the `int` filter, then you can suffix `:int` onto the field name (if it detects a non-numerical value in the data then an error will occur), e.g:
+
+```
+NUMBER:int, NAME
+1, one
+10, ten
+2, two
+20, twenty
+```
+
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
 ### JinjaFx Server Usage
 
-Once JinjaFx Server has been started with the "-s" argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify "data.csv", "template.j2" and "vars.yml" and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
+Once JinjaFx Server has been started with the `-s` argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify `data.csv`, `template.j2` and `vars.yml` and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
 
 ```
  jinjafx_server.py -s [-l <address>] [-p <port>] [-r <repository>]
@@ -125,7 +136,7 @@ Once JinjaFx Server has been started with the "-s" argument then point your web 
    -r <repository>             - specify a repository directory (allows 'Get Link')
 ```
 
-For health checking purposes, if you specify the URL "/ping" then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
+For health checking purposes, if you specify the URL `/ping` then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
 
 The "-r" argument allows you to specify a directory that will be used to store DataTemplates on the server via the "Get Link" button. The link is basically a cryptographic hash of your DataTemplate, which means the same DataTemplate will always result in the same link being generated - if you change any item within the DataTemplate then a different link would be generated.
 
@@ -162,7 +173,7 @@ keep_trailing_newline = True
 
 JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
 
-```
+```yaml
 ---
 dt:
   data: |2
@@ -174,6 +185,31 @@ dt:
   vars: |2
     ... VARS.YML ...
 ```
+
+### Filtering and Sorting
+
+JinjaFx supports the ability to filter as well as sort the data within `data.csv` before it is passed to the templating engine. From a filtering perspective, while you could include and exclude certain rows within your `template.j2` with a conditional `if` statement, it won't allow you to use `jinjafx.first()` and `jinjafx.last()` on the reduced data set. This is where the `jinjafx_filter` key which can be specified in `vars.yml` comes into play - it lets you specify using regular expressions what field values you wish to include in your data, e.g:
+
+```yaml
+---
+  jinjafx_filter:
+    "HOST": "^r740"
+    "INTERFACE": "^et"
+```
+
+The above will filter `data.csv` and only include rows where the "HOST" field value starts with "r740" and where the "INTERFACE" field value starts with "et".
+
+While data is normally processed in the order in which it is provided, it can be sorted through the use of the `jinjafx_sort` key when specified within `vars.yml`. It takes a case-sensitive list of the fields you wish to sort by, which will then sort the data before it is processed, e.g to sort by "HOST" followed by "INTERFACE" you would specify the following:
+
+```yaml
+---
+  jinjafx_sort:
+    - "HOST"
+    - "INTERFACE"
+```
+
+Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using `:int` on the field name.
+
 
 
 ### Ansible Filters
@@ -190,15 +226,15 @@ This filter allows IP address manipulation and is documented in [playbooks_filte
 
 ### Jinja2 Extensions
 
-Jinja2 supports the ability to provide extended functionality through [extensions](https://jinja.palletsprojects.com/en/2.11.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja_extensions` global variable, which you can set within one of your "vars.yml" files (it expects a list):
+Jinja2 supports the ability to provide extended functionality through [extensions](https://jinja.palletsprojects.com/en/2.11.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja2_extensions` global variable, which you can set within one of your `vars.yml` files (it expects a list):
 
 ```yaml
 ---
-jinja_extensions:
+jinja2_extensions:
   - 'jinja2.ext.i18n'
 ```
 
-JinjaFx will then attempt to load and enable the extensions that will then be used when processing your Jinja2 templates. You also have the ability to check whether an extensions is loaded within your template by querying `jinja_extensions` directly.
+JinjaFx will then attempt to load and enable the extensions that will then be used when processing your Jinja2 templates. You also have the ability to check whether an extensions is loaded within your template by querying `jinja2_extensions` directly.
 
 Unfortunately writing Jinja2 Extensions isn't that obvious - well, I didn't find it that obvious as it took me quite a while to work out how to write a custom filter. Let's assume we want to write a custom filter called `add` that simply adds a value to a number, for example:
 
@@ -224,7 +260,7 @@ We would then use the new Extension by adding the following YAML to our `vars.ym
 
 ```yaml
 ---
-jinja_extensions:
+jinja2_extensions:
   - 'jinjafx_extensions.AddExtension'
 ```
 

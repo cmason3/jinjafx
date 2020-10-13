@@ -37,6 +37,20 @@ sudo systemctl enable jinjafx
 sudo systemctl start jinjafx
 ```
 
+#### To Upgrade Container
+```
+sudo podman build ...
+
+sudo systemctl stop jinjafx
+sudo podman rm jinjafx
+
+sudo podman create ...
+sudo podman generate systemd ...
+
+sudo systemctl daemon-reload
+sudo systemctl start jinjafx
+```
+
 ### /etc/haproxy/haproxy.cfg
 
 The preferred way to use JinjaFx Server is with HAProxy running in front of it. Please see https://ssl-config.mozilla.org/#server=haproxy for TLS termination options, but the following will forward port 80 requests to JinjaFx running in Docker or Podman that has been exposed on 127.0.0.1:8080.

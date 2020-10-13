@@ -18,13 +18,14 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.1.6'
+__version__ = '1.2.0'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
-    print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
-    print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
+    if '-q' not in sys.argv:
+      print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
+      print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
     raise Exception(message)
 
 
@@ -58,10 +59,11 @@ def import_filters(errc = 0):
 
 def main():
   try:
-    print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
-    print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
+    if '-q' not in sys.argv:
+      print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
+      print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>]'
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
 
     parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
@@ -71,6 +73,7 @@ def main():
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-o', metavar='<output file>', type=str)
     parser.add_argument('-od', metavar='<output dir>', type=str)
+    parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
 
     if args.dt is not None and args.d is not None:
@@ -199,11 +202,14 @@ class JinjaFx():
     outputs = {}
     delim = None
     rowkey = 1
+    int_indices = []
     
     if isinstance(data, bytes):
       data = data.decode('utf-8')
 
     if data is not None and len(data.strip()) > 0:
+      jinjafx_filter = {}
+
       for l in data.splitlines():
         if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
           if len(self.g_datarows) == 0:
@@ -218,6 +224,10 @@ class JinjaFx():
             fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
 
             for i in range(len(fields)):
+              if fields[i].lower().endswith(':int'):
+                int_indices.append(i + 1)
+                fields[i] = fields[i][:-4]
+
               if fields[i] == '':
                 raise Exception('empty header field detected at column position ' + str(i + 1))
               elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
@@ -227,6 +237,10 @@ class JinjaFx():
               raise Exception('duplicate header field detected in data')
             else:
               self.g_datarows.append(fields)
+
+            if 'jinjafx_filter' in gvars and len(gvars['jinjafx_filter']) > 0:
+              for field in gvars['jinjafx_filter']:
+                jinjafx_filter[self.g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
 
           else:
             n = len(self.g_datarows[0])
@@ -269,14 +283,33 @@ class JinjaFx():
                   fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
                   fields[row][col] = re.sub(r'\\([}{])', r'\1', fields[row][col])
 
-                self.g_datarows.append(fields[row][1:])
+                  if col in int_indices:
+                    fields[row][col] = int(fields[row][col])
+
+                include_row = True
+                if len(jinjafx_filter) > 0:
+                  for index in jinjafx_filter:
+                    if not re.search(jinjafx_filter[index], fields[row][index], re.IGNORECASE):
+                      include_row = False
+                      break
+
+                if include_row:
+                  self.g_datarows.append(fields[row])
+
                 row += 1
 
       if len(self.g_datarows) <= 1:
         raise Exception('not enough data rows - need at least two')
 
-    if 'jinja_extensions' not in gvars:
-      gvars.update({ 'jinja_extensions': [] })
+    if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
+      for field in reversed(gvars['jinjafx_sort']):
+        if field.startswith('-'):
+          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:]) + 1], reverse=True)
+        else:
+          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:] if field.startswith('+') else field) + 1])
+
+    if 'jinja2_extensions' not in gvars:
+      gvars.update({ 'jinja2_extensions': [] })
 
     jinja2_options = {
       'undefined': jinja2.StrictUndefined,
@@ -286,14 +319,14 @@ class JinjaFx():
     }
 
     if isinstance(template, bytes) or isinstance(template, str):
-      env = jinja2.Environment(extensions=gvars['jinja_extensions'], **jinja2_options)
+      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
       if isinstance(template, bytes):
         template = env.from_string(template.decode('utf-8'))
       else:
         template = env.from_string(template)
     else:
-      env = jinja2.Environment(extensions=gvars['jinja_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
+      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
       template = env.get_template(os.path.basename(template.name))
 
@@ -308,7 +341,7 @@ class JinjaFx():
       'setg': self.jfx_setg,
       'getg': self.jfx_getg,
       'rows': max([0, len(self.g_datarows) - 1]),
-      'data': self.g_datarows
+      'data': [r[1:] if isinstance(r[0], int) else r for r in self.g_datarows]
     }})
 
     if len(gvars) > 0:
@@ -319,7 +352,7 @@ class JinjaFx():
 
       if len(self.g_datarows) > 0:
         for col in range(len(self.g_datarows[0])):
-          rowdata.update({ self.g_datarows[0][col]: self.g_datarows[row][col] })
+          rowdata.update({ self.g_datarows[0][col]: self.g_datarows[row][col + 1] })
 
         env.globals['jinjafx'].update({ 'row': row })
         self.g_row = row
@@ -330,9 +363,10 @@ class JinjaFx():
 
       try:
         content = template.render(rowdata)
+
       except Exception as e:
         if len(e.args) >= 1 and self.g_row != 0:
-          e.args = (e.args[0] + ' at data row ' + str(self.g_row) + ':\n - ' + str(rowdata),) + e.args[1:]
+          e.args = (e.args[0] + ' at data row ' + str(self.g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
       stack = [ env.from_string(output).render(rowdata) ]
@@ -475,7 +509,7 @@ class JinjaFx():
     if fields is not None:
       for f in fields:
         if f in self.g_datarows[0]:
-          fpos.append(self.g_datarows[0].index(f))
+          fpos.append(self.g_datarows[0].index(f) + 1)
         else:
           raise Exception('invalid field \'' + f + '\' passed to jinjafx.' + forl + '()')
     elif forl == 'first':
@@ -496,7 +530,7 @@ class JinjaFx():
       for f in ffilter:
         if f in self.g_datarows[0]:
           try:
-            if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f)]):
+            if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f) + 1]):
               fmatch = False
               break
           except Exception:
@@ -522,7 +556,7 @@ class JinjaFx():
   def jfx_fields(self, field=None, ffilter={}):
     if field is not None:
       if field in self.g_datarows[0]:
-        fpos = self.g_datarows[0].index(field)
+        fpos = self.g_datarows[0].index(field) + 1
       else:
         raise Exception('invalid field \'' + field + '\' passed to jinjafx.fields()')
     else:
@@ -538,7 +572,7 @@ class JinjaFx():
         for f in ffilter:
           if f in self.g_datarows[0]:
             try:
-              if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f)]):
+              if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f) + 1]):
                 fmatch = False
                 break
             except Exception:
