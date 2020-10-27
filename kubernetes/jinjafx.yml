@@ -35,7 +35,7 @@ spec:
     spec:
       dnsPolicy: Default
       volumes:
-        - name: jinjafx_repository
+        - name: jinjafx-repository
           hostPath:
             path: /var/lib/jinjafx
       containers:
@@ -47,7 +47,7 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - name: jinjafx_repository
+            - name: jinjafx-repository
               mountPath: /var/lib/jinjafx
           readinessProbe:
             httpGet:
