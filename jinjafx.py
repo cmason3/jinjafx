@@ -228,7 +228,7 @@ class JinjaFx():
                 int_indices.append(i + 1)
                 fields[i] = fields[i][:-4]
 
-              fields[i] = fields[i].replace(' ', '')
+              fields[i] = re.sub(r'\s+', '', fields[i], flags=re.UNICODE)
 
               if fields[i] == '':
                 raise Exception('empty header field detected at column position ' + str(i + 1))
