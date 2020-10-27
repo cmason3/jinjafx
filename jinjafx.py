@@ -63,11 +63,11 @@ def main():
       print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
       print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
 
     parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
-    group_ex.add_argument('-dt', metavar='<datatemplate.yml>', type=argparse.FileType('r'))
+    group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
     group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
     parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
@@ -227,6 +227,8 @@ class JinjaFx():
               if fields[i].lower().endswith(':int'):
                 int_indices.append(i + 1)
                 fields[i] = fields[i][:-4]
+
+              fields[i] = fields[i].replace(' ', '')
 
               if fields[i] == '':
                 raise Exception('empty header field detected at column position ' + str(i + 1))
@@ -413,7 +415,7 @@ class JinjaFx():
     if re.search(r'(?<!\\)[\(\[\{]', pofa[0]):
       i = 0
       while i < len(pofa):
-        m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
+        m = re.search(r'(?<!\\)\((.+?(?<!\\)\|.+?)(?<!\\)\)', pofa[i])
         if m:
           for g in m.group(1).split('|'):
             pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
@@ -496,7 +498,7 @@ class JinjaFx():
     for g in groups:
       g.pop(0)
 
-    pofa = [re.sub(r'\\([\(\[\)\]])', r'\1', i) for i in pofa]
+    pofa = [re.sub(r'\\([\|\(\[\)\]])', r'\1', i) for i in pofa]
     return [pofa, groups] if rg else pofa
 
 
