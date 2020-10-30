@@ -13,10 +13,10 @@ JinjaFx Server running at https://jinjafx.io
 ### JinjaFx Usage
 
 ```
- jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <datatemplate.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]
+ jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]
    -t <template.j2>            - specify a Jinja2 template
    -d <data.csv>               - specify row based data (comma or tab separated)
-   -dt <datatemplate.yml>      - specify a JinjaFx DataTemplate (contains template and data)
+   -dt <dt.yml>                - specify a JinjaFx DataTemplate (contains template and data)
    -g <vars.yml>[, -g ...]     - specify global variables in yaml (supports Ansible vaulted files and strings)
    -o <output file>            - specify the output file (supports Jinja2 variables) (default is stdout)
    -od <output dir>            - change the output dir for output files with a relative path (default is ".")
@@ -34,16 +34,16 @@ A, B, C    <- HEADER ROW
 7, 8, 9    <- DATA ROW 3
 ```
 
-The case-sensitive header row determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value) and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you do omit the data then the template will still be executed, but with a single empty row of data.
+The case-sensitive header row determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value - whitespace is automatically removed from header fields, which means "New Port" will need to be referenced using the variable name "NewPort") and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you do omit the data then the template will still be executed, but with a single empty row of data.
 
-Apart from normal data you can also specify regex based static character classes or static groups as values within the data rows. These will be expanded using the `jinjafx.expand()` function to multiple rows, for example:
+Apart from normal data you can also specify regex based static character classes or static groups as values within the data rows using `(value1|value2|value3)` or `[a-f]`. These will be expanded using the `jinjafx.expand()` function to multiple rows, for example:
 
 ```
 DEVICE, TYPE
 us(ma|n[yh]|tx)-pe-1[ab], pe
 ```
 
-The above would be expanded to the following, which JinjaFx would then loop through like normal rows (be careful as you can easily create huge data sets with no boundaries) - if you do wish to use literal brackets then they would need to be escaped (e.g. "\\["):
+The above would be expanded to the following, which JinjaFx would then loop through like normal rows (be careful as you can easily create huge data sets with no boundaries) - if you do wish to use literal brackets then they would need to be escaped (e.g. "\\[" or "\\("), although escaping curly brackets is only required if you include a `|` character.
 
 ```
 DEVICE, TYPE
