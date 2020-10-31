@@ -43,7 +43,7 @@ DEVICE, TYPE
 us(ma|n[yh]|tx)-pe-1[ab], pe
 ```
 
-The above would be expanded to the following, which JinjaFx would then loop through like normal rows (be careful as you can easily create huge data sets with no boundaries) - if you do wish to use literal brackets then they would need to be escaped (e.g. "\\[" or "\\("), although escaping curly brackets is only required if you include a `|` character.
+The above would be expanded to the following, which JinjaFx would then loop through like normal rows (be careful as you can easily create huge data sets with no boundaries) - if you do wish to use literal brackets then they would need to be escaped (e.g. "\\[" or "\\(").
 
 ```
 DEVICE, TYPE
