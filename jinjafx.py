@@ -417,7 +417,7 @@ class JinjaFx():
       while i < len(pofa):
         m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
         if m:
-          for g in m.group(1).split('|'):
+          for g in re.split(r'(?<!\\)\|', m.group(1)):
             pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
             groups.append(groups[i] + [g])
 
