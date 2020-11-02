@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -245,8 +245,25 @@ class JinjaFx():
                 jinjafx_filter[self.g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
 
           else:
+            gcount = 1
+            fields = []
+            for f in re.split(delim, l.strip(schars)):
+              delta = 0
+
+              for m in re.finditer(r'(?<!\\)\((.+?)(?<!\\)\)', f):
+                if not re.search(r'(?<!\\)\|', m.group(1)):
+                  if not re.search(r'\\' + str(gcount), l):
+                    if re.search(r'\\[0-9]+', l):
+                      raise Exception('inproper use of parenthesis in row ' + str(rowkey) + ' at \'' + str(m.group(0)) + '\' - you should escape them')
+                    else:
+                      f = f[:m.start() + delta] + '\\(' + m.group(1) + '\\)' + f[m.end() + delta:]
+                      delta += 2
+
+                gcount += 1
+
+              fields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
+
             n = len(self.g_datarows[0])
-            fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l.strip(schars))]
             fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
             recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'
