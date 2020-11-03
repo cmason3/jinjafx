@@ -121,7 +121,8 @@ def main():
 
         if 'vars' in dt:
           gyaml = decrypt_vault(dt['vars'])
-          gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
+          if gyaml:
+            gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
     if args.d is not None:
       with open(args.d.name) as f:
@@ -436,7 +437,7 @@ class JinjaFx():
         if m:
           for g in re.split(r'(?<!\\)\|', m.group(1)):
             pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
-            groups.append(groups[i] + [g])
+            groups.append(groups[i] + [re.sub(r'\\([\|\(\[\)\]])', r'\1', g)])
 
           pofa.pop(i)
           groups.pop(i)
