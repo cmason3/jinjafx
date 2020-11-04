@@ -323,10 +323,19 @@ class JinjaFx():
 
     if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
       for field in reversed(gvars['jinjafx_sort']):
-        if field.startswith('-'):
-          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:]) + 1], reverse=True)
+        if isinstance(field, dict):
+          fn = next(iter(field))
+
+          if fn.startswith('-'):
+            self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: (field[fn].get(n[self.g_datarows[0].index(fn[1:]) + 1], 0), n[self.g_datarows[0].index(fn[1:]) + 1]), reverse=True)
+          else:
+            self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: (field[fn].get(n[self.g_datarows[0].index(fn[1:] if fn.startswith('+') else fn) + 1], 0), n[self.g_datarows[0].index(fn[1:] if fn.startswith('+') else fn) + 1]))
+
         else:
-          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:] if field.startswith('+') else field) + 1])
+          if field.startswith('-'):
+            self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:]) + 1], reverse=True)
+          else:
+            self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:] if field.startswith('+') else field) + 1])
 
     if 'jinja2_extensions' not in gvars:
       gvars.update({ 'jinja2_extensions': [] })
