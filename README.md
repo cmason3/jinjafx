@@ -210,7 +210,15 @@ While data is normally processed in the order in which it is provided, it can be
 
 Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using `:int` on the field name.
 
+While sorting is performed in either ascending or descending order, you can also specify a custom sort order using the following syntax:
 
+```yaml
+---
+  jinjafx_sort:
+    - "HOST": { "r740-036": -2, "r740-035": -1, "r740-039": 1 }
+```
+
+The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if yo specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
 
 ### Ansible Filters
 
