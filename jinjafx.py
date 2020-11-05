@@ -255,7 +255,7 @@ class JinjaFx():
                 if not re.search(r'(?<!\\)\|', m.group(1)):
                   if not re.search(r'\\' + str(gcount), l):
                     if re.search(r'\\[0-9]+', l):
-                      raise Exception('inproper use of parenthesis in row ' + str(rowkey) + ' at \'' + str(m.group(0)) + '\' - you should escape them')
+                      raise Exception('parenthesis in row ' + str(rowkey) + ' at \'' + str(m.group(0)) + '\' should be escaped or removed')
                     else:
                       f = f[:m.start() + delta] + '\\(' + m.group(1) + '\\)' + f[m.end() + delta:]
                       delta += 2
