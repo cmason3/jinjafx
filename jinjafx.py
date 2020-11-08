@@ -326,12 +326,16 @@ class JinjaFx():
         if isinstance(field, dict):
           fn = next(iter(field))
           r = True if fn.startswith('-') else False
-          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: (field[fn].get(n[self.g_datarows[0].index(fn.lstrip('+-')) + 1], 0), n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), reverse=r)
+
+          for i in range(len(field[fn])):
+            rx = next(iter(field[fn][i]))
+            field[fn][i] = [re.compile(rx + '$'), field[fn][i][rx]]
+
+          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: (self.find_re_match(field[fn], n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), reverse=r)
 
         else:
           r = True if field.startswith('-') else False
           self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field.lstrip('+-')) + 1], reverse=r)
-
 
     if 'jinja2_extensions' not in gvars:
       gvars.update({ 'jinja2_extensions': [] })
@@ -629,6 +633,14 @@ class JinjaFx():
 
   def jfx_getg(self, key, default=None):
     return self.g_dict.get('_val_' + str(key), default)
+
+
+  def find_re_match(self, o, v, default=0):
+    for rx in o:
+      if rx[0].match(v):
+        return rx[1]
+
+    return default
 
 
 if __name__ == '__main__':
