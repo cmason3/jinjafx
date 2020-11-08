@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.2.2-beta'
+__version__ = '1.2.2 (beta)'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -326,12 +326,12 @@ class JinjaFx():
         if isinstance(field, dict):
           fn = next(iter(field))
           r = True if fn.startswith('-') else False
+          mv = []
 
-          for i in range(len(field[fn])):
-            rx = next(iter(field[fn][i]))
-            field[fn][i] = [re.compile(rx + '$'), field[fn][i][rx]]
+          for rx, v in field[fn].items():
+            mv.append([re.compile(rx + '$'), v])
 
-          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: (self.find_re_match(field[fn], n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), reverse=r)
+          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: (self.find_re_match(mv, n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), reverse=r)
 
         else:
           r = True if field.startswith('-') else False
