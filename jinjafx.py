@@ -309,7 +309,7 @@ class JinjaFx():
                 include_row = True
                 if len(jinjafx_filter) > 0:
                   for index in jinjafx_filter:
-                    if not re.search(jinjafx_filter[index], fields[row][index], re.IGNORECASE):
+                    if not re.search(jinjafx_filter[index], fields[row][index]):
                       include_row = False
                       break
 
