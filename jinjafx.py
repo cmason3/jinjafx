@@ -423,14 +423,14 @@ class JinjaFx():
       if len(stack) != 1:
         raise Exception('unbalanced output tags')
 
-      for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
-        nkey = o.split(':')[1]
+    for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
+      nkey = o.split(':')[1]
 
-        if nkey not in outputs:
-          outputs[nkey] = []
+      if nkey not in outputs:
+        outputs[nkey] = []
           
-        outputs[nkey] += outputs[o]
-        del outputs[o]
+      outputs[nkey] += outputs[o]
+      del outputs[o]
 
     return outputs
 
