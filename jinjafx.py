@@ -398,11 +398,16 @@ class JinjaFx():
           e.args = (e.args[0] + ' at data row ' + str(self.g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
-      stack = [ env.from_string(output).render(rowdata) ]
+      stack = ['0:' + env.from_string(output).render(rowdata)]
       for l in iter(content.splitlines()):
-        block_begin = re.search(r'<output[\t ]+["\']*(.+?)["\']*[\t ]*>', l, re.IGNORECASE)
+        block_begin = re.search(r'<output[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', l, re.IGNORECASE)
         if block_begin:
-          stack.append(block_begin.group(1).strip())
+          if block_begin.group(2) != None:
+            index = int(block_begin.group(2))
+          else:
+            index = 0
+
+          stack.append(str(index) + ':' + block_begin.group(1).strip())
         else:
           block_end = re.search(r'</output[\t ]*>', l, re.IGNORECASE)
           if block_end:
@@ -417,6 +422,15 @@ class JinjaFx():
 
       if len(stack) != 1:
         raise Exception('unbalanced output tags')
+
+      for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
+        nkey = o.split(':')[1]
+
+        if nkey not in outputs:
+          outputs[nkey] = []
+          
+        outputs[nkey] += outputs[o]
+        del outputs[o]
 
     return outputs
 

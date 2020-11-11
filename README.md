@@ -134,7 +134,7 @@ JinjaFx templates are Jinja2 templates with one exception - they support a Jinja
 </output>
 ```
 
-The above syntax is transparent to Jinja2 and will be ignored, but JinjaFx will parse it and use a different output file for the contents of that specific block. Full Jinja2 syntax is supported within the block as well as supporting nested blocks.
+The above syntax is transparent to Jinja2 and will be ignored by Jinja2, but JinjaFx will parse it and use a different output file for the contents of that specific block. Full Jinja2 syntax is supported within the block as well as supporting nested blocks.
 
 This data could then be used in a template as follows, which would output a different text file per "DEVICE":
 
@@ -143,6 +143,29 @@ This data could then be used in a template as follows, which would output a diff
 edit interfaces {{ INTERFACE }}
 set description "## Link to {{ HOST }} ##"
 </output>
+```
+
+You also have the option of specifying a numerical output block index to order them, e.g:
+
+```
+<output "{{ DEVICE|lower }}.txt">[1]
+first
+</output>
+<output "{{ DEVICE|lower }}.txt">[0]
+second
+</output>
+<output "{{ DEVICE|lower }}.txt">[-1]
+third
+</output>
+
+```
+
+The outputs are then sorted based on the index (the default index if omitted is 0), which results in the following output:
+
+```
+third
+second
+first
 ```
 
 By default the following Jinja2 templating options are enabled, but they can be overridden as required in the template:
