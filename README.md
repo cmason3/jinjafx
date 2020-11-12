@@ -43,7 +43,7 @@ DEVICE, TYPE
 us(ma|n[yh]|tx)-pe-1[ab], pe
 ```
 
-The above would be expanded to the following, which JinjaFx would then loop through like normal rows (be careful as you can easily create huge data sets with no boundaries) - if you do wish to use literal brackets then they would need to be escaped (e.g. "\\[" or "\\("), although escaping curly brackets is only required if you include a `|` character.
+The above would be expanded to the following, which JinjaFx would then loop through like normal rows (be careful as you can easily create huge data sets with no boundaries) - if you do wish to use literal brackets then they would need to be escaped (e.g. "\\[" or "\\(") - JinjaFx tries to be intelligent with regards to curly brackets - if it thinks you meant to escape them then it will automatically escape them (i.e. if it can't detect a "|" between the brackets and you aren't referencing them in capture groups).
 
 ```
 DEVICE, TYPE
@@ -134,7 +134,7 @@ JinjaFx templates are Jinja2 templates with one exception - they support a Jinja
 </output>
 ```
 
-The above syntax is transparent to Jinja2 and will be ignored, but JinjaFx will parse it and use a different output file for the contents of that specific block. Full Jinja2 syntax is supported within the block as well as supporting nested blocks.
+The above syntax is transparent to Jinja2 and will be ignored by Jinja2, but JinjaFx will parse it and use a different output file for the contents of that specific block. Full Jinja2 syntax is supported within the block as well as supporting nested blocks.
 
 This data could then be used in a template as follows, which would output a different text file per "DEVICE":
 
@@ -143,6 +143,29 @@ This data could then be used in a template as follows, which would output a diff
 edit interfaces {{ INTERFACE }}
 set description "## Link to {{ HOST }} ##"
 </output>
+```
+
+You also have the option of specifying a numerical output block index to order them, e.g:
+
+```
+<output "{{ DEVICE|lower }}.txt">[1]
+first
+</output>
+<output "{{ DEVICE|lower }}.txt">[0]
+second
+</output>
+<output "{{ DEVICE|lower }}.txt">[-1]
+third
+</output>
+
+```
+
+The outputs are then sorted based on the index (the default index if omitted is 0), which results in the following output:
+
+```
+third
+second
+first
 ```
 
 By default the following Jinja2 templating options are enabled, but they can be overridden as required in the template:
@@ -197,7 +220,7 @@ JinjaFx supports the ability to filter as well as sort the data within `data.csv
     "INTERFACE": "^et"
 ```
 
-The above will filter `data.csv` and only include rows where the "HOST" field value starts with "r740" and where the "INTERFACE" field value starts with "et".
+The above will filter `data.csv` and only include rows where the "HOST" field value starts with "r740" and where the "INTERFACE" field value starts with "et" (by default it performs a case sensitive match, but "(?i)" can be specified at the beginning of the match string to ignore case).
 
 While data is normally processed in the order in which it is provided, it can be sorted through the use of the `jinjafx_sort` key when specified within `vars.yml`. It takes a case-sensitive list of the fields you wish to sort by, which will then sort the data before it is processed, e.g to sort by "HOST" followed by "INTERFACE" you would specify the following:
 
@@ -210,7 +233,15 @@ While data is normally processed in the order in which it is provided, it can be
 
 Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using `:int` on the field name.
 
+While sorting is performed in either ascending or descending order, you can also specify a custom sort order using the following syntax:
 
+```yaml
+---
+  jinjafx_sort:
+    - "HOST": { "r740-036": -2, "r740-035": -1, "r740-039": 1 }
+```
+
+The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if yo specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
 
 ### Ansible Filters
 

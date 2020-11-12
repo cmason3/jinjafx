@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -121,7 +121,8 @@ def main():
 
         if 'vars' in dt:
           gyaml = decrypt_vault(dt['vars'])
-          gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
+          if gyaml:
+            gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
     if args.d is not None:
       with open(args.d.name) as f:
@@ -245,8 +246,25 @@ class JinjaFx():
                 jinjafx_filter[self.g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
 
           else:
+            gcount = 1
+            fields = []
+            for f in re.split(delim, l.strip(schars)):
+              delta = 0
+
+              for m in re.finditer(r'(?<!\\)\((.+?)(?<!\\)\)', f):
+                if not re.search(r'(?<!\\)\|', m.group(1)):
+                  if not re.search(r'\\' + str(gcount), l):
+                    if re.search(r'\\[0-9]+', l):
+                      raise Exception('parenthesis in row ' + str(rowkey) + ' at \'' + str(m.group(0)) + '\' should be escaped or removed')
+                    else:
+                      f = f[:m.start() + delta] + '\\(' + m.group(1) + '\\)' + f[m.end() + delta:]
+                      delta += 2
+
+                gcount += 1
+
+              fields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
+
             n = len(self.g_datarows[0])
-            fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in re.split(delim, l.strip(schars))]
             fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
             recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'
@@ -291,7 +309,7 @@ class JinjaFx():
                 include_row = True
                 if len(jinjafx_filter) > 0:
                   for index in jinjafx_filter:
-                    if not re.search(jinjafx_filter[index], fields[row][index], re.IGNORECASE):
+                    if not re.search(jinjafx_filter[index], fields[row][index]):
                       include_row = False
                       break
 
@@ -305,10 +323,19 @@ class JinjaFx():
 
     if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
       for field in reversed(gvars['jinjafx_sort']):
-        if field.startswith('-'):
-          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:]) + 1], reverse=True)
+        if isinstance(field, dict):
+          fn = next(iter(field))
+          r = True if fn.startswith('-') else False
+          mv = []
+
+          for rx, v in field[fn].items():
+            mv.append([re.compile(rx + '$'), v])
+
+          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: (self.find_re_match(mv, n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), reverse=r)
+
         else:
-          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field[1:] if field.startswith('+') else field) + 1])
+          r = True if field.startswith('-') else False
+          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field.lstrip('+-')) + 1], reverse=r)
 
     if 'jinja2_extensions' not in gvars:
       gvars.update({ 'jinja2_extensions': [] })
@@ -371,11 +398,16 @@ class JinjaFx():
           e.args = (e.args[0] + ' at data row ' + str(self.g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
-      stack = [ env.from_string(output).render(rowdata) ]
+      stack = ['0:' + env.from_string(output).render(rowdata)]
       for l in iter(content.splitlines()):
-        block_begin = re.search(r'<output[\t ]+["\']*(.+?)["\']*[\t ]*>', l, re.IGNORECASE)
+        block_begin = re.search(r'<output[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', l, re.IGNORECASE)
         if block_begin:
-          stack.append(block_begin.group(1).strip())
+          if block_begin.group(2) != None:
+            index = int(block_begin.group(2))
+          else:
+            index = 0
+
+          stack.append(str(index) + ':' + block_begin.group(1).strip())
         else:
           block_end = re.search(r'</output[\t ]*>', l, re.IGNORECASE)
           if block_end:
@@ -390,6 +422,15 @@ class JinjaFx():
 
       if len(stack) != 1:
         raise Exception('unbalanced output tags')
+
+    for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
+      nkey = o.split(':')[1]
+
+      if nkey not in outputs:
+        outputs[nkey] = []
+          
+      outputs[nkey] += outputs[o]
+      del outputs[o]
 
     return outputs
 
@@ -415,11 +456,11 @@ class JinjaFx():
     if re.search(r'(?<!\\)[\(\[\{]', pofa[0]):
       i = 0
       while i < len(pofa):
-        m = re.search(r'(?<!\\)\((.+?(?<!\\)\|.+?)(?<!\\)\)', pofa[i])
+        m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
         if m:
-          for g in m.group(1).split('|'):
+          for g in re.split(r'(?<!\\)\|', m.group(1)):
             pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
-            groups.append(groups[i] + [g])
+            groups.append(groups[i] + [re.sub(r'\\([\|\(\[\)\]])', r'\1', g)])
 
           pofa.pop(i)
           groups.pop(i)
@@ -606,6 +647,14 @@ class JinjaFx():
 
   def jfx_getg(self, key, default=None):
     return self.g_dict.get('_val_' + str(key), default)
+
+
+  def find_re_match(self, o, v, default=0):
+    for rx in o:
+      if rx[0].match(v):
+        return rx[1]
+
+    return default
 
 
 if __name__ == '__main__':
