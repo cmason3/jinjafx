@@ -34,7 +34,7 @@ A, B, C    <- HEADER ROW
 7, 8, 9    <- DATA ROW 3
 ```
 
-The case-sensitive header row determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value - whitespace is automatically removed from header fields, which means "New Port" will need to be referenced using the variable name "NewPort") and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you do omit the data then the template will still be executed, but with a single empty row of data.
+The case-sensitive header row (see `jinjafx_adjust_headers`) determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value - whitespace is automatically removed from header fields, which means "New Port" will need to be referenced using the variable name "NewPort") and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you do omit the data then the template will still be executed, but with a single empty row of data.
 
 Apart from normal data you can also specify regex based static character classes or static groups as values within the data rows using `(value1|value2|value3)` or `[a-f]`. These will be expanded using the `jinjafx.expand()` function to multiple rows, for example:
 
@@ -175,6 +175,10 @@ trim_blocks = True
 lstrip_blocks = True
 keep_trailing_newline = True
 ```
+
+#### jinjafx_adjust_headers
+
+There might be some situations where you can't control the format of the header fields that are provided in `data.csv` - it might come from a spreadsheet where someone hasn't been consistent with the header row and has used uppercase in some situations and lowercase in others. The header fields are used by Jinja2 as case-sensitive variables and can't contain spaces or punctuation characters - they can only contain alphanumerical characters and the underscore. To help in these situations, the variable `jinjafx_adjust_headers` can be set in `vars.yml` which will remove any non-standard characters and upper case all header fields (i.e. "Assigned / Unassigned" would become "ASSIGNEDUNASSIGNED").
 
 ### JinjaFx Server Usage
 
