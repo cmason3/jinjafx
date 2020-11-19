@@ -331,6 +331,17 @@ This function is used to expand a string that contains static character classes 
 
 This function is used to provide a persistent counter within a row or between rows. If you specify a `key` then it is a global counter that will persist between rows, but if you don't or you include `jinjafx.row` within the `key`, then the counter only persists within the template of the current row.
 
+- <b><code>jinjafx.exception("message")</code></b>
+
+This function is used to stop processing and raise an exception with a meaningful message - for example, if an expected header field doesn't exist you could use it as follows:
+
+```jinja2
+{% if name is not defined %}
+  {% set null = jinjafx.exception("header field 'name' is not defined in data") %}
+{% endif %}
+
+```
+
 - <b><code>jinjafx.first([fields[]], [{ filter_field: "regex", ... }])</code></b>
 
 This function is used to determine whether this is the first row where you have seen this particular field value or not - if you don't specify any fields then it will return `True` for the first row and `False` for the rest.

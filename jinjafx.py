@@ -365,6 +365,7 @@ class JinjaFx():
       'jinja_version': jinja2.__version__,
       'expand': self.jfx_expand,
       'counter': self.jfx_counter,
+      'exception': self.jfx_exception,
       'first': self.jfx_first,
       'last': self.jfx_last,
       'fields': self.jfx_fields,
@@ -395,8 +396,11 @@ class JinjaFx():
         content = template.render(rowdata)
 
       except Exception as e:
-        if len(e.args) >= 1 and self.g_row != 0:
-          e.args = (e.args[0] + ' at data row ' + str(self.g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
+        if e.args[0].startswith('[jfx_exception] '):
+          e.args = (e.args[0][16:],)
+        else:
+          if len(e.args) >= 1 and self.g_row != 0:
+            e.args = (e.args[0] + ' at data row ' + str(self.g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
       stack = ['0:' + env.from_string(output).render(rowdata)]
@@ -587,6 +591,10 @@ class JinjaFx():
           return True if self.g_row == r else False
 
     return False
+
+
+  def jfx_exception(self, message):
+    raise Exception('[jfx_exception] ' + message)
 
 
   def jfx_first(self, fields=None, ffilter={}):

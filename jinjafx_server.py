@@ -198,7 +198,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 raise Exception('nothing to output')
   
             except Exception as e:
-              traceback.print_exc()
               tb = traceback.format_exc()
               match = re.search(r'[\s\S]*File "<(?:template|unknown)>", line ([0-9]+), in.*template', tb, re.IGNORECASE)
               if match:
@@ -206,6 +205,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               elif 'yaml.FullLoader' in tb:
                 error = 'error[vars.yml]: ' + type(e).__name__ + ': ' + str(e)
               else:
+                traceback.print_exc()
                 error = 'error[' + str(sys.exc_info()[2].tb_lineno) + ']: ' + type(e).__name__ + ': ' + str(e)
 
               jsr = {
