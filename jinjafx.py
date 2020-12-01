@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.2.2'
+__version__ = '1.2.3 (beta)'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -229,7 +229,8 @@ class JinjaFx():
                 int_indices.append(i + 1)
                 fields[i] = fields[i][:-4]
 
-              fields[i] = re.sub(r'\s+', '', fields[i], flags=re.UNICODE)
+              if 'jinjafx_adjust_headers' in gvars and gvars['jinjafx_adjust_headers'] == True:
+                fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].upper(), flags=re.UNICODE)
 
               if fields[i] == '':
                 raise Exception('empty header field detected at column position ' + str(i + 1))
@@ -364,6 +365,7 @@ class JinjaFx():
       'jinja_version': jinja2.__version__,
       'expand': self.jfx_expand,
       'counter': self.jfx_counter,
+      'exception': self.jfx_exception,
       'first': self.jfx_first,
       'last': self.jfx_last,
       'fields': self.jfx_fields,
@@ -394,8 +396,11 @@ class JinjaFx():
         content = template.render(rowdata)
 
       except Exception as e:
-        if len(e.args) >= 1 and self.g_row != 0:
-          e.args = (e.args[0] + ' at data row ' + str(self.g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
+        if e.args[0].startswith('[jfx_exception] '):
+          e.args = (e.args[0][16:],)
+        else:
+          if len(e.args) >= 1 and self.g_row != 0:
+            e.args = (e.args[0] + ' at data row ' + str(self.g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
       stack = ['0:' + env.from_string(output).render(rowdata)]
@@ -586,6 +591,10 @@ class JinjaFx():
           return True if self.g_row == r else False
 
     return False
+
+
+  def jfx_exception(self, message):
+    raise Exception('[jfx_exception] ' + message)
 
 
   def jfx_first(self, fields=None, ffilter={}):
