@@ -2,7 +2,7 @@
 
 ### Docker Hub
 
-The latest released version of JinjaFx Server will always be available in Docker Hub at `docker.io/cmason3/jinjafx:latest`
+The latest released version of JinjaFx Server will always be available in Docker Hub at `docker.io/cmason3/jinjafx:latest` - if you use this image then the build step below can be skipped.
 
 ### Build Docker Image
 
