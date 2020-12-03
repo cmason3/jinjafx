@@ -1,7 +1,7 @@
 FROM python:3.8-slim
 
 RUN apt-get update; apt-get install -y curl; apt-get clean
-RUN python3 -m pip --no-cache-dir install --upgrade ansible netaddr
+RUN python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr
 
 RUN curl -s https://api.github.com/repos/cmason3/jinjafx/releases/latest \
 | grep "tarball_url" | cut -d'"' -f4 | xargs -I {} curl -sL {} \
