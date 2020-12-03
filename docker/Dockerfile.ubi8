@@ -1,8 +1,0 @@
-FROM registry.access.redhat.com/ubi8/python-38
-
-RUN python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr
-RUN git clone -b "master" https://github.com/cmason3/jinjafx.git jinjafx
-
-WORKDIR jinjafx
-
-ENTRYPOINT [ "python3", "-u", "jinjafx_server.py", "-s", "-l", "0.0.0.0", "-p", "8080" ]
