@@ -431,7 +431,7 @@ def main(rflag=False):
 
   try:
     print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja Templating Tool')
-    print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
+    print('Copyright (c) 2020-' + datetime.datetime.now().strftime('%Y') + ' Chris Mason <chris@jinjafx.org>\n')
 
     parser = jinjafx.ArgumentParser(add_help=False)
     parser.add_argument('-s', action='store_true', required=True)
