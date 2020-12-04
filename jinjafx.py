@@ -61,7 +61,7 @@ def main():
   try:
     if '-q' not in sys.argv:
       print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
-      print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
+      print('Copyright (c) 2020-' + datetime.datetime.now().strftime('%Y') + ' Chris Mason <chris@jinjafx.org>\n')
 
     jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
 
