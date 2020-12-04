@@ -10,6 +10,7 @@ var qs = {};
 function getStatusText(code) {
   var statusText = {
     400: 'Bad Request',
+    403: 'Forbidden',
     404: 'Not Found',
     413: 'Request Entity Too Large',
     429: 'Too Many Requests',
