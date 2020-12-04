@@ -250,6 +250,11 @@ window.onload = function() {
 
       try {
         if (qs.hasOwnProperty('dt')) {
+          $("#loading").modal({
+            backdrop: 'static',
+            keyboard: false
+          });
+
           var xHR = new XMLHttpRequest();
           xHR.open("GET", "dt/" + qs.dt, true);
 
@@ -277,12 +282,16 @@ window.onload = function() {
               set_status("darkred", "HTTP ERROR " + this.status, sT);
               window.history.replaceState({}, document.title, window.location.pathname);
             }
+            $("#loading").hide();
+            $('.modal-backdrop').hide();
             loaded = true;
           };
 
           xHR.onerror = function() {
             set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
             window.history.replaceState({}, document.title, window.location.pathname);
+            $("#loading").hide();
+            $('.modal-backdrop').hide();
             loaded = true;
           };
           xHR.send(null);
