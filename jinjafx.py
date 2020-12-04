@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # JinjaFx - Jinja Templating Tool
-# Copyright (c) 2020 Chris Mason <chris@jinjafx.org>
+# Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.2.3'
+__version__ = '1.3.0 (beta)'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -61,7 +61,7 @@ def main():
   try:
     if '-q' not in sys.argv:
       print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
-      print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
+      print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
 
     jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
 
