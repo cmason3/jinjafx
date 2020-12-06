@@ -17,7 +17,8 @@
 
 from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime, re, argparse, zipfile, hashlib, traceback, glob, requests, hmac
+import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime
+import re, argparse, zipfile, hashlib, traceback, glob, requests, hmac, uuid
 
 try:
   from ansible.constants import DEFAULT_VAULT_ID_MATCH
@@ -27,11 +28,11 @@ except Exception:
   pass
 
 lock = threading.RLock()
-repository = None
 
 aws_s3_url = None
 aws_access_key = None
 aws_secret_key = None
+repository = None
 
 class JinjaFxServer(HTTPServer):
   def handle_error(self, request, client_address):
@@ -84,7 +85,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def do_GET(self):
     fpath = self.path.split('?', 1)[0]
-    ro = False
+    #ro = False
 
     if fpath == '/':
       fpath = '/index.html'
@@ -99,7 +100,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
           if rr.status_code == 200:
             r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
-            ro = True
+            #ro = True
 
           elif rr.status_code == 403:
             r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
@@ -117,22 +118,18 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       elif repository != None:
         fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.yml')
 
-        with lock:
-          if os.path.isfile(fpath):
-            try:
-              with open(fpath, 'rb') as f:
-                r = [ 'application/yaml', 200, f.read() ]
+        if os.path.isfile(fpath):
+          try:
+            with open(fpath, 'rb') as f:
+              r = [ 'application/yaml', 200, f.read() ]
 
-              if not os.access(fpath, os.W_OK):
-                ro = True
+            os.utime(fpath, None)
 
-              os.utime(fpath, None)
+          except Exception:
+            r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
-            except Exception:
-              r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
-
-          else:
-            r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+        else:
+          r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
 
       else:
         r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
@@ -163,8 +160,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
-    if ro:
-      self.send_header('X-Read-Only', 'yes');  
+    #if ro:
+    #  self.send_header('X-Read-Only', 'yes');  
     self.end_headers()
     self.wfile.write(r[2])
 
@@ -315,21 +312,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   dt_yml += '  vars: |2\n'
                   dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
 
-                dt_link = self.encode_link(hashlib.sha256(dt_yml.encode('utf-8')).digest()[:12])
-                dt_sha256 = hashlib.sha256(dt_yml.encode('utf-8')).hexdigest()
-
-                if repository != None:
-                  if 'id' in params:
-                    dt_yml += '\nrev_id: 1\n'
-                  else:
-                    dt_yml += '\nrev_id: 0\n'
-
-                  dt_yml += 'created: "' + datetime.datetime.now().strftime('%b %d, %Y at %H:%M:%S') + '"\n'
-                
-                else:
-                  dt_yml += '\n'
-
-                dt_yml += 'sha256: "' + dt_sha256 + '"\n'
+                dt_yml += '\ndt_hash: "' + hashlib.sha256(dt_yml.encode('utf-8')).hexdigest() + '"\n'
 
                 if hasattr(self, 'headers'):
                   if 'User-Agent' in self.headers:
@@ -339,101 +322,46 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   else:
                     dt_yml += 'remote-addr: "' + str(self.client_address[0]) + '"\n'
 
-                if aws_s3_url != None:
-                  if 'id' in params:
-                    r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                if 'id' in params:
+                  if re.search(r'^[A-Za-z0-9_-]{1,24}$', params['id']):
+                    dt_link = params['id']
 
                   else:
-                    try:
-                      rr = aws_s3_put(aws_s3_url, 'jfx_' + dt_link + '.yml', dt_yml, 'application/yaml')
-
-                      if rr.status_code == 200:
-                        r = [ 'text/plain', 200, dt_link + '\r\n' ]
-
-                      elif rr.status_code == 403:
-                        r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
-          
-                      else:
-                        r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
-
-                    except Exception as e:
-                      log('error: ' + str(e))
-                      r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
+                    raise Exception("invalid link format")
 
                 else:
-                  if os.access(repository, os.W_OK):
-                    with lock:
-                      maxiter = 10
+                  dt_link = self.encode_link(hashlib.sha256((str(uuid.uuid1()) + ':' + dt_yml).encode('utf-8')).digest()[:12])
+
+                dt_filename = 'jfx_' + dt_link + '.yml'
+
+                if aws_s3_url != None:
+                  try:
+                    rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
+
+                    if rr.status_code == 200:
+                      r = [ 'text/plain', 200, dt_link + '\r\n' ]
+
+                    elif rr.status_code == 403:
+                      r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+          
+                    else:
+                      r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+
+                  except Exception as e:
+                    log('error: ' + str(e))
+                    r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+
+                else:
+                  try:
+                    dt_filename = os.path.normpath(repository + '/' + dt_filename)
+
+                    with open(dt_filename, 'w') as f:
+                      f.write(dt_yml)
   
-                      if 'id' in params:
-                        dt_id = params['id']
+                      r = [ 'text/plain', 200, dt_link + '\r\n' ]
     
-                        if re.search(r'^[A-Za-z0-9_-]{1,24}$', dt_id):
-                          fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
-    
-                          if os.path.exists(fpath):
-                            if os.access(fpath, os.W_OK):
-                              try:
-                                with open(fpath, 'r') as f:
-                                  if '\nsha256: "' + dt_sha256 + '"' in f.read():
-                                    fpath = None
-                              except:
-                                pass
-    
-                              if fpath != None:
-                                os.rename(fpath, fpath + '.' + dt_link + '.bak')
-    
-                            else:
-                              raise Exception("link is read only")
-    
-                          else:
-                            raise Exception("link doesn't exist")
-    
-                        else:
-                          raise Exception("invalid link format")
-    
-                      else:
-                        while maxiter > 0:
-                          dt_id = dt_link
-                          fpath = os.path.normpath(repository + '/jfx_' + dt_id + '.yml')
-    
-                          if os.path.exists(fpath):
-                            if not os.access(fpath, os.W_OK):
-                              dt_link = self.encode_link(hashlib.sha256(dt_link.encode('utf-8')).digest()[:12])
-                              maxiter -= 1
-                              continue
-    
-                            try:
-                              with open(fpath, 'r') as f:
-                                if '\nrev_id: 1' in f.read():
-                                  dt_link = self.encode_link(hashlib.sha256(dt_link.encode('utf-8')).digest()[:12])
-                                  maxiter -= 1
-                                  continue
-                            except:
-                              pass
-    
-                            fpath = None
-    
-                          break
-  
-                      if maxiter == 0:
-                        log('error: unable to generate unique link')
-                        r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
-  
-                      else:
-                        try:
-                          if fpath != None:
-                            with open(fpath, 'w') as f:
-                              f.write(dt_yml)
-    
-                          r = [ 'text/plain', 200, dt_id + '\r\n' ]
-    
-                        except Exception as e:
-                          log('error: ' + str(e))
-                          r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
-  
-                  else:
-                    log('error: unable to write to repository')
+                  except Exception as e:
+                    log('error: ' + str(e))
                     r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
               except Exception as e:

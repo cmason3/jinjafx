@@ -55,8 +55,6 @@ function jinjafx(method) {
   dt.template = window.cmTemplate.getValue().replace(/\t/g, "  ");
   dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
 
-  var alias = "myalias";
-
   if ((method === "generate") || (method === "get_link") || (method == "update_link")) {
     try {
       var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
@@ -75,6 +73,7 @@ function jinjafx(method) {
         }
       }
       else {
+        set_wait();
         var xHR = new XMLHttpRequest();
 
         if (method == "update_link") {
@@ -95,15 +94,18 @@ function jinjafx(method) {
               window.removeEventListener('beforeunload', onBeforeUnload);
               window.location.href = window.location.pathname + "?dt=" + this.responseText;
             }
+            clear_wait();
           }
           else {
             var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
             set_status("darkred", "HTTP ERROR " + this.status, sT);
+            clear_wait();
           }
         };
 
         xHR.onerror = function() {
           set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+          clear_wait();
         };
 
         xHR.setRequestHeader("Content-Type", "application/json");
@@ -112,6 +114,7 @@ function jinjafx(method) {
     }
     catch (ex) {
       set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
+      clear_wait();
     }
   }
   else if (method === "export") {
@@ -250,11 +253,7 @@ window.onload = function() {
 
       try {
         if (qs.hasOwnProperty('dt')) {
-          $("#loading").modal({
-            backdrop: 'static',
-            keyboard: false
-          });
-
+          set_wait();
           var xHR = new XMLHttpRequest();
           xHR.open("GET", "dt/" + qs.dt, true);
 
@@ -282,17 +281,15 @@ window.onload = function() {
               set_status("darkred", "HTTP ERROR " + this.status, sT);
               window.history.replaceState({}, document.title, window.location.pathname);
             }
-            $("#loading").hide();
-            $('.modal-backdrop').hide();
             loaded = true;
+            clear_wait();
           };
 
           xHR.onerror = function() {
             set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
             window.history.replaceState({}, document.title, window.location.pathname);
-            $("#loading").hide();
-            $('.modal-backdrop').hide();
             loaded = true;
+            clear_wait();
           };
           xHR.send(null);
         }
@@ -318,6 +315,14 @@ window.onload = function() {
     document.body.style.display = "block";
   }
 };
+
+function set_wait() {
+  document.getElementById('overlay').style.display = 'block';
+}
+
+function clear_wait() {
+  document.getElementById('overlay').style.display = 'none';
+}
 
 function quote(str) {
   str = str.replace(/&/g, "&amp;");

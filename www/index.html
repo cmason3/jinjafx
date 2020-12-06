@@ -27,6 +27,7 @@
     <script src="jinjafx.js"></script>
   </head>
   <body>
+    <div id="overlay"></div>
     <div id="wrap">
       <div id="header" class="jumbotron">
         <a href="./">
@@ -45,11 +46,11 @@
         </h5>
         <!-- https://github.com/feathericons/feather/tree/master/icons -->
         <div class="btn-toolbar" role="group" style="margin-left: auto; display: flex;">
-          <a id="help" href="https://github.com/cmason3/jinjafx" target="_blank" onclick="fe.focus();" class="btn btn-success mr-2" title="Help">
+          <a id="help" href="https://github.com/cmason3/jinjafx" target="_blank" onclick="fe.focus();" class="btn btn-secondary mr-2" title="Help">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>&nbsp;Help
           </a>
 
@@ -58,14 +59,21 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>&nbsp;Get Link
+              </svg>
             </button>
-            <button id="update" type="button" class="btn btn-info dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" disabled>
-              <span class="sr-only">Toggle Dropdown</span>
+            <button id="update" type="button" class="btn btn-info" onclick="jinjafx('update_link');" title="Update Link" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
             </button>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" onclick="jinjafx('update_link'); return false;" href="#">Update Link</a>
-            </div>
+            <button id="lock" type="button" class="btn btn-info" onclick="jinjafx('lock_link');" title="Lock Link" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </button>
           </div>
 
           <button id="export" type="button" class="btn btn-info mr-2" onclick="jinjafx('export');" title="Export DataTemplate">
@@ -130,20 +138,6 @@
       <div class="container-fluid">
         <h5 id="status" class="float-left"></h5>
         <p class="text-right" style="font-size: 85%;">JinjaFx v{{ jinjafx.version }} - Jinja Templating Tool<br />by Chris Mason (<a href="mailto:chris@jinjafx.org">chris@jinjafx.org</a>)</p>
-      </div>
-    </div>
-    <div id="loading" class="modal fade">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 class="modal-title">Loading</h3>
-          </div>
-          <div class="modal-body">
-            <div class="progress">
-              <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
     <div id="vault_input" class="modal fade">
