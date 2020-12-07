@@ -94,7 +94,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8') ]
 
     elif re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
-      if aws_s3_url != None:
+      if aws_s3_url:
         try:
           rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
 
@@ -115,7 +115,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           log('error: ' + str(e))
           r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
-      elif repository != None:
+      elif repository:
         fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.yml')
 
         if os.path.isfile(fpath):
@@ -149,7 +149,12 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           r = [ ctype, 200, f.read() ]
 
           if fpath == '/index.html':
-            r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).encode('utf-8')
+            if repository or aws_s3_url:
+              get_link = 'true'
+            else:
+              get_link = 'false'
+
+            r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).replace('{{ get_link }}', get_link).encode('utf-8')
 
       except Exception:
         r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
@@ -160,8 +165,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
-    #if ro:
-    #  self.send_header('X-Read-Only', 'yes');  
     self.end_headers()
     self.wfile.write(r[2])
 
@@ -281,7 +284,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
 
         elif fpath == '/get_link':
-          if aws_s3_url != None or repository != None:
+          if aws_s3_url or repository:
             if self.headers['Content-Type'] == 'application/json':
               try:
                 dt = json.loads(postdata)
@@ -334,7 +337,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                 dt_filename = 'jfx_' + dt_link + '.yml'
 
-                if aws_s3_url != None:
+                if aws_s3_url:
                   try:
                     rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
 

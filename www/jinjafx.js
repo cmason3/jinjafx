@@ -132,6 +132,10 @@ window.onload = function() {
 
     window.onresize();
 
+    if (document.getElementById('get_link').value == 'false') {
+      document.getElementById('get').disabled = true;
+    }
+
     document.body.style.display = "block";
     
     var gExtraKeys = {
@@ -244,66 +248,74 @@ window.onload = function() {
     };
 
     if (window.location.href.indexOf('?') > -1) {
-      var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
-
-      for (var i = 0; i < v.length; i++) {
-        var p = v[i].split('=');
-        qs[p[0].toLowerCase()] = decodeURIComponent(p.length > 1 ? p[1] : '');
-      }
-
-      try {
-        if (qs.hasOwnProperty('dt')) {
-          set_wait();
-          var xHR = new XMLHttpRequest();
-          xHR.open("GET", "dt/" + qs.dt, true);
-
-          xHR.onload = function() {
-            if (this.status === 200) {
-              try {
-                var dt = jsyaml.safeLoad(this.responseText, 'utf8')['dt'];
-                load_datatemplate(dt, qs);
-                dt_id = qs.dt;
-
-                if (this.getResponseHeader('X-Read-Only') != null) {
-                  document.getElementById('update').disabled = true;
-                }
-                else {
+      if (document.getElementById('get_link').value != 'false') {
+        var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
+  
+        for (var i = 0; i < v.length; i++) {
+          var p = v[i].split('=');
+          qs[p[0].toLowerCase()] = decodeURIComponent(p.length > 1 ? p[1] : '');
+        }
+  
+        try {
+          if (qs.hasOwnProperty('dt')) {
+            set_wait();
+            var xHR = new XMLHttpRequest();
+            xHR.open("GET", "dt/" + qs.dt, true);
+  
+            xHR.onload = function() {
+              if (this.status === 200) {
+                try {
+                  var dt = jsyaml.safeLoad(this.responseText, 'utf8')['dt'];
+                  load_datatemplate(dt, qs);
+                  dt_id = qs.dt;
+  
+                  //if (this.getResponseHeader('X-Read-Only') != null) {
+                  //  document.getElementById('update').disabled = true;
+                  //}
+                  //else {
                   document.getElementById('update').disabled = false;
+                  //}
+                  window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);
+                }
+                catch (e) {
+                  set_status("darkred", "INTERNAL ERROR", e);
+                  window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
                 }
               }
-              catch (e) {
-                set_status("darkred", "INTERNAL ERROR", e);
-                window.history.replaceState({}, document.title, window.location.pathname);
+              else {
+                var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+                set_status("darkred", "HTTP ERROR " + this.status, sT);
+                window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
               }
-            }
-            else {
-              var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
-              set_status("darkred", "HTTP ERROR " + this.status, sT);
-              window.history.replaceState({}, document.title, window.location.pathname);
-            }
+              loaded = true;
+              clear_wait();
+            };
+  
+            xHR.onerror = function() {
+              set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+              window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+              loaded = true;
+              clear_wait();
+            };
+            xHR.send(null);
+          }
+          else {
+            update_from_qs();
             loaded = true;
-            clear_wait();
-          };
-
-          xHR.onerror = function() {
-            set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
-            window.history.replaceState({}, document.title, window.location.pathname);
-            loaded = true;
-            clear_wait();
-          };
-          xHR.send(null);
+          }
         }
-        else {
-          update_from_qs();
-          loaded = true;
+        catch (ex) {
+          set_status("darkred", "ERROR", ex);
+          loaded = true; onChange(true);
+        }
+        if (fe != window.cmData) {
+          onDataBlur();
         }
       }
-      catch (ex) {
-        set_status("darkred", "ERROR", ex);
-        loaded = true; onChange(true);
-      }
-      if (fe != window.cmData) {
-        onDataBlur();
+      else {
+        set_status("darkred", "HTTP ERROR 503", "Service Unavailable");
+        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+        loaded = true;
       }
     }
     else {
@@ -392,7 +404,7 @@ function onPaste(cm, change) {
         change.cancel();
 
         if (window.location.href.indexOf('?') > -1) {
-          window.history.replaceState({}, document.title, window.location.pathname);
+          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
         }
         dt_id = '';
         document.getElementById('update').disabled = true;
