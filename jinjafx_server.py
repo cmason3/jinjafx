@@ -34,6 +34,10 @@ aws_access_key = None
 aws_secret_key = None
 repository = None
 
+rtable = {}
+rl_rate = 0
+rl_limit = 0
+
 class JinjaFxServer(HTTPServer):
   def handle_error(self, request, client_address):
     pass
@@ -85,7 +89,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def do_GET(self):
     fpath = self.path.split('?', 1)[0]
-    #ro = False
+    readonly = None
 
     if fpath == '/':
       fpath = '/index.html'
@@ -94,13 +98,18 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8') ]
 
     elif re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
+      readonly = False
+
       if aws_s3_url:
         try:
           rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
 
           if rr.status_code == 200:
             r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
-            #ro = True
+
+            rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
+            if rr.status_code == 200:
+              readonly = True
 
           elif rr.status_code == 403:
             r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
@@ -122,6 +131,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           try:
             with open(fpath, 'rb') as f:
               r = [ 'application/yaml', 200, f.read() ]
+
+            if os.path.isfile(fpath + '.lock'):
+              readonly = True
 
             os.utime(fpath, None)
 
@@ -165,6 +177,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
+
+    if readonly != None:
+      if readonly:
+        self.send_header('X-Read-Only', 'true')
+      else:
+        self.send_header('X-Read-Only', 'false')
+      
     self.end_headers()
     self.wfile.write(r[2])
 
@@ -287,86 +306,115 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           if aws_s3_url or repository:
             if self.headers['Content-Type'] == 'application/json':
               try:
-                dt = json.loads(postdata)
-
-                vdt = {}
-                vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
-                vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
-                vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
-
-                dt_yml = '---\n'
-                dt_yml += 'dt:\n'
-
-                if vdt['data'] == '':
-                  dt_yml += '  data: ""\n\n'
-                else:
-                  dt_yml += '  data: |2\n'
-                  dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
-
-                if vdt['template'] == '':
-                  dt_yml += '  template: ""\n\n'
-                else:
-                  dt_yml += '  template: |2\n'
-                  dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n\n'
-
-                if vdt['vars'] == '':
-                  dt_yml += '  vars: ""\n'
-                else:
-                  dt_yml += '  vars: |2\n'
-                  dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
-
-                dt_yml += '\ndt_hash: "' + hashlib.sha256(dt_yml.encode('utf-8')).hexdigest() + '"\n'
+                remote_addr = str(self.client_address[0])
+                user_agent = None
 
                 if hasattr(self, 'headers'):
                   if 'User-Agent' in self.headers:
-                    dt_yml += 'user-agent: "' + self.headers['User-Agent'] + '"\n'
+                    user_agent = self.headers['User-Agent']
                   if 'X-Forwarded-For' in self.headers:
-                    dt_yml += 'remote-addr: "' + self.headers['X-Forwarded-For'] + '"\n'
-                  else:
-                    dt_yml += 'remote-addr: "' + str(self.client_address[0]) + '"\n'
+                    remote_addr = self.headers['X-Forwarded-For']
 
-                if 'id' in params:
-                  if re.search(r'^[A-Za-z0-9_-]{1,24}$', params['id']):
-                    dt_link = params['id']
+                ratelimit = False
+                if rl_rate != 0:
+                  rtable.setdefault(remote_addr, []).append(int(time.time()))
 
-                  else:
-                    raise Exception("invalid link format")
+                  if len(rtable[remote_addr]) > rl_rate:
+                    if (rtable[remote_addr][-1] - rtable[remote_addr][0]) <= rl_limit:
+                      ratelimit = True
 
-                else:
-                  dt_link = self.encode_link(hashlib.sha256((str(uuid.uuid1()) + ':' + dt_yml).encode('utf-8')).digest()[:12])
+                    rtable[remote_addr] = rtable[remote_addr][-rl_rate:]
 
-                dt_filename = 'jfx_' + dt_link + '.yml'
-
-                if aws_s3_url:
-                  try:
-                    rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
-
-                    if rr.status_code == 200:
-                      r = [ 'text/plain', 200, dt_link + '\r\n' ]
-
-                    elif rr.status_code == 403:
-                      r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
-          
-                    else:
-                      r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
-
-                  except Exception as e:
-                    log('error: ' + str(e))
-                    r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
-
-                else:
-                  try:
-                    dt_filename = os.path.normpath(repository + '/' + dt_filename)
-
-                    with open(dt_filename, 'w') as f:
-                      f.write(dt_yml)
+                if not ratelimit:
+                  dt = json.loads(postdata)
   
-                      r = [ 'text/plain', 200, dt_link + '\r\n' ]
+                  vdt = {}
+                  vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
+                  vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
+                  vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
+  
+                  dt_yml = '---\n'
+                  dt_yml += 'dt:\n'
+  
+                  if vdt['data'] == '':
+                    dt_yml += '  data: ""\n\n'
+                  else:
+                    dt_yml += '  data: |2\n'
+                    dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
+  
+                  if vdt['template'] == '':
+                    dt_yml += '  template: ""\n\n'
+                  else:
+                    dt_yml += '  template: |2\n'
+                    dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n\n'
+  
+                  if vdt['vars'] == '':
+                    dt_yml += '  vars: ""\n'
+                  else:
+                    dt_yml += '  vars: |2\n'
+                    dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
+  
+                  dt_yml += '\ndt_hash: "' + hashlib.sha256(dt_yml.encode('utf-8')).hexdigest() + '"\n'
+  
+                  if user_agent != None:
+                    dt_yml += 'user-agent: "' + user_agent + '"\n'
+  
+                  dt_yml += 'remote-addr: "' + remote_addr + '"\n'
+  
+                  if 'id' in params:
+                    if re.search(r'^[A-Za-z0-9_-]{1,24}$', params['id']):
+                      dt_link = params['id']
+  
+                    else:
+                      raise Exception("invalid link format")
+  
+                  else:
+                    dt_link = self.encode_link(hashlib.sha256((str(uuid.uuid1()) + ':' + dt_yml).encode('utf-8')).digest()[:12])
+  
+                  dt_filename = 'jfx_' + dt_link + '.yml'
+  
+                  if aws_s3_url:
+                    try:
+                      rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
+                      if rr.status_code == 200:
+                        r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                      
+                      else:
+                        rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
+  
+                        if rr.status_code == 200:
+                          r = [ 'text/plain', 200, dt_link + '\r\n' ]
+  
+                        elif rr.status_code == 403:
+                          r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+            
+                        else:
+                          r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+  
+                    except Exception as e:
+                      log('error: ' + str(e))
+                      r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+  
+                  else:
+                    try:
+                      dt_filename = os.path.normpath(repository + '/' + dt_filename)
+  
+                      if os.path.isfile(dt_filename + '.lock'):
+                        r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+  
+                      else:
+                        with open(dt_filename, 'w') as f:
+                          f.write(dt_yml)
     
-                  except Exception as e:
-                    log('error: ' + str(e))
-                    r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
-
+                          r = [ 'text/plain', 200, dt_link + '\r\n' ]
+      
+                    except Exception as e:
+                      log('error: ' + str(e))
+                      r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+  
+                else:
+                  r = [ 'text/plain', 429, '429 Too Many Requests\r\n' ]
+  
               except Exception as e:
                 log('error: ' + str(e))
                 r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
@@ -410,10 +458,12 @@ class JinjaFxThread(threading.Thread):
 
 
 def main(rflag=False):
-  global repository
   global aws_s3_url
   global aws_access_key
   global aws_secret_key
+  global repository
+  global rl_rate
+  global rl_limit
 
   try:
     print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja Templating Tool')
@@ -426,10 +476,8 @@ def main(rflag=False):
     group_ex = parser.add_mutually_exclusive_group()
     group_ex.add_argument('-r', metavar='<repository>', type=w_directory)
     group_ex.add_argument('-s3', metavar='<aws s3 url>', type=str)
+    parser.add_argument('-rl', metavar='<rate/limit>', type=rlimit)
     args = parser.parse_args()
-
-    if args.r is not None and args.s3 is not None:
-      parser.error("argument -r: not allowed with argument -s3")
 
     if args.s3 is not None:
       aws_s3_url = args.s3
@@ -438,6 +486,20 @@ def main(rflag=False):
 
       if aws_access_key == None or aws_secret_key == None:
         parser.error("argument -s3: environment variables 'AWS_ACCESS_KEY' and 'AWS_SECRET_KEY' are mandatory")
+
+    if args.rl is not None:
+      args.rl = args.rl.lower().split('/', 1)
+
+      if args.rl[1].endswith('s'):
+        rl_limit = int(args.rl[1][:-1])
+      elif args.rl[1].endswith('m'):
+        rl_limit = int(args.rl[1][:-1]) * 60
+      elif args.rl[1].endswith('h'):
+        rl_limit = int(args.rl[1][:-1]) * 3600
+      else:
+        rl_limit = int(args.rl[1][:-1])
+
+      rl_rate = int(args.rl[0])
 
     jinjafx.import_filters()
 
@@ -484,6 +546,12 @@ def w_directory(d):
   elif not os.access(d, os.W_OK):
     raise argparse.ArgumentTypeError("repository directory '" + d + "' must be writable")
   return d
+
+
+def rlimit(rl):
+  if not re.match(r'(?i)^\d+/\d+[smh]$', rl):
+    raise argparse.ArgumentTypeError("value must be rate/limit, e.g. 5/30s or 30/1h")
+  return rl 
 
 
 def aws_s3_authorization(method, fname, region, headers):

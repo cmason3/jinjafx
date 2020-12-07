@@ -269,12 +269,12 @@ window.onload = function() {
                   load_datatemplate(dt, qs);
                   dt_id = qs.dt;
   
-                  //if (this.getResponseHeader('X-Read-Only') != null) {
-                  //  document.getElementById('update').disabled = true;
-                  //}
-                  //else {
-                  document.getElementById('update').disabled = false;
-                  //}
+                  if (this.getResponseHeader('X-Read-Only') == 'true') {
+                    document.getElementById('update').disabled = true;
+                  }
+                  else {
+                    document.getElementById('update').disabled = false;
+                  }
                   window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);
                 }
                 catch (e) {
