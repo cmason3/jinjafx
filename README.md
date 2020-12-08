@@ -7,7 +7,9 @@
 
 JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and strings or use custom Ansible filters. While it should work on Python 2.7 without modification, Python 3 is recommended as I no longer test against Python 2 as it is end of life.
 
-JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface.
+JinjaFx differs from the Ansible "template" module as it allows data to be specified in "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
+
+JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface - it does require the "requests" module which isn't in the base install. Usage instructions are provided at the [bottom of this document](#server) as it is considered an additional component and not part of the base JinjaFx tool, although it is probably a much easier way to use it.
 
 JinjaFx Server running at https://jinjafx.io
 
@@ -22,11 +24,12 @@ JinjaFx Server running at https://jinjafx.io
    -o <output file>            - specify the output file (supports Jinja2 variables) (default is stdout)
    -od <output dir>            - change the output dir for output files with a relative path (default is ".")
    -q                          - quiet mode - don't output version or usage information
+   
+ environment variables:
+   ANSIBLE_VAULT_PASS          - specify an ansible vault password instead of prompting
 ```
 
-JinjaFx differs from the Ansible "template" module as it allows data to be specified in "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
-
-This tool allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
+JinjaFx allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
 
 ```
 A, B, C    <- HEADER ROW
@@ -179,23 +182,12 @@ keep_trailing_newline = True
 
 #### jinjafx_adjust_headers
 
-There might be some situations where you can't control the format of the header fields that are provided in `data.csv` - it might come from a spreadsheet where someone hasn't been consistent with the header row and has used uppercase in some situations and lowercase in others. The header fields are used by Jinja2 as case-sensitive variables and can't contain spaces or punctuation characters - they can only contain alphanumerical characters and the underscore. To help in these situations, the variable `jinjafx_adjust_headers` can be set in `vars.yml` which will remove any non-standard characters and upper case all header fields (i.e. "Assigned / Unassigned" would become "ASSIGNEDUNASSIGNED").
+There might be some situations where you can't control the format of the header fields that are provided in `data.csv` - it might come from a spreadsheet where someone hasn't been consistent with the header row and has used uppercase in some situations and lowercase in others. The header fields are used by Jinja2 as case-sensitive variables and can't contain spaces or punctuation characters - they can only contain alphanumerical characters and the underscore. To help in these situations, the variable `jinjafx_adjust_headers` can be set in `vars.yml` which will remove any non-standard characters and upper case all header fields (i.e. "Assigned / Unassigned" would become "ASSIGNEDUNASSIGNED"), e.g:
 
-### JinjaFx Server Usage
-
-Once JinjaFx Server has been started with the `-s` argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify `data.csv`, `template.j2` and `vars.yml` and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
-
+```yaml
+---
+jinjafx_adjust_headers: True
 ```
- jinjafx_server.py -s [-l <address>] [-p <port>] [-r <repository>]
-   -s                          - start the JinjaFx Server
-   -l <address>                - specify a listen address (default is '127.0.0.1')
-   -p <port>                   - specify a listen port (default is 8080)
-   -r <repository>             - specify a repository directory (allows 'Get Link')
-```
-
-For health checking purposes, if you specify the URL `/ping` then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
-
-The "-r" argument allows you to specify a directory that will be used to store DataTemplates on the server via the "Get Link" button. The link is basically a cryptographic hash of your DataTemplate, which means the same DataTemplate will always result in the same link being generated - if you change any item within the DataTemplate then a different link would be generated.
 
 ### JinjaFx DataTemplates
 
@@ -373,3 +365,28 @@ This function is used to set a global variable that will persist throughout the 
 - <b><code>jinjafx.getg("key", [default])</code></b>
 
 This function is used to get a global variable that has been set with `jinjafx.setg()` - optionally you can specify a default value that is returned if the `key` doesn't exist.
+
+<a name="server"></a>
+### JinjaFx Server Usage
+
+Once JinjaFx Server has been started with the `-s` argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify `data.csv`, `template.j2` and `vars.yml` and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
+
+```
+ jinjafx_server.py -s [-l <address>] [-p <port>] [-r <repository> | -s3 <aws s3 url>] [-rl <rate/limit>]
+   -s                          - start the JinjaFx Server
+   -l <address>                - specify a listen address (default is '127.0.0.1')
+   -p <port>                   - specify a listen port (default is 8080)
+   -r <repository>             - specify a local repository directory (allows 'Get Link')
+   -s3 <aws s3 url>            - specify a repository using aws s3 buckets (allows 'Get Link')
+   -rl <rate/limit>            - specify a rate limit (i.e. '5/30s' for 5 requests in 30 seconds)
+
+ environment variables:
+   AWS_ACCESS_KEY              - specify an aws access key to authenticate for '-s3'
+   AWS_SECRET_KEY              - specify an aws secret key to authenticate for '-s3'
+```
+
+For health checking purposes, if you specify the URL `/ping` then you should get an "OK" response if the JinaFx Server is up and working (these requests are omitted from the logs). The preferred method of running the JinjaFx Server is with HAProxy in front of it as it supports TLS termination and HTTP/2 - please see the `docker` directory for more information.
+
+The "-r" or "-s3" arguments (mutually exclusive) allow you to specify a repository ("-r" is a local directory and "-s3" is an AWS S3 URL) that will be used to store DataTemplates on the server via the "Get Link" and "Update Link" buttons. The generated link is guaranteed to be unique and a different link will be created every time - version 1.3.0 changed the behaviour, where previously the same link was always generated for the same DataTemplate, but this made it difficult to update DataTeplates without the link changing as it was basically a cryptographic hash of your DataTemplate. If you use an AWS S3 bucket then you will also need to provide some credentials via the two environment variables which has read and write permissions to the S3 URL.
+
+The "-rl" argument is used to provide an optional rate limit of the source IP - the "rate" is how many requests are permitted and the "limit" is the interval in which those requests are permitted - it can be specified in "s", "m" or "h" (e.g. "5/30s", "10/1m" or "30/1h").
