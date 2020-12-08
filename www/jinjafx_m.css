@@ -20,14 +20,12 @@ body {
 }
 .expand {
   position: absolute;
-  background: white;
+  background: transparent;
   z-index: 10;
   right: 1px;
   top: 1px;
   padding-top: 2px;
   padding-right: 2px;
-  padding-bottom: 0px;
-  padding-left: 3px;
   cursor: pointer;
   stroke: gray;
 }
