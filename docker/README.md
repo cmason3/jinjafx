@@ -17,7 +17,7 @@ docker build --no-cache -t jinjafx:latest https://raw.githubusercontent.com/cmas
 docker run -d --name jinjafx --restart unless-stopped -e TZ=<TIMEZONE> -p 127.0.0.1:8080:8080 jinjafx:latest
 ```
 
-By default it won't enable a repository directory so 'Get Link' won't work - it will return 503 Service Unavailable. To enable this functionality you need to specify `-r` with a directory - the following example will demonstrate how you can use "/var/lib/jinjafx" on the local filesystem (exposed inside the container as "/var/lib/jinjafx"), which will persist if the container is reloaded:
+By default it won't enable a repository directory so 'Get Link' won't work - it will return 503 Service Unavailable. To enable this functionality you need to specify `-r` with a directory (or `-s3` if using AWS S3) - the following example will demonstrate how you can use "/var/lib/jinjafx" on the local filesystem (exposed inside the container as "/var/lib/jinjafx"), which will persist if the container is reloaded:
 
 ```
 sudo mkdir /var/lib/jinjafx
@@ -26,15 +26,12 @@ sudo chmod a+rwx /var/lib/jinjafx
 docker run -d --name jinjafx --restart unless-stopped -e TZ=<TIMEZONE> -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx jinjafx:latest -r /var/lib/jinjafx
 ```
 
-### Podman Equivalent using Systemd
+### Podman Equivalent using Systemd with AWS S3
 
 ```
 sudo podman build --no-cache -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile.Release
 
-sudo mkdir /var/lib/jinjafx
-sudo chmod a+rwx /var/lib/jinjafx
-
-sudo podman create --name jinjafx -e TZ=<TIMEZONE> -p 127.0.0.1:8080:8080 -v /var/lib/jinjafx:/var/lib/jinjafx:Z jinjafx:latest -r /var/lib/jinjafx
+sudo podman create --name jinjafx -e TZ=<TIMEZONE> -e AWS_ACCESS_KEY=<KEY> -e AWS_SECRET_KEY=<KEY> -p 127.0.0.1:8080:8080 jinjafx:latest -s3 <bucket>.s3.<region>.amazonaws.com
 sudo podman generate systemd -n --restart-policy=always jinjafx | sudo tee /etc/systemd/system/jinjafx.service
 
 sudo systemctl enable jinjafx
@@ -68,15 +65,4 @@ frontend fe_jinjafx
 backend be_jinjafx
   mode http
   server jinjafx 127.0.0.1:8080
-```
-
-HAProxy also has the ability to rate limit connections, although it doesn't make it easy to understand the syntax. The following example can be used to limit POST requests to `/get_link` to a maximum of 15 requests within a 30 minute sliding window per source IP - any requests that exceed this limit will be presented with a HTTP 429 (Too Many Requests) error.
-
-```
-frontend fe_jinjafx
-  stick-table type ip size 100k expire 30m store http_req_rate(30m)
-  http-request track-sc0 src if METH_POST { path -i -m beg /get_link }
-  http-request deny deny_status 429 if { sc_http_req_rate(0) gt 15 }
-  option http-buffer-request
-  timeout http-request 5s
 ```
