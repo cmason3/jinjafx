@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, jinja2, yaml, argparse, re, copy, traceback
+import sys, os, jinja2, yaml, argparse, re, copy, traceback, datetime
 
 __version__ = '1.3.0 (beta)'
 jinja2_filters = []
