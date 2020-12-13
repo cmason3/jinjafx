@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, jinja2, yaml, argparse, re, copy, traceback, datetime
+import sys, os, jinja2, yaml, argparse, re, copy, traceback
 
 __version__ = '1.3.0 (beta)'
 jinja2_filters = []
@@ -61,22 +61,22 @@ def main():
   try:
     if '-q' not in sys.argv:
       print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
-      print('Copyright (c) 2020-' + datetime.datetime.now().strftime('%Y') + ' Chris Mason <chris@jinjafx.org>\n')
+      print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
+    jinjafx_usage = '([-d [data.csv]] -t <template.j2> | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
 
     parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
     group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
     group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
-    parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
+    parser.add_argument('-d', metavar='[data.csv]', nargs='?', type=argparse.FileType('r'), default=argparse.SUPPRESS)
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-o', metavar='<output file>', type=str)
     parser.add_argument('-od', metavar='<output dir>', type=str)
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
 
-    if args.dt is not None and args.d is not None:
+    if args.dt is not None and 'd' in args:
       parser.error("argument -d: not allowed with argument -dt")
 
     if args.od is not None and not os.access(args.od, os.W_OK):
@@ -124,9 +124,22 @@ def main():
           if gyaml:
             gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
-    if args.d is not None:
-      with open(args.d.name) as f:
-        data = f.read()
+    if 'd' in args:
+      if args.d is not None:
+        with open(args.d.name) as f:
+          data = f.read()
+      else:
+        isatty = sys.stdin.isatty()
+
+        if isatty:
+          print('Paste in data.csv (ctrl+d to end)...')
+
+        data = ''
+        for line in sys.stdin:
+          data += line + '\n'
+
+        if isatty:
+          print()
 
     if args.g is not None:
       for g in args.g:
