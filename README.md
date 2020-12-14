@@ -16,9 +16,9 @@ JinjaFx Server running at https://jinjafx.io
 ### JinjaFx Usage
 
 ```
- jinjafx.py (-t <template.j2> [-d [data.csv]] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]
+ jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]
    -t <template.j2>            - specify a Jinja2 template
-   -d [data.csv]               - specify row based data (comma or tab separated) - stdin if file is omitted
+   -d <data.csv>               - specify row based data (comma or tab separated)
    -dt <dt.yml>                - specify a JinjaFx DataTemplate (contains template and data)
    -g <vars.yml>[, -g ...]     - specify global variables in yaml (supports Ansible vaulted files and strings)
    -o <output file>            - specify the output file (supports Jinja2 variables) (default is stdout)
@@ -29,7 +29,7 @@ JinjaFx Server running at https://jinjafx.io
    ANSIBLE_VAULT_PASS          - specify an ansible vault password instead of prompting
 ```
 
-JinjaFx allows you to specify a text based "csv" file (or paste from stdin if the file is omitted) using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
+JinjaFx allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
 
 ```
 A, B, C    <- HEADER ROW
