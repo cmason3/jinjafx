@@ -31,7 +31,7 @@ docker run -d --name jinjafx --restart unless-stopped -e TZ=<TIMEZONE> -p 127.0.
 ```
 sudo podman build --no-cache -t jinjafx:latest https://raw.githubusercontent.com/cmason3/jinjafx/master/docker/Dockerfile.Release
 
-sudo podman create --name jinjafx -e TZ=<TIMEZONE> -e AWS_ACCESS_KEY=<KEY> -e AWS_SECRET_KEY=<KEY> -p 127.0.0.1:8080:8080 jinjafx:latest -s3 <bucket>.s3.<region>.amazonaws.com
+sudo podman create --name jinjafx --tz local -e AWS_ACCESS_KEY=<KEY> -e AWS_SECRET_KEY=<KEY> -p 127.0.0.1:8080:8080 jinjafx:latest -s3 <bucket>.s3.<region>.amazonaws.com
 sudo podman generate systemd -n --restart-policy=always jinjafx | sudo tee /etc/systemd/system/jinjafx.service
 
 sudo systemctl enable jinjafx
