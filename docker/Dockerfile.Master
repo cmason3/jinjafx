@@ -1,7 +1,7 @@
 FROM python:3.8-slim
 
 RUN apt-get update; apt-get install -y curl git; apt-get clean
-RUN python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr
+RUN python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr requests
 
 RUN git clone -b "master" https://github.com/cmason3/jinjafx.git /opt/jinjafx
 

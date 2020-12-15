@@ -40,3 +40,6 @@ svg {
   outline: none !important;
   box-shadow: none !important;
 }
+.wait, .wait * {
+  cursor: wait !important;
+}

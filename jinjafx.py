@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # JinjaFx - Jinja Templating Tool
-# Copyright (c) 2020 Chris Mason <chris@jinjafx.org>
+# Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -16,9 +16,9 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, jinja2, yaml, argparse, re, copy, traceback
+import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.2.3'
+__version__ = '1.3.0 (beta)'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -61,7 +61,7 @@ def main():
   try:
     if '-q' not in sys.argv:
       print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
-      print('Copyright (c) 2020 Chris Mason <chris@jinjafx.org>\n')
+      print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
 
     jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
 
@@ -371,6 +371,7 @@ class JinjaFx():
       'fields': self.jfx_fields,
       'setg': self.jfx_setg,
       'getg': self.jfx_getg,
+      'nslookup': self.jfx_nslookup,
       'rows': max([0, len(self.g_datarows) - 1]),
       'data': [r[1:] if isinstance(r[0], int) else r for r in self.g_datarows]
     }})
@@ -656,6 +657,31 @@ class JinjaFx():
 
   def jfx_getg(self, key, default=None):
     return self.g_dict.get('_val_' + str(key), default)
+
+
+  def jfx_nslookup(self, v, family=46):
+    try:
+      if re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I):
+        return [socket.gethostbyaddr(v)[0]]
+
+      elif re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v):
+        return [socket.gethostbyaddr(v)[0]]
+
+      else:
+        if int(family) == 46:
+          s = socket.getaddrinfo(v, 0, 0, socket.SOCK_STREAM)
+          return [e[4][0] for e in s]
+        elif int(family) == 4:
+          s = socket.getaddrinfo(v, 0, socket.AF_INET, socket.SOCK_STREAM)
+          return [e[4][0] for e in s]
+        elif int(family) == 6:
+          s = socket.getaddrinfo(v, 0, socket.AF_INET6, socket.SOCK_STREAM)
+          return [e[4][0] for e in s]
+
+    except:
+      pass
+
+    return None
 
 
   def find_re_match(self, o, v, default=0):

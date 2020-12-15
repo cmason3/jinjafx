@@ -10,6 +10,7 @@ var qs = {};
 function getStatusText(code) {
   var statusText = {
     400: 'Bad Request',
+    403: 'Forbidden',
     404: 'Not Found',
     413: 'Request Entity Too Large',
     429: 'Too Many Requests',
@@ -54,8 +55,6 @@ function jinjafx(method) {
   dt.template = window.cmTemplate.getValue().replace(/\t/g, "  ");
   dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
 
-  var alias = "myalias";
-
   if ((method === "generate") || (method === "get_link") || (method == "update_link")) {
     try {
       var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
@@ -74,6 +73,7 @@ function jinjafx(method) {
         }
       }
       else {
+        set_wait();
         var xHR = new XMLHttpRequest();
 
         if (method == "update_link") {
@@ -94,15 +94,18 @@ function jinjafx(method) {
               window.removeEventListener('beforeunload', onBeforeUnload);
               window.location.href = window.location.pathname + "?dt=" + this.responseText;
             }
+            clear_wait();
           }
           else {
             var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
             set_status("darkred", "HTTP ERROR " + this.status, sT);
+            clear_wait();
           }
         };
 
         xHR.onerror = function() {
           set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+          clear_wait();
         };
 
         xHR.setRequestHeader("Content-Type", "application/json");
@@ -111,6 +114,7 @@ function jinjafx(method) {
     }
     catch (ex) {
       set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
+      clear_wait();
     }
   }
   else if (method === "export") {
@@ -127,6 +131,10 @@ window.onload = function() {
     };
 
     window.onresize();
+
+    if (document.getElementById('get_link').value == 'false') {
+      document.getElementById('get').disabled = true;
+    }
 
     document.body.style.display = "block";
     
@@ -240,63 +248,74 @@ window.onload = function() {
     };
 
     if (window.location.href.indexOf('?') > -1) {
-      var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
-
-      for (var i = 0; i < v.length; i++) {
-        var p = v[i].split('=');
-        qs[p[0].toLowerCase()] = decodeURIComponent(p.length > 1 ? p[1] : '');
-      }
-
-      try {
-        if (qs.hasOwnProperty('dt')) {
-          var xHR = new XMLHttpRequest();
-          xHR.open("GET", "dt/" + qs.dt, true);
-
-          xHR.onload = function() {
-            if (this.status === 200) {
-              try {
-                var dt = jsyaml.safeLoad(this.responseText, 'utf8')['dt'];
-                load_datatemplate(dt, qs);
-                dt_id = qs.dt;
-
-                if (this.getResponseHeader('X-Read-Only') != null) {
-                  document.getElementById('update').disabled = true;
+      if (document.getElementById('get_link').value != 'false') {
+        var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
+  
+        for (var i = 0; i < v.length; i++) {
+          var p = v[i].split('=');
+          qs[p[0].toLowerCase()] = decodeURIComponent(p.length > 1 ? p[1] : '');
+        }
+  
+        try {
+          if (qs.hasOwnProperty('dt')) {
+            set_wait();
+            var xHR = new XMLHttpRequest();
+            xHR.open("GET", "dt/" + qs.dt, true);
+  
+            xHR.onload = function() {
+              if (this.status === 200) {
+                try {
+                  var dt = jsyaml.safeLoad(this.responseText, 'utf8')['dt'];
+                  load_datatemplate(dt, qs);
+                  dt_id = qs.dt;
+  
+                  if (this.getResponseHeader('X-Read-Only') == 'true') {
+                    document.getElementById('update').disabled = true;
+                  }
+                  else {
+                    document.getElementById('update').disabled = false;
+                  }
+                  window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);
                 }
-                else {
-                  document.getElementById('update').disabled = false;
+                catch (e) {
+                  set_status("darkred", "INTERNAL ERROR", e);
+                  window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
                 }
               }
-              catch (e) {
-                set_status("darkred", "INTERNAL ERROR", e);
-                window.history.replaceState({}, document.title, window.location.pathname);
+              else {
+                var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+                set_status("darkred", "HTTP ERROR " + this.status, sT);
+                window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
               }
-            }
-            else {
-              var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
-              set_status("darkred", "HTTP ERROR " + this.status, sT);
-              window.history.replaceState({}, document.title, window.location.pathname);
-            }
+              loaded = true;
+              clear_wait();
+            };
+  
+            xHR.onerror = function() {
+              set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+              window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+              loaded = true;
+              clear_wait();
+            };
+            xHR.send(null);
+          }
+          else {
+            update_from_qs();
             loaded = true;
-          };
-
-          xHR.onerror = function() {
-            set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
-            window.history.replaceState({}, document.title, window.location.pathname);
-            loaded = true;
-          };
-          xHR.send(null);
+          }
         }
-        else {
-          update_from_qs();
-          loaded = true;
+        catch (ex) {
+          set_status("darkred", "ERROR", ex);
+          loaded = true; onChange(true);
+        }
+        if (fe != window.cmData) {
+          onDataBlur();
         }
       }
-      catch (ex) {
-        set_status("darkred", "ERROR", ex);
-        loaded = true; onChange(true);
-      }
-      if (fe != window.cmData) {
-        onDataBlur();
+      else {
+        set_status("darkred", "HTTP ERROR 503", "Service Unavailable");
+        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+        loaded = true;
       }
     }
     else {
@@ -308,6 +327,14 @@ window.onload = function() {
     document.body.style.display = "block";
   }
 };
+
+function set_wait() {
+  document.getElementById('overlay').style.display = 'block';
+}
+
+function clear_wait() {
+  document.getElementById('overlay').style.display = 'none';
+}
 
 function quote(str) {
   str = str.replace(/&/g, "&amp;");
@@ -377,7 +404,7 @@ function onPaste(cm, change) {
         change.cancel();
 
         if (window.location.href.indexOf('?') > -1) {
-          window.history.replaceState({}, document.title, window.location.pathname);
+          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
         }
         dt_id = '';
         document.getElementById('update').disabled = true;

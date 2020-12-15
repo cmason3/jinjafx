@@ -41,7 +41,7 @@ spec:
       containers:
         - name: jinjafx
           image: docker.io/cmason3/jinjafx:latest
-          args: [ "-r", "/var/lib/jinjafx" ]
+          args: [ "-r", "/var/lib/jinjafx", "-rl", "5/30s" ]
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
