@@ -1,9 +1,11 @@
 FROM python:3.8-slim
 
+ARG BRANCH="master"
+
 RUN apt-get update; apt-get install -y curl git; apt-get clean
 RUN python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr requests
 
-RUN git clone -b "master" https://github.com/cmason3/jinjafx.git /opt/jinjafx
+RUN git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx
 
 RUN useradd -m jinjafx
 USER jinjafx
