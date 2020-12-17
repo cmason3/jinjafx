@@ -177,7 +177,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
 
     else:
-      r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
+      r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
 
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
