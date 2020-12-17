@@ -33,6 +33,7 @@ aws_s3_url = None
 aws_access_key = None
 aws_secret_key = None
 repository = None
+api_only = False
 
 rtable = {}
 rl_rate = 0
@@ -91,88 +92,92 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     fpath = self.path.split('?', 1)[0]
     readonly = None
 
-    if fpath == '/':
-      fpath = '/index.html'
-
     if fpath == '/ping':
       r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8') ]
 
-    elif re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
-      readonly = False
+    elif not api_only:
+      if fpath == '/':
+        fpath = '/index.html'
+        
+      if re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
+        readonly = False
 
-      if aws_s3_url:
-        try:
-          rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
+        if aws_s3_url:
+          try:
+            rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
 
-          if rr.status_code == 200:
-            r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
-
-            rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
             if rr.status_code == 200:
-              readonly = True
+              r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
 
-          elif rr.status_code == 403:
-            r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
-          
-          elif rr.status_code == 404:
-            r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+              rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
+              if rr.status_code == 200:
+                readonly = True
+
+            elif rr.status_code == 403:
+              r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
+
+            elif rr.status_code == 404:
+              r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+
+            else:
+              r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
+
+          except Exception as e:
+            log('error: ' + str(e))
+            r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
+
+        elif repository:
+          fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.yml')
+
+          if os.path.isfile(fpath):
+            try:
+              with open(fpath, 'rb') as f:
+                r = [ 'application/yaml', 200, f.read() ]
+
+              if os.path.isfile(fpath + '.lock'):
+                readonly = True
+
+              os.utime(fpath, None)
+
+            except Exception:
+              r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
           else:
-            r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
-
-        except Exception as e:
-          log('error: ' + str(e))
-          r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
-
-      elif repository:
-        fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.yml')
-
-        if os.path.isfile(fpath):
-          try:
-            with open(fpath, 'rb') as f:
-              r = [ 'application/yaml', 200, f.read() ]
-
-            if os.path.isfile(fpath + '.lock'):
-              readonly = True
-
-            os.utime(fpath, None)
-
-          except Exception:
-            r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
+            r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
 
         else:
-          r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+          r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
+
+      elif not re.search(r'[^A-Za-z0-9_./-]', fpath) and not re.search(r'\.{2,}', fpath) and os.path.isfile('www' + fpath):
+        if fpath.endswith('.js'):
+          ctype = 'text/javascript'
+        elif fpath.endswith('.css'):
+          ctype = 'text/css'
+        elif fpath.endswith('png'):
+          ctype = 'image/png'
+        else:
+          ctype = 'text/html'
+
+        try:
+          with open('www' + fpath, 'rb') as f:
+            r = [ ctype, 200, f.read() ]
+
+            if fpath == '/index.html':
+              if repository or aws_s3_url:
+                get_link = 'true'
+              else:
+                get_link = 'false'
+
+              r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).replace('{{ get_link }}', get_link).encode('utf-8')
+
+        except Exception:
+          r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
       else:
-        r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
-
-    elif not re.search(r'[^A-Za-z0-9_./-]', fpath) and not re.search(r'\.{2,}', fpath) and os.path.isfile('www' + fpath):
-      if fpath.endswith('.js'):
-        ctype = 'text/javascript'
-      elif fpath.endswith('.css'):
-        ctype = 'text/css'
-      elif fpath.endswith('png'):
-        ctype = 'image/png'
-      else:
-        ctype = 'text/html'
-
-      try:
-        with open('www' + fpath, 'rb') as f:
-          r = [ ctype, 200, f.read() ]
-
-          if fpath == '/index.html':
-            if repository or aws_s3_url:
-              get_link = 'true'
-            else:
-              get_link = 'false'
-
-            r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).replace('{{ get_link }}', get_link).encode('utf-8')
-
-      except Exception:
-        r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
+        r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
 
     else:
-      r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+      r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
 
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
@@ -263,158 +268,39 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           else:
             r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
   
-        elif fpath == '/download':
-          if self.headers['Content-Type'] == 'application/json':
-            lterminator = '\r\n' if 'User-Agent' in self.headers and 'windows' in self.headers['User-Agent'].lower() else '\n'
-  
-            try:
-              outputs = json.loads(postdata)
-  
-              zfile = io.BytesIO()
-              z = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
-  
-              for o in outputs:
-                ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o)))
-                outputs[o] = re.sub(r'\r?\n', lterminator, base64.b64decode(outputs[o]).decode('utf-8'))
-  
-                if '.' not in ofile:
-                  if re.search(r'<html.*?>[\s\S]+<\/html>', outputs[o], re.IGNORECASE):
-                    ofile += '.html'
-                  else:
-                    ofile += '.txt'
-  
-                z.writestr(ofile, outputs[o])
-  
-              z.close()
-  
-              self.send_response(200)
-              self.send_header('Content-Type', 'application/zip')
-              self.send_header('Content-Length', str(len(zfile.getvalue())))
-              self.send_header('X-Download-Filename', 'Outputs.' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.zip')
-              self.end_headers()
-              self.wfile.write(zfile.getvalue())
-              return
-  
-            except Exception as e:
-              log('error: ' + str(e))
-              r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
-  
-          else:
-            r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
-
-        elif fpath == '/get_link':
-          if aws_s3_url or repository:
+        elif not api_only:
+          if fpath == '/download':
             if self.headers['Content-Type'] == 'application/json':
+              lterminator = '\r\n' if 'User-Agent' in self.headers and 'windows' in self.headers['User-Agent'].lower() else '\n'
+
               try:
-                remote_addr = str(self.client_address[0])
-                user_agent = None
+                outputs = json.loads(postdata)
 
-                if hasattr(self, 'headers'):
-                  if 'User-Agent' in self.headers:
-                    user_agent = self.headers['User-Agent']
-                  if 'X-Forwarded-For' in self.headers:
-                    remote_addr = self.headers['X-Forwarded-For']
+                zfile = io.BytesIO()
+                z = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
 
-                ratelimit = False
-                if rl_rate != 0:
-                  rtable.setdefault(remote_addr, []).append(int(time.time()))
+                for o in outputs:
+                  ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o)))
+                  outputs[o] = re.sub(r'\r?\n', lterminator, base64.b64decode(outputs[o]).decode('utf-8'))
 
-                  if len(rtable[remote_addr]) > rl_rate:
-                    if (rtable[remote_addr][-1] - rtable[remote_addr][0]) <= rl_limit:
-                      ratelimit = True
-
-                    rtable[remote_addr] = rtable[remote_addr][-rl_rate:]
-
-                if not ratelimit:
-                  dt = json.loads(postdata)
-  
-                  vdt = {}
-                  vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
-                  vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
-                  vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
-  
-                  dt_yml = '---\n'
-                  dt_yml += 'dt:\n'
-  
-                  if vdt['data'] == '':
-                    dt_yml += '  data: ""\n\n'
-                  else:
-                    dt_yml += '  data: |2\n'
-                    dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
-  
-                  if vdt['template'] == '':
-                    dt_yml += '  template: ""\n\n'
-                  else:
-                    dt_yml += '  template: |2\n'
-                    dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n\n'
-  
-                  if vdt['vars'] == '':
-                    dt_yml += '  vars: ""\n'
-                  else:
-                    dt_yml += '  vars: |2\n'
-                    dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
-  
-                  dt_yml += '\ndt_hash: "' + hashlib.sha256(dt_yml.encode('utf-8')).hexdigest() + '"\n'
-  
-                  if user_agent != None:
-                    dt_yml += 'user-agent: "' + user_agent + '"\n'
-  
-                  dt_yml += 'remote-addr: "' + remote_addr + '"\n'
-  
-                  if 'id' in params:
-                    if re.search(r'^[A-Za-z0-9_-]{1,24}$', params['id']):
-                      dt_link = params['id']
-  
+                  if '.' not in ofile:
+                    if re.search(r'<html.*?>[\s\S]+<\/html>', outputs[o], re.IGNORECASE):
+                      ofile += '.html'
                     else:
-                      raise Exception("invalid link format")
-  
-                  else:
-                    dt_link = self.encode_link(hashlib.sha256((str(uuid.uuid1()) + ':' + dt_yml).encode('utf-8')).digest()[:12])
-  
-                  dt_filename = 'jfx_' + dt_link + '.yml'
-  
-                  if aws_s3_url:
-                    try:
-                      rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
-                      if rr.status_code == 200:
-                        r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
-                      
-                      else:
-                        rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
-  
-                        if rr.status_code == 200:
-                          r = [ 'text/plain', 200, dt_link + '\r\n' ]
-  
-                        elif rr.status_code == 403:
-                          r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
-            
-                        else:
-                          r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
-  
-                    except Exception as e:
-                      log('error: ' + str(e))
-                      r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
-  
-                  else:
-                    try:
-                      dt_filename = os.path.normpath(repository + '/' + dt_filename)
-  
-                      if os.path.isfile(dt_filename + '.lock'):
-                        r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
-  
-                      else:
-                        with open(dt_filename, 'w') as f:
-                          f.write(dt_yml)
-    
-                          r = [ 'text/plain', 200, dt_link + '\r\n' ]
-      
-                    except Exception as e:
-                      log('error: ' + str(e))
-                      r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
-  
-                else:
-                  r = [ 'text/plain', 429, '429 Too Many Requests\r\n' ]
-  
+                      ofile += '.txt'
+
+                  z.writestr(ofile, outputs[o])
+
+                z.close()
+
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/zip')
+                self.send_header('Content-Length', str(len(zfile.getvalue())))
+                self.send_header('X-Download-Filename', 'Outputs.' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.zip')
+                self.end_headers()
+                self.wfile.write(zfile.getvalue())
+                return
+
               except Exception as e:
                 log('error: ' + str(e))
                 r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
@@ -422,12 +308,135 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             else:
               r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
 
+          elif fpath == '/get_link':
+            if aws_s3_url or repository:
+              if self.headers['Content-Type'] == 'application/json':
+                try:
+                  remote_addr = str(self.client_address[0])
+                  user_agent = None
+
+                  if hasattr(self, 'headers'):
+                    if 'User-Agent' in self.headers:
+                      user_agent = self.headers['User-Agent']
+                    if 'X-Forwarded-For' in self.headers:
+                      remote_addr = self.headers['X-Forwarded-For']
+
+                  ratelimit = False
+                  if rl_rate != 0:
+                    rtable.setdefault(remote_addr, []).append(int(time.time()))
+
+                    if len(rtable[remote_addr]) > rl_rate:
+                      if (rtable[remote_addr][-1] - rtable[remote_addr][0]) <= rl_limit:
+                        ratelimit = True
+
+                      rtable[remote_addr] = rtable[remote_addr][-rl_rate:]
+
+                  if not ratelimit:
+                    dt = json.loads(postdata)
+
+                    vdt = {}
+                    vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
+                    vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
+                    vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
+
+                    dt_yml = '---\n'
+                    dt_yml += 'dt:\n'
+
+                    if vdt['data'] == '':
+                      dt_yml += '  data: ""\n\n'
+                    else:
+                      dt_yml += '  data: |2\n'
+                      dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                    if vdt['template'] == '':
+                      dt_yml += '  template: ""\n\n'
+                    else:
+                      dt_yml += '  template: |2\n'
+                      dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                    if vdt['vars'] == '':
+                      dt_yml += '  vars: ""\n'
+                    else:
+                      dt_yml += '  vars: |2\n'
+                      dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
+
+                    dt_yml += '\ndt_hash: "' + hashlib.sha256(dt_yml.encode('utf-8')).hexdigest() + '"\n'
+
+                    if user_agent != None:
+                      dt_yml += 'user-agent: "' + user_agent + '"\n'
+
+                    dt_yml += 'remote-addr: "' + remote_addr + '"\n'
+
+                    if 'id' in params:
+                      if re.search(r'^[A-Za-z0-9_-]{1,24}$', params['id']):
+                        dt_link = params['id']
+
+                      else:
+                        raise Exception("invalid link format")
+
+                    else:
+                      dt_link = self.encode_link(hashlib.sha256((str(uuid.uuid1()) + ':' + dt_yml).encode('utf-8')).digest()[:12])
+
+                    dt_filename = 'jfx_' + dt_link + '.yml'
+
+                    if aws_s3_url:
+                      try:
+                        rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
+                        if rr.status_code == 200:
+                          r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+
+                        else:
+                          rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
+
+                          if rr.status_code == 200:
+                            r = [ 'text/plain', 200, dt_link + '\r\n' ]
+
+                          elif rr.status_code == 403:
+                            r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+
+                          else:
+                            r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+
+                      except Exception as e:
+                        log('error: ' + str(e))
+                        r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+
+                    else:
+                      try:
+                        dt_filename = os.path.normpath(repository + '/' + dt_filename)
+
+                        if os.path.isfile(dt_filename + '.lock'):
+                          r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+
+                        else:
+                          with open(dt_filename, 'w') as f:
+                            f.write(dt_yml)
+
+                            r = [ 'text/plain', 200, dt_link + '\r\n' ]
+
+                      except Exception as e:
+                        log('error: ' + str(e))
+                        r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+
+                  else:
+                    r = [ 'text/plain', 429, '429 Too Many Requests\r\n' ]
+
+                except Exception as e:
+                  log('error: ' + str(e))
+                  r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+
+              else:
+                r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+
+            else:
+              r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
+
           else:
-            r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
+            r = [ 'text/plain', 404, '404 Not Found\r\n' ]
 
         else:
-          r = [ 'text/plain', 404, '404 Not Found\r\n' ]
-
+          r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
+                    
       else:
         r = [ 'text/plain', 413, '413 Request Entity Too Large\r\n' ]
 
@@ -464,6 +473,7 @@ def main(rflag=False):
   global repository
   global rl_rate
   global rl_limit
+  global api_only
 
   try:
     print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja Templating Tool')
@@ -477,8 +487,10 @@ def main(rflag=False):
     group_ex.add_argument('-r', metavar='<repository>', type=w_directory)
     group_ex.add_argument('-s3', metavar='<aws s3 url>', type=str)
     parser.add_argument('-rl', metavar='<rate/limit>', type=rlimit)
+    parser.add_argument('-api', action='store_true', default=False)
     args = parser.parse_args()
-
+    api_only = args.api
+    
     if args.s3 is not None:
       aws_s3_url = args.s3
       aws_access_key = os.getenv('AWS_ACCESS_KEY')
