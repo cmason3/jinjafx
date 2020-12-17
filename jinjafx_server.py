@@ -259,7 +259,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
               jsr = {
                 'status': 'error',
-                'error': '<pre>' + error + '</pre>'
+                'error': error
               }
               self.log_request('ERR', error);
   
