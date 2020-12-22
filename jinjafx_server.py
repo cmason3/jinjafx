@@ -18,7 +18,7 @@
 from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime
-import re, argparse, zipfile, hashlib, traceback, glob, requests, hmac, uuid
+import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid
 
 try:
   from ansible.constants import DEFAULT_VAULT_ID_MATCH
@@ -103,6 +103,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         readonly = False
 
         if aws_s3_url:
+          import requests
+
           try:
             rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
 

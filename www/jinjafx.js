@@ -329,11 +329,19 @@ window.onload = function() {
 };
 
 function set_wait() {
+  fe.setOption('readOnly', 'nocursor');
+  window.cmData.getWrapperElement().style.background = '#eee';
+  window.cmTemplate.getWrapperElement().style.background = '#eee';
+  window.cmVars.getWrapperElement().style.background = '#eee';
   document.getElementById('overlay').style.display = 'block';
 }
 
 function clear_wait() {
   document.getElementById('overlay').style.display = 'none';
+  window.cmVars.getWrapperElement().style.background = '';
+  window.cmTemplate.getWrapperElement().style.background = '';
+  window.cmData.getWrapperElement().style.background = '';
+  fe.setOption('readOnly', false);
 }
 
 function quote(str) {
