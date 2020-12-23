@@ -107,7 +107,12 @@ function jinjafx(method) {
           set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
           clear_wait();
         };
+        xHR.ontimeout = function() {
+          set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+          clear_wait();
+        };
 
+        xHR.timeout = 10000;
         xHR.setRequestHeader("Content-Type", "application/json");
         xHR.send(JSON.stringify(dt));
       }
@@ -297,6 +302,14 @@ window.onload = function() {
               loaded = true;
               clear_wait();
             };
+            xHR.ontimeout = function() {
+              set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+              window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+              loaded = true;
+              clear_wait();
+            };
+
+            xHR.timeout = 10000;
             xHR.send(null);
           }
           else {
