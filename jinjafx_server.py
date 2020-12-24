@@ -21,10 +21,15 @@ import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, dateti
 import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid
 
 try:
+  import requests
+except:
+  pass
+
+try:
   from ansible.constants import DEFAULT_VAULT_ID_MATCH
   from ansible.parsing.vault import VaultLib
   from ansible.parsing.vault import VaultSecret
-except Exception:
+except:
   pass
 
 lock = threading.RLock()
@@ -103,8 +108,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         readonly = False
 
         if aws_s3_url:
-          import requests
-
           try:
             rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
 
