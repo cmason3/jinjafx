@@ -128,7 +128,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
           except Exception as e:
-            log('error: ' + str(e))
+            traceback.print_exc()
             r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
         elif repository:
@@ -307,7 +307,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 return
 
               except Exception as e:
-                log('error: ' + str(e))
+                traceback.print_exc()
                 r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
 
             else:
@@ -403,7 +403,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                             r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
                       except Exception as e:
-                        log('error: ' + str(e))
+                        traceback.print_exc()
                         r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
                     else:
@@ -420,14 +420,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                             r = [ 'text/plain', 200, dt_link + '\r\n' ]
 
                       except Exception as e:
-                        log('error: ' + str(e))
+                        traceback.print_exc()
                         r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
                   else:
                     r = [ 'text/plain', 429, '429 Too Many Requests\r\n' ]
 
                 except Exception as e:
-                  log('error: ' + str(e))
+                  traceback.print_exc()
                   r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
 
               else:
@@ -497,6 +497,8 @@ def main(rflag=False):
     api_only = args.api
     
     if args.s3 is not None:
+      import requests
+
       aws_s3_url = args.s3
       aws_access_key = os.getenv('AWS_ACCESS_KEY')
       aws_secret_key = os.getenv('AWS_SECRET_KEY')
