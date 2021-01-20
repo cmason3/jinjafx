@@ -80,7 +80,7 @@ def main():
     if args.dt is not None and args.d is not None:
       parser.error("argument -d: not allowed with argument -dt")
 
-    if args.m is not None and args.g is None:
+    if args.m is True and args.g is None:
       parser.error("argument -m: only allowed with argument -g")
 
     if args.od is not None and not os.access(args.od, os.W_OK):
