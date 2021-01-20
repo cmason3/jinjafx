@@ -113,28 +113,28 @@ def main():
     def yaml_vault_tag(loader, node):
       return decrypt_vault(node.value)
 
-    def merge(a, b, path=[]):
-      for key in b:
-        if key in a:
-          if isinstance(a[key], dict) and isinstance(b[key], dict):
-            merge(a[key], b[key], path + [str(key)])
+    def merge(dst, src):
+      for key in src:
+        if key in dst:
+          if isinstance(dst[key], dict) and isinstance(src[key], dict):
+            merge(dst[key], src[key])
 
-          elif isinstance(a[key], list) and isinstance(b[key], list):
-            a[key] += b[key]
+          elif isinstance(dst[key], list) and isinstance(src[key], list):
+            dst[key] += src[key]
 
-          elif isinstance(a[key], list):
-            a[key].append(b[key])
+          elif isinstance(dst[key], list):
+            dst[key].append(src[key])
 
-          elif isinstance(b[key], list):
-            a[key] = [a[key]] + b[key]
+          elif isinstance(src[key], list):
+            dst[key] = [dst[key]] + src[key]
 
           else:
-            a[key] = [a[key], b[key]]
+            dst[key] = [dst[key], src[key]]
 
         else:
-          a[key] = b[key]
+          dst[key] = src[key]
 
-      return a
+      return dst
 
     yaml.add_constructor('!vault', yaml_vault_tag, yaml.FullLoader)
 
