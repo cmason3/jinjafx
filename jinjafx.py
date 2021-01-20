@@ -122,14 +122,8 @@ def main():
           elif isinstance(dst[key], list) and isinstance(src[key], list):
             dst[key] += src[key]
 
-          elif isinstance(dst[key], list):
-            dst[key].append(src[key])
-
-          elif isinstance(src[key], list):
-            dst[key] = [dst[key]] + src[key]
-
           else:
-            dst[key] = [dst[key], src[key]]
+            dst[key] = src[key]
 
         else:
           dst[key] = src[key]
