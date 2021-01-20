@@ -16,13 +16,14 @@ JinjaFx Server running at https://jinjafx.io
 ### JinjaFx Usage
 
 ```
- jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]
+ jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]
    -t <template.j2>            - specify a Jinja2 template
    -d <data.csv>               - specify row based data (comma or tab separated)
    -dt <dt.yml>                - specify a JinjaFx DataTemplate (contains template and data)
    -g <vars.yml>[, -g ...]     - specify global variables in yaml (supports Ansible vaulted files and strings)
    -o <output file>            - specify the output file (supports Jinja2 variables) (default is stdout)
    -od <output dir>            - change the output dir for output files with a relative path (default is ".")
+   -m                          - merge global variables instead of overwriting duplicate keys
    -q                          - quiet mode - don't output version or usage information
    
  environment variables:

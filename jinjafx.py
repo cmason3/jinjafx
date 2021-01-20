@@ -63,7 +63,7 @@ def main():
       print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
       print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-m] [-o <output file>] [-od <output dir>] [-q]'
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]'
 
     parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
@@ -113,14 +113,24 @@ def main():
     def yaml_vault_tag(loader, node):
       return decrypt_vault(node.value)
 
-    def merge(a, b, path=None):
-      if path is None:
-        path = []
-
+    def merge(a, b, path=[]):
       for key in b:
         if key in a:
           if isinstance(a[key], dict) and isinstance(b[key], dict):
             merge(a[key], b[key], path + [str(key)])
+
+          elif isinstance(a[key], list) and isinstance(b[key], list):
+            a[key] += b[key]
+
+          elif isinstance(a[key], list):
+            a[key].append(b[key])
+
+          elif isinstance(b[key], list):
+            a[key] = [a[key]] + b[key]
+
+          else:
+            a[key] = [a[key], b[key]]
+
         else:
           a[key] = b[key]
 
