@@ -99,7 +99,13 @@ def main():
           from ansible.parsing.vault import VaultSecret
           from getpass import getpass
 
-          vpw = os.getenv('ANSIBLE_VAULT_PASS')
+          vpw = os.getenv('ANSIBLE_VAULT_PASSWORD')
+
+          if vpw == None:
+            vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
+            if vpwf != None:
+              with open(vpwf) as f:
+                vpw = f.read().strip()
 
           if vpw == None:
             vpw = getpass('Vault Password: ')
