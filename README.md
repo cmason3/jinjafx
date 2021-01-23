@@ -16,17 +16,19 @@ JinjaFx Server running at https://jinjafx.io
 ### JinjaFx Usage
 
 ```
- jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]
-   -t <template.j2>            - specify a Jinja2 template
-   -d <data.csv>               - specify row based data (comma or tab separated)
-   -dt <dt.yml>                - specify a JinjaFx DataTemplate (contains template and data)
-   -g <vars.yml>[, -g ...]     - specify global variables in yaml (supports Ansible vaulted files and strings)
-   -o <output file>            - specify the output file (supports Jinja2 variables) (default is stdout)
-   -od <output dir>            - change the output dir for output files with a relative path (default is ".")
-   -q                          - quiet mode - don't output version or usage information
+ jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]
+   -t <template.j2>              - specify a Jinja2 template
+   -d <data.csv>                 - specify row based data (comma or tab separated)
+   -dt <dt.yml>                  - specify a JinjaFx DataTemplate (contains template and data)
+   -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible vaulted files and strings)
+   -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
+   -od <output dir>              - change the output dir for output files with a relative path (default is ".")
+   -m                            - merge global variables (dicts and lists) instead of overwriting keys
+   -q                            - quiet mode - don't output version or usage information
    
  environment variables:
-   ANSIBLE_VAULT_PASS          - specify an ansible vault password instead of prompting
+   ANSIBLE_VAULT_PASSWORD        - specify an ansible vault password
+   ANSIBLE_VAULT_PASSWORD_FILE   - specify an ansible vault password file
 ```
 
 JinjaFx allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
@@ -38,7 +40,7 @@ A, B, C    <- HEADER ROW
 7, 8, 9    <- DATA ROW 3
 ```
 
-The case-sensitive header row (see `jinjafx_adjust_headers`) determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value - whitespace is automatically removed from header fields, which means "New Port" will need to be referenced using the variable name "NewPort") and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you do omit the data then the template will still be executed, but with a single empty row of data.
+The case-sensitive header row (see `jinjafx_adjust_headers`) determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value - whitespace is automatically removed from header fields, which means "New Port" will need to be referenced using the variable name "NewPort") and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you define the same key in different files then the last file specified will overwrite the key value, unless you specify `-m` which tells JinjaFx to merge keys, although this only works for keys of the same type that are mergable (i.e. dicts and lists). If you do omit the data then the template will still be executed, but with a single empty row of data.
 
 Apart from normal data you can also specify regex based static character classes or static groups as values within the data rows using `(value1|value2|value3)` or `[a-f]`. These will be expanded using the `jinjafx.expand()` function to multiple rows, for example:
 
@@ -376,13 +378,14 @@ This function is used to perform a forward or reverse DNS lookup - it will retur
 Once JinjaFx Server has been started with the `-s` argument then point your web browser at http://localhost:8080 and you will be presented with a web page that allows you to specify `data.csv`, `template.j2` and `vars.yml` and then generate outputs. If you click on "Export" then it will present you with an output that can be pasted back into any pane of JinjaFx to restore the values.
 
 ```
- jinjafx_server.py -s [-l <address>] [-p <port>] [-r <repository> | -s3 <aws s3 url>] [-rl <rate/limit>]
+ jinjafx_server.py -s [-l <address>] [-p <port>] [-r <repository> | -s3 <aws s3 url>] [-rl <rate/limit>] [-api]
    -s                          - start the JinjaFx Server
    -l <address>                - specify a listen address (default is '127.0.0.1')
    -p <port>                   - specify a listen port (default is 8080)
    -r <repository>             - specify a local repository directory (allows 'Get Link')
    -s3 <aws s3 url>            - specify a repository using aws s3 buckets (allows 'Get Link')
    -rl <rate/limit>            - specify a rate limit (i.e. '5/30s' for 5 requests in 30 seconds)
+   -api                        - start in api only mode without web frontend
 
  environment variables:
    AWS_ACCESS_KEY              - specify an aws access key to authenticate for '-s3'
@@ -394,3 +397,5 @@ For health checking purposes, if you specify the URL `/ping` then you should get
 The "-r" or "-s3" arguments (mutually exclusive) allow you to specify a repository ("-r" is a local directory and "-s3" is an AWS S3 URL) that will be used to store DataTemplates on the server via the "Get Link" and "Update Link" buttons. The generated link is guaranteed to be unique and a different link will be created every time - version 1.3.0 changed the behaviour, where previously the same link was always generated for the same DataTemplate, but this made it difficult to update DataTeplates without the link changing as it was basically a cryptographic hash of your DataTemplate. If you use an AWS S3 bucket then you will also need to provide some credentials via the two environment variables which has read and write permissions to the S3 URL.
 
 The "-rl" argument is used to provide an optional rate limit of the source IP - the "rate" is how many requests are permitted and the "limit" is the interval in which those requests are permitted - it can be specified in "s", "m" or "h" (e.g. "5/30s", "10/1m" or "30/1h").
+
+The "-api" argument is used to disable the web frontend and only provide the api which the frontend uses - the api is currently undocumented so this option isn't recommended in normal use cases.

@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -63,7 +63,7 @@ def main():
       print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
       print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-q]'
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]'
 
     parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
@@ -73,11 +73,15 @@ def main():
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-o', metavar='<output file>', type=str)
     parser.add_argument('-od', metavar='<output dir>', type=str)
+    parser.add_argument('-m', action='store_true')
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
 
     if args.dt is not None and args.d is not None:
       parser.error("argument -d: not allowed with argument -dt")
+
+    if args.m is True and args.g is None:
+      parser.error("argument -m: only allowed with argument -g")
 
     if args.od is not None and not os.access(args.od, os.W_OK):
       parser.error("argument -od: unable to write to output directory")
@@ -95,7 +99,13 @@ def main():
           from ansible.parsing.vault import VaultSecret
           from getpass import getpass
 
-          vpw = os.getenv('ANSIBLE_VAULT_PASS')
+          vpw = os.getenv('ANSIBLE_VAULT_PASSWORD')
+
+          if vpw == None:
+            vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
+            if vpwf != None:
+              with open(vpwf) as f:
+                vpw = f.read().strip()
 
           if vpw == None:
             vpw = getpass('Vault Password: ')
@@ -108,6 +118,23 @@ def main():
 
     def yaml_vault_tag(loader, node):
       return decrypt_vault(node.value)
+
+    def merge(dst, src):
+      for key in src:
+        if key in dst:
+          if isinstance(dst[key], dict) and isinstance(src[key], dict):
+            merge(dst[key], src[key])
+
+          elif isinstance(dst[key], list) and isinstance(src[key], list):
+            dst[key] += src[key]
+
+          else:
+            dst[key] = src[key]
+
+        else:
+          dst[key] = src[key]
+
+      return dst
 
     yaml.add_constructor('!vault', yaml_vault_tag, yaml.FullLoader)
 
@@ -132,7 +159,10 @@ def main():
       for g in args.g:
         with open(g.name) as f:
           gyaml = decrypt_vault(f.read())
-          gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
+          if args.m == True:
+            merge(gvars, yaml.load(gyaml, Loader=yaml.FullLoader))
+          else:
+            gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
 
     if args.o is None:
       args.o = '_stdout_'

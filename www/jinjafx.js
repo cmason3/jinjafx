@@ -107,7 +107,12 @@ function jinjafx(method) {
           set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
           clear_wait();
         };
+        xHR.ontimeout = function() {
+          set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+          clear_wait();
+        };
 
+        xHR.timeout = 10000;
         xHR.setRequestHeader("Content-Type", "application/json");
         xHR.send(JSON.stringify(dt));
       }
@@ -297,6 +302,14 @@ window.onload = function() {
               loaded = true;
               clear_wait();
             };
+            xHR.ontimeout = function() {
+              set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+              window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+              loaded = true;
+              clear_wait();
+            };
+
+            xHR.timeout = 10000;
             xHR.send(null);
           }
           else {
@@ -329,11 +342,19 @@ window.onload = function() {
 };
 
 function set_wait() {
+  fe.setOption('readOnly', 'nocursor');
+  window.cmData.getWrapperElement().style.background = '#eee';
+  window.cmTemplate.getWrapperElement().style.background = '#eee';
+  window.cmVars.getWrapperElement().style.background = '#eee';
   document.getElementById('overlay').style.display = 'block';
 }
 
 function clear_wait() {
   document.getElementById('overlay').style.display = 'none';
+  window.cmVars.getWrapperElement().style.background = '';
+  window.cmTemplate.getWrapperElement().style.background = '';
+  window.cmData.getWrapperElement().style.background = '';
+  fe.setOption('readOnly', false);
 }
 
 function quote(str) {
