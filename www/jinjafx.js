@@ -343,6 +343,11 @@ window.onload = function() {
 
 function set_wait() {
   fe.setOption('readOnly', 'nocursor');
+  var e = document.getElementById("csv").getElementsByTagName("th");
+  for (var i = 0; i < e.length; i++) {
+    e[i].style.background = '#eee';
+  }
+  document.getElementById("csv").style.background = '#eee';
   window.cmData.getWrapperElement().style.background = '#eee';
   window.cmTemplate.getWrapperElement().style.background = '#eee';
   window.cmVars.getWrapperElement().style.background = '#eee';
@@ -354,6 +359,11 @@ function clear_wait() {
   window.cmVars.getWrapperElement().style.background = '';
   window.cmTemplate.getWrapperElement().style.background = '';
   window.cmData.getWrapperElement().style.background = '';
+  document.getElementById("csv").style.background = '#fff';
+  var e = document.getElementById("csv").getElementsByTagName("th");
+  for (var i = 0; i < e.length; i++) {
+    e[i].style.background = 'lightgray';
+  }
   fe.setOption('readOnly', false);
 }
 

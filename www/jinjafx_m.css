@@ -18,6 +18,9 @@ body {
   background-color: #fff;
   font-size: 12px;
 }
+#csv th {
+  background-color: lightgray;
+}
 .expand {
   position: absolute;
   background: transparent;
