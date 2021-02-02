@@ -101,9 +101,11 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8') ]
 
     elif not api_only:
+      base = os.path.abspath(os.path.dirname(sys.argv[0]))
+
       if fpath == '/':
         fpath = '/index.html'
-        
+
       if re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
         readonly = False
 
@@ -153,7 +155,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         else:
           r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
 
-      elif not re.search(r'[^A-Za-z0-9_./-]', fpath) and not re.search(r'\.{2,}', fpath) and os.path.isfile('www' + fpath):
+      elif not re.search(r'[^A-Za-z0-9_./-]', fpath) and not re.search(r'\.{2,}', fpath) and os.path.isfile(base + '/www' + fpath):
         if fpath.endswith('.js'):
           ctype = 'text/javascript'
         elif fpath.endswith('.css'):
@@ -164,7 +166,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           ctype = 'text/html'
 
         try:
-          with open('www' + fpath, 'rb') as f:
+          with open(base + '/www' + fpath, 'rb') as f:
             r = [ ctype, 200, f.read() ]
 
             if fpath == '/index.html':
