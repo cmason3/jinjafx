@@ -370,4 +370,4 @@ This function is used to get a global variable that has been set with `jinjafx.s
 
 - <b><code>jinjafx.nslookup("query", [family])</code></b>
 
-This function is used to perform a forward or reverse DNS lookup - it will return the result as a list or `None` if it can't resolve the query - for reverse lookups it will always be a list with a single entry. When performing forward lookups the "family" field can be set to "4" or "6" to force an IPv4 or IPv6 only lookup - by default it will return both if they exist.
+This function is used to perform a forward or reverse DNS lookup - it will return the result as a list or `None` if it can't resolve the query - for reverse lookups it will always be a list with a single entry. When performing forward lookups the "family" field can be set to "4" or "6" to force an IPv4 or IPv6 only lookup - by default it will return both if they exist. Be warned that this will cause long delays as it uses the `getnameinfo` and `getaddrinfo` system calls where you can't specify a timeout - it will take at least 10 seconds to timeout per server configured in `/etc/resolv.conf` for queries which result in SERVFAIL.
