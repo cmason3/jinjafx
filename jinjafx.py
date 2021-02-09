@@ -691,7 +691,10 @@ class JinjaFx():
 
   def jfx_nslookup(self, v, family=46):
     try:
-      if re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v) or re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I):
+      if re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I): # IPv6
+        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
+
+      elif re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v): # IPv4
         return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
 
       else:
