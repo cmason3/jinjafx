@@ -5,7 +5,7 @@ RUN python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade 
 
 RUN curl -s https://api.github.com/repos/cmason3/jinjafx/releases/latest \
 | grep "tarball_url" | cut -d'"' -f4 | xargs -I {} curl -sL {} \
-| tar -zx -C /opt --transform="s/[^\/]*/jinjafx/"
+| tar -zx -C /opt --one-top-level=jinjafx --strip-components 1
 
 RUN useradd -m jinjafx
 USER jinjafx
