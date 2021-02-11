@@ -1,6 +1,6 @@
 FROM python:3.8-slim
 
-ARG BRANCH="master"
+ARG BRANCH="main"
 
 RUN apt-get update; apt-get install -y git; apt-get clean
 RUN python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr requests
