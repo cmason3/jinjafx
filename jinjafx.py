@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.3.1'
+__version__ = '1.3.2 (beta)'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -691,11 +691,11 @@ class JinjaFx():
 
   def jfx_nslookup(self, v, family=46):
     try:
-      if re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I):
-        return [socket.gethostbyaddr(v)[0]]
+      if re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I): # IPv6
+        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
 
-      elif re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v):
-        return [socket.gethostbyaddr(v)[0]]
+      elif re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v): # IPv4
+        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
 
       else:
         if int(family) == 46:

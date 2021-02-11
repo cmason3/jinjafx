@@ -1,17 +1,17 @@
-## jinjafx.yml
+## jinjafx_server.yml
 
 ```
 apiVersion: v1
 kind: Service
 metadata:
-  name: jinjafx
+  name: jinjafx_server
   labels:
-    app: jinjafx
+    app: jinjafx_server
 spec:
   type: ClusterIP
   clusterIP: 10.152.183.100
   selector:
-    app: jinjafx
+    app: jinjafx_server
   ports:
     - protocol: TCP
       port: 8080
@@ -21,11 +21,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jinjafx
+  name: jinjafx_server
 spec:
   selector:
     matchLabels:
-      app: jinjafx
+      app: jinjafx_server
   replicas: 1
   strategy:
     type: RollingUpdate
@@ -35,12 +35,12 @@ spec:
   template:
     metadata:
       labels:
-        app: jinjafx
+        app: jinjafx_server
     spec:
       dnsPolicy: Default
       containers:
-        - name: jinjafx
-          image: docker.io/cmason3/jinjafx:latest
+        - name: jinjafx_server
+          image: docker.io/cmason3/jinjafx_server:latest
           args: [ "-rl", "5/30s" ]
           imagePullPolicy: Always
           ports:
