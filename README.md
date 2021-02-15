@@ -2,9 +2,10 @@
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [<img src="https://img.shields.io/badge/JinjaFx%20Server-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
-# JinjaFx
-## Jinja Templating Tool
-### :sparkles: Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input :sparkles:
+
+<h1 align="center">JinjaFx</h1>
+<h2 align="center">Jinja Templating Tool</h2>
+<h3 align="center">:sparkles: Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input :sparkles:</h3>
 
 JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and strings or use custom Ansible filters. While it should work on Python 2.7 without modification, Python 3 is recommended as I no longer test against Python 2 as it is end of life.
 
