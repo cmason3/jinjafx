@@ -18,7 +18,7 @@ JinjaFx Server running at [https://jinjafx.io](https://jinjafx.io)
 ```
  jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]
    -t <template.j2>              - specify a Jinja2 template
-   -d <data.csv>                 - specify row based data (comma or tab separated)
+   -d <data.csv>                 - specify row/column based data (comma or tab separated)
    -dt <dt.yml>                  - specify a JinjaFx DataTemplate (contains template and data)
    -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible vaulted files and strings)
    -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
@@ -40,7 +40,7 @@ A, B, C    <- HEADER ROW
 7, 8, 9    <- DATA ROW 3
 ```
 
-The case-sensitive header row (see `jinjafx_adjust_headers`) determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value - whitespace is automatically removed from header fields, which means "New Port" will need to be referenced using the variable name "NewPort") and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you define the same key in different files then the last file specified will overwrite the key value, unless you specify `-m` which tells JinjaFx to merge keys, although this only works for keys of the same type that are mergable (i.e. dicts and lists). If you do omit the data then the template will still be executed, but with a single empty row of data.
+The case-sensitive header row (see `jinjafx_adjust_headers` in "JinjaFx Variables") determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value - whitespace is automatically removed from header fields, which means "New Port" will need to be referenced using the variable name "NewPort") and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you define the same key in different files then the last file specified will overwrite the key value, unless you specify `-m` which tells JinjaFx to merge keys, although this only works for keys of the same type that are mergable (i.e. dicts and lists). If you do omit the data then the template will still be executed, but with a single empty row of data.
 
 Apart from normal data you can also specify regex based static character classes or static groups as values within the data rows using `(value1|value2|value3)` or `[a-f]`. These will be expanded using the `jinjafx.expand()` function to multiple rows, for example:
 
@@ -182,7 +182,23 @@ lstrip_blocks = True
 keep_trailing_newline = True
 ```
 
-#### jinjafx_adjust_headers
+### Ansible Filters
+
+Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
+
+- <b><code>core</code></b>
+
+This contains the "Core" Ansible filters like `regexp_search`, `regex_replace`, `regex_findall`, `to_yaml`, `to_json`, etc 
+
+- <b><code>ipaddr</code></b>
+
+This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module. These filters can be used using the shorter `|ipaddr` syntax as well as the longer `|ansible.netcommon.ipaddr` syntax.
+
+### JinjaFx Variables
+
+The following variables, if defined within `vars.yml` control how JinjaFx works:
+
+- <b><code>jinjafx_adjust_headers</code></b>
 
 There might be some situations where you can't control the format of the header fields that are provided in `data.csv` - it might come from a spreadsheet where someone hasn't been consistent with the header row and has used uppercase in some situations and lowercase in others. The header fields are used by Jinja2 as case-sensitive variables and can't contain spaces or punctuation characters - they can only contain alphanumerical characters and the underscore. To help in these situations, the variable `jinjafx_adjust_headers` can be set in `vars.yml` which will remove any non-standard characters and upper case all header fields (i.e. "Assigned / Unassigned" would become "ASSIGNEDUNASSIGNED"), e.g:
 
@@ -190,6 +206,43 @@ There might be some situations where you can't control the format of the header 
 ---
 jinjafx_adjust_headers: True
 ```
+- <b><code>jinjafx_dilimeter</code></b>
+
+TBC....
+
+- <b><code>jinjafx_filter + jinjafx_sort</code></b>
+
+JinjaFx supports the ability to filter as well as sort the data within `data.csv` before it is passed to the templating engine. From a filtering perspective, while you could include and exclude certain rows within your `template.j2` with a conditional `if` statement, it won't allow you to use `jinjafx.first()` and `jinjafx.last()` on the reduced data set. This is where the `jinjafx_filter` key which can be specified in `vars.yml` comes into play - it lets you specify using regular expressions what field values you wish to include in your data, e.g:
+
+```yaml
+---
+jinjafx_filter:
+  "HOST": "^r740"
+  "INTERFACE": "^et"
+```
+
+The above will filter `data.csv` and only include rows where the "HOST" field value starts with "r740" and where the "INTERFACE" field value starts with "et" (by default it performs a case sensitive match, but "(?i)" can be specified at the beginning of the match string to ignore case).
+
+While data is normally processed in the order in which it is provided, it can be sorted through the use of the `jinjafx_sort` key when specified within `vars.yml`. It takes a case-sensitive list of the fields you wish to sort by, which will then sort the data before it is processed, e.g to sort by "HOST" followed by "INTERFACE" you would specify the following:
+
+```yaml
+---
+jinjafx_sort:
+  - "HOST"
+  - "INTERFACE"
+```
+
+Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using `:int` on the field name.
+
+While sorting is performed in either ascending or descending order, you can also specify a custom sort order using the following syntax:
+
+```yaml
+---
+jinjafx_sort:
+  - "HOST": { "r740-036": -2, "r740-035": -1, "r740-039": 1 }
+```
+
+The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if yo specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
 
 ### JinjaFx DataTemplates
 
@@ -208,51 +261,6 @@ dt:
     ... VARS.YML ...
 ```
 
-### Filtering and Sorting
-
-JinjaFx supports the ability to filter as well as sort the data within `data.csv` before it is passed to the templating engine. From a filtering perspective, while you could include and exclude certain rows within your `template.j2` with a conditional `if` statement, it won't allow you to use `jinjafx.first()` and `jinjafx.last()` on the reduced data set. This is where the `jinjafx_filter` key which can be specified in `vars.yml` comes into play - it lets you specify using regular expressions what field values you wish to include in your data, e.g:
-
-```yaml
----
-  jinjafx_filter:
-    "HOST": "^r740"
-    "INTERFACE": "^et"
-```
-
-The above will filter `data.csv` and only include rows where the "HOST" field value starts with "r740" and where the "INTERFACE" field value starts with "et" (by default it performs a case sensitive match, but "(?i)" can be specified at the beginning of the match string to ignore case).
-
-While data is normally processed in the order in which it is provided, it can be sorted through the use of the `jinjafx_sort` key when specified within `vars.yml`. It takes a case-sensitive list of the fields you wish to sort by, which will then sort the data before it is processed, e.g to sort by "HOST" followed by "INTERFACE" you would specify the following:
-
-```yaml
----
-  jinjafx_sort:
-    - "HOST"
-    - "INTERFACE"
-```
-
-Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using `:int` on the field name.
-
-While sorting is performed in either ascending or descending order, you can also specify a custom sort order using the following syntax:
-
-```yaml
----
-  jinjafx_sort:
-    - "HOST": { "r740-036": -2, "r740-035": -1, "r740-039": 1 }
-```
-
-The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if yo specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
-
-### Ansible Filters
-
-Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
-
-- <b><code>core</code></b>
-
-This contains the "Core" Ansible filters like `regexp_search`, `regex_replace`, `regex_findall`, `to_yaml`, `to_json`, etc 
-
-- <b><code>ipaddr</code></b>
-
-This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module.
 
 ### Jinja2 Extensions
 
