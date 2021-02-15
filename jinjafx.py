@@ -250,7 +250,10 @@ class JinjaFx():
       for l in data.splitlines():
         if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
           if len(self.g_datarows) == 0:
-            if l.count(',') > l.count('\t'):
+            if 'jinjafx_delimiter' in gvars:
+              delim = r'[ \t]*' + gvars['jinjafx_delimiter'] + r'[ \t]*'
+              schars = ' \t'
+            elif l.count(',') > l.count('\t'):
               delim = r'[ \t]*,[ \t]*'
               schars = ' \t'
             else:
