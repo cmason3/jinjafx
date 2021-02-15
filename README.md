@@ -206,9 +206,10 @@ There might be some situations where you can't control the format of the header 
 ---
 jinjafx_adjust_headers: True
 ```
+
 - <b><code>jinjafx_dilimeter</code></b>
 
-TBC....
+By default, JinjaFx will look for data that is either tab separated or comma separated, however using the `jinjafx_dilimeter` variable you have the ability to override this and specify a different dilimeter that will be used when processing `data.csv`.
 
 - <b><code>jinjafx_filter + jinjafx_sort</code></b>
 
@@ -260,7 +261,6 @@ dt:
   vars: |2
     ... VARS.YML ...
 ```
-
 
 ### Jinja2 Extensions
 
