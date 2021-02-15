@@ -208,10 +208,6 @@ There might be some situations where you can't control the format of the header 
 jinjafx_adjust_headers: True
 ```
 
-- <b><code>jinjafx_dilimeter</code></b>
-
-By default, JinjaFx will look for data that is either tab separated or comma separated, however using the `jinjafx_dilimeter` variable you have the ability to override this and specify a different dilimeter that will be used when processing `data.csv`.
-
 - <b><code>jinjafx_filter + jinjafx_sort</code></b>
 
 JinjaFx supports the ability to filter as well as sort the data within `data.csv` before it is passed to the templating engine. From a filtering perspective, while you could include and exclude certain rows within your `template.j2` with a conditional `if` statement, it won't allow you to use `jinjafx.first()` and `jinjafx.last()` on the reduced data set. This is where the `jinjafx_filter` key which can be specified in `vars.yml` comes into play - it lets you specify using regular expressions what field values you wish to include in your data, e.g:
@@ -245,23 +241,6 @@ jinjafx_sort:
 ```
 
 The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if yo specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
-
-### JinjaFx DataTemplates
-
-JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
-
-```yaml
----
-dt:
-  data: |2
-    ... DATA.CSV ...
-
-  template: |2
-    ... TEMPLATE.J2 ...
-
-  vars: |2
-    ... VARS.YML ...
-```
 
 ### Jinja2 Extensions
 
@@ -301,6 +280,23 @@ We would then use the new Extension by adding the following YAML to our `vars.ym
 ---
 jinja2_extensions:
   - 'jinjafx_extensions.AddExtension'
+```
+
+### JinjaFx DataTemplates
+
+JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
+
+```yaml
+---
+dt:
+  data: |2
+    ... DATA.CSV ...
+
+  template: |2
+    ... TEMPLATE.J2 ...
+
+  vars: |2
+    ... VARS.YML ...
 ```
 
 ### JinjaFx Built-Ins
