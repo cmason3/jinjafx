@@ -2,9 +2,10 @@
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [<img src="https://img.shields.io/badge/JinjaFx%20Server-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
-# JinjaFx Server
-## Jinja Templating Tool
-### :sparkles: Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input :sparkles:
+
+<h1 align="center">JinjaFx Server</h1>
+<h2 align="center">Jinja Templating Tool</h2>
+<h3 align="center">:sparkles: Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input :sparkles:</h3>
 
 JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface - it does require the "requests" module which isn't in the base install. Usage instructions are provided below, although it is considered an additional component and not part of the base JinjaFx tool, although it is probably a much easier way to use it.
 
