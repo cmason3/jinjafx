@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.3.2 (beta)'
+__version__ = '1.3.3 (beta)'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -48,7 +48,13 @@ def import_filters(errc = 0):
       except Exception:
         raise Exception()
 
-    jinja2_filters.append(ipaddr.FilterModule().filters())
+    filters = {}
+    for k, v in ipaddr.FilterModule().filters().items():
+      filters[k] = v
+      filters['ansible.netcommon.' + k] = v
+
+    jinja2_filters.append(filters)
+
   except Exception:
     print('warning: unable to import ansible \'ipaddr\' filter - requires ansible and netaddr', file=sys.stderr)
     errc += 1
