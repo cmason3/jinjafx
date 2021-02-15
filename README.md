@@ -163,7 +163,6 @@ second
 <output "{{ DEVICE|lower }}.txt">[-1]
 third
 </output>
-
 ```
 
 The outputs are then sorted based on the index (the default index if omitted is 0), which results in the following output:
