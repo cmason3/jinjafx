@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [<img src="https://img.shields.io/badge/JinjaFx%20Server-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
 
-<h1 align="center">JinjaFx - Jinja Templating Tool</h1>
+<h2 align="center">JinjaFx - Jinja Templating Tool</h2>
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a></p>
 
