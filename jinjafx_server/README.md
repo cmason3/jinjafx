@@ -1,7 +1,7 @@
 ![Release](https://img.shields.io/github/v/release/cmason3/jinjafx)
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[<img src="https://img.shields.io/badge/JinjaFx%20Server-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
+[<img src="https://img.shields.io/badge/Web%20Front--End-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
 
 <h1 align="center">JinjaFx Server - Jinja Templating Tool</h1>
 <h3 align="center">:sparkles: Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input :sparkles:</h3>
@@ -22,7 +22,7 @@ Once JinjaFx Server has been started with the `-s` argument then point your web 
    -rl <rate/limit>            - specify a rate limit (i.e. '5/30s' for 5 requests in 30 seconds)
    -api                        - start in api only mode without web frontend
 
- environment variables:
+ Environment Variables:
    AWS_ACCESS_KEY              - specify an aws access key to authenticate for '-s3'
    AWS_SECRET_KEY              - specify an aws secret key to authenticate for '-s3'
 ```
