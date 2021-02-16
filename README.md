@@ -44,6 +44,8 @@ A, B, C    <- HEADER ROW
 
 The case-sensitive header row (see `jinjafx_adjust_headers` in "JinjaFx Variables") determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value - whitespace is automatically removed from header fields, which means "New Port" will need to be referenced using the variable name "NewPort") and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you define the same key in different files then the last file specified will overwrite the key value, unless you specify `-m` which tells JinjaFx to merge keys, although this only works for keys of the same type that are mergable (i.e. dicts and lists). If you do omit the data then the template will still be executed, but with a single empty row of data.
 
+#### RegEx Style Character Classes and Groups
+
 Apart from normal data you can also specify regex based static character classes or static groups as values within the data rows using `(value1|value2|value3)` or `[a-f]`. These will be expanded using the `jinjafx.expand()` function to multiple rows, for example:
 
 ```
@@ -64,6 +66,8 @@ usny-pe-1b, pe
 usnh-pe-1a, pe
 usnh-pe-1b, pe
 ```
+
+#### RegEx Style Capture Groups
 
 It also supports the ability to use regex style capture groups in combination with static groups, which allows the following syntax where we have used "\1" to reference the first capture group that appears within the row:
 
@@ -89,6 +93,8 @@ spine-03, et-0/0/2, leaf-02
 spine-03, et-0/0/3, leaf-03
 spine-03, et-0/0/4, leaf-04
 ```
+
+#### Expansion Counters
 
 We also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step[:pad] }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
 
@@ -119,6 +125,8 @@ et-0/0/7, r740-040
 et-0/0/8, r740-041
 et-0/0/9, r740-042
 ```
+
+#### Field Values
 
 By default all field values are treated as strings which means you need to use the `int` filter (e.g. `{{ NUMBER|int }}`) if you wish to perform mathematical functions on them (e.g. `{{ NUMBER|int + 1 }}`). If you have a field where all the values are numbers and you wish them to be treated as numerical values without having to use the `int` filter, then you can suffix `:int` onto the field name (if it detects a non-numerical value in the data then an error will occur), e.g:
 
