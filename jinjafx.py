@@ -268,7 +268,7 @@ class JinjaFx():
                 fields[i] = fields[i][:-4]
 
               if 'jinjafx_adjust_headers' in gvars:
-                if gvars['jinjafx_adjust_headers'].lower() == 'keep':
+                if gvars['jinjafx_adjust_headers'].lower() == 'normal':
                   fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i], flags=re.UNICODE)
 
                 elif gvars['jinjafx_adjust_headers'].lower() == 'upper':
@@ -278,7 +278,7 @@ class JinjaFx():
                   fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].lower(), flags=re.UNICODE)
 
                 else:
-                  raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'keep\', \'upper\' or \'lower\'')
+                  raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'normal\', \'upper\' or \'lower\'')
               
               if fields[i] == '':
                 raise Exception('empty header field detected at column position ' + str(i + 1))
