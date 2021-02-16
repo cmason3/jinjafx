@@ -208,7 +208,7 @@ There might be some situations where you can't control the format of the header 
 jinjafx_adjust_headers: True
 ```
 
-- <b><code>jinjafx_filter + jinjafx_sort</code></b>
+- <b><code>jinjafx_filter</code></b> and <b><code>jinjafx_sort</code></b>
 
 JinjaFx supports the ability to filter as well as sort the data within `data.csv` before it is passed to the templating engine. From a filtering perspective, while you could include and exclude certain rows within your `template.j2` with a conditional `if` statement, it won't allow you to use `jinjafx.first()` and `jinjafx.last()` on the reduced data set. This is where the `jinjafx_filter` key which can be specified in `vars.yml` comes into play - it lets you specify using regular expressions what field values you wish to include in your data, e.g:
 
