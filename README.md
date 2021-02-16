@@ -25,10 +25,10 @@ JinjaFx Server is a add-on which provides a lightweight web server to support a 
    -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible vaulted files and strings)
    -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
    -od <output dir>              - change the output dir for output files with a relative path (default is ".")
-   -m                            - merge global variables (dicts and lists) instead of overwriting keys
+   -m                            - merge duplicate global variables (dicts and lists) instead of overwriting keys
    -q                            - quiet mode - don't output version or usage information
    
- environment variables:
+ Environment Variables:
    ANSIBLE_VAULT_PASSWORD        - specify an ansible vault password
    ANSIBLE_VAULT_PASSWORD_FILE   - specify an ansible vault password file
 ```
