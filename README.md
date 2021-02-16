@@ -209,11 +209,11 @@ The following variables, if defined within `vars.yml` control how JinjaFx works:
 
 - <b><code>jinjafx_adjust_headers</code></b>
 
-There might be some situations where you can't control the format of the header fields that are provided in `data.csv` - it might come from a spreadsheet where someone hasn't been consistent with the header row and has used uppercase in some situations and lowercase in others. The header fields are used by Jinja2 as case-sensitive variables and can't contain spaces or punctuation characters - they can only contain alphanumerical characters and the underscore. To help in these situations, the variable `jinjafx_adjust_headers` can be set in `vars.yml` which will remove any non-standard characters and upper case all header fields (i.e. "Assigned / Unassigned" would become "ASSIGNEDUNASSIGNED"), e.g:
+There might be some situations where you can't control the format of the header fields that are provided in `data.csv` - it might come from a spreadsheet where someone hasn't been consistent with the header row and has used uppercase in some situations and lowercase in others. The header fields are used by Jinja2 as case-sensitive variables and can't contain spaces or punctuation characters - they can only contain alphanumerical characters and the underscore. To help in these situations, the variable `jinjafx_adjust_headers` can be set in `vars.yml` to either `keep`, `upper` or `lower`, which will remove any non-standard characters and change the case depending on the value (i.e. "Assigned / Unassigned" would become "ASSIGNEDUNASSIGNED" if the value was `upper` and "AssignedUnassigned" if the value was `keep`).
 
 ```yaml
 ---
-jinjafx_adjust_headers: True
+jinjafx_adjust_headers: "keep" or "upper" or "lower"
 ```
 
 - <b><code>jinjafx_filter</code></b> and <b><code>jinjafx_sort</code></b>
