@@ -199,7 +199,7 @@ Jinja2 is commonly used with Ansible which has a wide variety of [custom filters
 
 This contains the "Core" Ansible filters, which includes `groupby`, `b64decode`, `b64encode`, `to_uuid`, `to_json`, `to_nice_json`, `from_json`, `to_yaml`, `to_nice_yaml`, `from_yaml`, `from_yaml_all`, `basename`, `dirname`, `expanduser`, `expandvars`, `realpath`, `relpath`, `splitext`, `win_basename`, `win_dirname`, `win_splitdrive`, `fileglob`, `bool`, `to_datetime`, `strftime`, `quote`, `md5`, `sha1`, `checksum`, `password_hash`, `hash`, `regex_replace`, `regex_escape`, `regex_search`, `regex_findall`, `ternary`, `random`, `shuffle`, `mandatory`, `comment`, `type_debug`, `combine`, `extract`, `flatten`, `dict2items`, `items2dict`, `subelements` and `random_mac`.
 
-- <b><code>ipaddr</code></b>
+- <b><code>ansible.netcommon.ipaddr</code></b>
 
 This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module. These filters can be used using the shorter `|ipaddr` syntax as well as the longer `|ansible.netcommon.ipaddr` syntax. The full list of imported filters are `cidr_merge`, `ipaddr`, `ipmath`, `ipwrap`, `ip4_hex`, `ipv4`, `ipv6`, `ipsubnet`, `next_nth_usable`, `network_in_network`, `network_in_usable`, `reduce_on_network`, `nthhost`, `previous_nth_usable`, `slaac`, `hwaddr` and `macaddr`.
 
