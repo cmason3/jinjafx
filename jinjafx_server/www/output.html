@@ -92,7 +92,7 @@
 
                     document.body.style.display = 'none';
                     document.getElementById('status').style.display = 'none';
-                    document.getElementById('summary').innerHTML = 'Generated at ' + new Date().toTimeString().substring(0, 17) + '<br />in ' + Math.ceil(obj.elapsed).toLocaleString() + ' milliseconds';
+                    document.getElementById('summary').innerHTML = 'Generated at ' + new Date().toLocaleTimeString() + ' on ' + new Date().toLocaleDateString() + '<br />in ' + Math.ceil(obj.elapsed).toLocaleString() + ' milliseconds';
                     document.getElementById('tabs').innerHTML = tabs;
                     document.getElementById('nav-links').innerHTML = links;
                     document.getElementById('wrap').style.display = 'block';
