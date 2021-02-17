@@ -32,8 +32,6 @@ class ArgumentParser(argparse.ArgumentParser):
 def import_filters(errc = 0):
   try:
     from ansible.plugins.filter import core
-    for k, v in core.FilterModule().filters().items():
-      print(str(k))
     jinja2_filters.append(core.FilterModule().filters())
   except Exception:
     print('warning: unable to import ansible \'core\' filters - requires ansible', file=sys.stderr)
@@ -268,16 +266,16 @@ class JinjaFx():
                 fields[i] = fields[i][:-4]
 
               if 'jinjafx_adjust_headers' in gvars:
-                jinjafx_adjust_headers = gvars['jinjafx_adjust_headers'].strip().lower()
+                jinjafx_adjust_headers = str(gvars['jinjafx_adjust_headers']).strip().lower()
 
                 if jinjafx_adjust_headers == 'yes':
-                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i], flags=re.UNICODE)
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i], flags=re.UNICODE | re.IGNORECASE)
 
                 elif jinjafx_adjust_headers == 'upper':
-                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].upper(), flags=re.UNICODE)
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].upper(), flags=re.UNICODE | re.IGNORECASE)
 
                 elif jinjafx_adjust_headers == 'lower':
-                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].lower(), flags=re.UNICODE)
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].lower(), flags=re.UNICODE | re.IGNORECASE)
 
                 elif jinjafx_adjust_headers != 'no':
                   raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
