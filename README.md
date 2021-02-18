@@ -144,7 +144,7 @@ The `-o` argument is used to specify the output file, as by default the output i
 
 JinjaFx templates are Jinja2 templates with one exception - they support a JinjaFx specific syntax that allows you to specify a different output file (or `_stdout_` for stdout) within a Jinja2 template to override the value of `-o` (or output name if being used with the JinjaFx Server):
 
-```
+```jinja2
 <output "output file">
 ...
 </output>
@@ -154,7 +154,7 @@ The above syntax is transparent to Jinja2 and will be ignored by Jinja2, but Jin
 
 This data could then be used in a template as follows, which would output a different text file per "DEVICE":
 
-```
+```jinja2
 <output "{{ DEVICE|lower }}.txt">
 edit interfaces {{ INTERFACE }}
 set description "## Link to {{ HOST }} ##"
@@ -163,7 +163,7 @@ set description "## Link to {{ HOST }} ##"
 
 You also have the option of specifying a numerical output block index to order them, e.g:
 
-```
+```jinja2
 <output "{{ DEVICE|lower }}.txt">[1]
 first
 </output>
