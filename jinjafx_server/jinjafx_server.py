@@ -370,9 +370,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                     dt_yml += '\ndt_hash: "' + hashlib.sha256(dt_yml.encode('utf-8')).hexdigest() + '"\n'
 
                     if user_agent != None:
-                      dt_yml += 'user-agent: "' + user_agent + '"\n'
+                      dt_yml += 'user_agent: "' + user_agent + '"\n'
 
-                    dt_yml += 'remote-addr: "' + remote_addr + '"\n'
+                    dt_yml += 'remote_addr: "' + remote_addr + '"\n'
 
                     if 'id' in params:
                       if re.search(r'^[A-Za-z0-9_-]{1,24}$', params['id']):

@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.3.2'
+__version__ = '1.3.3'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -48,7 +48,13 @@ def import_filters(errc = 0):
       except Exception:
         raise Exception()
 
-    jinja2_filters.append(ipaddr.FilterModule().filters())
+    filters = {}
+    for k, v in ipaddr.FilterModule().filters().items():
+      filters[k] = v
+      filters['ansible.netcommon.' + k] = v
+
+    jinja2_filters.append(filters)
+
   except Exception:
     print('warning: unable to import ansible \'ipaddr\' filter - requires ansible and netaddr', file=sys.stderr)
     errc += 1
@@ -259,9 +265,21 @@ class JinjaFx():
                 int_indices.append(i + 1)
                 fields[i] = fields[i][:-4]
 
-              if 'jinjafx_adjust_headers' in gvars and gvars['jinjafx_adjust_headers'] == True:
-                fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].upper(), flags=re.UNICODE)
+              if 'jinjafx_adjust_headers' in gvars:
+                jinjafx_adjust_headers = str(gvars['jinjafx_adjust_headers']).strip().lower()
 
+                if jinjafx_adjust_headers == 'yes':
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i], flags=re.UNICODE | re.IGNORECASE)
+
+                elif jinjafx_adjust_headers == 'upper':
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].upper(), flags=re.UNICODE | re.IGNORECASE)
+
+                elif jinjafx_adjust_headers == 'lower':
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].lower(), flags=re.UNICODE | re.IGNORECASE)
+
+                elif jinjafx_adjust_headers != 'no':
+                  raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
+              
               if fields[i] == '':
                 raise Exception('empty header field detected at column position ' + str(i + 1))
               elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):

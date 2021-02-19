@@ -1,32 +1,34 @@
 ![Release](https://img.shields.io/github/v/release/cmason3/jinjafx)
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-# JinjaFx
-## Jinja Templating Tool
-### Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input
+[<img src="https://img.shields.io/badge/Web%20Front--End-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
+
+<h1 align="center">JinjaFx - Jinja Templating Tool</h1>
+
+<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a></p>
+
+<h3 align="center">:sparkles: Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input :sparkles:</h3>
 
 JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and strings or use custom Ansible filters. While it should work on Python 2.7 without modification, Python 3 is recommended as I no longer test against Python 2 as it is end of life.
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
 
-JinjaFx Server is a add-on which provides a lightweight web server to support a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface - please see details within the `jinjafx_server` directory.
-
-JinjaFx Server running at [https://jinjafx.io](https://jinjafx.io)
+JinjaFx Server is a add-on which provides a lightweight web server to support a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface - please see details within the [/jinjafx_server](jinjafx_server) directory.
 
 ### JinjaFx Usage
 
 ```
  jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]
    -t <template.j2>              - specify a Jinja2 template
-   -d <data.csv>                 - specify row based data (comma or tab separated)
+   -d <data.csv>                 - specify row/column based data (comma or tab separated)
    -dt <dt.yml>                  - specify a JinjaFx DataTemplate (contains template and data)
    -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible vaulted files and strings)
    -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
    -od <output dir>              - change the output dir for output files with a relative path (default is ".")
-   -m                            - merge global variables (dicts and lists) instead of overwriting keys
+   -m                            - merge duplicate global variables (dicts and lists) instead of overwriting keys
    -q                            - quiet mode - don't output version or usage information
    
- environment variables:
+ Environment Variables:
    ANSIBLE_VAULT_PASSWORD        - specify an ansible vault password
    ANSIBLE_VAULT_PASSWORD_FILE   - specify an ansible vault password file
 ```
@@ -40,7 +42,9 @@ A, B, C    <- HEADER ROW
 7, 8, 9    <- DATA ROW 3
 ```
 
-The case-sensitive header row (see `jinjafx_adjust_headers`) determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value - whitespace is automatically removed from header fields, which means "New Port" will need to be referenced using the variable name "NewPort") and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you define the same key in different files then the last file specified will overwrite the key value, unless you specify `-m` which tells JinjaFx to merge keys, although this only works for keys of the same type that are mergable (i.e. dicts and lists). If you do omit the data then the template will still be executed, but with a single empty row of data.
+The case-sensitive header row (see `jinjafx_adjust_headers` in [JinjaFx Variables](#jinjafx-variables)) determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value) and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you define the same key in different files then the last file specified will overwrite the key value, unless you specify `-m` which tells JinjaFx to merge keys, although this only works for keys of the same type that are mergable (i.e. dicts and lists). If you do omit the data then the template will still be executed, but with a single empty row of data.
+
+#### RegEx Style Character Classes and Groups
 
 Apart from normal data you can also specify regex based static character classes or static groups as values within the data rows using `(value1|value2|value3)` or `[a-f]`. These will be expanded using the `jinjafx.expand()` function to multiple rows, for example:
 
@@ -62,6 +66,8 @@ usny-pe-1b, pe
 usnh-pe-1a, pe
 usnh-pe-1b, pe
 ```
+
+#### RegEx Style Capture Groups
 
 It also supports the ability to use regex style capture groups in combination with static groups, which allows the following syntax where we have used "\1" to reference the first capture group that appears within the row:
 
@@ -87,6 +93,8 @@ spine-03, et-0/0/2, leaf-02
 spine-03, et-0/0/3, leaf-03
 spine-03, et-0/0/4, leaf-04
 ```
+
+#### Expansion Counters
 
 We also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step[:pad] }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
 
@@ -118,6 +126,8 @@ et-0/0/8, r740-041
 et-0/0/9, r740-042
 ```
 
+#### Field Values
+
 By default all field values are treated as strings which means you need to use the `int` filter (e.g. `{{ NUMBER|int }}`) if you wish to perform mathematical functions on them (e.g. `{{ NUMBER|int + 1 }}`). If you have a field where all the values are numbers and you wish them to be treated as numerical values without having to use the `int` filter, then you can suffix `:int` onto the field name (if it detects a non-numerical value in the data then an error will occur), e.g:
 
 ```
@@ -134,7 +144,7 @@ The `-o` argument is used to specify the output file, as by default the output i
 
 JinjaFx templates are Jinja2 templates with one exception - they support a JinjaFx specific syntax that allows you to specify a different output file (or `_stdout_` for stdout) within a Jinja2 template to override the value of `-o` (or output name if being used with the JinjaFx Server):
 
-```
+```jinja2
 <output "output file">
 ...
 </output>
@@ -144,7 +154,7 @@ The above syntax is transparent to Jinja2 and will be ignored by Jinja2, but Jin
 
 This data could then be used in a template as follows, which would output a different text file per "DEVICE":
 
-```
+```jinja2
 <output "{{ DEVICE|lower }}.txt">
 edit interfaces {{ INTERFACE }}
 set description "## Link to {{ HOST }} ##"
@@ -153,7 +163,7 @@ set description "## Link to {{ HOST }} ##"
 
 You also have the option of specifying a numerical output block index to order them, e.g:
 
-```
+```jinja2
 <output "{{ DEVICE|lower }}.txt">[1]
 first
 </output>
@@ -163,7 +173,6 @@ second
 <output "{{ DEVICE|lower }}.txt">[-1]
 third
 </output>
-
 ```
 
 The outputs are then sorted based on the index (the default index if omitted is 0), which results in the following output:
@@ -174,7 +183,7 @@ second
 first
 ```
 
-By default the following Jinja2 templating options are enabled, but they can be overridden as required in the template:
+By default the following Jinja2 templating options are enabled, but they can be overridden as required in the template as per standard Jinja2 syntax:
 
 ```
 trim_blocks = True
@@ -182,41 +191,40 @@ lstrip_blocks = True
 keep_trailing_newline = True
 ```
 
-#### jinjafx_adjust_headers
+### Ansible Filters
 
-There might be some situations where you can't control the format of the header fields that are provided in `data.csv` - it might come from a spreadsheet where someone hasn't been consistent with the header row and has used uppercase in some situations and lowercase in others. The header fields are used by Jinja2 as case-sensitive variables and can't contain spaces or punctuation characters - they can only contain alphanumerical characters and the underscore. To help in these situations, the variable `jinjafx_adjust_headers` can be set in `vars.yml` which will remove any non-standard characters and upper case all header fields (i.e. "Assigned / Unassigned" would become "ASSIGNEDUNASSIGNED"), e.g:
+Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
+
+- <b><code>core</code></b>
+
+This contains the "Core" Ansible filters, which includes `groupby`, `b64decode`, `b64encode`, `to_uuid`, `to_json`, `to_nice_json`, `from_json`, `to_yaml`, `to_nice_yaml`, `from_yaml`, `from_yaml_all`, `basename`, `dirname`, `expanduser`, `expandvars`, `realpath`, `relpath`, `splitext`, `win_basename`, `win_dirname`, `win_splitdrive`, `fileglob`, `bool`, `to_datetime`, `strftime`, `quote`, `md5`, `sha1`, `checksum`, `password_hash`, `hash`, `regex_replace`, `regex_escape`, `regex_search`, `regex_findall`, `ternary`, `random`, `shuffle`, `mandatory`, `comment`, `type_debug`, `combine`, `extract`, `flatten`, `dict2items`, `items2dict`, `subelements` and `random_mac`.
+
+- <b><code>ansible.netcommon.ipaddr</code></b>
+
+This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module. These filters can be used using the shorter `|ipaddr` syntax as well as the longer `|ansible.netcommon.ipaddr` syntax. The full list of imported filters are `cidr_merge`, `ipaddr`, `ipmath`, `ipwrap`, `ip4_hex`, `ipv4`, `ipv6`, `ipsubnet`, `next_nth_usable`, `network_in_network`, `network_in_usable`, `reduce_on_network`, `nthhost`, `previous_nth_usable`, `slaac`, `hwaddr` and `macaddr`.
+
+### JinjaFx Variables
+
+The following variables, if defined within `vars.yml` control how JinjaFx works:
+
+- <b><code>jinjafx_adjust_headers</code></b>
+
+There might be some situations where you can't control the format of the header fields that are provided in `data.csv` - it might come from a spreadsheet where someone hasn't been consistent with the header row and has used uppercase in some situations and lowercase in others or they might have used non-standard characters. The header fields are used by Jinja2 as case-sensitive variables and can't contain spaces or punctuation characters - they can only contain alphanumerical characters and the underscore. To help in these situations, the variable `jinjafx_adjust_headers` can be set in `vars.yml` to either "yes", "no" (the default), "upper" or "lower", which will remove any non-standard characters and change the case depending on the value (i.e. "Assigned / Unassigned" would become `ASSIGNEDUNASSIGNED` if the value was "upper" and `AssignedUnassigned` if the value was "yes").
 
 ```yaml
 ---
-jinjafx_adjust_headers: True
+jinjafx_adjust_headers: "yes" | "no" | "upper" | "lower"
 ```
 
-### JinjaFx DataTemplates
-
-JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
-
-```yaml
----
-dt:
-  data: |2
-    ... DATA.CSV ...
-
-  template: |2
-    ... TEMPLATE.J2 ...
-
-  vars: |2
-    ... VARS.YML ...
-```
-
-### Filtering and Sorting
+- <b><code>jinjafx_filter</code></b> and <b><code>jinjafx_sort</code></b>
 
 JinjaFx supports the ability to filter as well as sort the data within `data.csv` before it is passed to the templating engine. From a filtering perspective, while you could include and exclude certain rows within your `template.j2` with a conditional `if` statement, it won't allow you to use `jinjafx.first()` and `jinjafx.last()` on the reduced data set. This is where the `jinjafx_filter` key which can be specified in `vars.yml` comes into play - it lets you specify using regular expressions what field values you wish to include in your data, e.g:
 
 ```yaml
 ---
-  jinjafx_filter:
-    "HOST": "^r740"
-    "INTERFACE": "^et"
+jinjafx_filter:
+  "HOST": "^r740"
+  "INTERFACE": "^et"
 ```
 
 The above will filter `data.csv` and only include rows where the "HOST" field value starts with "r740" and where the "INTERFACE" field value starts with "et" (by default it performs a case sensitive match, but "(?i)" can be specified at the beginning of the match string to ignore case).
@@ -225,9 +233,9 @@ While data is normally processed in the order in which it is provided, it can be
 
 ```yaml
 ---
-  jinjafx_sort:
-    - "HOST"
-    - "INTERFACE"
+jinjafx_sort:
+  - "HOST"
+  - "INTERFACE"
 ```
 
 Sorting is in ascending order as standard, but you can prefix the sort key with "+" (for ascending - the default) or "-" (for descending), e.g: "-INTERFACE" would sort the "INTERFACE" field in descending order. By default all fields are treated as strings - this means "2" will get placed after "10" but before "20" if sorted - if you have numbers and wish them to be sorted numerically then you need to ensure you designate the field as numerical using `:int` on the field name.
@@ -236,23 +244,11 @@ While sorting is performed in either ascending or descending order, you can also
 
 ```yaml
 ---
-  jinjafx_sort:
-    - "HOST": { "r740-036": -2, "r740-035": -1, "r740-039": 1 }
+jinjafx_sort:
+  - "HOST": { "r740-036": -2, "r740-035": -1, "r740-039": 1 }
 ```
 
 The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if yo specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
-
-### Ansible Filters
-
-Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
-
-- <b><code>core</code></b>
-
-This contains the "Core" Ansible filters like `regexp_search`, `regex_replace`, `regex_findall`, `to_yaml`, `to_json`, etc 
-
-- <b><code>ipaddr</code></b>
-
-This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module.
 
 ### Jinja2 Extensions
 
@@ -292,6 +288,23 @@ We would then use the new Extension by adding the following YAML to our `vars.ym
 ---
 jinja2_extensions:
   - 'jinjafx_extensions.AddExtension'
+```
+
+### JinjaFx DataTemplates
+
+JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
+
+```yaml
+---
+dt:
+  data: |2
+    ... DATA.CSV ...
+
+  template: |2
+    ... TEMPLATE.J2 ...
+
+  vars: |2
+    ... VARS.YML ...
 ```
 
 ### JinjaFx Built-Ins

@@ -1,13 +1,12 @@
 ![Release](https://img.shields.io/github/v/release/cmason3/jinjafx)
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-# JinjaFx Server
-## Jinja Templating Tool
-### Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input
+[<img src="https://img.shields.io/badge/Web%20Front--End-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
+
+<h1 align="center">JinjaFx Server - Jinja Templating Tool</h1>
+<h3 align="center">:sparkles: Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input :sparkles:</h3>
 
 JinjaFx Server is a lightweight web server that provides a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface - it does require the "requests" module which isn't in the base install. Usage instructions are provided below, although it is considered an additional component and not part of the base JinjaFx tool, although it is probably a much easier way to use it.
-
-JinjaFx Server running at [https://jinjafx.io](https://jinjafx.io)
 
 ### JinjaFx Server Usage
 
@@ -23,7 +22,7 @@ Once JinjaFx Server has been started with the `-s` argument then point your web 
    -rl <rate/limit>            - specify a rate limit (i.e. '5/30s' for 5 requests in 30 seconds)
    -api                        - start in api only mode without web frontend
 
- environment variables:
+ Environment Variables:
    AWS_ACCESS_KEY              - specify an aws access key to authenticate for '-s3'
    AWS_SECRET_KEY              - specify an aws secret key to authenticate for '-s3'
 ```
