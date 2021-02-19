@@ -264,7 +264,7 @@ JinjaFx will then attempt to load and enable the extensions that will then be us
 
 Unfortunately writing Jinja2 Extensions isn't that obvious - well, I didn't find it that obvious as it took me quite a while to work out how to write a custom filter. Let's assume we want to write a custom filter called `add` that simply adds a value to a number, for example:
 
-```
+```jinja2
 {{ 10|add(1) }}
 ```
 
