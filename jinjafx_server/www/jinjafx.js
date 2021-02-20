@@ -205,7 +205,7 @@ window.onload = function() {
     var hsplit = Split(["#cdata", "#cvars"], {
       direction: "horizontal",
       cursor: "col-resize",
-      sizes: [70, 30],
+      sizes: [60, 40],
       snapOffset: 0,
       minSize: 45
     });
