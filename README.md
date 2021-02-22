@@ -2,6 +2,7 @@
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [<img src="https://img.shields.io/badge/Web%20Front--End-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
+<br />[![huntr](https://cdn.huntr.dev/huntr_security_badge.svg)](https://huntr.dev)
 
 <h1 align="center">JinjaFx - Jinja Templating Tool</h1>
 
