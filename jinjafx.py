@@ -142,11 +142,11 @@ def main():
 
       return dst
 
-    yaml.add_constructor('!vault', yaml_vault_tag, yaml.FullLoader)
+    yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
 
     if args.dt is not None:
       with open(args.dt.name) as f:
-        dt.update(yaml.load(f.read(), Loader=yaml.FullLoader)['dt'])
+        dt.update(yaml.load(f.read(), Loader=yaml.SafeLoader)['dt'])
         args.t = dt['template']
 
         if 'data' in dt:
@@ -155,7 +155,7 @@ def main():
         if 'vars' in dt:
           gyaml = decrypt_vault(dt['vars'])
           if gyaml:
-            gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
+            gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
     if args.d is not None:
       with open(args.d.name) as f:
@@ -166,9 +166,9 @@ def main():
         with open(g.name) as f:
           gyaml = decrypt_vault(f.read())
           if args.m == True:
-            merge(gvars, yaml.load(gyaml, Loader=yaml.FullLoader))
+            merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
           else:
-            gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
+            gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
     if args.o is None:
       args.o = '_stdout_'
