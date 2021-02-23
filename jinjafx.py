@@ -478,7 +478,7 @@ class JinjaFx():
         raise Exception('unbalanced output tags')
 
     for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
-      nkey = o.split(':')[1]
+      nkey = o.split(':', 1)[1]
 
       if nkey not in outputs:
         outputs[nkey] = []
