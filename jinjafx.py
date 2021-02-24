@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.3.3'
+__version__ = '1.3.4'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -478,7 +478,7 @@ class JinjaFx():
         raise Exception('unbalanced output tags')
 
     for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
-      nkey = o.split(':')[1]
+      nkey = o.split(':', 1)[1]
 
       if nkey not in outputs:
         outputs[nkey] = []
