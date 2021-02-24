@@ -6,6 +6,10 @@ var tid = 0;
 var dt_id = '';
 var dt = {};
 var qs = {};
+var datasets = {
+  'Default': ['', '']
+};
+var current_ds = 'Default';
 
 function getStatusText(code) {
   var statusText = {
@@ -24,9 +28,69 @@ function getStatusText(code) {
   return '';
 }
 
+function select_dataset(e) {
+  switch_dataset(e.currentTarget.ds_name, true);
+}
+
+function switch_dataset(ds, sflag) {
+  if (ds != current_ds) {
+    if (sflag) {
+      datasets[current_ds][0] = window.cmData.getValue();
+      datasets[current_ds][1] = window.cmVars.getValue();
+    }
+    window.cmData.setValue(datasets[ds][0]);
+    window.cmVars.setValue(datasets[ds][1]);
+    document.getElementById('selected_ds').innerHTML = ds;
+    current_ds = ds;
+    onDataBlur();
+  }
+  window.cmTemplate.focus();
+}
+
+function rebuild_datasets() {
+  document.getElementById('datasets').innerHTML = '';
+
+  Object.keys(datasets).forEach(function(ds) {
+    var a = document.createElement('a');
+    a.classList.add('dropdown-item');
+    a.addEventListener('click', select_dataset, false);
+    a.href = '#';
+    a.ds_name = ds;
+    a.innerHTML = ds;
+    document.getElementById('datasets').appendChild(a);
+  });
+}
+
+function delete_dataset(ds) {
+  delete datasets[ds];
+  dirty = false;
+
+  if (Object.keys(datasets).length == 1) {
+    document.getElementById('select_ds').disabled = true;
+    document.getElementById('delete_ds').disabled = true;
+  }
+
+  rebuild_datasets();
+  switch_dataset(Object.keys(datasets)[0], false);
+}
+
 function jinjafx(method) {
   sobj.innerHTML = "";
   dt = {};
+
+  if (method == "delete_dataset") {
+    if (window.cmData.getValue().match(/\S/) || window.cmVars.getValue().match(/\S/)) {
+      $("#delete_confirm").modal("show");
+      return false;
+    }
+    delete_dataset(current_ds);
+    return false;
+  }
+  else if (method == "add_dataset") {
+    document.getElementById("ds_name").value = '';
+    $("#dataset_input").modal("show");
+    return false;
+  }
 
   if (window.cmTemplate.getValue().length === 0) {
     window.cmTemplate.focus();
@@ -66,7 +130,7 @@ function jinjafx(method) {
 
       if (method === "generate") {
         if (vaulted_vars) {
-          $("#vault_input").modal("show")
+          $("#vault_input").modal("show");
         }
         else {
           window.open("output.html", "_blank");
@@ -241,14 +305,47 @@ window.onload = function() {
       document.getElementById("vault").focus();
     });
 
-    document.getElementById('ml-ok').onclick = function() {
+    $('#dataset_input').on('shown.bs.modal', function() {
+      document.getElementById("ds_name").focus();
+    });
+
+    document.getElementById('ml-vault-ok').onclick = function() {
       dt.vault_password = window.btoa(document.getElementById("vault").value);
       window.open("output.html", "_blank");
     };
 
+    document.getElementById('ml-dataset-ok').onclick = function() {
+      var new_ds = document.getElementById("ds_name").value;
+
+      if (new_ds.match(/^[A-Z0-9_ -]+$/i)) {
+        if (!datasets.hasOwnProperty(new_ds)) {
+          datasets[new_ds] = ['', ''];
+          rebuild_datasets();
+          document.getElementById('select_ds').disabled = false;
+          document.getElementById('delete_ds').disabled = false;
+          dirty = true;
+        }
+        switch_dataset(new_ds, true);
+      }
+      else {
+        set_status("darkred", "ERROR", "Invalid Data Set Name");
+        fe.focus();
+      }
+    };
+
+    document.getElementById('ml-delete-yes').onclick = function() {
+      delete_dataset(current_ds);
+    };
+
     document.getElementById('vault').onkeyup = function(e) {
       if (e.which == 13) {
-        document.getElementById('ml-ok').click();
+        document.getElementById('ml-vault-ok').click();
+      }
+    };
+
+    document.getElementById('ds_name').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-dataset-ok').click();
       }
     };
 
@@ -420,6 +517,12 @@ function onDataBlur(cm, evt) {
       document.getElementById("ldata").style.display = 'none';
       document.getElementById("csv").style.display = 'block';
       window.cmData.getWrapperElement().style.display = 'none';
+    }
+    else {
+      window.cmData.getWrapperElement().style.display = 'block';
+      document.getElementById("csv").style.display = 'none';
+      document.getElementById("ldata").style.display = 'block';
+      window.cmData.refresh();
     }
   }
 } 
