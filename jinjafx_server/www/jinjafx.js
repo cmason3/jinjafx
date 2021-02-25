@@ -337,7 +337,7 @@ window.onload = function() {
     document.getElementById('ml-dataset-ok').onclick = function() {
       var new_ds = document.getElementById("ds_name").value;
 
-      if (new_ds.match(/^[A-Z0-9_ -]+$/i)) {
+      if (new_ds.match(/^[A-Z][A-Z0-9_ -]*$/i)) {
         if (!datasets.hasOwnProperty(new_ds)) {
           datasets[new_ds] = ['', ''];
           rebuild_datasets();
@@ -366,7 +366,7 @@ window.onload = function() {
         document.getElementById('ml-dataset-ok').click();
       }
     };
-
+    
     if (window.location.href.indexOf('?') > -1) {
       if (document.getElementById('get_link').value != 'false') {
         var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
@@ -480,6 +480,7 @@ function clear_wait() {
     e[i].style.background = 'lightgray';
   }
   fe.setOption('readOnly', false);
+  fe.focus();
 }
 
 function quote(str) {

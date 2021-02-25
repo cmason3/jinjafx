@@ -14,13 +14,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script>
       var obj = null;
-      var dt_id = '';
-      var dt_dataset = '';
+      //var dt_id = '';
+      //var dt_dataset = '';
+      var qs = '';
 
       function download_outputs() {
         if (obj != null) {
           var xHR = new XMLHttpRequest();
-          xHR.open("POST", 'download?dt=' + dt_id + '&ds=' + dt_dataset, true);
+          xHR.open("POST", 'download' + qs, true);
   
           xHR.onload = function() {
             if (this.status === 200) {
@@ -49,8 +50,17 @@
           window.opener.reset_dt();
   
           if (Object.keys(dt).length !== 0) {
+            var _qs = [];
+            if (dt.id != '') {
+              _qs.push('dt=' + dt.id);
+            }
+            if (dt.dataset != '') {
+              _qs.push('ds=' + dt.dataset);
+            }
+            qs = (_qs.length > 0) ? '?' + _qs.join('&') : '';
+
             var xHR = new XMLHttpRequest();
-            xHR.open("POST", 'jinjafx?dt=' + dt.id + '&ds=' + dt.dataset, true);
+            xHR.open("POST", 'jinjafx' + qs, true);
   
             xHR.onload = function() {
               if (this.status === 200) {
@@ -58,8 +68,8 @@
                   obj = JSON.parse(xHR.responseText);
                   if (obj.status === "ok") {
                     var oc = Object.keys(obj.outputs).length;
-                    dt_id = dt.id;
-                    dt_dataset = dt.dataset;
+                    //dt_id = dt.id;
+                    //dt_dataset = dt.dataset;
                     var oid = 1;
 
                     var links = '';
@@ -104,10 +114,10 @@
                     if (oc > 1) {
                       document.getElementById('toolbar').style.display = 'flex';
                       document.getElementById('pills').style.display = 'block';
-                      document.title = 'Outputs' + ((dt_dataset != 'Default') ? ' (' + dt_dataset + ')' : '');
+                      document.title = 'Outputs' + ((dt.dataset != 'Default') ? ' (' + dt.dataset + ')' : '');
                     }
                     else {
-                      document.title = 'Output' + ((dt_dataset != 'Default') ? ' (' + dt_dataset + ')' : '');
+                      document.title = 'Output' + ((dt.dataset != 'Default') ? ' (' + dt.dataset + ')' : '');
                     }
 
                     window.onresize = function() {

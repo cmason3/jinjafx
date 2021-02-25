@@ -75,7 +75,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
       elif self.command != None:
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
+        if args[1] != '200' or not re.match(r'.+\.(?:js|css|png)$', path):
+          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
 
         
   def encode_link(self, bhash):
