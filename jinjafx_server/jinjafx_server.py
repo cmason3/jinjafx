@@ -230,9 +230,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   def yaml_vault_tag(loader, node):
                     return vault.decrypt(node.value).decode('utf-8')
 
-                  yaml.add_constructor('!vault', yaml_vault_tag, yaml.FullLoader)
+                  yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
 
-                gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
   
               st = round(time.time() * 1000)
               outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
@@ -258,7 +258,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               match = re.search(r'[\s\S]*File "<(?:template|unknown)>", line ([0-9]+), in.*template', tb, re.IGNORECASE)
               if match:
                 error = 'error[template.j2:' + match.group(1) + ']: ' + type(e).__name__ + ': ' + str(e)
-              elif 'yaml.FullLoader' in tb:
+              elif 'yaml.SafeLoader' in tb:
                 error = 'error[vars.yml]: ' + type(e).__name__ + ': ' + str(e)
               else:
                 traceback.print_exc()
