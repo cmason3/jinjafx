@@ -230,9 +230,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   def yaml_vault_tag(loader, node):
                     return vault.decrypt(node.value).decode('utf-8')
 
-                  yaml.add_constructor('!vault', yaml_vault_tag, yaml.FullLoader)
+                  yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
 
-                gvars.update(yaml.load(gyaml, Loader=yaml.FullLoader))
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
   
               st = round(time.time() * 1000)
               outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
@@ -258,7 +258,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               match = re.search(r'[\s\S]*File "<(?:template|unknown)>", line ([0-9]+), in.*template', tb, re.IGNORECASE)
               if match:
                 error = 'error[template.j2:' + match.group(1) + ']: ' + type(e).__name__ + ': ' + str(e)
-              elif 'yaml.FullLoader' in tb:
+              elif 'yaml.SafeLoader' in tb:
                 error = 'error[vars.yml]: ' + type(e).__name__ + ': ' + str(e)
               else:
                 traceback.print_exc()
@@ -342,30 +342,54 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                     dt = json.loads(postdata)
 
                     vdt = {}
-                    vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
-                    vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
-                    vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
 
                     dt_yml = '---\n'
                     dt_yml += 'dt:\n'
 
-                    if vdt['data'] == '':
-                      dt_yml += '  data: ""\n\n'
-                    else:
-                      dt_yml += '  data: |2\n'
-                      dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
+                    if 'datasets' in dt:
+                      dt_yml += '  datasets:\n'
+
+                      for ds in dt['datasets']:
+                        vdt['data'] = base64.b64decode(dt['datasets'][ds]['data']).decode('utf-8') if 'data' in dt['datasets'][ds] and len(dt['datasets'][ds]['data'].strip()) > 0 else ''
+                        vdt['vars'] = base64.b64decode(dt['datasets'][ds]['vars']).decode('utf-8') if 'vars' in dt['datasets'][ds] and len(dt['datasets'][ds]['vars'].strip()) > 0 else ''
+
+                        dt_yml += '    "' + ds + '":\n'
+
+                        if vdt['data'] == '':
+                          dt_yml += '      data: ""\n\n'
+                        else:
+                          dt_yml += '      data: |2\n'
+                          dt_yml += re.sub('^', ' ' * 8, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                        if vdt['vars'] == '':
+                          dt_yml += '      vars: ""\n\n'
+                        else:
+                          dt_yml += '      vars: |2\n'
+                          dt_yml += re.sub('^', ' ' * 8, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                    else :
+                      vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
+                      vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
+
+                      if vdt['data'] == '':
+                        dt_yml += '  data: ""\n\n'
+                      else:
+                        dt_yml += '  data: |2\n'
+                        dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                      if vdt['vars'] == '':
+                        dt_yml += '  vars: ""\n\n'
+                      else:
+                        dt_yml += '  vars: |2\n'
+                        dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                    vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
 
                     if vdt['template'] == '':
-                      dt_yml += '  template: ""\n\n'
+                      dt_yml += '  template: ""\n'
                     else:
                       dt_yml += '  template: |2\n'
-                      dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n\n'
-
-                    if vdt['vars'] == '':
-                      dt_yml += '  vars: ""\n'
-                    else:
-                      dt_yml += '  vars: |2\n'
-                      dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
+                      dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n'
 
                     dt_yml += '\ndt_hash: "' + hashlib.sha256(dt_yml.encode('utf-8')).hexdigest() + '"\n'
 

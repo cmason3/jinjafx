@@ -15,11 +15,12 @@
     <script>
       var obj = null;
       var dt_id = '';
+      var dt_dataset = '';
 
       function download_outputs() {
         if (obj != null) {
           var xHR = new XMLHttpRequest();
-          xHR.open("POST", "download" + ((dt_id != '') ? '?dt=' + dt_id : ''), true);
+          xHR.open("POST", 'download?dt=' + dt_id + '&ds=' + dt_dataset, true);
   
           xHR.onload = function() {
             if (this.status === 200) {
@@ -49,7 +50,7 @@
   
           if (Object.keys(dt).length !== 0) {
             var xHR = new XMLHttpRequest();
-            xHR.open("POST", "jinjafx" + ((dt.id != '') ? '?dt=' + dt.id : ''), true);
+            xHR.open("POST", 'jinjafx?dt=' + dt.id + '&ds=' + dt.dataset, true);
   
             xHR.onload = function() {
               if (this.status === 200) {
@@ -58,6 +59,7 @@
                   if (obj.status === "ok") {
                     var oc = Object.keys(obj.outputs).length;
                     dt_id = dt.id;
+                    dt_dataset = dt.dataset;
                     var oid = 1;
 
                     var links = '';
@@ -102,10 +104,10 @@
                     if (oc > 1) {
                       document.getElementById('toolbar').style.display = 'flex';
                       document.getElementById('pills').style.display = 'block';
-                      document.title = 'Outputs';
+                      document.title = 'Outputs' + ((dt_dataset != 'Default') ? ' (' + dt_dataset + ')' : '');
                     }
                     else {
-                      document.title = 'Output';
+                      document.title = 'Output' + ((dt_dataset != 'Default') ? ' (' + dt_dataset + ')' : '');
                     }
 
                     window.onresize = function() {

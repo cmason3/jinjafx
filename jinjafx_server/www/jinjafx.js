@@ -33,18 +33,21 @@ function select_dataset(e) {
 }
 
 function switch_dataset(ds, sflag) {
+  if (sflag) {
+    datasets[current_ds][0] = window.cmData.getValue();
+    datasets[current_ds][1] = window.cmVars.getValue();
+  }
   if (ds != current_ds) {
-    if (sflag) {
-      datasets[current_ds][0] = window.cmData.getValue();
-      datasets[current_ds][1] = window.cmVars.getValue();
-    }
     window.cmData.setValue(datasets[ds][0]);
+    window.cmData.getDoc().clearHistory();
     window.cmVars.setValue(datasets[ds][1]);
+    window.cmVars.getDoc().clearHistory();
+
     document.getElementById('selected_ds').innerHTML = ds;
     current_ds = ds;
     onDataBlur();
   }
-  window.cmTemplate.focus();
+  fe.focus();
 }
 
 function rebuild_datasets() {
@@ -59,24 +62,29 @@ function rebuild_datasets() {
     a.innerHTML = ds;
     document.getElementById('datasets').appendChild(a);
   });
+
+  if (Object.keys(datasets).length > 1) {
+    document.getElementById('select_ds').disabled = false;
+    document.getElementById('delete_ds').disabled = false;
+  }
+  else {
+    document.getElementById('select_ds').disabled = true;
+    document.getElementById('delete_ds').disabled = true;
+  }
+  document.getElementById('selected_ds').innerHTML = current_ds;
 }
 
 function delete_dataset(ds) {
   delete datasets[ds];
   dirty = false;
 
-  if (Object.keys(datasets).length == 1) {
-    document.getElementById('select_ds').disabled = true;
-    document.getElementById('delete_ds').disabled = true;
-  }
-
   rebuild_datasets();
   switch_dataset(Object.keys(datasets)[0], false);
+  fe.focus();
 }
 
 function jinjafx(method) {
   sobj.innerHTML = "";
-  dt = {};
 
   if (method == "delete_dataset") {
     if (window.cmData.getValue().match(/\S/) || window.cmVars.getValue().match(/\S/)) {
@@ -98,43 +106,58 @@ function jinjafx(method) {
     return false;
   }
 
-  var datarows = window.cmData.getValue();
+  dt = {};
 
-  if (method == "generate") {
-    datarows = datarows.split(/\r?\n/).filter(function(e) {
-      return !e.match(/^[ \t]*#/) && e.match(/\S/);
-    });
+  try {
+    if (method === "generate") {
+      dt.data = window.cmData.getValue().split(/\r?\n/).filter(function(e) {
+        return !e.match(/^[ \t]*#/) && e.match(/\S/);
+      });
 
-    if (datarows.length == 1) {
-      window.cmData.focus();
-      set_status("darkred", "ERROR", "Not Enough Rows in Data");
-      return false;
-    }
-    datarows = datarows.join("\n");
-  }
+      if (dt.data.length == 1) {
+        window.cmData.focus();
+        set_status("darkred", "ERROR", "Not Enough Data Rows");
+        return false;
+      }
 
-  fe.focus();
-
-  dt.data = datarows;
-  dt.template = window.cmTemplate.getValue().replace(/\t/g, "  ");
-  dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
-
-  if ((method === "generate") || (method === "get_link") || (method == "update_link")) {
-    try {
+      dt.data = window.btoa(dt.data.join("\n"));
+      dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
       var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
-
-      dt.data = window.btoa(dt.data);
-      dt.template = window.btoa(dt.template);
       dt.vars = window.btoa(dt.vars);
+      dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
       dt.id = dt_id;
+      dt.dataset = current_ds;
 
-      if (method === "generate") {
-        if (vaulted_vars) {
-          $("#vault_input").modal("show");
-        }
-        else {
-          window.open("output.html", "_blank");
-        }
+      if (vaulted_vars) {
+        $("#vault_input").modal("show");
+      }
+      else {
+        window.open("output.html", "_blank");
+      }
+    }
+    else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
+      dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
+
+      if ((current_ds === 'Default') && (Object.keys(datasets).length === 1)) {
+        dt.vars = window.btoa(window.cmVars.getValue().replace(/\t/g, "  "));
+        dt.data = window.btoa(window.cmData.getValue().split(/\r?\n/).filter(function(e) {
+          return !e.match(/^[ \t]*#/) && e.match(/\S/);
+        }).join("\n"));
+      }
+      else {
+        dt.datasets = {};
+        switch_dataset(current_ds, true);
+        Object.keys(datasets).forEach(function(ds) {
+          dt.datasets[ds] = {};
+          dt.datasets[ds].data = window.btoa(datasets[ds][0].split(/\r?\n/).filter(function(e) {
+            return !e.match(/^[ \t]*#/) && e.match(/\S/);
+          }).join("\n"));
+          dt.datasets[ds].vars = window.btoa(datasets[ds][1].replace(/\t/g, "  "));
+        });
+      }
+
+      if (method === "export") {
+        window.open("dt.html", "_blank");
       }
       else {
         set_wait();
@@ -181,13 +204,10 @@ function jinjafx(method) {
         xHR.send(JSON.stringify(dt));
       }
     }
-    catch (ex) {
-      set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
-      clear_wait();
-    }
   }
-  else if (method === "export") {
-    window.open("dt.html", "_blank");
+  catch (ex) {
+    set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
+    clear_wait();
   }
 }
 
@@ -321,8 +341,6 @@ window.onload = function() {
         if (!datasets.hasOwnProperty(new_ds)) {
           datasets[new_ds] = ['', ''];
           rebuild_datasets();
-          document.getElementById('select_ds').disabled = false;
-          document.getElementById('delete_ds').disabled = false;
           dirty = true;
         }
         switch_dataset(new_ds, true);
@@ -563,20 +581,49 @@ function onChange(errflag) {
 function load_datatemplate(_dt, _qs) {
   try {
     if (_qs != null) {
-      if (_qs.hasOwnProperty("data")) {
-        _dt.data = window.atob(_qs.data);
-      }
       if (_qs.hasOwnProperty("template")) {
         _dt.template = window.atob(_qs.template);
       }
-      if (_qs.hasOwnProperty("vars")) {
-        _dt.vars = window.atob(_qs.vars);
-      }
     }
 
-    window.cmData.setValue(_dt.hasOwnProperty("data") ? _dt.data : "");
+    current_ds = 'Default';
+
+    if (_dt.hasOwnProperty("datasets")) {
+      datasets = {};
+
+      Object.keys(_dt.datasets).forEach(function(ds) {
+        var data = _dt.datasets[ds].hasOwnProperty("data") ? _dt.datasets[ds].data : "";
+        var vars = _dt.datasets[ds].hasOwnProperty("vars") ? _dt.datasets[ds].vars : "";
+        datasets[ds] = [data, vars];
+      });
+
+      current_ds = Object.keys(datasets)[0];
+      window.cmData.setValue(datasets[current_ds][0]);
+      window.cmVars.setValue(datasets[current_ds][1]);
+    }
+    else {
+      datasets = {
+        'Default': ['', '']
+      };
+
+      if (_qs != null) {
+        if (_qs.hasOwnProperty("data")) {
+          _dt.data = window.atob(_qs.data);
+        }
+        if (_qs.hasOwnProperty("vars")) {
+          _dt.vars = window.atob(_qs.vars);
+        }
+      }
+      window.cmData.setValue(_dt.hasOwnProperty("data") ? _dt.data : "");
+      window.cmVars.setValue(_dt.hasOwnProperty("vars") ? _dt.vars : "");
+    }
     window.cmTemplate.setValue(_dt.hasOwnProperty("template") ? _dt.template : "");
-    window.cmVars.setValue(_dt.hasOwnProperty("vars") ? _dt.vars : "");
+
+    window.cmData.getDoc().clearHistory();
+    window.cmVars.getDoc().clearHistory();
+    window.cmTemplate.getDoc().clearHistory();
+
+    rebuild_datasets();
     loaded = true;
   }
   catch (ex) {

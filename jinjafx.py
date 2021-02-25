@@ -149,13 +149,17 @@ def main():
         dt.update(yaml.load(f.read(), Loader=yaml.SafeLoader)['dt'])
         args.t = dt['template']
 
-        if 'data' in dt:
-          data = dt['data']
+        if 'datasets' in dt:
+          raise Exception('datasets aren\'t supported at present')
 
-        if 'vars' in dt:
-          gyaml = decrypt_vault(dt['vars'])
-          if gyaml:
-            gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+        else:
+          if 'data' in dt:
+            data = dt['data']
+
+          if 'vars' in dt:
+            gyaml = decrypt_vault(dt['vars'])
+            if gyaml:
+              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
     if args.d is not None:
       with open(args.d.name) as f:

@@ -12,37 +12,66 @@
         window.opener.reset_dt();
 
         if (Object.keys(dt).length !== 0) {
-          dt.data = dt.data.match(/\S/) ? dt.data.replace(/\s+$/g, '') : "";
-          dt.template = dt.template.match(/\S/) ? dt.template.replace(/\s+$/g, '') : "";
-          dt.vars = dt.vars.match(/\S/) ? dt.vars.replace(/\s+$/g, '') : "";
-
           var dtx = '<span style="color: #0074D9;"># JinjaFx DataTemplate\n# https://github.com/cmason3/jinjafx</span>\n\n';
 
           dtx += '---\n';
           dtx += 'dt:\n';
 
-          if (dt.data == '') {
-            dtx += '  data: ""\n\n';
+          if (dt.hasOwnProperty('datasets')) {
+            dtx += '  datasets:\n';
+
+            Object.keys(dt.datasets).forEach(function(ds) {
+              var data = dt.datasets[ds].data.match(/\S/) ? window.atob(dt.datasets[ds].data).replace(/\s+$/g, '') : "";
+              var vars = dt.datasets[ds].vars.match(/\S/) ? window.atob(dt.datasets[ds].vars).replace(/\s+$/g, '') : "";
+
+              dtx += '    "' + ds + '":\n';
+
+              if (data == '') {
+                dtx += '      data: ""\n\n';
+              }
+              else {
+                dtx += '      data: |2\n';
+                dtx += window.opener.quote(data.replace(/^/gm, '        ')) + '\n\n';
+              }
+
+              if (vars == '') {
+                dtx += '      vars: ""\n\n';
+              }
+              else {
+                dtx += '      vars: |2\n';
+                dtx += window.opener.quote(vars.replace(/^/gm, '        ')) + '\n\n';
+              }
+            });
           }
           else {
-            dtx += '  data: |2\n';
-            dtx += window.opener.quote(dt.data.replace(/^/gm, '    ')) + '\n\n';
+            var data = dt.data.match(/\S/) ? window.atob(dt.data).replace(/\s+$/g, '') : "";
+            var vars = dt.vars.match(/\S/) ? window.atob(dt.vars).replace(/\s+$/g, '') : "";
+
+            if (data == '') {
+              dtx += '  data: ""\n\n';
+            }
+            else {
+              dtx += '  data: |2\n';
+              dtx += window.opener.quote(data.replace(/^/gm, '    ')) + '\n\n';
+            }
+
+            if (vars == '') {
+              dtx += '  vars: ""\n\n';
+            }
+            else {
+              dtx += '  vars: |2\n';
+              dtx += window.opener.quote(vars.replace(/^/gm, '    ')) + '\n\n';
+            }
           }
 
-          if (dt.template == '') {
-            dtx += '  template: ""\n\n';
+          var template = dt.template.match(/\S/) ? window.atob(dt.template).replace(/\s+$/g, '') : "";
+
+          if (template == '') {
+            dtx += '  template: ""\n';
           }
           else {
             dtx += '  template: |2\n';
-            dtx += window.opener.quote(dt.template.replace(/^/gm, '    ')) + '\n\n';
-          }
-
-          if (dt.vars == '') {
-            dtx += '  vars: ""\n';
-          }
-          else {
-            dtx += '  vars: |2\n';
-            dtx += window.opener.quote(dt.vars.replace(/^/gm, '    ')) + '\n';
+            dtx += window.opener.quote(template.replace(/^/gm, '    ')) + '\n';
           }
 
           document.body.innerHTML = "<pre>" + dtx + "</pre>";
