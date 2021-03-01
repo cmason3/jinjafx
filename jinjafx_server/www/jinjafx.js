@@ -658,7 +658,7 @@ function load_datatemplate(_dt, _qs) {
 
       datasets['Default'][0].setValue(_dt.hasOwnProperty("data") ? _dt.data : "");
       window.cmData.swapDoc(datasets['Default'][0]);
-      datasets['Default'][1].setValue(_dt.hasOwnProperty("data") ? _dt.data : "");
+      datasets['Default'][1].setValue(_dt.hasOwnProperty("vars") ? _dt.vars : "");
       window.cmVars.swapDoc(datasets['Default'][1]);
     }
     window.cmTemplate.setValue(_dt.hasOwnProperty("template") ? _dt.template : "");
