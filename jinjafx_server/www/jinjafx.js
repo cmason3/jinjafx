@@ -308,7 +308,8 @@ window.onload = function() {
       cursor: "col-resize",
       sizes: [60, 40],
       snapOffset: 0,
-      minSize: 45
+      minSize: 45,
+      onDragEnd: refresh_cm
     });
 
     var vsplit = Split(["#top", "#ctemplate"], {
@@ -316,7 +317,8 @@ window.onload = function() {
       cursor: "row-resize",
       sizes: [30, 70],
       snapOffset: 0,
-      minSize: 30
+      minSize: 30,
+      onDragEnd: refresh_cm
     });
 
     document.getElementById('ldata').onclick = function() {
@@ -481,6 +483,13 @@ window.onload = function() {
     document.body.style.display = "block";
   }
 };
+
+function refresh_cm() {
+  console.log("refreshing");
+  window.cmData.refresh();
+  window.cmVars.refresh();
+  window.cmTemplate.refresh();
+}
 
 function set_wait() {
   fe.setOption('readOnly', 'nocursor');
