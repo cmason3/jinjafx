@@ -69,7 +69,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           ctype = ' (' + self.headers['Content-Type'] + ')'
 
       if str(args[1]) == 'ERR':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + str(args[2]))
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + '\033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
           
       elif self.command == 'POST':
         log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
