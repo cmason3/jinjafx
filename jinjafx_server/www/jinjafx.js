@@ -258,6 +258,7 @@ window.onload = function() {
       styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "data",
+      viewportMargin: 80,
       smartIndent: false
     });
 
@@ -267,6 +268,7 @@ window.onload = function() {
       styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "yaml",
+      viewportMargin: 80,
       smartIndent: false
     });
 
@@ -278,6 +280,7 @@ window.onload = function() {
       styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "jinja2",
+      viewportMargin: 80,
       smartIndent: false,
       showTrailingSpace: true
     });
