@@ -278,7 +278,8 @@ window.onload = function() {
       styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "jinja2",
-      smartIndent: false
+      smartIndent: false,
+      showTrailingSpace: true
     });
 
     fe = window.cmTemplate;
