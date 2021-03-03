@@ -151,18 +151,14 @@ function jinjafx(method) {
 
       if ((current_ds === 'Default') && (Object.keys(datasets).length === 1)) {
         dt.vars = window.btoa(window.cmVars.getValue().replace(/\t/g, "  "));
-        dt.data = window.btoa(window.cmData.getValue().split(/\r?\n/).filter(function(e) {
-          return !e.match(/^[ \t]*#/) && e.match(/\S/);
-        }).join("\n"));
+        dt.data = window.btoa(window.cmData.getValue());
       }
       else {
         dt.datasets = {};
         switch_dataset(current_ds, true);
         Object.keys(datasets).forEach(function(ds) {
           dt.datasets[ds] = {};
-          dt.datasets[ds].data = window.btoa(datasets[ds][0].getValue().split(/\r?\n/).filter(function(e) {
-            return !e.match(/^[ \t]*#/) && e.match(/\S/);
-          }).join("\n"));
+          dt.datasets[ds].data = window.btoa(datasets[ds][0].getValue());
           dt.datasets[ds].vars = window.btoa(datasets[ds][1].getValue().replace(/\t/g, "  "));
         });
       }
