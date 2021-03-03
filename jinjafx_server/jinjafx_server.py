@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # JinjaFx Server - Jinja2 Templating Tool
-# Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>
+# Copyright (c) 2020-2021 Chris Mason <chris@netnix.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -509,7 +509,7 @@ def main(rflag=False):
 
   try:
     print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja2 Templating Tool')
-    print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
+    print('Copyright (c) 2020-2021 Chris Mason <chris@netnix.org>\n')
 
     parser = jinjafx.ArgumentParser(add_help=False)
     parser.add_argument('-s', action='store_true', required=True)
