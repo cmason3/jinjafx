@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# JinjaFx Server - Jinja Templating Tool
+# JinjaFx Server - Jinja2 Templating Tool
 # Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
@@ -508,7 +508,7 @@ def main(rflag=False):
   global api_only
 
   try:
-    print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja Templating Tool')
+    print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja2 Templating Tool')
     print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
 
     parser = jinjafx.ArgumentParser(add_help=False)

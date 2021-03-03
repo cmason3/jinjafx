@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# JinjaFx - Jinja Templating Tool
+# JinjaFx - Jinja2 Templating Tool
 # Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
@@ -66,7 +66,7 @@ def import_filters(errc = 0):
 def main():
   try:
     if '-q' not in sys.argv:
-      print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
+      print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
       print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
 
     jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]'
@@ -414,7 +414,7 @@ class JinjaFx():
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
-      'jinja_version': jinja2.__version__,
+      'jinja2_version': jinja2.__version__,
       'expand': self.jfx_expand,
       'counter': self.jfx_counter,
       'exception': self.jfx_exception,
