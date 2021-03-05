@@ -30,10 +30,12 @@
           var t = document.getElementById('t_' + $('.tab-content .active').attr('id'));
           var oss = t.selectionStart;
           var ose = t.selectionEnd;
+          var ost = t.scrollTop;
           t.focus();
           t.setSelectionRange(0, t.value.length);
           document.execCommand("copy");
           t.setSelectionRange(oss, ose);
+          t.scrollTop = ost;
           set_status("green", "OK", "Copied to Clipboard");
         }
         catch (e) {
