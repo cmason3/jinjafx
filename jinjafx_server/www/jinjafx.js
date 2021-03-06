@@ -475,6 +475,7 @@ window.onload = function() {
             };
 
             xHR.timeout = 10000;
+            xHR.setRequestHeader("Cache-Control", "no-store");
             xHR.send(null);
           }
           else {

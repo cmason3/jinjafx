@@ -641,6 +641,7 @@ def aws_s3_put(s3_url, fname, content, ctype):
 def aws_s3_get(s3_url, fname):
   headers = {
     'Host': s3_url,
+    'Cache-Control': 'no-store',
     'x-amz-content-sha256': hashlib.sha256(b'').hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
