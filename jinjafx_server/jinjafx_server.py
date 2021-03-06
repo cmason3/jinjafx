@@ -115,7 +115,11 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
 
             if rr.status_code == 200:
-              r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
+              if self.path.endswith('?dt_hash'):
+                r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.text).group(1).encode('utf-8') ]
+
+              else:
+                r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
 
               rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
               if rr.status_code == 200:
@@ -140,7 +144,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           if os.path.isfile(fpath):
             try:
               with open(fpath, 'rb') as f:
-                r = [ 'application/yaml', 200, f.read() ]
+                rr = f.read()
+
+                if self.path.endswith('?dt_hash'):
+                  r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.decode('utf-8')).group(1).encode('utf-8') ]
+
+                else:
+                  r = [ 'application/yaml', 200, rr ]
 
               if os.path.isfile(fpath + '.lock'):
                 readonly = True

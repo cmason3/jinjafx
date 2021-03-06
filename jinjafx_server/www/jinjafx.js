@@ -4,6 +4,7 @@ var sobj = undefined;
 var fe = undefined;
 var tid = 0;
 var dt_id = '';
+var dt_hash = '';
 var dt = {};
 var qs = {};
 var datasets = {
@@ -176,6 +177,25 @@ function jinjafx(method) {
         var xHR = new XMLHttpRequest();
 
         if (method == "update_link") {
+          console.log("about to check if different from dt_hash " + dt_hash);
+          // FIXME
+
+
+            /*
+            xHR.open("GET", "dt/" + qs.dt + "?dt_hash", true);
+  
+            xHR.onload = function() {
+              if (this.status === 200) {
+                try {
+                  var dt = jsyaml.safeLoad(this.responseText, 'utf8');
+                  dt_hash = dt.dt_hash;
+
+                  load_datatemplate(dt['dt'], qs);
+
+*/
+
+
+
           xHR.open("POST", "get_link?id=" + dt_id, true);
         }
         else {
@@ -413,10 +433,12 @@ window.onload = function() {
             xHR.onload = function() {
               if (this.status === 200) {
                 try {
-                  var dt = jsyaml.safeLoad(this.responseText, 'utf8')['dt'];
-                  load_datatemplate(dt, qs);
+                  var dt = jsyaml.safeLoad(this.responseText, 'utf8');
+                  dt_hash = dt.dt_hash;
+
+                  load_datatemplate(dt['dt'], qs);
                   dt_id = qs.dt;
-  
+
                   if (this.getResponseHeader('X-Read-Only') == 'true') {
                     document.getElementById('update').disabled = true;
                   }
