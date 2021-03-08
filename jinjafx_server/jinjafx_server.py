@@ -158,6 +158,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               os.utime(fpath, None)
 
             except Exception:
+              traceback.print_exc()
               r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
           else:
@@ -402,7 +403,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       dt_yml += '  template: |2\n'
                       dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n'
 
-                    dt_yml += '\ndt_hash: "' + hashlib.sha256(dt_yml.encode('utf-8')).hexdigest() + '"\n'
+                    dt_hash = hashlib.sha256(dt_yml.encode('utf-8')).hexdigest()
+                    dt_yml += '\ndt_hash: "' + dt_hash + '"\n'
 
                     if user_agent != None:
                       dt_yml += 'user_agent: "' + user_agent + '"\n'
@@ -431,7 +433,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                           rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
 
                           if rr.status_code == 200:
-                            r = [ 'text/plain', 200, dt_link + '\r\n' ]
+                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
 
                           elif rr.status_code == 403:
                             r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
@@ -454,7 +456,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                           with open(dt_filename, 'w') as f:
                             f.write(dt_yml)
 
-                            r = [ 'text/plain', 200, dt_link + '\r\n' ]
+                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
 
                       except Exception as e:
                         traceback.print_exc()

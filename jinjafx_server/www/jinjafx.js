@@ -11,7 +11,6 @@ var datasets = {
   'Default': [CodeMirror.Doc('', 'data'), CodeMirror.Doc('', 'yaml')]
 };
 var current_ds = 'Default';
-var action = 0;
 var pending_dt = '';
 
 function getStatusText(code) {
@@ -94,11 +93,14 @@ function jinjafx(method) {
 
   if (method == "delete_dataset") {
     if (window.cmData.getValue().match(/\S/) || window.cmVars.getValue().match(/\S/)) {
-      action = 1;
-      $("#confirm_dialog").modal("show");
-      return false;
+      if (confirm("Are You Sure?") === true) {
+        delete_dataset(current_ds);
+      }
     }
-    delete_dataset(current_ds);
+    else {
+      delete_dataset(current_ds);
+    }
+    fe.focus();
     return false;
   }
   else if (method == "add_dataset") {
@@ -174,67 +176,48 @@ function jinjafx(method) {
       }
       else {
         set_wait();
-        var xHR = new XMLHttpRequest();
 
         if (method == "update_link") {
-          console.log("about to check if different from dt_hash " + dt_hash);
-          // FIXME
+          var xHR = new XMLHttpRequest();
+          xHR.open("GET", "dt/" + qs.dt + "?dt_hash", true);
 
-
-            /*
-            xHR.open("GET", "dt/" + qs.dt + "?dt_hash", true);
-  
-            xHR.onload = function() {
-              if (this.status === 200) {
-                try {
-                  var dt = jsyaml.safeLoad(this.responseText, 'utf8');
-                  dt_hash = dt.dt_hash;
-
-                  load_datatemplate(dt['dt'], qs);
-
-*/
-
-
-
-          xHR.open("POST", "get_link?id=" + dt_id, true);
-        }
-        else {
-          xHR.open("POST", "get_link", true);
-        }
-
-        xHR.onload = function() {
-          if (this.status === 200) {
-            if (method == "update_link") {
-              set_status("green", "OK", "Link Updated");
-              window.removeEventListener('beforeunload', onBeforeUnload);
+          xHR.onload = function() {
+            if (this.status === 200) {
+              if (this.responseText !== dt_hash) {
+                if (confirm("Remote Changes in DataTemplate Detected - Are You Sure?") === true) {
+                  update_link(dt_id);
+                }
+                else {
+                  set_status("darkorange", "OK", 'Link Not Updated');
+                  clear_wait();
+                }
+              }
+              else {
+                update_link(dt_id);
+              }
             }
             else {
-              window.removeEventListener('beforeunload', onBeforeUnload);
-              window.location.href = window.location.pathname + "?dt=" + this.responseText;
+              var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+              set_status("darkred", "HTTP ERROR " + this.status, sT);
+              clear_wait();
             }
-            document.title = 'JinjaFx';
-            dirty = false;
-            clear_wait();
-          }
-          else {
-            var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
-            set_status("darkred", "HTTP ERROR " + this.status, sT);
-            clear_wait();
-          }
-        };
+          };
 
-        xHR.onerror = function() {
-          set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
-          clear_wait();
-        };
-        xHR.ontimeout = function() {
-          set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
-          clear_wait();
-        };
+          xHR.onerror = function() {
+            set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+            clear_wait();
+          };
+          xHR.ontimeout = function() {
+            set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+            clear_wait();
+          };
 
-        xHR.timeout = 10000;
-        xHR.setRequestHeader("Content-Type", "application/json");
-        xHR.send(JSON.stringify(dt));
+          xHR.timeout = 5000;
+          xHR.send(null);
+        }
+        else {
+          update_link(null);
+        }
       }
     }
   }
@@ -242,6 +225,54 @@ function jinjafx(method) {
     set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
     clear_wait();
   }
+}
+
+function update_link(v_dt_id) {
+  var xHR = new XMLHttpRequest();
+
+  if (v_dt_id !== null) {
+    xHR.open("POST", "get_link?id=" + v_dt_id, true);
+  }
+  else {
+    xHR.open("POST", "get_link", true);
+  }
+
+  xHR.onload = function() {
+    if (this.status === 200) {
+      var dte = this.responseText.trim().split(':');
+
+      if (v_dt_id !== null) {
+        dt_hash = dte[1];
+        set_status("green", "OK", "Link Updated");
+        window.removeEventListener('beforeunload', onBeforeUnload);
+      }
+      else {
+        window.removeEventListener('beforeunload', onBeforeUnload);
+        window.location.href = window.location.pathname + "?dt=" + dte[0];
+      }
+      document.title = 'JinjaFx';
+      dirty = false;
+      clear_wait();
+    }
+    else {
+      var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+      set_status("darkred", "HTTP ERROR " + this.status, sT);
+      clear_wait();
+    }
+  };
+
+  xHR.onerror = function() {
+    set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+    clear_wait();
+  };
+  xHR.ontimeout = function() {
+    set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+    clear_wait();
+  };
+
+  xHR.timeout = 10000;
+  xHR.setRequestHeader("Content-Type", "application/json");
+  xHR.send(JSON.stringify(dt));
 }
 
 window.onload = function() {
@@ -394,15 +425,6 @@ window.onload = function() {
       }
     };
 
-    document.getElementById('ml-confirm-yes').onclick = function() {
-      if (action == 1) {
-        delete_dataset(current_ds);
-      }
-      else if (action == 2) {
-        apply_dt();
-      }
-    };
-
     document.getElementById('vault').onkeyup = function(e) {
       if (e.which == 13) {
         document.getElementById('ml-vault-ok').click();
@@ -508,7 +530,6 @@ window.onload = function() {
 };
 
 function refresh_cm() {
-  console.log("refreshing");
   window.cmData.refresh();
   window.cmVars.refresh();
   window.cmTemplate.refresh();
@@ -624,8 +645,9 @@ function onPaste(cm, change) {
         pending_dt = obj['dt'];
 
         if (dirty) {
-          action = 2;
-          $("#confirm_dialog").modal("show");
+          if (confirm("Are You Sure?") === true) {
+            apply_dt();
+          }
         }
         else {
           apply_dt();
