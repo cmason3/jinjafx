@@ -4,7 +4,7 @@
 [<img src="https://img.shields.io/badge/Web%20Front--End-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
 <br />[![huntr](https://cdn.huntr.dev/huntr_security_badge.svg)](https://huntr.dev)
 
-<h1 align="center">JinjaFx - Jinja Templating Tool</h1>
+<h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a></p>
 
@@ -316,9 +316,9 @@ Templates should be written using Jinja2 template syntax to make them compatible
 
 This variable will contain the current version of JinjaFx as a string (e.g. "1.0.0").
 
-- <b><code>jinjafx.jinja_version</code></b>
+- <b><code>jinjafx.jinja2_version</code></b>
 
-This variable will return the current version of the Jinja templating engine as a string (e.g. "2.10.3").
+This variable will return the current version of the Jinja2 templating engine as a string (e.g. "2.10.3").
 
 - <b><code>jinjafx.row</code></b>
 

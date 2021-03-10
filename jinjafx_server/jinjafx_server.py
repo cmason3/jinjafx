@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# JinjaFx Server - Jinja Templating Tool
-# Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>
+# JinjaFx Server - Jinja2 Templating Tool
+# Copyright (c) 2020-2021 Chris Mason <chris@netnix.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -69,13 +69,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           ctype = ' (' + self.headers['Content-Type'] + ')'
 
       if str(args[1]) == 'ERR':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + str(args[2]))
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + '\033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
           
       elif self.command == 'POST':
         log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
       elif self.command != None:
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
+        if args[1] != '200' or not re.match(r'.+\.(?:js|css|png)$', path):
+          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
 
         
   def encode_link(self, bhash):
@@ -114,7 +115,11 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
 
             if rr.status_code == 200:
-              r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
+              if self.path.endswith('?dt_hash'):
+                r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.text).group(1).encode('utf-8') ]
+
+              else:
+                r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
 
               rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
               if rr.status_code == 200:
@@ -139,7 +144,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           if os.path.isfile(fpath):
             try:
               with open(fpath, 'rb') as f:
-                r = [ 'application/yaml', 200, f.read() ]
+                rr = f.read()
+
+                if self.path.endswith('?dt_hash'):
+                  r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.decode('utf-8')).group(1).encode('utf-8') ]
+
+                else:
+                  r = [ 'application/yaml', 200, rr ]
 
               if os.path.isfile(fpath + '.lock'):
                 readonly = True
@@ -147,6 +158,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               os.utime(fpath, None)
 
             except Exception:
+              traceback.print_exc()
               r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
 
           else:
@@ -342,32 +354,57 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                     dt = json.loads(postdata)
 
                     vdt = {}
-                    vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
-                    vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
-                    vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
 
                     dt_yml = '---\n'
                     dt_yml += 'dt:\n'
 
-                    if vdt['data'] == '':
-                      dt_yml += '  data: ""\n\n'
-                    else:
-                      dt_yml += '  data: |2\n'
-                      dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
+                    if 'datasets' in dt:
+                      dt_yml += '  datasets:\n'
+
+                      for ds in dt['datasets']:
+                        vdt['data'] = base64.b64decode(dt['datasets'][ds]['data']).decode('utf-8') if 'data' in dt['datasets'][ds] and len(dt['datasets'][ds]['data'].strip()) > 0 else ''
+                        vdt['vars'] = base64.b64decode(dt['datasets'][ds]['vars']).decode('utf-8') if 'vars' in dt['datasets'][ds] and len(dt['datasets'][ds]['vars'].strip()) > 0 else ''
+
+                        dt_yml += '    "' + ds + '":\n'
+
+                        if vdt['data'] == '':
+                          dt_yml += '      data: ""\n\n'
+                        else:
+                          dt_yml += '      data: |2\n'
+                          dt_yml += re.sub('^', ' ' * 8, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                        if vdt['vars'] == '':
+                          dt_yml += '      vars: ""\n\n'
+                        else:
+                          dt_yml += '      vars: |2\n'
+                          dt_yml += re.sub('^', ' ' * 8, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                    else :
+                      vdt['data'] = base64.b64decode(dt['data']).decode('utf-8') if 'data' in dt and len(dt['data'].strip()) > 0 else ''
+                      vdt['vars'] = base64.b64decode(dt['vars']).decode('utf-8') if 'vars' in dt and len(dt['vars'].strip()) > 0 else ''
+
+                      if vdt['data'] == '':
+                        dt_yml += '  data: ""\n\n'
+                      else:
+                        dt_yml += '  data: |2\n'
+                        dt_yml += re.sub('^', ' ' * 4, vdt['data'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                      if vdt['vars'] == '':
+                        dt_yml += '  vars: ""\n\n'
+                      else:
+                        dt_yml += '  vars: |2\n'
+                        dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n\n'
+
+                    vdt['template'] = base64.b64decode(dt['template']).decode('utf-8') if 'template' in dt and len(dt['template'].strip()) > 0 else ''
 
                     if vdt['template'] == '':
-                      dt_yml += '  template: ""\n\n'
+                      dt_yml += '  template: ""\n'
                     else:
                       dt_yml += '  template: |2\n'
-                      dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n\n'
+                      dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n'
 
-                    if vdt['vars'] == '':
-                      dt_yml += '  vars: ""\n'
-                    else:
-                      dt_yml += '  vars: |2\n'
-                      dt_yml += re.sub('^', ' ' * 4, vdt['vars'].rstrip(), flags=re.MULTILINE) + '\n'
-
-                    dt_yml += '\ndt_hash: "' + hashlib.sha256(dt_yml.encode('utf-8')).hexdigest() + '"\n'
+                    dt_hash = hashlib.sha256(dt_yml.encode('utf-8')).hexdigest()
+                    dt_yml += '\ndt_hash: "' + dt_hash + '"\n'
 
                     if user_agent != None:
                       dt_yml += 'user_agent: "' + user_agent + '"\n'
@@ -396,7 +433,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                           rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
 
                           if rr.status_code == 200:
-                            r = [ 'text/plain', 200, dt_link + '\r\n' ]
+                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
 
                           elif rr.status_code == 403:
                             r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
@@ -419,7 +456,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                           with open(dt_filename, 'w') as f:
                             f.write(dt_yml)
 
-                            r = [ 'text/plain', 200, dt_link + '\r\n' ]
+                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
 
                       except Exception as e:
                         traceback.print_exc()
@@ -483,8 +520,8 @@ def main(rflag=False):
   global api_only
 
   try:
-    print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja Templating Tool')
-    print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
+    print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja2 Templating Tool')
+    print('Copyright (c) 2020-2021 Chris Mason <chris@netnix.org>\n')
 
     parser = jinjafx.ArgumentParser(add_help=False)
     parser.add_argument('-s', action='store_true', required=True)
@@ -606,6 +643,7 @@ def aws_s3_put(s3_url, fname, content, ctype):
 def aws_s3_get(s3_url, fname):
   headers = {
     'Host': s3_url,
+    'Cache-Control': 'no-store',
     'x-amz-content-sha256': hashlib.sha256(b'').hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }

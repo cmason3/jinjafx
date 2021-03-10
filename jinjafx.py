@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# JinjaFx - Jinja Templating Tool
-# Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>
+# JinjaFx - Jinja2 Templating Tool
+# Copyright (c) 2020-2021 Chris Mason <chris@netnix.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.3.4'
+__version__ = '1.4.0'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -66,8 +66,8 @@ def import_filters(errc = 0):
 def main():
   try:
     if '-q' not in sys.argv:
-      print('JinjaFx v' + __version__ + ' - Jinja Templating Tool')
-      print('Copyright (c) 2020-2021 Chris Mason <chris@jinjafx.org>\n')
+      print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
+      print('Copyright (c) 2020-2021 Chris Mason <chris@netnix.org>\n')
 
     jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]'
 
@@ -149,13 +149,17 @@ def main():
         dt.update(yaml.load(f.read(), Loader=yaml.SafeLoader)['dt'])
         args.t = dt['template']
 
-        if 'data' in dt:
-          data = dt['data']
+        if 'datasets' in dt:
+          raise Exception('datasets aren\'t supported at present')
 
-        if 'vars' in dt:
-          gyaml = decrypt_vault(dt['vars'])
-          if gyaml:
-            gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+        else:
+          if 'data' in dt:
+            data = dt['data']
+
+          if 'vars' in dt:
+            gyaml = decrypt_vault(dt['vars'])
+            if gyaml:
+              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
     if args.d is not None:
       with open(args.d.name) as f:
@@ -410,7 +414,7 @@ class JinjaFx():
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
-      'jinja_version': jinja2.__version__,
+      'jinja2_version': jinja2.__version__,
       'expand': self.jfx_expand,
       'counter': self.jfx_counter,
       'exception': self.jfx_exception,

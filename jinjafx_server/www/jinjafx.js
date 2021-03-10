@@ -4,8 +4,14 @@ var sobj = undefined;
 var fe = undefined;
 var tid = 0;
 var dt_id = '';
+var dt_hash = '';
 var dt = {};
 var qs = {};
+var datasets = {
+  'Default': [CodeMirror.Doc('', 'data'), CodeMirror.Doc('', 'yaml')]
+};
+var current_ds = 'Default';
+var pending_dt = '';
 
 function getStatusText(code) {
   var statusText = {
@@ -24,9 +30,84 @@ function getStatusText(code) {
   return '';
 }
 
+function select_dataset(e) {
+  switch_dataset(e.currentTarget.ds_name, true);
+}
+
+function switch_dataset(ds, sflag) {
+  if (sflag) {
+    datasets[current_ds][0] = window.cmData.swapDoc(datasets[ds][0]);
+    datasets[current_ds][1] = window.cmVars.swapDoc(datasets[ds][1]);
+  }
+  else {
+    window.cmData.swapDoc(datasets[ds][0]);
+    window.cmVars.swapDoc(datasets[ds][1]);
+  }
+  if (ds != current_ds) {
+    document.getElementById('selected_ds').innerHTML = ds;
+    current_ds = ds;
+    onDataBlur();
+  }
+  fe.focus();
+}
+
+function rebuild_datasets() {
+  document.getElementById('datasets').innerHTML = '';
+
+  Object.keys(datasets).forEach(function(ds) {
+    var a = document.createElement('a');
+    a.classList.add('dropdown-item');
+    a.addEventListener('click', select_dataset, false);
+    a.href = '#';
+    a.ds_name = ds;
+    a.innerHTML = ds;
+    document.getElementById('datasets').appendChild(a);
+  });
+
+  if (Object.keys(datasets).length > 1) {
+    document.getElementById('select_ds').disabled = false;
+    document.getElementById('delete_ds').disabled = false;
+  }
+  else {
+    document.getElementById('select_ds').disabled = true;
+    document.getElementById('delete_ds').disabled = true;
+  }
+  document.getElementById('selected_ds').innerHTML = current_ds;
+}
+
+function delete_dataset(ds) {
+  delete datasets[ds];
+  window.addEventListener('beforeunload', onBeforeUnload);
+  if (document.getElementById('get_link').value != 'false') {
+    document.title = 'JinjaFx [unsaved]';
+  }
+  dirty = true;
+
+  rebuild_datasets();
+  switch_dataset(Object.keys(datasets)[0], false);
+  fe.focus();
+}
+
 function jinjafx(method) {
   sobj.innerHTML = "";
-  dt = {};
+
+  if (method == "delete_dataset") {
+    if (window.cmData.getValue().match(/\S/) || window.cmVars.getValue().match(/\S/)) {
+      if (confirm("Are You Sure?") === true) {
+        delete_dataset(current_ds);
+      }
+    }
+    else {
+      delete_dataset(current_ds);
+    }
+    fe.focus();
+    return false;
+  }
+  else if (method == "add_dataset") {
+    document.getElementById("ds_name").value = '';
+    $("#dataset_input").modal("show");
+    return false;
+  }
 
   if (window.cmTemplate.getValue().length === 0) {
     window.cmTemplate.focus();
@@ -34,97 +115,164 @@ function jinjafx(method) {
     return false;
   }
 
-  var datarows = window.cmData.getValue();
+  dt = {};
 
-  if (method == "generate") {
-    datarows = datarows.split(/\r?\n/).filter(function(e) {
-      return !e.match(/^[ \t]*#/) && e.match(/\S/);
-    });
+  try {
+    if (method === "generate") {
+      dt.data = window.cmData.getValue().split(/\r?\n/).filter(function(e) {
+        return !e.match(/^[ \t]*#/) && e.match(/\S/);
+      });
 
-    if (datarows.length == 1) {
-      window.cmData.focus();
-      set_status("darkred", "ERROR", "Not Enough Rows in Data");
-      return false;
-    }
-    datarows = datarows.join("\n");
-  }
+      if (dt.data.length == 1) {
+        window.cmData.focus();
+        set_status("darkred", "ERROR", "Not Enough Data Rows");
+        return false;
+      }
 
-  fe.focus();
-
-  dt.data = datarows;
-  dt.template = window.cmTemplate.getValue().replace(/\t/g, "  ");
-  dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
-
-  if ((method === "generate") || (method === "get_link") || (method == "update_link")) {
-    try {
+      dt.data = window.btoa(dt.data.join("\n"));
+      dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
       var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
-
-      dt.data = window.btoa(dt.data);
-      dt.template = window.btoa(dt.template);
       dt.vars = window.btoa(dt.vars);
+      dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
       dt.id = dt_id;
+      dt.dataset = current_ds;
 
-      if (method === "generate") {
-        if (vaulted_vars) {
-          $("#vault_input").modal("show")
+      if (vaulted_vars) {
+        $("#vault_input").modal("show");
+      }
+      else {
+        if (dt_id != '') {
+          window.open("output.html?dt=" + dt_id, "_blank");
         }
         else {
           window.open("output.html", "_blank");
         }
       }
-      else {
-        set_wait();
-        var xHR = new XMLHttpRequest();
+    }
+    else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
+      dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
 
-        if (method == "update_link") {
-          xHR.open("POST", "get_link?id=" + dt_id, true);
+      if ((current_ds === 'Default') && (Object.keys(datasets).length === 1)) {
+        dt.vars = window.btoa(window.cmVars.getValue().replace(/\t/g, "  "));
+        dt.data = window.btoa(window.cmData.getValue());
+      }
+      else {
+        dt.datasets = {};
+        switch_dataset(current_ds, true);
+        Object.keys(datasets).forEach(function(ds) {
+          dt.datasets[ds] = {};
+          dt.datasets[ds].data = window.btoa(datasets[ds][0].getValue());
+          dt.datasets[ds].vars = window.btoa(datasets[ds][1].getValue().replace(/\t/g, "  "));
+        });
+      }
+
+      if (method === "export") {
+        if (dt_id != '') {
+          window.open("dt.html?dt=" + dt_id, "_blank");
         }
         else {
-          xHR.open("POST", "get_link", true);
+          window.open("dt.html", "_blank");
         }
+      }
+      else {
+        set_wait();
 
-        xHR.onload = function() {
-          if (this.status === 200) {
-            if (method == "update_link") {
-              set_status("green", "OK", "Link Updated");
-              window.removeEventListener('beforeunload', onBeforeUnload);
-              dirty = false;
+        if (method == "update_link") {
+          var xHR = new XMLHttpRequest();
+          xHR.open("GET", "dt/" + qs.dt + "?dt_hash", true);
+
+          xHR.onload = function() {
+            if (this.status === 200) {
+              if (this.responseText !== dt_hash) {
+                if (confirm("Remote Changes in DataTemplate Detected - Are You Sure?") === true) {
+                  update_link(dt_id);
+                }
+                else {
+                  set_status("darkorange", "OK", 'Link Not Updated');
+                  clear_wait();
+                }
+              }
+              else {
+                update_link(dt_id);
+              }
             }
             else {
-              window.removeEventListener('beforeunload', onBeforeUnload);
-              window.location.href = window.location.pathname + "?dt=" + this.responseText;
+              var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+              set_status("darkred", "HTTP ERROR " + this.status, sT);
+              clear_wait();
             }
-            clear_wait();
-          }
-          else {
-            var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
-            set_status("darkred", "HTTP ERROR " + this.status, sT);
-            clear_wait();
-          }
-        };
+          };
 
-        xHR.onerror = function() {
-          set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
-          clear_wait();
-        };
-        xHR.ontimeout = function() {
-          set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
-          clear_wait();
-        };
+          xHR.onerror = function() {
+            set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+            clear_wait();
+          };
+          xHR.ontimeout = function() {
+            set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+            clear_wait();
+          };
 
-        xHR.timeout = 10000;
-        xHR.setRequestHeader("Content-Type", "application/json");
-        xHR.send(JSON.stringify(dt));
+          xHR.timeout = 5000;
+          xHR.send(null);
+        }
+        else {
+          update_link(null);
+        }
       }
     }
-    catch (ex) {
-      set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
+  }
+  catch (ex) {
+    set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
+    clear_wait();
+  }
+}
+
+function update_link(v_dt_id) {
+  var xHR = new XMLHttpRequest();
+
+  if (v_dt_id !== null) {
+    xHR.open("POST", "get_link?id=" + v_dt_id, true);
+  }
+  else {
+    xHR.open("POST", "get_link", true);
+  }
+
+  xHR.onload = function() {
+    if (this.status === 200) {
+      var dte = this.responseText.trim().split(':');
+
+      if (v_dt_id !== null) {
+        dt_hash = dte[1];
+        set_status("green", "OK", "Link Updated");
+        window.removeEventListener('beforeunload', onBeforeUnload);
+      }
+      else {
+        window.removeEventListener('beforeunload', onBeforeUnload);
+        window.location.href = window.location.pathname + "?dt=" + dte[0];
+      }
+      document.title = 'JinjaFx';
+      dirty = false;
       clear_wait();
     }
-  }
-  else if (method === "export") {
-    window.open("dt.html", "_blank");
-  }
+    else {
+      var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+      set_status("darkred", "HTTP ERROR " + this.status, sT);
+      clear_wait();
+    }
+  };
+
+  xHR.onerror = function() {
+    set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+    clear_wait();
+  };
+  xHR.ontimeout = function() {
+    set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+    clear_wait();
+  };
+
+  xHR.timeout = 10000;
+  xHR.setRequestHeader("Content-Type", "application/json");
+  xHR.send(JSON.stringify(dt));
 }
 
 window.onload = function() {
@@ -157,6 +305,7 @@ window.onload = function() {
       styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "data",
+      viewportMargin: 80,
       smartIndent: false
     });
 
@@ -166,6 +315,7 @@ window.onload = function() {
       styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "yaml",
+      viewportMargin: 80,
       smartIndent: false
     });
 
@@ -177,7 +327,9 @@ window.onload = function() {
       styleSelectedText: false,
       extraKeys: gExtraKeys,
       mode: "jinja2",
-      smartIndent: false
+      viewportMargin: 80,
+      smartIndent: false,
+      showTrailingSpace: true
     });
 
     fe = window.cmTemplate;
@@ -207,7 +359,8 @@ window.onload = function() {
       cursor: "col-resize",
       sizes: [60, 40],
       snapOffset: 0,
-      minSize: 45
+      minSize: 45,
+      onDragEnd: refresh_cm
     });
 
     var vsplit = Split(["#top", "#ctemplate"], {
@@ -215,7 +368,8 @@ window.onload = function() {
       cursor: "row-resize",
       sizes: [30, 70],
       snapOffset: 0,
-      minSize: 30
+      minSize: 30,
+      onDragEnd: refresh_cm
     });
 
     document.getElementById('ldata').onclick = function() {
@@ -241,17 +395,48 @@ window.onload = function() {
       document.getElementById("vault").focus();
     });
 
-    document.getElementById('ml-ok').onclick = function() {
+    $('#dataset_input').on('shown.bs.modal', function() {
+      document.getElementById("ds_name").focus();
+    });
+
+    document.getElementById('ml-vault-ok').onclick = function() {
       dt.vault_password = window.btoa(document.getElementById("vault").value);
       window.open("output.html", "_blank");
     };
 
-    document.getElementById('vault').onkeyup = function(e) {
-      if (e.which == 13) {
-        document.getElementById('ml-ok').click();
+    document.getElementById('ml-dataset-ok').onclick = function() {
+      var new_ds = document.getElementById("ds_name").value;
+
+      if (new_ds.match(/^[A-Z][A-Z0-9_ -]*$/i)) {
+        if (!datasets.hasOwnProperty(new_ds)) {
+          datasets[new_ds] = [CodeMirror.Doc('', 'data'), CodeMirror.Doc('', 'yaml')];
+          rebuild_datasets();
+          window.addEventListener('beforeunload', onBeforeUnload);
+          if (document.getElementById('get_link').value != 'false') {
+            document.title = 'JinjaFx [unsaved]';
+          }
+          dirty = true;
+        }
+        switch_dataset(new_ds, true);
+      }
+      else {
+        set_status("darkred", "ERROR", "Invalid Data Set Name");
+        fe.focus();
       }
     };
 
+    document.getElementById('vault').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-vault-ok').click();
+      }
+    };
+
+    document.getElementById('ds_name').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-dataset-ok').click();
+      }
+    };
+    
     if (window.location.href.indexOf('?') > -1) {
       if (document.getElementById('get_link').value != 'false') {
         var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
@@ -270,10 +455,12 @@ window.onload = function() {
             xHR.onload = function() {
               if (this.status === 200) {
                 try {
-                  var dt = jsyaml.safeLoad(this.responseText, 'utf8')['dt'];
-                  load_datatemplate(dt, qs);
+                  var dt = jsyaml.safeLoad(this.responseText, 'utf8');
+                  dt_hash = dt.dt_hash;
+
+                  load_datatemplate(dt['dt'], qs);
                   dt_id = qs.dt;
-  
+
                   if (this.getResponseHeader('X-Read-Only') == 'true') {
                     document.getElementById('update').disabled = true;
                   }
@@ -310,6 +497,7 @@ window.onload = function() {
             };
 
             xHR.timeout = 10000;
+            xHR.setRequestHeader("Cache-Control", "no-store");
             xHR.send(null);
           }
           else {
@@ -341,6 +529,12 @@ window.onload = function() {
   }
 };
 
+function refresh_cm() {
+  window.cmData.refresh();
+  window.cmVars.refresh();
+  window.cmTemplate.refresh();
+}
+
 function set_wait() {
   fe.setOption('readOnly', 'nocursor');
   var e = document.getElementById("csv").getElementsByTagName("th");
@@ -365,6 +559,7 @@ function clear_wait() {
     e[i].style.background = 'lightgray';
   }
   fe.setOption('readOnly', false);
+  fe.focus();
 }
 
 function quote(str) {
@@ -421,8 +616,23 @@ function onDataBlur(cm, evt) {
       document.getElementById("csv").style.display = 'block';
       window.cmData.getWrapperElement().style.display = 'none';
     }
+    else {
+      window.cmData.getWrapperElement().style.display = 'block';
+      document.getElementById("csv").style.display = 'none';
+      document.getElementById("ldata").style.display = 'block';
+      window.cmData.refresh();
+    }
   }
 } 
+
+function apply_dt() {
+  load_datatemplate(pending_dt, null);
+  if (window.location.href.indexOf('?') > -1) {
+    window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+  }
+  dt_id = '';
+  document.getElementById('update').disabled = true;
+}
 
 function onPaste(cm, change) {
   if (change.origin === "paste") {
@@ -431,14 +641,17 @@ function onPaste(cm, change) {
     if (t.indexOf('---\ndt:\n') > -1) {
       var obj = jsyaml.safeLoad(t, 'utf8');
       if (obj != null) {
-        load_datatemplate(obj['dt'], null);
         change.cancel();
+        pending_dt = obj['dt'];
 
-        if (window.location.href.indexOf('?') > -1) {
-          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+        if (dirty) {
+          if (confirm("Are You Sure?") === true) {
+            apply_dt();
+          }
         }
-        dt_id = '';
-        document.getElementById('update').disabled = true;
+        else {
+          apply_dt();
+        }
       }
     }
   }
@@ -452,6 +665,9 @@ function onChange(errflag) {
   if (loaded) {
     if (!dirty && (errflag !== true)) {
       window.addEventListener('beforeunload', onBeforeUnload);
+      if (document.getElementById('get_link').value != 'false') {
+        document.title = 'JinjaFx [unsaved]';
+      }
       dirty = true;
     }
   }
@@ -460,20 +676,52 @@ function onChange(errflag) {
 function load_datatemplate(_dt, _qs) {
   try {
     if (_qs != null) {
-      if (_qs.hasOwnProperty("data")) {
-        _dt.data = window.atob(_qs.data);
-      }
       if (_qs.hasOwnProperty("template")) {
         _dt.template = window.atob(_qs.template);
       }
-      if (_qs.hasOwnProperty("vars")) {
-        _dt.vars = window.atob(_qs.vars);
-      }
     }
 
-    window.cmData.setValue(_dt.hasOwnProperty("data") ? _dt.data : "");
+    current_ds = 'Default';
+
+    if (_dt.hasOwnProperty("datasets")) {
+      datasets = {};
+
+      Object.keys(_dt.datasets).forEach(function(ds) {
+        var data = _dt.datasets[ds].hasOwnProperty("data") ? _dt.datasets[ds].data : "";
+        var vars = _dt.datasets[ds].hasOwnProperty("vars") ? _dt.datasets[ds].vars : "";
+        datasets[ds] = [CodeMirror.Doc(data, 'data'), CodeMirror.Doc(vars, 'yaml')];
+      });
+
+      current_ds = Object.keys(datasets)[0];
+      window.cmData.swapDoc(datasets[current_ds][0]);
+      window.cmVars.swapDoc(datasets[current_ds][1]);
+    }
+    else {
+      datasets = {
+        'Default': [CodeMirror.Doc('', 'data'), CodeMirror.Doc('', 'yaml')]
+      };
+
+      if (_qs != null) {
+        if (_qs.hasOwnProperty("data")) {
+          _dt.data = window.atob(_qs.data);
+        }
+        if (_qs.hasOwnProperty("vars")) {
+          _dt.vars = window.atob(_qs.vars);
+        }
+      }
+
+      datasets['Default'][0].setValue(_dt.hasOwnProperty("data") ? _dt.data : "");
+      window.cmData.swapDoc(datasets['Default'][0]);
+      datasets['Default'][1].setValue(_dt.hasOwnProperty("vars") ? _dt.vars : "");
+      window.cmVars.swapDoc(datasets['Default'][1]);
+    }
     window.cmTemplate.setValue(_dt.hasOwnProperty("template") ? _dt.template : "");
-    window.cmVars.setValue(_dt.hasOwnProperty("vars") ? _dt.vars : "");
+
+    window.cmData.getDoc().clearHistory();
+    window.cmVars.getDoc().clearHistory();
+    window.cmTemplate.getDoc().clearHistory();
+
+    rebuild_datasets();
     loaded = true;
   }
   catch (ex) {

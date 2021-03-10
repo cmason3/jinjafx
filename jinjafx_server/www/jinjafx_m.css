@@ -52,7 +52,7 @@ body {
 }
 .gutter.gutter-horizontal {
   cursor: ew-resize;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==')
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
 }
 .split-horizontal, .gutter.gutter-horizontal {
   height: 100%;
@@ -62,6 +62,10 @@ body {
   border: 1px solid lightgray;
   height: 100%;
   font-size: 12px;
+}
+.cm-trailingspace::after {
+  color: steelblue;
+  content: '$';
 }
 .cm-jfx-header {
   font-weight: bold;
