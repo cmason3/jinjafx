@@ -63,6 +63,9 @@ body {
   height: 100%;
   font-size: 12px;
 }
+.CodeMirror-dialog-bottom pre {
+  font-size: 14px;
+}
 .cm-trailingspace::after {
   color: steelblue;
   content: '$';

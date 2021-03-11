@@ -338,7 +338,6 @@ window.onload = function() {
       showTrailingSpace: true
     });
 
-
     window.cmTemplate = CodeMirror.fromTextArea(template, {
       lineNumbers: true,
       tabSize: 2,
@@ -351,6 +350,15 @@ window.onload = function() {
       smartIndent: false,
       showTrailingSpace: true
     });
+
+    CodeMirror.commands.save = function() {
+      if (document.getElementById('update').disabled == false) {
+        jinjafx('update_link');
+      }
+      else {
+        set_status("darkred", "ERROR", "No Link to Update");
+      }
+    };
 
     if (localStorage.vimMode == 'on') {
       window.cmData.setOption("vimMode", true);
@@ -380,10 +388,13 @@ window.onload = function() {
     window.cmVars.on("change", onChange);
     window.cmTemplate.on("change", onChange);
 
+    var hsize = [60, 40];
+    var vsize = [30, 70];
+
     var hsplit = Split(["#cdata", "#cvars"], {
       direction: "horizontal",
       cursor: "col-resize",
-      sizes: [60, 40],
+      sizes: hsize,
       snapOffset: 0,
       minSize: 45,
       onDragEnd: refresh_cm
@@ -392,7 +403,7 @@ window.onload = function() {
     var vsplit = Split(["#top", "#ctemplate"], {
       direction: "vertical",
       cursor: "row-resize",
-      sizes: [30, 70],
+      sizes: vsize,
       snapOffset: 0,
       minSize: 30,
       onDragEnd: refresh_cm
@@ -403,6 +414,11 @@ window.onload = function() {
       vsplit.setSizes([100, 0]);
       window.cmData.focus();
     };
+    document.getElementById('ldata').ondblclick = function() {
+      hsplit.setSizes(hsize);
+      vsplit.setSizes(vsize);
+      window.cmData.focus();
+    };
 
     document.getElementById('lvars').onclick = function() {
       hsplit.setSizes([0, 100]);
@@ -410,9 +426,21 @@ window.onload = function() {
       window.cmVars.focus();
       onDataBlur();
     };
+    document.getElementById('lvars').ondblclick = function() {
+      hsplit.setSizes(hsize);
+      vsplit.setSizes(vsize);
+      window.cmVars.focus();
+      onDataBlur();
+    };
 
     document.getElementById('ltemplate').onclick = function() {
       vsplit.setSizes([0, 100]);
+      window.cmTemplate.focus();
+      onDataBlur();
+    };
+    document.getElementById('ltemplate').ondblclick = function() {
+      hsplit.setSizes(hsize);
+      vsplit.setSizes(vsize);
       window.cmTemplate.focus();
       onDataBlur();
     };

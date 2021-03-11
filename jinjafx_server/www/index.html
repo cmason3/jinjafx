@@ -32,7 +32,7 @@
     <div id="overlay"></div>
     <div id="wrap">
       <div id="header" class="jumbotron">
-        <a href="./">
+        <a href="./" tabindex="-1">
           <svg style="float: left; margin-right: 10px;" width="48" height="48" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
             <rect x="32" y="32" width="250" height="250" fill="#0074d9" stroke="#001f3f" />
             <rect x="304" y="162" width="120" height="120" fill="#0074d9" stroke="#001f3f" />
@@ -41,7 +41,7 @@
           </svg>
         </a>
         <h5 id="title" style="color: black; float: left; margin: 0px 10px 0px 0px;">
-          <a class="text-decoration-none text-reset" href="./">
+          <a class="text-decoration-none text-reset" href="./" tabindex="-1">
             <span class="font-weight-bold">JinjaFx</span><br />
             <span class="small" style="color: black;">&nbsp;Jinja2&nbsp;Templating&nbsp;Tool</span>
           </a>
@@ -116,7 +116,7 @@
               <div class="badge badge-secondary float-left labels">D<br />A<br />T<br />A<br />.<br />C<br />S<br />V<br /></div>
               <textarea id="data"></textarea>
               <div id="csv" class="table-responsive" style="overflow: auto; width: auto; height: 100%; display: none;"></div>
-              <span id="ldata" class="expand" title="Maximise">
+              <span id="ldata" class="expand">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
@@ -125,7 +125,7 @@
             <div id="cvars" class="split-horizontal" style="position: relative;">
               <div class="badge badge-danger float-left labels">V<br />A<br />R<br />S<br />.<br />Y<br />M<br />L<br /></div>
               <textarea id="vars"></textarea>
-              <span id="lvars" class="expand" title="Maximise">
+              <span id="lvars" class="expand">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
@@ -135,7 +135,7 @@
           <div id="ctemplate" style="position: relative;">
             <div class="badge badge-info float-left labels">T<br />E<br />M<br />P<br />L<br />A<br />T<br />E<br />.<br />J<br />2<br /></div>
             <textarea id="template"></textarea>
-            <span id="ltemplate" class="expand" title="Maximise">
+            <span id="ltemplate" class="expand">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
@@ -148,7 +148,7 @@
     <div id="footer">
       <div class="container-fluid">
         <h5 id="status" class="float-left"></h5>
-        <p class="text-right" style="font-size: 85%;">JinjaFx v{{ jinjafx.version }} - Jinja2 Templating Tool<br /><a href="https://github.com/cmason3/jinjafx" target="_blank">https://github.com/cmason3/jinjafx</a></p>
+        <p class="text-right" style="font-size: 85%;">JinjaFx v{{ jinjafx.version }} - Jinja2 Templating Tool<br /><a href="https://github.com/cmason3/jinjafx" tabindex="-1" target="_blank">https://github.com/cmason3/jinjafx</a></p>
       </div>
     </div>
     <input id="get_link" type="hidden" value="{{ get_link }}">
