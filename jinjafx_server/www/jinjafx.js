@@ -311,8 +311,7 @@ window.onload = function() {
     var gExtraKeys = {
       "Alt-F": "findPersistent",
       "Ctrl-F": "findPersistent",
-      "Cmd-F": "findPersistent",
-      "Ctrl-D": false
+      "Cmd-F": "findPersistent"
     };
 
     CodeMirror.defineMode("data", cmDataMode);    
