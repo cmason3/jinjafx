@@ -275,6 +275,23 @@ function update_link(v_dt_id) {
   xHR.send(JSON.stringify(dt));
 }
 
+function vimMode() {
+  if (localStorage.vimMode == 'on') {
+    localStorage.vimMode = undefined;
+    window.cmData.setOption("vimMode", false)
+    window.cmVars.setOption("vimMode", false)
+    window.cmTemplate.setOption("vimMode", false)
+    set_status("green", "OK", "Vim Mode Disabled");
+  }
+  else {
+    localStorage.vimMode = 'on';
+    window.cmData.setOption("vimMode", true)
+    window.cmVars.setOption("vimMode", true)
+    window.cmTemplate.setOption("vimMode", true)
+    set_status("green", "OK", "Vim Mode Enabled");
+  }
+}
+
 window.onload = function() {
   if (typeof window.btoa == 'function') {
     sobj = document.getElementById("status");
@@ -306,7 +323,8 @@ window.onload = function() {
       extraKeys: gExtraKeys,
       mode: "data",
       viewportMargin: 80,
-      smartIndent: false
+      smartIndent: false,
+      showTrailingSpace: true
     });
 
     window.cmVars = CodeMirror.fromTextArea(vars, {
@@ -316,8 +334,10 @@ window.onload = function() {
       extraKeys: gExtraKeys,
       mode: "yaml",
       viewportMargin: 80,
-      smartIndent: false
+      smartIndent: false,
+      showTrailingSpace: true
     });
+
 
     window.cmTemplate = CodeMirror.fromTextArea(template, {
       lineNumbers: true,
@@ -331,6 +351,12 @@ window.onload = function() {
       smartIndent: false,
       showTrailingSpace: true
     });
+
+    if (localStorage.vimMode == 'on') {
+      window.cmData.setOption("vimMode", true);
+      window.cmVars.setOption("vimMode", true);
+      window.cmTemplate.setOption("vimMode", true);
+    }
 
     fe = window.cmTemplate;
     window.cmData.on("focus", function() { fe = window.cmData });
@@ -438,14 +464,18 @@ window.onload = function() {
     };
     
     if (window.location.href.indexOf('?') > -1) {
-      if (document.getElementById('get_link').value != 'false') {
-        var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
+      var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
   
-        for (var i = 0; i < v.length; i++) {
-          var p = v[i].split('=');
-          qs[p[0].toLowerCase()] = decodeURIComponent(p.length > 1 ? p[1] : '');
-        }
-  
+      for (var i = 0; i < v.length; i++) {
+        var p = v[i].split('=');
+        qs[p[0].toLowerCase()] = decodeURIComponent(p.length > 1 ? p[1] : '');
+      }
+
+      if (qs.hasOwnProperty('vim')) {
+        vimMode();
+        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+      }
+      else if (document.getElementById('get_link').value != 'false') {
         try {
           if (qs.hasOwnProperty('dt')) {
             set_wait();
