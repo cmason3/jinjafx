@@ -409,13 +409,19 @@ window.onload = function() {
     });
 
     document.getElementById('ldata').onclick = function() {
+      hsize = hsplit.getSizes();
+      vsize = vsplit.getSizes();
       hsplit.setSizes([100, 0]);
       vsplit.setSizes([100, 0]);
+      document.getElementById('ldata').style.display = 'none';
+      document.getElementById('ldata2').style.display = 'block';
       window.cmData.focus();
     };
-    document.getElementById('ldata').ondblclick = function() {
+    document.getElementById('ldata2').onclick = function() {
       hsplit.setSizes(hsize);
       vsplit.setSizes(vsize);
+      document.getElementById('ldata2').style.display = 'none';
+      document.getElementById('ldata').style.display = 'block';
       window.cmData.focus();
     };
 
