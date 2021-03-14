@@ -12,6 +12,7 @@ var datasets = {
 };
 var current_ds = 'Default';
 var pending_dt = '';
+var cflag = false;
 
 function getStatusText(code) {
   var statusText = {
@@ -411,8 +412,11 @@ window.onload = function() {
     });
 
     document.getElementById('ldata').onclick = function() {
-      hsize = hsplit.getSizes();
-      vsize = vsplit.getSizes();
+      if (cflag == false) {
+        hsize = hsplit.getSizes();
+        vsize = vsplit.getSizes();
+      }
+      cflag = true;
       reset_icons();
       hsplit.setSizes([100, 0]);
       vsplit.setSizes([100, 0]);
@@ -429,8 +433,11 @@ window.onload = function() {
     };
 
     document.getElementById('lvars').onclick = function() {
-      hsize = hsplit.getSizes();
-      vsize = vsplit.getSizes();
+      if (cflag == false) {
+        hsize = hsplit.getSizes();
+        vsize = vsplit.getSizes();
+      }
+      cflag = true;
       reset_icons();
       hsplit.setSizes([0, 100]);
       vsplit.setSizes([100, 0]);
@@ -449,8 +456,11 @@ window.onload = function() {
     };
 
     document.getElementById('ltemplate').onclick = function() {
-      hsize = hsplit.getSizes();
-      vsize = vsplit.getSizes();
+      if (cflag == false) {
+        hsize = hsplit.getSizes();
+        vsize = vsplit.getSizes();
+      }
+      cflag = true;
       reset_icons();
       vsplit.setSizes([0, 100]);
       document.getElementById('ltemplate').style.display = 'none';
@@ -613,6 +623,7 @@ function refresh_cm() {
   window.cmData.refresh();
   window.cmVars.refresh();
   window.cmTemplate.refresh();
+  cflag = false;
 }
 
 function reset_icons() {
