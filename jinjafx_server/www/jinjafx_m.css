@@ -41,6 +41,9 @@ body {
   line-height: 0.8rem;
   overflow-y: hidden;
 }
+.caret-off::after {
+  display: none;
+}
 .gutter {
   background-color: #eee;
   background-repeat: no-repeat;

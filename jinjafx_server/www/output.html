@@ -140,13 +140,10 @@
                     document.getElementById('wrap').style.display = 'block';
                     document.getElementById('footer').style.display = 'block';
 
+                    document.title = 'Outputs' + ((dt.dataset != 'Default') ? ' (' + dt.dataset + ')' : '');
+
                     if (oc > 1) {
-                      document.getElementById('download').style.display = 'flex';
                       document.getElementById('pills').style.display = 'block';
-                      document.title = 'Outputs' + ((dt.dataset != 'Default') ? ' (' + dt.dataset + ')' : '');
-                    }
-                    else {
-                      document.title = 'Output' + ((dt.dataset != 'Default') ? ' (' + dt.dataset + ')' : '');
                     }
 
                     window.onresize = function() {
@@ -217,7 +214,7 @@
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>&nbsp;Copy
           </button>
-          <button id="download" class="btn btn-info mr-2" style="display: none;" type="button" onclick="download_outputs();" title="Download Outputs">
+          <button id="download" class="btn btn-info mr-2" type="button" onclick="download_outputs();" title="Download Outputs as Zip">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />

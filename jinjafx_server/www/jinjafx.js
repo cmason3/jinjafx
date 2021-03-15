@@ -283,6 +283,7 @@ function vimMode() {
     window.cmVars.setOption("vimMode", false)
     window.cmTemplate.setOption("vimMode", false)
     set_status("green", "OK", "Vim Mode Disabled");
+    document.getElementById("vim_mode").innerHTML = "Enable Vim Mode";
   }
   else {
     localStorage.vimMode = 'on';
@@ -290,7 +291,9 @@ function vimMode() {
     window.cmVars.setOption("vimMode", true)
     window.cmTemplate.setOption("vimMode", true)
     set_status("green", "OK", "Vim Mode Enabled");
+    document.getElementById("vim_mode").innerHTML = "Disable Vim Mode";
   }
+  fe.focus();
 }
 
 window.onload = function() {
@@ -364,6 +367,7 @@ window.onload = function() {
       window.cmData.setOption("vimMode", true);
       window.cmVars.setOption("vimMode", true);
       window.cmTemplate.setOption("vimMode", true);
+      document.getElementById("vim_mode").innerHTML = "Disable Vim Mode";
     }
 
     fe = window.cmTemplate;
@@ -531,11 +535,7 @@ window.onload = function() {
         qs[p[0].toLowerCase()] = decodeURIComponent(p.length > 1 ? p[1] : '');
       }
 
-      if (qs.hasOwnProperty('vim')) {
-        vimMode();
-        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-      }
-      else if (document.getElementById('get_link').value != 'false') {
+      if (document.getElementById('get_link').value != 'false') {
         try {
           if (qs.hasOwnProperty('dt')) {
             set_wait();
