@@ -42,7 +42,7 @@ body {
   overflow-y: hidden;
 }
 .caret-off::after {
-  display: none;
+  display: none !important;
 }
 .gutter {
   background-color: #eee;
