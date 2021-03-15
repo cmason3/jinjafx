@@ -24,7 +24,7 @@ body {
 .expand {
   position: absolute;
   background: transparent;
-  z-index: 10;
+  z-index: 2;
   right: 1px;
   top: 1px;
   padding-top: 2px;

@@ -295,7 +295,24 @@ window.onload = function() {
     var gExtraKeys = {
       "Alt-F": "findPersistent",
       "Ctrl-F": "findPersistent",
-      "Cmd-F": "findPersistent"
+      "Cmd-F": "findPersistent",
+      "F11": function(cm) {
+        cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+      },
+      "Esc": function(cm) {
+        if (cm.getOption("fullScreen")) {
+          cm.setOption("fullScreen", false);
+        }
+      },
+      "Ctrl-S": function(cm) {
+        if (document.getElementById('update').disabled == false) {
+          jinjafx('update_link');
+        }
+        else {
+          set_status("darkred", "ERROR", "No Link to Update");
+        }
+      },
+      "Ctrl-D": false
     };
 
     CodeMirror.defineMode("data", cmDataMode);    
@@ -333,15 +350,6 @@ window.onload = function() {
       smartIndent: false,
       showTrailingSpace: true
     });
-
-    CodeMirror.commands.save = function() {
-      if (document.getElementById('update').disabled == false) {
-        jinjafx('update_link');
-      }
-      else {
-        set_status("darkred", "ERROR", "No Link to Update");
-      }
-    };
 
     fe = window.cmTemplate;
     window.cmData.on("focus", function() { fe = window.cmData });
