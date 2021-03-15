@@ -276,26 +276,6 @@ function update_link(v_dt_id) {
   xHR.send(JSON.stringify(dt));
 }
 
-function vimMode() {
-  if (localStorage.vimMode == 'on') {
-    localStorage.vimMode = undefined;
-    window.cmData.setOption("vimMode", false)
-    window.cmVars.setOption("vimMode", false)
-    window.cmTemplate.setOption("vimMode", false)
-    set_status("green", "OK", "Vim Mode Disabled");
-    document.getElementById("vim_mode").innerHTML = "Enable Vim Mode";
-  }
-  else {
-    localStorage.vimMode = 'on';
-    window.cmData.setOption("vimMode", true)
-    window.cmVars.setOption("vimMode", true)
-    window.cmTemplate.setOption("vimMode", true)
-    set_status("green", "OK", "Vim Mode Enabled");
-    document.getElementById("vim_mode").innerHTML = "Disable Vim Mode";
-  }
-  fe.focus();
-}
-
 window.onload = function() {
   if (typeof window.btoa == 'function') {
     sobj = document.getElementById("status");
@@ -362,13 +342,6 @@ window.onload = function() {
         set_status("darkred", "ERROR", "No Link to Update");
       }
     };
-
-    if (localStorage.vimMode == 'on') {
-      window.cmData.setOption("vimMode", true);
-      window.cmVars.setOption("vimMode", true);
-      window.cmTemplate.setOption("vimMode", true);
-      document.getElementById("vim_mode").innerHTML = "Disable Vim Mode";
-    }
 
     fe = window.cmTemplate;
     window.cmData.on("focus", function() { fe = window.cmData });
