@@ -152,7 +152,7 @@ function jinjafx(method) {
     }
     else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
       if ((method === "update_link") && !dirty) {
-        set_status("darkorange", "OK", 'No Changes');
+        set_status("#e64c00", "OK", 'No Changes');
         return false;
       }
 
@@ -194,7 +194,7 @@ function jinjafx(method) {
                   update_link(dt_id);
                 }
                 else {
-                  set_status("darkorange", "OK", 'Link Not Updated');
+                  set_status("#e64c00", "OK", 'Link Not Updated');
                   clear_wait();
                 }
               }
