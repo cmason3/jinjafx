@@ -151,6 +151,11 @@ function jinjafx(method) {
       }
     }
     else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
+      if ((method === "update_link") && !dirty) {
+        set_status("darkorange", "OK", 'No Changes');
+        return false;
+      }
+
       dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
 
       if ((current_ds === 'Default') && (Object.keys(datasets).length === 1)) {
