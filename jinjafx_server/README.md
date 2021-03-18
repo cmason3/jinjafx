@@ -35,6 +35,18 @@ The "-rl" argument is used to provide an optional rate limit of the source IP - 
 
 The "-api" argument is used to disable the web frontend and only provide the api which the frontend uses - the api is currently undocumented so this option isn't recommended in normal use cases.
 
+### Shortcut Keys
+
+As well as supporting the standard CodeMirror shortcut keys for the `data.csv`, `vars.yml` and `template.j2` panes, it also supports the following custom shortcut keys:
+
+- F11 - Toggle Fullscreen
+
+- Ctrl-G / Cmd-G - Generate
+
+- Ctrl-S / Cmd-S - Update Link
+
+- Ctrl-F / Cmd-F - Find
+
 ### Data Sets
 
 The Data Set feature allows you to include multiple different "data.csv" and "vars.yml" contents while maintaining the same "template.j2". This is to support scenarios where you have different Data Sets for your Live vs your Test environments, but the template should be the same. There are no limits on the number of different Data Sets that can be added to a single DataTemplate (the name must start with a letter and only contain alphanumerical, "-", " " or "_" characters). When you click "Generate" it will use the currently active Data Set to generate the output - clicking on the name of the current Data Set (by default there is a single "Default" Data Set) allows you to switch between the different Data Sets.

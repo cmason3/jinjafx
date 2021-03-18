@@ -312,7 +312,22 @@ window.onload = function() {
           set_status("darkred", "ERROR", "No Link to Update");
         }
       },
-      "Ctrl-D": false
+      "Cmd-S": function(cm) {
+        if (document.getElementById('update').disabled == false) {
+          jinjafx('update_link');
+        }
+        else {
+          set_status("darkred", "ERROR", "No Link to Update");
+        }
+      },
+      "Ctrl-G": function(cm) {
+        jinjafx('generate');
+      },
+      "Cmd-G": function(cm) {
+        jinjafx('generate');
+      },
+      "Ctrl-D": false,
+      "Cmd-D": false
     };
 
     CodeMirror.defineMode("data", cmDataMode);    
