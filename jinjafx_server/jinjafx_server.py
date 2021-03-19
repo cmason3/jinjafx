@@ -410,6 +410,12 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       dt_yml += 'user_agent: "' + user_agent + '"\n'
 
                     dt_yml += 'remote_addr: "' + remote_addr + '"\n'
+                    dt_yml += 'updated: "' + str(int(time.time()))  + '"\n'
+
+                    if 'rev' in params:
+                      dt_yml += 'revision: ' + params['rev'] + '\n'
+                    else:
+                      dt_yml += 'revision: 1\n'
 
                     if 'id' in params:
                       if re.search(r'^[A-Za-z0-9_-]{1,24}$', params['id']):

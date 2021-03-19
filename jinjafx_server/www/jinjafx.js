@@ -13,6 +13,7 @@ var datasets = {
 var current_ds = 'Default';
 var pending_dt = '';
 var cflag = false;
+var revision = 0;
 
 function getStatusText(code) {
   var statusText = {
@@ -152,7 +153,7 @@ function jinjafx(method) {
     }
     else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
       if ((method === "update_link") && !dirty) {
-        set_status("#e64c00", "OK", 'No Changes');
+        set_status("#e64c00", "OK", 'No Changes to Update');
         return false;
       }
 
@@ -237,7 +238,7 @@ function update_link(v_dt_id) {
   var xHR = new XMLHttpRequest();
 
   if (v_dt_id !== null) {
-    xHR.open("POST", "get_link?id=" + v_dt_id, true);
+    xHR.open("POST", "get_link?id=" + v_dt_id + "&rev=" + (revision + 1), true);
   }
   else {
     xHR.open("POST", "get_link", true);
@@ -249,6 +250,7 @@ function update_link(v_dt_id) {
 
       if (v_dt_id !== null) {
         dt_hash = dte[1];
+        revision += 1;
         set_status("green", "OK", "Link Updated");
         window.removeEventListener('beforeunload', onBeforeUnload);
       }
@@ -559,6 +561,12 @@ window.onload = function() {
                   else {
                     document.getElementById('update').disabled = false;
                   }
+
+                  if (dt.hasOwnProperty('updated')) {
+                    revision = dt.revision;
+                    set_status('green', 'Revision ' + revision, '<br /><span style="font-size: 85%;">Updated ' + moment.unix(dt.updated).fromNow() + '</span>', 60000);
+                  }
+
                   window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);
                 }
                 catch (e) {
@@ -856,9 +864,14 @@ function update_from_qs() {
   }
 }
 
-function set_status(color, title, message) {
+function set_status(color, title, message, delay) {
   clearTimeout(tid);
-  tid = setTimeout(function() { sobj.innerHTML = "" }, 5000);
+  if (typeof delay !== 'undefined') {
+    tid = setTimeout(function() { sobj.innerHTML = "" }, delay);
+  }
+  else {
+    tid = setTimeout(function() { sobj.innerHTML = "" }, 5000);
+  }
   sobj.style.color = color;
   sobj.innerHTML = "<strong>" + title + "</strong> " + message;
 }
