@@ -154,6 +154,7 @@ function jinjafx(method) {
     else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
       if ((method === "update_link") && !dirty) {
         set_status("#e64c00", "OK", 'No Changes to Update');
+        fe.focus();
         return false;
       }
 
