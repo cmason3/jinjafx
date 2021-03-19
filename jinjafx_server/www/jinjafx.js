@@ -252,7 +252,7 @@ function update_link(v_dt_id) {
       if (v_dt_id !== null) {
         dt_hash = dte[1];
         revision += 1;
-        set_status("green", "OK", "Link Updated");
+        set_status("green", "OK", "Link Updated (Revision " + revision + ")");
         window.removeEventListener('beforeunload', onBeforeUnload);
       }
       else {
