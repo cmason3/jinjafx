@@ -564,7 +564,7 @@ window.onload = function() {
 
                   if (dt.hasOwnProperty('updated')) {
                     revision = dt.revision;
-                    set_status('green', 'Revision ' + revision, '<br /><span style="font-size: 85%;">Updated ' + moment.unix(dt.updated).fromNow() + '</span>', 60000);
+                    set_status('green', 'Revision ' + revision, '<br /><span class="small">Updated ' + moment.unix(dt.updated).fromNow() + '</span>', 30000);
                   }
 
                   window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);
