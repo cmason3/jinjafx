@@ -153,7 +153,7 @@ function jinjafx(method) {
     }
     else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
       if ((method === "update_link") && !dirty) {
-        set_status("#e64c00", "OK", 'No Changes to Update');
+        set_status("#e64c00", "OK", 'No Changes Detected');
         fe.focus();
         return false;
       }
@@ -296,6 +296,7 @@ window.onload = function() {
 
     if (document.getElementById('get_link').value == 'false') {
       document.getElementById('get').disabled = true;
+      document.getElementById('lbuttons').style.display = 'none';
     }
 
     document.body.style.display = "block";
@@ -566,6 +567,9 @@ window.onload = function() {
                   if (dt.hasOwnProperty('updated')) {
                     revision = dt.revision;
                     set_status('green', 'Revision ' + revision, '<br /><span class="small">Updated ' + moment.unix(dt.updated).fromNow() + '</span>', 30000);
+                  }
+                  else {
+                    revision = 1;
                   }
 
                   window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);

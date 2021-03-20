@@ -65,7 +65,7 @@
             <button id="add_ds" type="button" class="btn btn-warning" onclick="jinjafx('add_dataset');" title="Add Data Set">+</button>
           </div>
 
-          <div class="btn-group mr-2">
+          <div id="lbuttons" class="btn-group mr-2">
             <button id="get" type="button" class="btn btn-info" onclick="jinjafx('get_link');" title="Get Link">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
@@ -79,14 +79,12 @@
                 <polyline points="7 3 7 8 15 8" />
               </svg>
             </button>
-            <!--
-            <button id="lock" type="button" class="btn btn-info" onclick="jinjafx('lock_link');" title="Lock Link" disabled>
+            <button id="protect" type="button" class="btn btn-info" onclick="jinjafx('protect');" title="Protect Link" disabled>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </button>
-            -->
           </div>
 
           <button id="export" type="button" class="btn btn-info mr-2" onclick="jinjafx('export');" title="Export DataTemplate">
