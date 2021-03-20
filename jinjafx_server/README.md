@@ -39,7 +39,7 @@ The "-api" argument is used to disable the web frontend and only provide the api
 
 As well as supporting the standard CodeMirror shortcut keys for the "data.csv", "vars.yml" and "template.j2" panes, it also supports the following custom shortcut keys:
 
-- F11 - Toggle Fullscreen
+- F11 / Cmd-Enter - Toggle Fullscreen
 
 - Ctrl-G / Cmd-G - Generate
 
