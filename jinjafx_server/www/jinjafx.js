@@ -12,6 +12,7 @@ var datasets = {
 };
 var current_ds = 'Default';
 var pending_dt = '';
+var dt_password = null;
 var cflag = false;
 var revision = 0;
 
@@ -111,6 +112,25 @@ function jinjafx(method) {
     return false;
   }
 
+  if (method == "protect") {
+    dt_password = prompt('Enter Password?');
+
+    if (dt_password !== null) {
+      if (dt_password.match(/\S/)) {
+        document.getElementById('protect').disabled = true;
+        window.addEventListener('beforeunload', onBeforeUnload);
+        document.title = 'JinjaFx [unsaved]';
+        dirty = true;
+      }
+      else {
+        set_status("darkred", "ERROR", "Invalid Password");
+        dt_password = null;
+      }
+    }
+    fe.focus();
+    return false;
+  }
+
   if (window.cmTemplate.getValue().length === 0) {
     window.cmTemplate.focus();
     set_status("darkred", "ERROR", "No Template");
@@ -189,6 +209,10 @@ function jinjafx(method) {
           var xHR = new XMLHttpRequest();
           xHR.open("GET", "dt/" + qs.dt + "?dt_hash", true);
 
+          if (dt_password !== null) {
+            xHR.setRequestHeader("X-Dt-Password", dt_password);
+          }
+
           xHR.onload = function() {
             if (this.status === 200) {
               if (this.responseText !== dt_hash) {
@@ -240,6 +264,9 @@ function update_link(v_dt_id) {
 
   if (v_dt_id !== null) {
     xHR.open("POST", "get_link?id=" + v_dt_id + "&rev=" + (revision + 1), true);
+    if (dt_password !== null) {
+      xHR.setRequestHeader("X-Dt-Password", dt_password);
+    }
   }
   else {
     xHR.open("POST", "get_link", true);
@@ -282,6 +309,106 @@ function update_link(v_dt_id) {
   xHR.timeout = 10000;
   xHR.setRequestHeader("Content-Type", "application/json");
   xHR.send(JSON.stringify(dt));
+}
+
+function try_to_load() {
+  try {
+    if (qs.hasOwnProperty('dt')) {
+      set_wait();
+      var xHR = new XMLHttpRequest();
+      xHR.open("GET", "dt/" + qs.dt, true);
+  
+      xHR.onload = function() {
+        if (this.status === 401) {
+          dt_password = prompt('Enter Password?');
+
+          if ((dt_password !== null) && dt_password.match(/\S/)) {
+            try_to_load();
+            return false;
+          }
+          else {
+            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+            set_status("darkred", "ERROR", "Invalid Password");
+            dt_password = null;
+          }
+        }
+        else if (this.status === 403) {
+          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          set_status("darkred", "ERROR", "Invalid Password");
+          dt_password = null;
+        }
+        else if (this.status === 200) {
+          try {
+            var dt = jsyaml.safeLoad(this.responseText, 'utf8');
+            dt_hash = dt.dt_hash;
+
+            load_datatemplate(dt['dt'], qs);
+            dt_id = qs.dt;
+
+            if (this.getResponseHeader('X-Read-Only') == 'true') {
+              document.getElementById('update').disabled = true;
+              document.getElementById('protect').disabled = true;
+            }
+            else {
+              document.getElementById('update').disabled = false;
+              if (!dt.hasOwnProperty('dt_password')) {
+                document.getElementById('protect').disabled = false;
+              }
+            }
+
+            if (dt.hasOwnProperty('updated')) {
+              revision = dt.revision;
+              set_status('green', 'Revision ' + revision, '<br /><span class="small">Updated ' + moment.unix(dt.updated).fromNow() + '</span>', 30000);
+            }
+            else {
+              revision = 1;
+            }
+
+            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);
+          }
+          catch (e) {
+            set_status("darkred", "INTERNAL ERROR", e);
+            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          }
+        }
+        else {
+          var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+          set_status("darkred", "HTTP ERROR " + this.status, sT);
+          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+        }
+        loaded = true;
+        clear_wait();
+      };
+  
+      xHR.onerror = function() {
+        set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+        loaded = true;
+        clear_wait();
+      };
+      xHR.ontimeout = function() {
+        set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+        loaded = true;
+        clear_wait();
+      };
+
+      xHR.timeout = 10000;
+      if (dt_password != null) {
+        xHR.setRequestHeader("X-Dt-Password", dt_password);
+      }
+      xHR.setRequestHeader("Cache-Control", "no-store");
+      xHR.send(null);
+    }
+    else {
+      update_from_qs();
+      loaded = true;
+    }
+  }
+  catch (ex) {
+    set_status("darkred", "ERROR", ex);
+    loaded = true; onChange(true);
+  }
 }
 
 window.onload = function() {
@@ -545,78 +672,8 @@ window.onload = function() {
       }
 
       if (document.getElementById('get_link').value != 'false') {
-        try {
-          if (qs.hasOwnProperty('dt')) {
-            set_wait();
-            var xHR = new XMLHttpRequest();
-            xHR.open("GET", "dt/" + qs.dt, true);
-  
-            xHR.onload = function() {
-              if (this.status === 200) {
-                try {
-                  var dt = jsyaml.safeLoad(this.responseText, 'utf8');
-                  dt_hash = dt.dt_hash;
+        try_to_load();
 
-                  load_datatemplate(dt['dt'], qs);
-                  dt_id = qs.dt;
-
-                  if (this.getResponseHeader('X-Read-Only') == 'true') {
-                    document.getElementById('update').disabled = true;
-                  }
-                  else {
-                    document.getElementById('update').disabled = false;
-                  }
-
-                  if (dt.hasOwnProperty('updated')) {
-                    revision = dt.revision;
-                    set_status('green', 'Revision ' + revision, '<br /><span class="small">Updated ' + moment.unix(dt.updated).fromNow() + '</span>', 30000);
-                  }
-                  else {
-                    revision = 1;
-                  }
-
-                  window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);
-                }
-                catch (e) {
-                  set_status("darkred", "INTERNAL ERROR", e);
-                  window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-                }
-              }
-              else {
-                var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
-                set_status("darkred", "HTTP ERROR " + this.status, sT);
-                window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-              }
-              loaded = true;
-              clear_wait();
-            };
-  
-            xHR.onerror = function() {
-              set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
-              window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-              loaded = true;
-              clear_wait();
-            };
-            xHR.ontimeout = function() {
-              set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
-              window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-              loaded = true;
-              clear_wait();
-            };
-
-            xHR.timeout = 10000;
-            xHR.setRequestHeader("Cache-Control", "no-store");
-            xHR.send(null);
-          }
-          else {
-            update_from_qs();
-            loaded = true;
-          }
-        }
-        catch (ex) {
-          set_status("darkred", "ERROR", ex);
-          loaded = true; onChange(true);
-        }
         if (fe != window.cmData) {
           onDataBlur();
         }
@@ -749,7 +806,9 @@ function apply_dt() {
     window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
   }
   dt_id = '';
+  dt_password = null;
   document.getElementById('update').disabled = true;
+  document.getElementById('protect').disabled = true;
 }
 
 function onPaste(cm, change) {
