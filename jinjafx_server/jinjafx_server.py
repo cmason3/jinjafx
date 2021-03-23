@@ -449,7 +449,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                     if aws_s3_url:
                       try:
-                        rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
+                        rr = aws_s3_get(aws_s3_url, dt_filename)
                         if rr.status_code == 200:
                           m = re.search(r'dt_password: "(\S+)"', rr.text)
                           if m != None and dt_password == None:
