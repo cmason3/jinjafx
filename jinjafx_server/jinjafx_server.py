@@ -106,7 +106,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def do_GET(self):
     fpath = self.path.split('?', 1)[0]
-    readonly = None
 
     r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
@@ -120,7 +119,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         fpath = '/index.html'
 
       if re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
-        readonly = False
         dt = ''
 
         if aws_s3_url or repository:
@@ -136,9 +134,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
   
                 dt = rr.text
-                rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
-                if rr.status_code == 200:
-                  readonly = True
   
               elif rr.status_code == 403:
                 r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
@@ -165,9 +160,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
   
                   dt = rr.decode('utf-8')
 
-                if os.path.isfile(fpath + '.lock'):
-                  readonly = True
-  
                 os.utime(fpath, None)
   
               except Exception:
@@ -228,13 +220,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
-
-    if readonly != None:
-      if readonly:
-        self.send_header('X-Read-Only', 'true')
-      else:
-        self.send_header('X-Read-Only', 'false')
-      
     self.end_headers()
     self.wfile.write(r[2])
 
@@ -466,41 +451,36 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                     if aws_s3_url:
                       try:
-                        rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
+                        rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
                         if rr.status_code == 200:
-                          r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                          m = re.search(r'dt_password: "(\S+)"', rr.text)
+                          if m != None and dt_password == None:
+                            r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
 
-                        else:
-                          rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
-                          if rr.status_code == 200:
-                            m = re.search(r'dt_password: "(\S+)"', rr.text)
-                            if m != None and dt_password == None:
-                              r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                          elif m != None and dt_password != None:
+                            t = binascii.unhexlify(m.group(1).encode('utf-8'))
+                            x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
 
-                            elif m != None and dt_password != None:
-                              t = binascii.unhexlify(m.group(1).encode('utf-8'))
-                              x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
-
-                              if t != x:
-                                r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
-                              
-                              else:
-                                dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
-
-                            elif dt_password != None:
-                              dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
+                            if t != x:
+                              r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
+                            
+                            else:
+                              dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
 
                           elif dt_password != None:
-                            r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                            dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
 
-                          if r[1] == 200:
-                            rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
+                        elif dt_password != None:
+                          r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
 
-                            if rr.status_code == 200:
-                              r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
+                        if r[1] == 200:
+                          rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
 
-                            elif rr.status_code == 403:
-                              r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                          if rr.status_code == 200:
+                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
+
+                          elif rr.status_code == 403:
+                            r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
 
                       except Exception as e:
                         traceback.print_exc()
@@ -509,39 +489,35 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       try:
                         dt_filename = os.path.normpath(repository + '/' + dt_filename)
 
-                        if os.path.isfile(dt_filename + '.lock'):
-                          r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                        if os.path.isfile(dt_filename):
+                          with open(dt_filename, 'rb') as f:
+                            rr = f.read()
 
-                        else:
-                          if os.path.isfile(dt_filename):
-                            with open(dt_filename, 'rb') as f:
-                              rr = f.read()
+                          m = re.search(r'dt_password: "(\S+)"', rr.decode('utf-8'))
+                          if m != None and dt_password == None:
+                            r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
 
-                            m = re.search(r'dt_password: "(\S+)"', rr.decode('utf-8'))
-                            if m != None and dt_password == None:
-                              r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                          elif m != None and dt_password != None:
+                            t = binascii.unhexlify(m.group(1).encode('utf-8'))
+                            x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
 
-                            elif m != None and dt_password != None:
-                              t = binascii.unhexlify(m.group(1).encode('utf-8'))
-                              x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
+                            if t != x:
+                              r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
 
-                              if t != x:
-                                r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
-
-                              else:
-                                dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
-
-                            elif dt_password != None:
-                              dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
+                            else:
+                              dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
 
                           elif dt_password != None:
-                            r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                            dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
 
-                          if r[1] == 500 or r[1] == 200:
-                            with open(dt_filename, 'w') as f:
-                              f.write(dt_yml)
+                        elif dt_password != None:
+                          r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
 
-                              r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
+                        if r[1] == 500 or r[1] == 200:
+                          with open(dt_filename, 'w') as f:
+                            f.write(dt_yml)
+
+                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
 
                       except Exception as e:
                         traceback.print_exc()

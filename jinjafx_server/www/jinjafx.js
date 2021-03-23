@@ -345,15 +345,9 @@ function try_to_load() {
             load_datatemplate(dt['dt'], qs);
             dt_id = qs.dt;
 
-            if (this.getResponseHeader('X-Read-Only') == 'true') {
-              document.getElementById('update').disabled = true;
-              document.getElementById('protect').disabled = true;
-            }
-            else {
-              document.getElementById('update').disabled = false;
-              if (!dt.hasOwnProperty('dt_password')) {
-                document.getElementById('protect').disabled = false;
-              }
+            document.getElementById('update').disabled = false;
+            if (!dt.hasOwnProperty('dt_password')) {
+              document.getElementById('protect').disabled = false;
             }
 
             if (dt.hasOwnProperty('updated')) {
