@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-##
-#
-# dt_hash needs to take dt_password into consideration
-#
-
 # JinjaFx Server - Jinja2 Templating Tool
 # Copyright (c) 2020-2021 Chris Mason <chris@netnix.org>
 #
@@ -60,6 +55,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def log_message(self, format, *args):
     path = self.path if hasattr(self, 'path') else ''
+    lnumber = " (" + str(self.lnumber) + ")" if hasattr(self, 'lnumber') else ''
 
     if not isinstance(args[0], int) and path != '/ping':
       ansi = '32' if args[1] == '200' else '31'
@@ -74,14 +70,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           ctype = ' (' + self.headers['Content-Type'] + ')'
 
       if str(args[1]) == 'ERR':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + '\033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
+        log('[' + src + ']' + lnumber + ' [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + '\033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
           
       elif self.command == 'POST':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
+        log('[' + src + ']' + lnumber + ' [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
       elif self.command != None:
         if args[1] != '200' or not re.match(r'.+\.(?:js|css|png)$', path):
-          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
+          log('[' + src + ']' + lnumber + ' [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
 
         
   def encode_link(self, bhash):
@@ -107,10 +103,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
   def do_GET(self):
     fpath = self.path.split('?', 1)[0]
 
-    r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+    r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
 
     if fpath == '/ping':
-      r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8') ]
+      r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
     elif not api_only:
       base = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -128,18 +124,18 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
   
               if rr.status_code == 200:
                 if self.path.endswith('?dt_hash'):
-                  r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.text).group(1).encode('utf-8') ]
+                  r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.text).group(1).encode('utf-8'), sys._getframe().f_lineno ]
   
                 else:
-                  r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
+                  r = [ 'application/yaml', 200, rr.text.encode('utf-8'), sys._getframe().f_lineno ]
   
                 dt = rr.text
   
               elif rr.status_code == 403:
-                r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
+                r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
   
               elif rr.status_code == 404:
-                r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+                r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
   
             except Exception as e:
               traceback.print_exc()
@@ -153,10 +149,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   rr = f.read()
   
                   if self.path.endswith('?dt_hash'):
-                    r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.decode('utf-8')).group(1).encode('utf-8') ]
+                    r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.decode('utf-8')).group(1).encode('utf-8'), sys._getframe().f_lineno ]
   
                   else:
-                    r = [ 'application/yaml', 200, rr ]
+                    r = [ 'application/yaml', 200, rr, sys._getframe().f_lineno ]
   
                   dt = rr.decode('utf-8')
 
@@ -166,7 +162,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 traceback.print_exc()
   
             else:
-              r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+              r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
           if r[1] == 200:
             m = re.search(r'dt_password: "(\S+)"', dt)
@@ -178,13 +174,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 x = self.derive_key(self.headers['X-Dt-Password'], t[2:int(t[1]) + 2], t[0])
 
                 if t != x:
-                  r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
+                  r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
               else:
-                r = [ 'text/plain', 401, '401 Unauthorized\r\n'.encode('utf-8') ]
+                r = [ 'text/plain', 401, '401 Unauthorized\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
         else:
-          r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
+          r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
       elif not re.search(r'[^A-Za-z0-9_./-]', fpath) and not re.search(r'\.{2,}', fpath) and os.path.isfile(base + '/www' + fpath):
         if fpath.endswith('.js'):
@@ -198,7 +194,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
         try:
           with open(base + '/www' + fpath, 'rb') as f:
-            r = [ ctype, 200, f.read() ]
+            r = [ ctype, 200, f.read(), sys._getframe().f_lineno ]
 
             if fpath == '/index.html':
               if repository or aws_s3_url:
@@ -212,11 +208,12 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           traceback.print_exc()
 
       else:
-        r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+        r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
     else:
-      r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
+      r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
+    self.lnumber = r[3]
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
@@ -229,7 +226,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     params = { x[0]: x[1] for x in [x.split('=') for x in uc[1].split('&') ] } if len(uc) > 1 else { }
     fpath = uc[0]
 
-    r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+    r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
 
     if 'Content-Length' in self.headers:
       postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
@@ -296,10 +293,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               }
               self.log_request('ERR', error);
   
-            r = [ 'application/json', 200, json.dumps(jsr) ]
+            r = [ 'application/json', 200, json.dumps(jsr), sys._getframe().f_lineno ]
   
           else:
-            r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+            r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
   
         elif not api_only:
           if fpath == '/download':
@@ -326,6 +323,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                 z.close()
 
+                self.lnumber = sys._getframe().f_lineno
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/zip')
                 self.send_header('Content-Length', str(len(zfile.getvalue())))
@@ -336,10 +334,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
               except Exception as e:
                 traceback.print_exc()
-                r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
             else:
-              r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+              r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
           elif fpath == '/get_link':
             if aws_s3_url or repository:
@@ -455,14 +453,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                         if rr.status_code == 200:
                           m = re.search(r'dt_password: "(\S+)"', rr.text)
                           if m != None and dt_password == None:
-                            r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                            r = [ 'text/plain', 403, '403 Forbidden\r\n', sys._getframe().f_lineno ]
 
                           elif m != None and dt_password != None:
                             t = binascii.unhexlify(m.group(1).encode('utf-8'))
                             x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
 
                             if t != x:
-                              r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
+                              r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
                             
                             else:
                               dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
@@ -471,16 +469,16 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                             dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
 
                         elif dt_password != None:
-                          r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                          r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
                         if r[1] == 500 or r[1] == 200:
                           rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
 
                           if rr.status_code == 200:
-                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
+                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n', sys._getframe().f_lineno ]
 
                           elif rr.status_code == 403:
-                            r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                            r = [ 'text/plain', 403, '403 Forbidden\r\n', sys._getframe().f_lineno ]
 
                       except Exception as e:
                         traceback.print_exc()
@@ -495,14 +493,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                           m = re.search(r'dt_password: "(\S+)"', rr.decode('utf-8'))
                           if m != None and dt_password == None:
-                            r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                            r = [ 'text/plain', 403, '403 Forbidden\r\n', sys._getframe().f_lineno ]
 
                           elif m != None and dt_password != None:
                             t = binascii.unhexlify(m.group(1).encode('utf-8'))
                             x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
 
                             if t != x:
-                              r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
+                              r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
                             else:
                               dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
@@ -511,42 +509,43 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                             dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
 
                         elif dt_password != None:
-                          r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                          r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
                         if r[1] == 500 or r[1] == 200:
                           with open(dt_filename, 'w') as f:
                             f.write(dt_yml)
 
-                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
+                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n', sys._getframe().f_lineno ]
 
                       except Exception as e:
                         traceback.print_exc()
 
                   else:
-                    r = [ 'text/plain', 429, '429 Too Many Requests\r\n' ]
+                    r = [ 'text/plain', 429, '429 Too Many Requests\r\n', sys._getframe().f_lineno ]
 
                 except Exception as e:
                   traceback.print_exc()
-                  r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                  r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
               else:
-                r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
             else:
-              r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
+              r = [ 'text/plain', 503, '503 Service Unavailable\r\n', sys._getframe().f_lineno ]
 
           else:
-            r = [ 'text/plain', 404, '404 Not Found\r\n' ]
+            r = [ 'text/plain', 404, '404 Not Found\r\n', sys._getframe().f_lineno ]
 
         else:
-          r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
+          r = [ 'text/plain', 503, '503 Service Unavailable\r\n', sys._getframe().f_lineno ]
                     
       else:
-        r = [ 'text/plain', 413, '413 Request Entity Too Large\r\n' ]
+        r = [ 'text/plain', 413, '413 Request Entity Too Large\r\n', sys._getframe().f_lineno ]
 
     else:
-      r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+      r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
+    self.lnumber = r[3]
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
