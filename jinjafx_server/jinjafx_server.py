@@ -55,7 +55,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def log_message(self, format, *args):
     path = self.path if hasattr(self, 'path') else ''
-    lnumber = " (" + str(self.lnumber) + ")" if hasattr(self, 'lnumber') else ''
+    lnumber = ":" + str(self.lnumber) if hasattr(self, 'lnumber') else ''
 
     if not isinstance(args[0], int) and path != '/ping':
       ansi = '32' if args[1] == '200' else '31'
@@ -70,14 +70,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           ctype = ' (' + self.headers['Content-Type'] + ')'
 
       if str(args[1]) == 'ERR':
-        log('[' + src + ']' + lnumber + ' [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + '\033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + lnumber + '\033[0m] ' + '\033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
           
       elif self.command == 'POST':
-        log('[' + src + ']' + lnumber + ' [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + lnumber + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
       elif self.command != None:
         if args[1] != '200' or not re.match(r'.+\.(?:js|css|png)$', path):
-          log('[' + src + ']' + lnumber + ' [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
+          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + lnumber + '\033[0m] ' + self.command + ' ' + path)
 
         
   def encode_link(self, bhash):
@@ -345,7 +345,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 try:
                   remote_addr = str(self.client_address[0])
                   user_agent = None
-                  dt_password = None
+                  dt_password = ''
 
                   if hasattr(self, 'headers'):
                     if 'User-Agent' in self.headers:
@@ -418,10 +418,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       dt_yml += '  template: |2\n'
                       dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n'
 
-                    dt_hash = hashlib.sha256(dt_yml.encode('utf-8')).hexdigest()
+                    dt_hash = hmac.new(dt_password.encode('utf-8'), dt_yml.encode('utf-8'), hashlib.sha256).hexdigest()
                     dt_yml += '\ndt_hash: "' + dt_hash + '"\n'
 
-                    if dt_password != None:
+                    if dt_password != '':
                       dt_yml += 'dt_password: "{{ dt_password }}"\n'
 
                     if user_agent != None:
@@ -452,10 +452,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                         rr = aws_s3_get(aws_s3_url, dt_filename)
                         if rr.status_code == 200:
                           m = re.search(r'dt_password: "(\S+)"', rr.text)
-                          if m != None and dt_password == None:
+                          if m != None and dt_password == '':
                             r = [ 'text/plain', 403, '403 Forbidden\r\n', sys._getframe().f_lineno ]
 
-                          elif m != None and dt_password != None:
+                          elif m != None and dt_password != '':
                             t = binascii.unhexlify(m.group(1).encode('utf-8'))
                             x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
 
@@ -465,10 +465,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                             else:
                               dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
 
-                          elif dt_password != None:
+                          elif dt_password != '':
                             dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
 
-                        elif dt_password != None:
+                        elif dt_password != '':
                           r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
                         if r[1] == 500 or r[1] == 200:
@@ -492,10 +492,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                             rr = f.read()
 
                           m = re.search(r'dt_password: "(\S+)"', rr.decode('utf-8'))
-                          if m != None and dt_password == None:
+                          if m != None and dt_password == '':
                             r = [ 'text/plain', 403, '403 Forbidden\r\n', sys._getframe().f_lineno ]
 
-                          elif m != None and dt_password != None:
+                          elif m != None and dt_password != '':
                             t = binascii.unhexlify(m.group(1).encode('utf-8'))
                             x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
 
@@ -505,10 +505,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                             else:
                               dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
 
-                          elif dt_password != None:
+                          elif dt_password != '':
                             dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
 
-                        elif dt_password != None:
+                        elif dt_password != '':
                           r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
                         if r[1] == 500 or r[1] == 200:
@@ -620,7 +620,7 @@ def main(rflag=False):
 
     jinjafx.import_filters()
 
-    log('Starting JinjaFx Server on http://' + args.l + ':' + str(args.p) + '...')
+    log('Starting JinjaFx Server (PID is ' + str(os.getpid()) + ') on http://' + args.l + ':' + str(args.p) + '...')
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -654,7 +654,7 @@ def main(rflag=False):
 
 def log(t):
   with lock:
-    print('[' + datetime.datetime.now().strftime('%b %d %H:%M:%S.%f')[:19] + '] {' + str(os.getpid()) + '} ' + t)
+    print('[' + datetime.datetime.now().strftime('%b %d %H:%M:%S.%f')[:19] + '] ' + t)
 
 
 def w_directory(d):

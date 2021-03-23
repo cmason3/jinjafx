@@ -15,6 +15,7 @@ var pending_dt = '';
 var dt_password = null;
 var cflag = false;
 var revision = 0;
+var protect_ok = false;
 
 function getStatusText(code) {
   var statusText = {
@@ -113,21 +114,9 @@ function jinjafx(method) {
   }
 
   if (method == "protect") {
-    dt_password = prompt('Enter Password?');
-
-    if (dt_password !== null) {
-      if (dt_password.match(/\S/)) {
-        document.getElementById('protect').disabled = true;
-        window.addEventListener('beforeunload', onBeforeUnload);
-        document.title = 'JinjaFx [unsaved]';
-        dirty = true;
-      }
-      else {
-        set_status("darkred", "ERROR", "Invalid Password");
-        dt_password = null;
-      }
-    }
-    fe.focus();
+    document.getElementById("in_protect1").value = '';
+    document.getElementById("in_protect2").value = '';
+    $("#protect_dt").modal("show");
     return false;
   }
 
@@ -279,7 +268,7 @@ function update_link(v_dt_id) {
       if (v_dt_id !== null) {
         dt_hash = dte[1];
         revision += 1;
-        set_status("green", "OK", "Link Updated (Revision " + revision + ")");
+        set_status("green", "OK", "Link Updated");
         window.removeEventListener('beforeunload', onBeforeUnload);
       }
       else {
@@ -320,17 +309,9 @@ function try_to_load() {
   
       xHR.onload = function() {
         if (this.status === 401) {
-          dt_password = prompt('Enter Password?');
-
-          if ((dt_password !== null) && dt_password.match(/\S/)) {
-            try_to_load();
-            return false;
-          }
-          else {
-            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-            set_status("darkred", "ERROR", "Invalid Password");
-            dt_password = null;
-          }
+          document.getElementById("in_protect").value = '';
+          $("#protect_input").modal("show");
+          return false;
         }
         else if (this.status === 403) {
           window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
@@ -614,6 +595,29 @@ window.onload = function() {
       document.getElementById("vault").focus();
     });
 
+    $('#protect_dt').on('shown.bs.modal', function() {
+      document.getElementById("in_protect1").focus();
+    });
+
+    $('#protect_input').on('shown.bs.modal', function() {
+      protect_ok = false;
+      document.getElementById("in_protect").focus();
+    });
+
+    $("#protect_dt").on("hidden.bs.modal", function () {
+      fe.focus();
+    });
+
+    $("#protect_input").on("hidden.bs.modal", function () {
+      if (protect_ok == false) {
+        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+        set_status("darkred", "ERROR", "Invalid Password");
+        dt_password = null;
+        loaded = true;
+        clear_wait();
+      }
+    });
+
     $('#dataset_input').on('shown.bs.modal', function() {
       document.getElementById("ds_name").focus();
     });
@@ -621,6 +625,39 @@ window.onload = function() {
     document.getElementById('ml-vault-ok').onclick = function() {
       dt.vault_password = window.btoa(document.getElementById("vault").value);
       window.open("output.html", "_blank");
+    };
+
+    document.getElementById('ml-protect-dt-ok').onclick = function() {
+      dt_password = document.getElementById("in_protect1").value;
+      if (dt_password.match(/\S/)) {
+        if (dt_password === document.getElementById("in_protect2").value) {
+          document.getElementById('protect').disabled = true;
+          window.addEventListener('beforeunload', onBeforeUnload);
+          document.title = 'JinjaFx [unsaved]';
+          dirty = true;
+        }
+        else {
+          set_status("darkred", "ERROR", "Password Mismatch");
+          dt_password = null;
+        }
+      }
+      else {
+        set_status("darkred", "ERROR", "Invalid Password");
+        dt_password = null;
+      }
+    };
+
+    document.getElementById('ml-protect-ok').onclick = function() {
+      protect_ok = true;
+      dt_password = document.getElementById("in_protect").value;
+      if (dt_password.match(/\S/)) {
+        try_to_load();
+      }
+      else {
+        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+        set_status("darkred", "ERROR", "Invalid Password");
+        dt_password = null;
+      }
     };
 
     document.getElementById('ml-dataset-ok').onclick = function() {
@@ -647,6 +684,24 @@ window.onload = function() {
     document.getElementById('vault').onkeyup = function(e) {
       if (e.which == 13) {
         document.getElementById('ml-vault-ok').click();
+      }
+    };
+
+    document.getElementById('in_protect').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-protect-ok').click();
+      }
+    };
+
+    document.getElementById('in_protect1').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('in_protect2').focus();
+      }
+    };
+
+    document.getElementById('in_protect2').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-protect-dt-ok').click();
       }
     };
 
