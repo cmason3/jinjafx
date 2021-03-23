@@ -476,7 +476,6 @@ window.onload = function() {
     });
 
     window.cmVars = CodeMirror.fromTextArea(vars, {
-      lineNumbers: true,
       tabSize: 2,
       scrollbarStyle: "null",
       styleSelectedText: false,

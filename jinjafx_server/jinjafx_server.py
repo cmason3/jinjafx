@@ -473,7 +473,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                         elif dt_password != None:
                           r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
 
-                        if r[1] == 200:
+                        if r[1] == 500 or r[1] == 200:
                           rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
 
                           if rr.status_code == 200:
