@@ -287,7 +287,6 @@ function try_to_load() {
             document.getElementById('update').disabled = false;
             if (!dt.hasOwnProperty('dt_password')) {
               document.getElementById('protect').disabled = false;
-              //document.getElementById('protect_svg').setAttribute('stroke', 'currentColor');
             }
             else {
               document.getElementById('protect_svg').setAttribute('stroke', 'darkred');
