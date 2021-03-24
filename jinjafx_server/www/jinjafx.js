@@ -4,7 +4,6 @@ var sobj = undefined;
 var fe = undefined;
 var tid = 0;
 var dt_id = '';
-var dt_hash = '';
 var dt = {};
 var qs = {};
 var datasets = {
@@ -195,46 +194,7 @@ function jinjafx(method) {
         set_wait();
 
         if (method == "update_link") {
-          var xHR = new XMLHttpRequest();
-          xHR.open("GET", "dt/" + qs.dt + "?dt_hash", true);
-
-          if (dt_password !== null) {
-            xHR.setRequestHeader("X-Dt-Password", dt_password);
-          }
-
-          xHR.onload = function() {
-            if (this.status === 200) {
-              if (this.responseText !== dt_hash) {
-                if (confirm("Remote Changes in DataTemplate Detected - Are You Sure?") === true) {
-                  update_link(dt_id);
-                }
-                else {
-                  set_status("#e64c00", "OK", 'Link Not Updated');
-                  clear_wait();
-                }
-              }
-              else {
-                update_link(dt_id);
-              }
-            }
-            else {
-              var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
-              set_status("darkred", "HTTP ERROR " + this.status, sT);
-              clear_wait();
-            }
-          };
-
-          xHR.onerror = function() {
-            set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
-            clear_wait();
-          };
-          xHR.ontimeout = function() {
-            set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
-            clear_wait();
-          };
-
-          xHR.timeout = 5000;
-          xHR.send(null);
+          update_link(dt_id);
         }
         else {
           update_link(null);
@@ -263,27 +223,26 @@ function update_link(v_dt_id) {
 
   xHR.onload = function() {
     if (this.status === 200) {
-      var dte = this.responseText.trim().split(':');
-
       if (v_dt_id !== null) {
-        dt_hash = dte[1];
         revision += 1;
         set_status("green", "OK", "Link Updated");
         window.removeEventListener('beforeunload', onBeforeUnload);
       }
       else {
         window.removeEventListener('beforeunload', onBeforeUnload);
-        window.location.href = window.location.pathname + "?dt=" + dte[0];
+        window.location.href = window.location.pathname + "?dt=" + this.responseText.trim();
       }
       document.title = 'JinjaFx';
       dirty = false;
-      clear_wait();
+    }
+    else if (this.status == 409) {
+      set_status("darkred", "DENIED", "Remote DataTemplate is a Later Revision");
     }
     else {
       var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
       set_status("darkred", "HTTP ERROR " + this.status, sT);
-      clear_wait();
     }
+    clear_wait();
   };
 
   xHR.onerror = function() {
@@ -321,7 +280,6 @@ function try_to_load() {
         else if (this.status === 200) {
           try {
             var dt = jsyaml.safeLoad(this.responseText, 'utf8');
-            dt_hash = dt.dt_hash;
 
             load_datatemplate(dt['dt'], qs);
             dt_id = qs.dt;
@@ -710,7 +668,26 @@ window.onload = function() {
         document.getElementById('ml-dataset-ok').click();
       }
     };
-    
+
+    $('.modal').on('keydown', function(e) {
+      if (e.keyCode === 9) {
+        var focusable = $(e.target).closest('.modal').find('input,button');
+        if (focusable.length) {
+          var first = focusable[0];
+          var last = focusable[focusable.length - 1];
+
+          if ((e.target === first) && e.shiftKey) {
+            last.focus();
+            e.preventDefault();
+          }
+          else if ((e.target === last) && !e.shiftKey) {
+            first.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    });
+
     if (window.location.href.indexOf('?') > -1) {
       var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
   
