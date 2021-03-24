@@ -287,6 +287,11 @@ function try_to_load() {
             document.getElementById('update').disabled = false;
             if (!dt.hasOwnProperty('dt_password')) {
               document.getElementById('protect').disabled = false;
+              //document.getElementById('protect_svg').setAttribute('stroke', 'currentColor');
+            }
+            else {
+              document.getElementById('protect_svg').setAttribute('stroke', 'darkred');
+              document.getElementById('protect').title = 'Link Protected';
             }
 
             if (dt.hasOwnProperty('updated')) {
@@ -590,6 +595,8 @@ window.onload = function() {
       if (dt_password.match(/\S/)) {
         if (dt_password === document.getElementById("in_protect2").value) {
           document.getElementById('protect').disabled = true;
+          document.getElementById('protect').title = 'Link Protected';
+          document.getElementById('protect_svg').setAttribute('stroke', 'darkred');
           window.addEventListener('beforeunload', onBeforeUnload);
           document.title = 'JinjaFx [unsaved]';
           dirty = true;
@@ -834,6 +841,8 @@ function apply_dt() {
   dt_password = null;
   document.getElementById('update').disabled = true;
   document.getElementById('protect').disabled = true;
+  document.getElementById('protect').title = 'Protect Link';
+  document.getElementById('protect_svg').setAttribute('stroke', 'currentColor');
 }
 
 function onPaste(cm, change) {
