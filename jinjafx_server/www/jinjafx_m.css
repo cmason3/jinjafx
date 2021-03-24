@@ -23,7 +23,7 @@ body {
 }
 .expand {
   position: absolute;
-  background: white;
+  background: #fff;
   z-index: 2;
   right: 2px;
   top: 2px;

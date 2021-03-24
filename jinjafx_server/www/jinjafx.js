@@ -289,7 +289,9 @@ function try_to_load() {
               document.getElementById('protect').disabled = false;
             }
             else {
-              document.getElementById('protect_svg').setAttribute('stroke', 'darkred');
+              $('#protect').removeClass('btn-info');
+              $('#protect').addClass('btn-info-outline');
+              $('#update').css({'border-top-right-radius': '0.25rem', 'border-bottom-right-radius': '0.25rem'});
               document.getElementById('protect').title = 'Link Protected';
             }
 
@@ -594,8 +596,10 @@ window.onload = function() {
       if (dt_password.match(/\S/)) {
         if (dt_password === document.getElementById("in_protect2").value) {
           document.getElementById('protect').disabled = true;
+          $('#protect').removeClass('btn-info');
+          $('#protect').addClass('btn-info-outline');
+          $('#update').css({'border-top-right-radius': '0.25rem', 'border-bottom-right-radius': '0.25rem'});
           document.getElementById('protect').title = 'Link Protected';
-          document.getElementById('protect_svg').setAttribute('stroke', 'darkred');
           window.addEventListener('beforeunload', onBeforeUnload);
           document.title = 'JinjaFx [unsaved]';
           dirty = true;
@@ -612,15 +616,10 @@ window.onload = function() {
     };
 
     document.getElementById('ml-protect-ok').onclick = function() {
-      protect_ok = true;
       dt_password = document.getElementById("in_protect").value;
       if (dt_password.match(/\S/)) {
+        protect_ok = true;
         try_to_load();
-      }
-      else {
-        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-        set_status("darkred", "ERROR", "Invalid Password");
-        dt_password = null;
       }
     };
 
@@ -742,6 +741,7 @@ function reset_icons() {
 }
 
 function set_wait() {
+  $('.expand').css('background', '#eee');
   fe.setOption('readOnly', 'nocursor');
   var e = document.getElementById("csv").getElementsByTagName("th");
   for (var i = 0; i < e.length; i++) {
@@ -765,6 +765,7 @@ function clear_wait() {
     e[i].style.background = 'lightgray';
   }
   fe.setOption('readOnly', false);
+  $('.expand').css('background', '#fff');
   fe.focus();
 }
 
@@ -840,8 +841,10 @@ function apply_dt() {
   dt_password = null;
   document.getElementById('update').disabled = true;
   document.getElementById('protect').disabled = true;
+  $('#protect').removeClass('btn-info-outline');
+  $('#protect').addClass('btn-info');
+  $('#update').css({'border-top-right-radius': '0', 'border-bottom-right-radius': '0'});
   document.getElementById('protect').title = 'Protect Link';
-  document.getElementById('protect_svg').setAttribute('stroke', 'currentColor');
 }
 
 function onPaste(cm, change) {
