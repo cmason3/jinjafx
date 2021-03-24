@@ -23,12 +23,13 @@ body {
 }
 .expand {
   position: absolute;
-  background: transparent;
+  background: white;
   z-index: 2;
-  right: 1px;
-  top: 1px;
+  right: 2px;
+  top: 2px;
   padding-top: 2px;
   padding-right: 2px;
+  padding-left: 2px;
   cursor: pointer;
   stroke: gray;
 }
