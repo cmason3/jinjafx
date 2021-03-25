@@ -264,7 +264,7 @@ function try_to_load() {
     if (qs.hasOwnProperty('dt')) {
       set_wait();
       var xHR = new XMLHttpRequest();
-      xHR.open("GET", "dt/" + qs.dt, true);
+      xHR.open("GET", "get_dt/" + qs.dt, true);
   
       xHR.onload = function() {
         if (this.status === 401) {

@@ -114,13 +114,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       if fpath == '/':
         fpath = '/index.html'
 
-      if re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
+      if re.search(r'^/get_dt/[A-Za-z0-9_-]{1,24}$', fpath):
         dt = ''
 
         if aws_s3_url or repository:
           if aws_s3_url:
             try:
-              rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
+              rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[8:] + '.yml')
   
               if rr.status_code == 200:
                 r = [ 'application/yaml', 200, rr.text.encode('utf-8'), sys._getframe().f_lineno ]
@@ -137,7 +137,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               traceback.print_exc()
   
           elif repository:
-            fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.yml')
+            fpath = os.path.normpath(repository + '/jfx_' + fpath[8:] + '.yml')
   
             if os.path.isfile(fpath):
               try:
