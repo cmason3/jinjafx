@@ -703,15 +703,11 @@ function getStatusText(code) {
       };
   
       $('.modal').on('keydown', function(e) {
-        console.log("in keydown");
         if (e.keyCode === 9) {
           var focusable = $(e.target).closest('.modal').find('input,button');
           if (focusable.length) {
             var first = focusable[0];
             var last = focusable[focusable.length - 1];
-
-            console.log("first is " + first.id);
-            console.log("last is " + last.id);
   
             if ((e.target === first) && e.shiftKey) {
               last.focus();
