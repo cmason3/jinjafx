@@ -95,8 +95,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     return string
 
 
-  def derive_key(self, password, salt=os.urandom(32), version=1):
+  def derive_key(self, password, salt=None, version=1):
     pbkdf2_iterations = 251001
+    if salt == None:
+      salt = os.urandom(32)
     return struct.pack('B', version) + struct.pack('B', len(salt)) + salt + hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, pbkdf2_iterations)
 
 
@@ -156,16 +158,19 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
           if r[1] == 200:
-            m = re.search(r'dt_password: "(\S+)"', dt)
-            if m != None:
-              dt_password = m.group(1)
-
+            mo = re.search(r'dt_password: "(\S+)"', dt)
+            if mo != None:
               if 'X-Dt-Password' in self.headers:
-                t = binascii.unhexlify(dt_password.encode('utf-8'))
-                x = self.derive_key(self.headers['X-Dt-Password'], t[2:int(t[1]) + 2], t[0])
+                t = binascii.unhexlify(mo.group(1).encode('utf-8'))
+                if t != self.derive_key(self.headers['X-Dt-Password'], t[2:int(t[1]) + 2], t[0]):
+                  mm = re.search(r'dt_mpassword: "(\S+)"', dt)
+                  if mm != None:
+                    t = binascii.unhexlify(mm.group(1).encode('utf-8'))
+                    if t != self.derive_key(self.headers['X-Dt-Password'], t[2:int(t[1]) + 2], t[0]):
+                      r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
-                if t != x:
-                  r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
+                  else:
+                    r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
               else:
                 r = [ 'text/plain', 401, '401 Unauthorized\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
@@ -420,17 +425,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n'
 
                     dt_yml += '\nrevision: ' + str(dt_revision) + '\n'
-                    dt_hash = hmac.new(dt_password.encode('utf-8'), dt_yml.encode('utf-8'), hashlib.sha256).hexdigest()
+
+                    dt_hash = hashlib.sha256(dt_yml.encode('utf-8')).hexdigest()
                     dt_yml += 'dt_hash: "' + dt_hash + '"\n'
-
-                    if dt_password != '':
-                      dt_yml += 'dt_password: "{{ dt_password }}"\n'
-
-                    if user_agent != None:
-                      dt_yml += 'user_agent: "' + user_agent + '"\n'
-
-                    dt_yml += 'remote_addr: "' + remote_addr + '"\n'
-                    dt_yml += 'updated: "' + str(int(time.time()))  + '"\n'
 
                     if 'id' in params:
                       if re.search(r'^[A-Za-z0-9_-]{1,24}$', params['id']):
@@ -444,6 +441,43 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                     dt_filename = 'jfx_' + dt_link + '.yml'
 
+                    def update_dt(rdt, dt_yml, r, user_agent, remote_addr):
+                      mm = re.search(r'dt_mpassword: "(\S+)"', rdt)
+                      mo = re.search(r'dt_password: "(\S+)"', rdt)
+
+                      if mm != None or mo != None:
+                        if dt_password != '':
+                          rpassword = mm.group(1) if mm != None else mo.group(1)
+                          t = binascii.unhexlify(rpassword.encode('utf-8'))
+                          if t != self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0]):
+                            r = [ 'text/plain', 403, '403 Forbidden\r\n', sys._getframe().f_lineno ]
+
+                        else:
+                          r = [ 'text/plain', 401, '401 Unauthorized\r\n', sys._getframe().f_lineno ]
+
+                      if r[1] != 403:
+                        if dt_opassword != '' or dt_mpassword != '':
+                          if dt_opassword != '':
+                            dt_yml += 'dt_password: "' + binascii.hexlify(self.derive_key(dt_opassword)).decode('utf-8') + '"\n'
+
+                          if dt_mpassword != '':
+                            dt_yml += 'dt_mpassword: "' + binascii.hexlify(self.derive_key(dt_mpassword)).decode('utf-8') + '"\n'
+
+                        else:
+                          if mo != None:
+                            dt_yml += 'dt_password: "' + mo.group(1) + '"\n'
+
+                          if mm != None:
+                            dt_yml += 'dt_mpassword: "' + mm.group(1) + '"\n'
+
+                      if user_agent != None:
+                        dt_yml += 'user_agent: "' + user_agent + '"\n'
+
+                      dt_yml += 'remote_addr: "' + remote_addr + '"\n'
+                      dt_yml += 'updated: "' + str(int(time.time()))  + '"\n'
+
+                      return dt_yml, r
+
                     if aws_s3_url:
                       try:
                         rr = aws_s3_get(aws_s3_url, dt_filename)
@@ -454,25 +488,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                               r = [ 'text/plain', 409, '409 Conflict\r\n', sys._getframe().f_lineno ]
 
                           if r[1] != 409:
-                            m = re.search(r'dt_password: "(\S+)"', rr.text)
-                            if m != None and dt_password == '':
-                              r = [ 'text/plain', 403, '403 Forbidden\r\n', sys._getframe().f_lineno ]
-
-                            elif m != None and dt_password != '':
-                              t = binascii.unhexlify(m.group(1).encode('utf-8'))
-                              x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
-
-                              if t != x:
-                                r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
-                            
-                              else:
-                                dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
-
-                            elif dt_password != '':
-                              dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
-
-                        elif dt_password != '':
-                          r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
+                            dt_yml, r = update_dt(rr.text, dt_yml, r, user_agent, remote_addr)
 
                         if r[1] == 500 or r[1] == 200:
                           rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
@@ -500,25 +516,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                               r = [ 'text/plain', 409, '409 Conflict\r\n', sys._getframe().f_lineno ]
 
                           if r[1] != 409:
-                            m = re.search(r'dt_password: "(\S+)"', rr.decode('utf-8'))
-                            if m != None and dt_password == '':
-                              r = [ 'text/plain', 403, '403 Forbidden\r\n', sys._getframe().f_lineno ]
-
-                            elif m != None and dt_password != '':
-                              t = binascii.unhexlify(m.group(1).encode('utf-8'))
-                              x = self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0])
-
-                              if t != x:
-                                r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
-
-                              else:
-                                dt_yml = dt_yml.replace('{{ dt_password }}', m.group(1))
-
-                            elif dt_password != '':
-                              dt_yml = dt_yml.replace('{{ dt_password }}', binascii.hexlify(self.derive_key(dt_password)).decode('utf-8'))
-
-                        elif dt_password != '':
-                          r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
+                            dt_yml, r = update_dt(rr.decode('utf-8'), dt_yml, r, user_agent, remote_addr)
 
                         if r[1] == 500 or r[1] == 200:
                           with open(dt_filename, 'w') as f:

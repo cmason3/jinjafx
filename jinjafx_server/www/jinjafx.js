@@ -46,6 +46,7 @@ function getStatusText(code) {
   var dt_password = null;
   var dt_opassword = null;
   var dt_mpassword = null;
+  var protect_action = 0;
   var cflag = false;
   var revision = 0;
   var protect_ok = false;
@@ -237,6 +238,12 @@ function getStatusText(code) {
       if (dt_password !== null) {
         xHR.setRequestHeader("X-Dt-Password", dt_password);
       }
+      if (dt_opassword != null) {
+        xHR.setRequestHeader("X-Dt-Open-Password", dt_opassword);
+      }
+      if (dt_mpassword != null) {
+        xHR.setRequestHeader("X-Dt-Modify-Password", dt_mpassword);
+      }
     }
     else {
       xHR.open("POST", "get_link", true);
@@ -246,6 +253,14 @@ function getStatusText(code) {
       if (this.status === 200) {
         if (v_dt_id !== null) {
           revision += 1;
+          if (dt_mpassword != null) {
+            dt_password = dt_mpassword;
+          }
+          else if (dt_opassword != null) {
+            dt_password = dt_opassword;
+          }
+          dt_opassword = null;
+          dt_mpassword = null;
           set_status("green", "OK", "Link Updated");
           window.removeEventListener('beforeunload', onBeforeUnload);
         }
@@ -256,10 +271,18 @@ function getStatusText(code) {
         document.title = 'JinjaFx';
         dirty = false;
       }
+      else if (this.status == 401) {
+        protect_action = 2;
+        $("#protect_input").modal("show");
+        return false;
+      }
       else if (this.status == 409) {
         set_status("darkred", "DENIED", "Remote DataTemplate is a Later Revision");
       }
       else {
+        if (this.status == 403) {
+          dt_password = null;
+        }
         var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
         set_status("darkred", "HTTP ERROR " + this.status, sT);
       }
@@ -289,6 +312,7 @@ function getStatusText(code) {
     
         xHR.onload = function() {
           if (this.status === 401) {
+            protect_action = 1;
             $("#protect_input").modal("show");
             return false;
           }
@@ -305,7 +329,7 @@ function getStatusText(code) {
               dt_id = qs.dt;
   
               document.getElementById('update').disabled = false;
-              if (!dt.hasOwnProperty('dt_password')) {
+              if (!dt.hasOwnProperty('dt_password') && !dt.hasOwnProperty('dt_mpassword')) {
                 document.getElementById('protect').disabled = false;
               }
               else {
@@ -355,12 +379,6 @@ function getStatusText(code) {
         xHR.timeout = 10000;
         if (dt_password != null) {
           xHR.setRequestHeader("X-Dt-Password", dt_password);
-        }
-        if (dt_opassword != null) {
-          xHR.setRequestHeader("X-Dt-Open-Password", dt_opassword);
-        }
-        if (dt_mpassword != null) {
-          xHR.setRequestHeader("X-Dt-Modify-Password", dt_mpassword);
         }
         xHR.setRequestHeader("Cache-Control", "no-store");
         xHR.send(null);
@@ -617,10 +635,12 @@ function getStatusText(code) {
   
       $("#protect_input").on("hidden.bs.modal", function () {
         if (protect_ok == false) {
-          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          if (protect_action == 1) {
+            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+            dt_password = null;
+            loaded = true;
+          }
           set_status("darkred", "ERROR", "Invalid Password");
-          dt_password = null;
-          loaded = true;
           clear_wait();
         }
         document.getElementById("in_protect").value = '';
@@ -639,7 +659,12 @@ function getStatusText(code) {
         dt_password = document.getElementById("in_protect").value;
         if (dt_password.match(/\S/)) {
           protect_ok = true;
-          try_to_load();
+          if (protect_action == 1) {
+            try_to_load();
+          }
+          else {
+            update_link(dt_id);
+          }
         }
       };
   
