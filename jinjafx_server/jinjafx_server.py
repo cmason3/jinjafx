@@ -337,6 +337,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                   remote_addr = str(self.client_address[0])
                   user_agent = None
                   dt_password = ''
+                  dt_opassword = ''
+                  dt_mpassword = ''
                   dt_revision = 1
 
                   if hasattr(self, 'headers'):
@@ -346,6 +348,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       remote_addr = self.headers['X-Forwarded-For']
                     if 'X-Dt-Password' in self.headers:
                       dt_password = self.headers['X-Dt-Password']
+                    if 'X-Dt-Open-Password' in self.headers:
+                      dt_opassword = self.headers['X-Dt-Open-Password']
+                    if 'X-Dt-Modify-Password' in self.headers:
+                      dt_mpassword = self.headers['X-Dt-Modify-Password']
 
                   ratelimit = False
                   if rl_rate != 0:
