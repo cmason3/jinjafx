@@ -55,7 +55,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def log_message(self, format, *args):
     path = self.path if hasattr(self, 'path') else ''
-    lnumber = ":" + str(self.lnumber) if hasattr(self, 'lnumber') else ''
+    lnumber = " {" + str(self.lnumber) + "}" if hasattr(self, 'lnumber') else ''
 
     if not isinstance(args[0], int) and path != '/ping':
       ansi = '32' if args[1] == '200' else '31'
@@ -70,14 +70,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           ctype = ' (' + self.headers['Content-Type'] + ')'
 
       if str(args[1]) == 'ERR':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + lnumber + '\033[0m] ' + '\033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
           
       elif self.command == 'POST':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + lnumber + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
       elif self.command != None:
         if args[1] != '200' or not re.match(r'.+\.(?:js|css|png)$', path):
-          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + lnumber + '\033[0m] ' + self.command + ' ' + path)
+          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' ' + self.command + ' ' + path)
 
         
   def encode_link(self, bhash):
