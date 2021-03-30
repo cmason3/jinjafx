@@ -606,7 +606,11 @@ function getStatusText(code) {
       $('#vault_input').on('shown.bs.modal', function() {
         document.getElementById("vault").focus();
       });
-  
+
+      $('#dataset_input').on('shown.bs.modal', function() {
+        document.getElementById("ds_name").focus();
+      });
+
       $('#protect_dt').on('shown.bs.modal', function() {
         document.getElementById("password_open1").focus();
       });

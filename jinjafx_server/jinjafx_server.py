@@ -230,7 +230,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     if 'Content-Length' in self.headers:
       postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
 
-      if len(postdata) < (256 * 1024):
+      if (len(postdata) < (512 * 1024)) or (fpath == '/download'):
         if fpath == '/jinjafx':
           if self.headers['Content-Type'] == 'application/json':
             try:
