@@ -455,7 +455,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                         else:
                           r = [ 'text/plain', 401, '401 Unauthorized\r\n', sys._getframe().f_lineno ]
 
-                      if r[1] != 403:
+                      if r[1] != 401:
                         if dt_opassword != '' or dt_mpassword != '':
                           if dt_opassword != '':
                             dt_yml += 'dt_password: "' + binascii.hexlify(self.derive_key(dt_opassword)).decode('utf-8') + '"\n'

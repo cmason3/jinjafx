@@ -280,9 +280,6 @@ function getStatusText(code) {
         set_status("darkred", "DENIED", "Remote DataTemplate is a Later Revision");
       }
       else {
-        if (this.status == 403) {
-          dt_password = null;
-        }
         var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
         set_status("darkred", "HTTP ERROR " + this.status, sT);
       }
@@ -315,11 +312,6 @@ function getStatusText(code) {
             protect_action = 1;
             $("#protect_input").modal("show");
             return false;
-          }
-          else if (this.status === 403) {
-            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-            set_status("darkred", "ERROR", "Invalid Password");
-            dt_password = null;
           }
           else if (this.status === 200) {
             try {
@@ -640,7 +632,6 @@ function getStatusText(code) {
             dt_password = null;
             loaded = true;
           }
-          set_status("darkred", "ERROR", "Invalid Password");
           clear_wait();
         }
         document.getElementById("in_protect").value = '';
@@ -665,6 +656,9 @@ function getStatusText(code) {
           else {
             update_link(dt_id);
           }
+        }
+        else {
+          set_status("darkred", "ERROR", "Invalid Password");
         }
       };
   
