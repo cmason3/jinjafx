@@ -65,26 +65,33 @@
             <button id="add_ds" type="button" class="btn btn-warning" title="Add Data Set">+</button>
           </div>
 
-          <div id="lbuttons" class="btn-group mr-2">
+          <div id="lbuttons" class="btn-group mr-2 d-none">
             <button id="get" type="button" class="btn btn-info" title="Get Link">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
+              </svg>&nbsp;Get Link
             </button>
-            <button id="update" type="button" class="btn btn-info" title="Update Link" disabled>
+            <button id="update" type="button" class="btn btn-info d-none" title="Update Link">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                 <polyline points="17 21 17 13 7 13 7 21" />
                 <polyline points="7 3 7 8 15 8" />
-              </svg>
+              </svg>&nbsp;Update
             </button>
-            <button id="protect" type="button" class="btn btn-info" title="Protect Link" disabled>
-              <svg id="protect_svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </button>
+            <div class="btn-group">
+              <button id="mdd" type="button" class="btn btn-info dropdown-toggle caret-off" data-toggle="dropdown" title="Menu" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="20" viewBox="0 0 12 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="6" cy="5" r="1"></circle>
+                  <circle cx="6" cy="12" r="1"></circle>
+                  <circle cx="6" cy="19" r="1"></circle>
+                </svg>
+              </button>
+              <div id="menu_items" class="dropdown-menu dropdown-menu-right">
+                <a id="get2" class="dropdown-item" href="#">Get New Link</a>
+                <a id="protect" class="dropdown-item disabled" href="#">Protect Link</a>
+              </div>
+            </div>
           </div>
 
           <button id="export" type="button" class="btn btn-info mr-2" title="Export DataTemplate">
@@ -106,20 +113,6 @@
               <line x1="4" y1="4" x2="9" y2="9" />
             </svg>&nbsp;Generate
           </button>
-
-          <!--
-          <div class="btn-group">
-            <button type="button" class="btn btn-info dropdown-toggle caret-off" data-toggle="dropdown" title="Menu">
-              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="20" viewBox="0 0 12 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="6" cy="5" r="1"></circle>
-                <circle cx="6" cy="12" r="1"></circle>
-                <circle cx="6" cy="19" r="1"></circle>
-              </svg>
-            </button>
-            <div id="menu_items" class="dropdown-menu dropdown-menu-right">
-            </div>
-          </div>
-          -->
         </div>
         <div style="clear: both;"></div>
       </div>
@@ -214,7 +207,7 @@
               </div>
               <div class="col-6">
                 <label for="password_open2" class="col-form-label" disabled>Verify Password</label>
-                <input type="password" class="form-control is-invalid" id="password_open2" disabled>
+                <input type="password" class="form-control" id="password_open2" disabled>
               </div>
             </div>
             <div class="row">
@@ -224,7 +217,7 @@
               </div>
               <div class="col-6">
                 <label for="password_modify2" class="col-form-label" disabled>Verify Password</label>
-                <input type="password" class="form-control is-invalid" id="password_modify2" disabled>
+                <input type="password" class="form-control" id="password_modify2" disabled>
               </div>
             </div>
           </div>

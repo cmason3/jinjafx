@@ -234,7 +234,7 @@ function getStatusText(code) {
     var xHR = new XMLHttpRequest();
   
     if (v_dt_id !== null) {
-      xHR.open("POST", "get_link?id=" + v_dt_id + "&rev=" + (revision + 1), true);
+      xHR.open("POST", "get_link?id=" + v_dt_id, true);
       if (dt_password !== null) {
         xHR.setRequestHeader("X-Dt-Password", dt_password);
       }
@@ -244,6 +244,7 @@ function getStatusText(code) {
       if (dt_mpassword != null) {
         xHR.setRequestHeader("X-Dt-Modify-Password", dt_mpassword);
       }
+      xHR.setRequestHeader("X-Dt-Revision", revision + 1);
     }
     else {
       xHR.open("POST", "get_link", true);
@@ -319,16 +320,15 @@ function getStatusText(code) {
   
               load_datatemplate(dt['dt'], qs);
               dt_id = qs.dt;
-  
-              document.getElementById('update').disabled = false;
+
+              $('#update').removeClass('d-none');
+              $('#get').addClass('d-none');
+              document.getElementById('mdd').disabled = false;
               if (!dt.hasOwnProperty('dt_password') && !dt.hasOwnProperty('dt_mpassword')) {
-                document.getElementById('protect').disabled = false;
+                $('#protect').removeClass('disabled');
               }
               else {
-                $('#protect').removeClass('btn-info');
-                $('#protect').addClass('btn-info-outline');
-                $('#update').css({'border-top-right-radius': '0.25rem', 'border-bottom-right-radius': '0.25rem'});
-                document.getElementById('protect').title = 'Link Protected';
+                document.getElementById('protect').innerHTML = 'Link Protected';
               }
   
               if (dt.hasOwnProperty('updated')) {
@@ -351,6 +351,7 @@ function getStatusText(code) {
             set_status("darkred", "HTTP ERROR " + this.status, sT);
             window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
           }
+          $('#lbuttons').removeClass('d-none');
           loaded = true;
           clear_wait();
         };
@@ -358,12 +359,14 @@ function getStatusText(code) {
         xHR.onerror = function() {
           set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
           window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          $('#lbuttons').removeClass('d-none');
           loaded = true;
           clear_wait();
         };
         xHR.ontimeout = function() {
           set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
           window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          $('#lbuttons').removeClass('d-none');
           loaded = true;
           clear_wait();
         };
@@ -377,11 +380,13 @@ function getStatusText(code) {
       }
       else {
         update_from_qs();
+        $('#lbuttons').removeClass('d-none');
         loaded = true;
       }
     }
     catch (ex) {
       set_status("darkred", "ERROR", ex);
+      $('#lbuttons').removeClass('d-none');
       loaded = true; onChange(true);
     }
   }
@@ -391,6 +396,7 @@ function getStatusText(code) {
       document.getElementById('delete_ds').onclick = function() { jinjafx('delete_dataset'); };
       document.getElementById('add_ds').onclick = function() { jinjafx('add_dataset'); };
       document.getElementById('get').onclick = function() { jinjafx('get_link'); };
+      document.getElementById('get2').onclick = function() { jinjafx('get_link'); };
       document.getElementById('update').onclick = function() { jinjafx('update_link'); };
       document.getElementById('protect').onclick = function() { jinjafx('protect'); };
       document.getElementById('export').onclick = function() { jinjafx('export'); };
@@ -403,11 +409,6 @@ function getStatusText(code) {
       };
   
       window.onresize();
-  
-      if (document.getElementById('get_link').value == 'false') {
-        document.getElementById('get').disabled = true;
-        document.getElementById('lbuttons').style.display = 'none';
-      }
   
       document.body.style.display = "block";
       
@@ -427,7 +428,7 @@ function getStatusText(code) {
           }
         },
         "Ctrl-S": function(cm) {
-          if (document.getElementById('update').disabled == false) {
+          if (!$('#update').hasClass('d-none')) {
             jinjafx('update_link');
           }
           else {
@@ -435,7 +436,7 @@ function getStatusText(code) {
           }
         },
         "Cmd-S": function(cm) {
-          if (document.getElementById('update').disabled == false) {
+          if (!$('#update').hasClass('d-none')) {
             jinjafx('update_link');
           }
           else {
@@ -624,32 +625,26 @@ function getStatusText(code) {
         document.getElementById("password_modify2").disabled = true;
         fe.focus();
       });
-  
+
       $("#protect_input").on("hidden.bs.modal", function () {
         if (protect_ok == false) {
           if (protect_action == 1) {
             window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+            $('#lbuttons').removeClass('d-none');
             dt_password = null;
             loaded = true;
           }
-          clear_wait();
+          else {
+            set_status("#e64c00", "OK", "Link Not Updated");
+          }
         }
         document.getElementById("in_protect").value = '';
+        clear_wait();
       });
-  
-      $('#dataset_input').on('shown.bs.modal', function() {
-        document.getElementById("ds_name").focus();
-      });
-  
-      document.getElementById('ml-vault-ok').onclick = function() {
-        dt.vault_password = window.btoa(document.getElementById("vault").value);
-        window.open("output.html", "_blank");
-      };
   
       document.getElementById('ml-protect-ok').onclick = function() {
         dt_password = document.getElementById("in_protect").value;
         if (dt_password.match(/\S/)) {
-          protect_ok = true;
           if (protect_action == 1) {
             try_to_load();
           }
@@ -658,10 +653,18 @@ function getStatusText(code) {
           }
         }
         else {
+          if (protect_action == 1) {
+            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+            dt_password = null;
+          }
+          loaded = true;
+          $('#lbuttons').removeClass('d-none');
           set_status("darkred", "ERROR", "Invalid Password");
+          clear_wait();
         }
+        protect_ok = true;
       };
-  
+
       document.getElementById('ml-dataset-ok').onclick = function() {
         var new_ds = document.getElementById("ds_name").value;
   
@@ -790,14 +793,12 @@ function getStatusText(code) {
           if (dt_opassword === dt_mpassword) {
             dt_mpassword = null;
           }
-          document.getElementById('protect').disabled = true;
-          $('#protect').removeClass('btn-info');
-          $('#protect').addClass('btn-info-outline');
-          $('#update').css({'border-top-right-radius': '0.25rem', 'border-bottom-right-radius': '0.25rem'});
-          document.getElementById('protect').title = 'Link Protected';
+          $('#protect').addClass('disabled');
+          document.getElementById('protect').innerHTML = 'Link Protected';
           window.addEventListener('beforeunload', onBeforeUnload);
           document.title = 'JinjaFx [unsaved]';
           dirty = true;
+          set_status("green", "OK", "Protection Set - Update Required", 10000);
         }
         else {
           set_status("darkred", "ERROR", "Invalid Password");
@@ -847,10 +848,12 @@ function getStatusText(code) {
         else {
           set_status("darkred", "HTTP ERROR 503", "Service Unavailable");
           window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          $('#lbuttons').removeClass('d-none');
           loaded = true;
         }
       }
       else {
+        $('#lbuttons').removeClass('d-none');
         loaded = true;
       }
     }
@@ -970,12 +973,11 @@ function getStatusText(code) {
     dt_password = null;
     dt_opassword = null;
     dt_mpassword = null;
-    document.getElementById('update').disabled = true;
-    document.getElementById('protect').disabled = true;
-    $('#protect').removeClass('btn-info-outline');
-    $('#protect').addClass('btn-info');
-    $('#update').css({'border-top-right-radius': '0', 'border-bottom-right-radius': '0'});
-    document.getElementById('protect').title = 'Protect Link';
+    $('#update').addClass('d-none');
+    $('#get').removeClass('d-none');
+    document.getElementById('mdd').disabled = true;
+    $('#protect').addClass('disabled');
+    document.getElementById('protect').innerHTML = 'Protect Link';
   }
   
   function onPaste(cm, change) {

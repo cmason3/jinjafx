@@ -102,7 +102,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     return struct.pack('B', version) + struct.pack('B', len(salt)) + salt + hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, pbkdf2_iterations)
 
 
-  def do_GET(self):
+  def do_GET(self, cache=True):
     fpath = self.path.split('?', 1)[0]
 
     r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
@@ -117,6 +117,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         fpath = '/index.html'
 
       if re.search(r'^/get_dt/[A-Za-z0-9_-]{1,24}$', fpath):
+        cache = False
         dt = ''
 
         if aws_s3_url or repository:
@@ -213,6 +214,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
+    if not cache:
+      self.send_header('Cache-Control', 'no-store')
     self.end_headers()
     self.wfile.write(r[2])
 
@@ -357,6 +360,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       dt_opassword = self.headers['X-Dt-Open-Password']
                     if 'X-Dt-Modify-Password' in self.headers:
                       dt_mpassword = self.headers['X-Dt-Modify-Password']
+                    if 'X-Dt-Revision' in self.headers:
+                      dt_revision = int(self.headers['X-Dt-Revision'])
 
                   ratelimit = False
                   if rl_rate != 0:
@@ -369,9 +374,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       rtable[remote_addr] = rtable[remote_addr][-rl_rate:]
 
                   if not ratelimit:
-                    if 'rev' in params:
-                      dt_revision = int(params['rev'])
-
                     dt = json.loads(postdata)
 
                     vdt = {}
