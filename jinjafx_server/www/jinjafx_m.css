@@ -45,11 +45,6 @@ body {
 .caret-off::after {
   display: none !important;
 }
-/*
-.btn.btn-info:disabled {
-  color: #eee;
-}
-*/
 .gutter {
   background-color: #eee;
   background-repeat: no-repeat;
