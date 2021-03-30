@@ -424,7 +424,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       dt_yml += '  template: ""\n'
                     else:
                       dt_yml += '  template: |2\n'
-                      dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n'
+                      dt_yml += re.sub('^', ' ' * 4, vdt['template'], flags=re.MULTILINE) + '\n'
 
                     dt_yml += '\nrevision: ' + str(dt_revision) + '\n'
 
