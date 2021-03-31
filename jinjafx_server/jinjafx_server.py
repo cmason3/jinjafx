@@ -221,16 +221,19 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     if 'If-None-Match' in self.headers:
       if self.headers['If-None-Match'] == etag:
         head = True
-        r = [ 'text/plain', 304, '304 Not Modified\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
+        r = [ None, 304, None, sys._getframe().f_lineno ]
 
     self.lnumber = r[3]
     self.send_response(r[1])
-    self.send_header('Content-Type', r[0])
-    self.send_header('Content-Length', str(len(r[2])))
+
+    if r[1] != 304:
+      self.send_header('Content-Type', r[0])
+      self.send_header('Content-Length', str(len(r[2])))
 
     if not cache:
       self.send_header('Cache-Control', 'no-store')
-    elif r[1] == 200:
+
+    elif r[1] == 200 or r[1] == 304:
       self.send_header('ETag', etag)
 
     self.end_headers()
