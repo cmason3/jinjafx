@@ -375,7 +375,6 @@ function getStatusText(code) {
         if (dt_password != null) {
           xHR.setRequestHeader("X-Dt-Password", dt_password);
         }
-        xHR.setRequestHeader("Cache-Control", "no-store");
         xHR.send(null);
       }
       else {

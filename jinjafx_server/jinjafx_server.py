@@ -58,7 +58,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     lnumber = " {" + str(self.lnumber) + "}" if hasattr(self, 'lnumber') else ''
 
     if not isinstance(args[0], int) and path != '/ping':
-      ansi = '32' if args[1] == '200' else '31'
+      if args[1] == '200':
+        ansi = '32'
+      elif args[1] == '304':
+        ansi = '33'
+      else:
+        ansi = '31'
+
       src = str(self.client_address[0])
       ctype = ''
 
@@ -76,7 +82,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
       elif self.command != None:
-        if args[1] != '200' or not re.match(r'.+\.(?:js|css|png)$', path):
+        if (args[1] != '200' and args[1] != '304') or not re.match(r'.+\.(?:js|css|png)$', path):
           log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' ' + self.command + ' ' + path)
 
         
@@ -102,12 +108,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     return struct.pack('B', version) + struct.pack('B', len(salt)) + salt + hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, pbkdf2_iterations)
 
 
-  def do_GET(self, cache=True):
+  def do_GET(self, head=False, cache=True):
     fpath = self.path.split('?', 1)[0]
 
     r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
 
     if fpath == '/ping':
+      cache = False
       r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
     elif not api_only:
@@ -210,14 +217,29 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     else:
       r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
+    etag = '"' + hashlib.sha256(r[2]).hexdigest() + '"'
+    if 'If-None-Match' in self.headers:
+      if self.headers['If-None-Match'] == etag:
+        head = True
+        r = [ 'text/plain', 304, '304 Not Modified\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
+
     self.lnumber = r[3]
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
+
     if not cache:
       self.send_header('Cache-Control', 'no-store')
+    elif r[1] == 200:
+      self.send_header('ETag', etag)
+
     self.end_headers()
-    self.wfile.write(r[2])
+    if not head:
+      self.wfile.write(r[2])
+
+
+  def do_HEAD(self):
+    self.do_GET(True)
 
 
   def do_POST(self):
@@ -716,7 +738,6 @@ def aws_s3_put(s3_url, fname, content, ctype):
 def aws_s3_get(s3_url, fname):
   headers = {
     'Host': s3_url,
-    'Cache-Control': 'no-store',
     'x-amz-content-sha256': hashlib.sha256(b'').hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
