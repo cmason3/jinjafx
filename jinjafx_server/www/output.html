@@ -28,14 +28,24 @@
         sobj.innerHTML = '';
         try {
           var t = document.getElementById('t_' + $('.tab-content .active').attr('id'));
-          var oss = t.selectionStart;
-          var ose = t.selectionEnd;
-          var ost = t.scrollTop;
-          t.focus();
-          t.setSelectionRange(0, t.value.length);
-          document.execCommand("copy");
-          t.setSelectionRange(oss, ose);
-          t.scrollTop = ost;
+
+          if (t.nodeName == 'IFRAME') {
+            t.contentDocument.designMode = "on";
+            t.contentDocument.execCommand("selectAll", false, null);
+            t.contentDocument.execCommand("copy", false, null);
+            t.contentDocument.designMode = "off";
+            t.contentDocument.getSelection().removeAllRanges(); 
+          }
+          else {
+            var oss = t.selectionStart;
+            var ose = t.selectionEnd;
+            var ost = t.scrollTop;
+            t.focus();
+            t.setSelectionRange(0, t.value.length);
+            document.execCommand("copy", false, null);
+            t.setSelectionRange(oss, ose);
+            t.scrollTop = ost;
+          }
           set_status("green", "OK", "Copied to Clipboard");
         }
         catch (e) {
@@ -117,7 +127,7 @@
                       var tc = window.atob(obj.outputs[output]);
                       if (tc.match(/<html.*?>[\s\S]+<\/html>/i)) {
                         tabs += '<iframe id="t_o' + oid + '" class="output" doc="' + tc.replace(/"/g, "&quot;") + '" src="javascript: window.frameElement.getAttribute(\'doc\');"></iframe>';
-                        document.getElementById('copy').style.display = 'none';
+                        //document.getElementById('copy').style.display = 'none';
                       }
                       else {
                         tabs += '<textarea id="t_o' + oid + '" class="output" readonly>' + window.opener.quote(tc) + '</textarea>';
