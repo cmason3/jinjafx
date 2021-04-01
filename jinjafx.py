@@ -413,6 +413,7 @@ class JinjaFx():
       template = env.get_template(os.path.basename(template.name))
 
     env.tests.update({
+      'regex': self.jfx_regex,
       'match': self.jfx_match,
       'search': self.jfx_search
     })
