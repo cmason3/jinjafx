@@ -204,6 +204,10 @@ This contains the "Core" Ansible filters, which includes `groupby`, `b64decode`,
 
 This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module. These filters can be used using the shorter `|ipaddr` syntax as well as the longer `|ansible.netcommon.ipaddr` syntax. The full list of imported filters are `cidr_merge`, `ipaddr`, `ipmath`, `ipwrap`, `ip4_hex`, `ipv4`, `ipv6`, `ipsubnet`, `next_nth_usable`, `network_in_network`, `network_in_usable`, `reduce_on_network`, `nthhost`, `previous_nth_usable`, `slaac`, `hwaddr` and `macaddr`.
 
+### Ansible Tests
+
+In additional to Ansible Filters, Ansible also introduces tests that can be performed with the `select` and `select_attr` filters - the following "Core" Ansible tests are also included: `match` and `search`.
+
 ### JinjaFx Variables
 
 The following variables, if defined within `vars.yml` control how JinjaFx works:

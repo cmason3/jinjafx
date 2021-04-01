@@ -412,6 +412,11 @@ class JinjaFx():
       [env.filters.update(f) for f in jinja2_filters]
       template = env.get_template(os.path.basename(template.name))
 
+    env.tests.update({
+      'match': self.jfx_match,
+      'search': self.jfx_search
+    })
+
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
@@ -734,6 +739,25 @@ class JinjaFx():
       pass
 
     return None
+
+
+  def jfx_regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
+    if ignorecase:
+      flags |= re.I
+
+    if multiline:
+      flags |= re.M
+
+    _re = re.compile(pattern, flags=flags)
+    return bool(getattr(_re, match_type, 'search')(value))
+
+
+  def jfx_match(self, value, pattern='', ignorecase=False, multiline=False):
+    return self.jfx_regex(value, pattern, ignorecase, multiline, 'match')
+
+
+  def jfx_search(self, value, pattern='', ignorecase=False, multiline=False):
+    return self.jfx_regex(value, pattern, ignorecase, multiline, 'search')
 
 
   def find_re_match(self, o, v, default=0):
