@@ -697,7 +697,23 @@ function getStatusText(code) {
         if (document.getElementById('input_form').checkValidity() !== false) {
           e.preventDefault();
           $("#jinjafx_input").modal("hide");
-          // FIXME
+
+          var vars = {};
+          $('#input_form').find('input,select,textarea').filter('[data-var]').each(function(i, elem) {
+            if (elem.dataset.var.match(/\S/)) {
+              var v = elem.value;
+              if ((elem.tagName == 'INPUT') && ((elem.type == 'checkbox') || (elem.type == 'radio'))) {
+                v = elem.checked;
+              }
+              if (vars.hasOwnProperty(elem.dataset.var)) {
+                vars[elem.dataset.var].push(v);
+              }
+              else {
+                vars[elem.dataset.var] = [v];
+              }
+            }
+          });
+          console.log(JSON.stringify(vars));
         }
       };
 
@@ -849,7 +865,7 @@ function getStatusText(code) {
   
       $('.modal').on('keydown', function(e) {
         if (e.keyCode === 9) {
-          var focusable = $(e.target).closest('.modal').find('input,button');
+          var focusable = $(e.target).closest('.modal').find('input,select,textarea,button');
           if (focusable.length) {
             var first = focusable[0];
             var last = focusable[focusable.length - 1];
