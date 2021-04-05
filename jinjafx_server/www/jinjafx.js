@@ -160,9 +160,27 @@ function getStatusText(code) {
           set_status("darkred", "ERROR", "Not Enough Data Rows");
           return false;
         }
-  
+
         dt.data = window.btoa(dt.data.join("\n"));
         dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
+
+        if (dt.vars.match(/\S/)) {
+          try {
+            var vars = jsyaml.safeLoad(dt.vars, 'utf8');
+            if (vars !== null) {
+              if (vars.hasOwnProperty('jinjafx_input') && vars['jinjafx_input'].hasOwnProperty('body')) {
+                document.getElementById('jinjafx_input_form').innerHTML = vars['jinjafx_input']['body'];
+                $("#jinjafx_input").modal("show");
+                return false;
+              }
+            }
+          }
+          catch (e) {
+            set_status("darkred", "ERROR", '[vars.yml] ' + e);
+            return false;
+          }
+        }
+
         var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
         dt.vars = window.btoa(dt.vars);
         dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
@@ -601,6 +619,13 @@ function getStatusText(code) {
         window.cmTemplate.focus();
         onDataBlur();
       };
+
+      $('#jinjafx_input').on('shown.bs.modal', function() {
+        var focusable = $('#jinjafx_input_form').find('input,select,textarea');
+        if (focusable.length) {
+          focusable[0].focus();
+        }
+      });
   
       $('#vault_input').on('shown.bs.modal', function() {
         document.getElementById("vault").focus();
@@ -666,6 +691,14 @@ function getStatusText(code) {
           clear_wait();
         }
         protect_ok = true;
+      };
+
+      document.getElementById('ml-input-ok').onclick = function(e) {
+        if (document.getElementById('input_form').checkValidity() !== false) {
+          e.preventDefault();
+          $("#jinjafx_input").modal("hide");
+          // FIXME
+        }
       };
 
       document.getElementById('ml-dataset-ok').onclick = function() {
