@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/addon/dialog/dialog.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/addon/display/fullscreen.min.css">
     <link rel="stylesheet" href="jinjafx.css">
     <link rel="stylesheet" href="jinjafx_m.css">
     <!-- Required by Internet Explorer 11 for js.yaml.min.js :( -->
@@ -18,11 +19,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/addon/selection/mark-selection.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/addon/dialog/dialog.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/addon/display/fullscreen.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/addon/search/search.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/addon/search/searchcursor.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/addon/edit/trailingspace.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/mode/jinja2/jinja2.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/mode/yaml/yaml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/mode/jinja2/jinja2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.59.4/mode/yaml/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
     <script src="jinjafx.js"></script>
@@ -31,7 +34,7 @@
     <div id="overlay"></div>
     <div id="wrap">
       <div id="header" class="jumbotron">
-        <a href="./">
+        <a href="./" tabindex="-1">
           <svg style="float: left; margin-right: 10px;" width="48" height="48" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
             <rect x="32" y="32" width="250" height="250" fill="#0074d9" stroke="#001f3f" />
             <rect x="304" y="162" width="120" height="120" fill="#0074d9" stroke="#001f3f" />
@@ -40,7 +43,7 @@
           </svg>
         </a>
         <h5 id="title" style="color: black; float: left; margin: 0px 10px 0px 0px;">
-          <a class="text-decoration-none text-reset" href="./">
+          <a class="text-decoration-none text-reset" href="./" tabindex="-1">
             <span class="font-weight-bold">JinjaFx</span><br />
             <span class="small" style="color: black;">&nbsp;Jinja2&nbsp;Templating&nbsp;Tool</span>
           </a>
@@ -58,35 +61,40 @@
               </button>
               <div id="datasets" class="dropdown-menu"></div>
             </div>
-            <button id="delete_ds" type="button" class="btn btn-warning" onclick="jinjafx('delete_dataset');" title="Delete Data Set" disabled>-</button>
-            <button id="add_ds" type="button" class="btn btn-warning" onclick="jinjafx('add_dataset');" title="Add Data Set">+</button>
+            <button id="delete_ds" type="button" class="btn btn-warning" title="Delete Data Set" disabled>-</button>
+            <button id="add_ds" type="button" class="btn btn-warning" title="Add Data Set">+</button>
           </div>
 
-          <div class="btn-group mr-2">
-            <button id="get" type="button" class="btn btn-info" onclick="jinjafx('get_link');" title="Get Link">
+          <div id="lbuttons" class="btn-group mr-2 d-none">
+            <button id="get" type="button" class="btn btn-info" title="Get Link">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
+              </svg>&nbsp;Get Link
             </button>
-            <button id="update" type="button" class="btn btn-info" onclick="jinjafx('update_link');" title="Update Link" disabled>
+            <button id="update" type="button" class="btn btn-info d-none" title="Update Link">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                 <polyline points="17 21 17 13 7 13 7 21" />
                 <polyline points="7 3 7 8 15 8" />
-              </svg>
+              </svg>&nbsp;Update
             </button>
-            <!--
-            <button id="lock" type="button" class="btn btn-info" onclick="jinjafx('lock_link');" title="Lock Link" disabled>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </button>
-            -->
+            <div class="btn-group">
+              <button id="mdd" type="button" class="btn btn-info dropdown-toggle caret-off" data-toggle="dropdown" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="20" viewBox="0 0 12 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="6" cy="5" r="1"></circle>
+                  <circle cx="6" cy="12" r="1"></circle>
+                  <circle cx="6" cy="19" r="1"></circle>
+                </svg>
+              </button>
+              <div id="menu_items" class="dropdown-menu dropdown-menu-right">
+                <a id="get2" class="dropdown-item" href="#">Get New Link</a>
+                <a id="protect" class="dropdown-item disabled" href="#">Protect Link</a>
+              </div>
+            </div>
           </div>
 
-          <button id="export" type="button" class="btn btn-info mr-2" onclick="jinjafx('export');" title="Export DataTemplate">
+          <button id="export" type="button" class="btn btn-info mr-2" title="Export DataTemplate">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
@@ -96,7 +104,7 @@
             </svg>&nbsp;Export
           </button>
 
-          <button id="generate" type="button" class="btn btn-secondary mr-2" onclick="jinjafx('generate');" title="Generate">
+          <button id="generate" type="button" class="btn btn-secondary" title="Generate">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 3 21 3 21 8" />
               <line x1="4" y1="20" x2="21" y2="3" />
@@ -115,30 +123,45 @@
               <div class="badge badge-secondary float-left labels">D<br />A<br />T<br />A<br />.<br />C<br />S<br />V<br /></div>
               <textarea id="data"></textarea>
               <div id="csv" class="table-responsive" style="overflow: auto; width: auto; height: 100%; display: none;"></div>
-              <span id="ldata" class="expand" title="Maximise">
+              <span id="ldata" title="Expand" class="expand">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
               </span>
+              <span id="ldata2" title="Restore" class="expand" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                </svg>
+              <span>
             </div>
             <div id="cvars" class="split-horizontal" style="position: relative;">
               <div class="badge badge-danger float-left labels">V<br />A<br />R<br />S<br />.<br />Y<br />M<br />L<br /></div>
               <textarea id="vars"></textarea>
-              <span id="lvars" class="expand" title="Maximise">
+              <span id="lvars" title="Expand" class="expand">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
               </span>
+              <span id="lvars2" title="Restore" class="expand" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                </svg>
+              <span>
             </div>
           </div>
           <div id="ctemplate" style="position: relative;">
             <div class="badge badge-info float-left labels">T<br />E<br />M<br />P<br />L<br />A<br />T<br />E<br />.<br />J<br />2<br /></div>
             <textarea id="template"></textarea>
-            <span id="ltemplate" class="expand" title="Maximise">
+            <span id="ltemplate" title="Expand" class="expand">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
             </span>
+              <span id="ltemplate2" title="Restore" class="expand" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                </svg>
+              <span>
           </div>
         </div>
       </div>
@@ -147,11 +170,29 @@
     <div id="footer">
       <div class="container-fluid">
         <h5 id="status" class="float-left"></h5>
-        <p class="text-right" style="font-size: 85%;">JinjaFx v{{ jinjafx.version }} - Jinja2 Templating Tool<br /><a href="https://github.com/cmason3/jinjafx" target="_blank">https://github.com/cmason3/jinjafx</a></p>
+        <h5 class="text-right">JinjaFx v{{ jinjafx.version }}<br /><a class="small" href="https://github.com/cmason3/jinjafx" tabindex="-1" target="_blank">https://github.com/cmason3/jinjafx</a></h5>
       </div>
     </div>
     <input id="get_link" type="hidden" value="{{ get_link }}">
-    <div id="vault_input" class="modal fade">
+    <div id="jinjafx_input" class="modal fade" role="dialog">
+      <div id="input_modal" class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form id="input_form" role="form">
+            <div class="modal-header">
+              <h4 style="margin-top: 0px;">Input</h4>
+            </div>
+            <div id="jinjafx_input_form" class="form-group modal-body">
+            </div>
+            <div class="modal-footer">
+              <button id="ml-input-reset" type="button" class="btn btn-danger">Reset</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              <button id="ml-input-ok" type="submit" class="btn btn-primary">Generate</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div id="vault_input" class="modal fade" role="dialog">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
@@ -164,12 +205,67 @@
             </div>
           </div>
           <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
             <button id="ml-vault-ok" type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
           </div>
         </div>
       </div>
     </div>
-    <div id="dataset_input" class="modal fade">
+    <div id="protect_dt" class="modal fade" role="dialog">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 id="ml-title" style="margin-top: 0px;">Protect DataTemplate</h4>
+          </div>
+          <div class="form-group modal-body">
+            <div class="row">
+              <div class="col-6">
+                <label for="password_open1" class="col-form-label">Password to Open</label>
+                <input type="password" class="form-control" id="password_open1">
+              </div>
+              <div class="col-6">
+                <label for="password_open2" class="col-form-label" disabled>Verify Password</label>
+                <input type="password" class="form-control" id="password_open2" disabled>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6">
+                <label for="password_modify1" class="col-form-label">Password to Modify</label>
+                <input type="password" class="form-control" id="password_modify1">
+              </div>
+              <div class="col-6">
+                <label for="password_modify2" class="col-form-label" disabled>Verify Password</label>
+                <input type="password" class="form-control" id="password_modify2" disabled>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button id="ml-protect-dt-ok" type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="protect_input" class="modal fade" role="dialog">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 id="ml-title" style="margin-top: 0px;">Protected DataTemplate</h4>
+          </div>
+          <div class="form-group row modal-body">
+            <label for="in_protect" class="col-sm-12 col-form-label">DataTemplate Password</label>
+            <div class="col-sm-12">
+              <input type="password" class="form-control" id="in_protect">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button id="ml-protect-ok" type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="dataset_input" class="modal fade" role="dialog">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
@@ -182,6 +278,7 @@
             </div>
           </div>
           <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
             <button id="ml-dataset-ok" type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
           </div>
         </div>

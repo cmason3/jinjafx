@@ -18,7 +18,7 @@
 from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime
-import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid
+import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid, struct, binascii
 
 try:
   import requests
@@ -55,9 +55,16 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def log_message(self, format, *args):
     path = self.path if hasattr(self, 'path') else ''
+    lnumber = " {" + str(self.lnumber) + "}" if hasattr(self, 'lnumber') else ''
 
     if not isinstance(args[0], int) and path != '/ping':
-      ansi = '32' if args[1] == '200' else '31'
+      if args[1] == '200':
+        ansi = '32'
+      elif args[1] == '304':
+        ansi = '33'
+      else:
+        ansi = '31'
+
       src = str(self.client_address[0])
       ctype = ''
 
@@ -69,14 +76,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           ctype = ' (' + self.headers['Content-Type'] + ')'
 
       if str(args[1]) == 'ERR':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + '\033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
           
       elif self.command == 'POST':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] \033[1;33m' + self.command + '\033[0m ' + path + ctype)
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype)
 
       elif self.command != None:
-        if args[1] != '200' or not re.match(r'.+\.(?:js|css|png)$', path):
-          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m] ' + self.command + ' ' + path)
+        if (args[1] != '200' and args[1] != '304') or not re.match(r'.+\.(?:js|css|png)$', path):
+          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' ' + self.command + ' ' + path)
 
         
   def encode_link(self, bhash):
@@ -94,12 +101,21 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     return string
 
 
-  def do_GET(self):
+  def derive_key(self, password, salt=None, version=1):
+    pbkdf2_iterations = 251001
+    if salt == None:
+      salt = os.urandom(32)
+    return struct.pack('B', version) + struct.pack('B', len(salt)) + salt + hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, pbkdf2_iterations)
+
+
+  def do_GET(self, head=False, cache=True):
     fpath = self.path.split('?', 1)[0]
-    readonly = None
+
+    r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
 
     if fpath == '/ping':
-      r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8') ]
+      cache = False
+      r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
     elif not api_only:
       base = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -107,65 +123,68 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       if fpath == '/':
         fpath = '/index.html'
 
-      if re.search(r'^/dt/[A-Za-z0-9_-]{1,24}$', fpath):
-        readonly = False
+      if re.search(r'^/get_dt/[A-Za-z0-9_-]{1,24}$', fpath):
+        cache = False
+        dt = ''
 
-        if aws_s3_url:
-          try:
-            rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml')
+        if aws_s3_url or repository:
+          if aws_s3_url:
+            try:
+              rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[8:] + '.yml')
+  
+              if rr.status_code == 200:
+                r = [ 'application/yaml', 200, rr.text.encode('utf-8'), sys._getframe().f_lineno ]
+  
+                dt = rr.text
+  
+              elif rr.status_code == 403:
+                r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
+  
+              elif rr.status_code == 404:
+                r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
+  
+            except Exception as e:
+              traceback.print_exc()
+  
+          elif repository:
+            fpath = os.path.normpath(repository + '/jfx_' + fpath[8:] + '.yml')
+  
+            if os.path.isfile(fpath):
+              try:
+                with open(fpath, 'rb') as f:
+                  rr = f.read()
+                  dt = rr.decode('utf-8')
+  
+                  r = [ 'application/yaml', 200, rr, sys._getframe().f_lineno ]
 
-            if rr.status_code == 200:
-              if self.path.endswith('?dt_hash'):
-                r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.text).group(1).encode('utf-8') ]
+                os.utime(fpath, None)
+  
+              except Exception:
+                traceback.print_exc()
+  
+            else:
+              r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
+
+          if r[1] == 200:
+            mo = re.search(r'dt_password: "(\S+)"', dt)
+            if mo != None:
+              if 'X-Dt-Password' in self.headers:
+                t = binascii.unhexlify(mo.group(1).encode('utf-8'))
+                if t != self.derive_key(self.headers['X-Dt-Password'], t[2:int(t[1]) + 2], t[0]):
+                  mm = re.search(r'dt_mpassword: "(\S+)"', dt)
+                  if mm != None:
+                    t = binascii.unhexlify(mm.group(1).encode('utf-8'))
+                    if t != self.derive_key(self.headers['X-Dt-Password'], t[2:int(t[1]) + 2], t[0]):
+                      r = [ 'text/plain', 401, '401 Unauthorized\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
+
+                  else:
+                    r = [ 'text/plain', 401, '401 Unauthorized\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
               else:
-                r = [ 'application/yaml', 200, rr.text.encode('utf-8') ]
-
-              rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
-              if rr.status_code == 200:
-                readonly = True
-
-            elif rr.status_code == 403:
-              r = [ 'text/plain', 403, '403 Forbidden\r\n'.encode('utf-8') ]
-
-            elif rr.status_code == 404:
-              r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
-
-            else:
-              r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
-
-          except Exception as e:
-            traceback.print_exc()
-            r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
-
-        elif repository:
-          fpath = os.path.normpath(repository + '/jfx_' + fpath[4:] + '.yml')
-
-          if os.path.isfile(fpath):
-            try:
-              with open(fpath, 'rb') as f:
-                rr = f.read()
-
-                if self.path.endswith('?dt_hash'):
-                  r = [ 'text/plain', 200, re.search(r'dt_hash: "(\S+)"', rr.decode('utf-8')).group(1).encode('utf-8') ]
-
-                else:
-                  r = [ 'application/yaml', 200, rr ]
-
-              if os.path.isfile(fpath + '.lock'):
-                readonly = True
-
-              os.utime(fpath, None)
-
-            except Exception:
-              traceback.print_exc()
-              r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
-
-          else:
-            r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+                r = [ 'text/plain', 401, '401 Unauthorized\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
         else:
-          r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
+          r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
       elif not re.search(r'[^A-Za-z0-9_./-]', fpath) and not re.search(r'\.{2,}', fpath) and os.path.isfile(base + '/www' + fpath):
         if fpath.endswith('.js'):
@@ -179,7 +198,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
         try:
           with open(base + '/www' + fpath, 'rb') as f:
-            r = [ ctype, 200, f.read() ]
+            r = [ ctype, 200, f.read(), sys._getframe().f_lineno ]
 
             if fpath == '/index.html':
               if repository or aws_s3_url:
@@ -190,26 +209,40 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).replace('{{ get_link }}', get_link).encode('utf-8')
 
         except Exception:
-          r = [ 'text/plain', 500, '500 Internal Server Error\r\n'.encode('utf-8') ]
+          traceback.print_exc()
 
       else:
-        r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8') ]
+        r = [ 'text/plain', 404, '404 Not Found\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
     else:
-      r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8') ]
+      r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
+    etag = '"' + hashlib.sha256(r[2]).hexdigest() + '"'
+    if 'If-None-Match' in self.headers:
+      if self.headers['If-None-Match'] == etag:
+        head = True
+        r = [ None, 304, None, sys._getframe().f_lineno ]
+
+    self.lnumber = r[3]
     self.send_response(r[1])
-    self.send_header('Content-Type', r[0])
-    self.send_header('Content-Length', str(len(r[2])))
 
-    if readonly != None:
-      if readonly:
-        self.send_header('X-Read-Only', 'true')
-      else:
-        self.send_header('X-Read-Only', 'false')
-      
+    if r[1] != 304:
+      self.send_header('Content-Type', r[0])
+      self.send_header('Content-Length', str(len(r[2])))
+
+    if not cache:
+      self.send_header('Cache-Control', 'no-store')
+
+    elif r[1] == 200 or r[1] == 304:
+      self.send_header('ETag', etag)
+
     self.end_headers()
-    self.wfile.write(r[2])
+    if not head:
+      self.wfile.write(r[2])
+
+
+  def do_HEAD(self):
+    self.do_GET(True)
 
 
   def do_POST(self):
@@ -217,10 +250,12 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     params = { x[0]: x[1] for x in [x.split('=') for x in uc[1].split('&') ] } if len(uc) > 1 else { }
     fpath = uc[0]
 
+    r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
+
     if 'Content-Length' in self.headers:
       postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
 
-      if len(postdata) < (256 * 1024):
+      if (len(postdata) < (512 * 1024)) or (fpath == '/download'):
         if fpath == '/jinjafx':
           if self.headers['Content-Type'] == 'application/json':
             try:
@@ -244,7 +279,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                   yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
 
-                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+                if y != None:
+                  gvars.update(y)
   
               st = round(time.time() * 1000)
               outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
@@ -282,10 +319,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               }
               self.log_request('ERR', error);
   
-            r = [ 'application/json', 200, json.dumps(jsr) ]
+            r = [ 'application/json', 200, json.dumps(jsr), sys._getframe().f_lineno ]
   
           else:
-            r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+            r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
   
         elif not api_only:
           if fpath == '/download':
@@ -312,6 +349,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                 z.close()
 
+                self.lnumber = sys._getframe().f_lineno
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/zip')
                 self.send_header('Content-Length', str(len(zfile.getvalue())))
@@ -322,10 +360,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
               except Exception as e:
                 traceback.print_exc()
-                r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
             else:
-              r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+              r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
           elif fpath == '/get_link':
             if aws_s3_url or repository:
@@ -333,12 +371,24 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 try:
                   remote_addr = str(self.client_address[0])
                   user_agent = None
+                  dt_password = ''
+                  dt_opassword = ''
+                  dt_mpassword = ''
+                  dt_revision = 1
 
                   if hasattr(self, 'headers'):
                     if 'User-Agent' in self.headers:
                       user_agent = self.headers['User-Agent']
                     if 'X-Forwarded-For' in self.headers:
                       remote_addr = self.headers['X-Forwarded-For']
+                    if 'X-Dt-Password' in self.headers:
+                      dt_password = self.headers['X-Dt-Password']
+                    if 'X-Dt-Open-Password' in self.headers:
+                      dt_opassword = self.headers['X-Dt-Open-Password']
+                    if 'X-Dt-Modify-Password' in self.headers:
+                      dt_mpassword = self.headers['X-Dt-Modify-Password']
+                    if 'X-Dt-Revision' in self.headers:
+                      dt_revision = int(self.headers['X-Dt-Revision'])
 
                   ratelimit = False
                   if rl_rate != 0:
@@ -401,15 +451,12 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       dt_yml += '  template: ""\n'
                     else:
                       dt_yml += '  template: |2\n'
-                      dt_yml += re.sub('^', ' ' * 4, vdt['template'].rstrip(), flags=re.MULTILINE) + '\n'
+                      dt_yml += re.sub('^', ' ' * 4, vdt['template'], flags=re.MULTILINE) + '\n'
+
+                    dt_yml += '\nrevision: ' + str(dt_revision) + '\n'
 
                     dt_hash = hashlib.sha256(dt_yml.encode('utf-8')).hexdigest()
-                    dt_yml += '\ndt_hash: "' + dt_hash + '"\n'
-
-                    if user_agent != None:
-                      dt_yml += 'user_agent: "' + user_agent + '"\n'
-
-                    dt_yml += 'remote_addr: "' + remote_addr + '"\n'
+                    dt_yml += 'dt_hash: "' + dt_hash + '"\n'
 
                     if 'id' in params:
                       if re.search(r'^[A-Za-z0-9_-]{1,24}$', params['id']):
@@ -423,70 +470,123 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                     dt_filename = 'jfx_' + dt_link + '.yml'
 
-                    if aws_s3_url:
-                      try:
-                        rr = aws_s3_get(aws_s3_url, 'jfx_' + fpath[4:] + '.yml.lock')
-                        if rr.status_code == 200:
-                          r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                    def update_dt(rdt, dt_yml, r):
+                      mm = re.search(r'dt_mpassword: "(\S+)"', rdt)
+                      mo = re.search(r'dt_password: "(\S+)"', rdt)
+
+                      if mm != None or mo != None:
+                        if dt_password != '':
+                          rpassword = mm.group(1) if mm != None else mo.group(1)
+                          t = binascii.unhexlify(rpassword.encode('utf-8'))
+                          if t != self.derive_key(dt_password, t[2:int(t[1]) + 2], t[0]):
+                            r = [ 'text/plain', 401, '401 Unauthorized\r\n', sys._getframe().f_lineno ]
 
                         else:
+                          r = [ 'text/plain', 401, '401 Unauthorized\r\n', sys._getframe().f_lineno ]
+
+                      if r[1] != 401:
+                        if dt_opassword != '' or dt_mpassword != '':
+                          if dt_opassword != '':
+                            dt_yml += 'dt_password: "' + binascii.hexlify(self.derive_key(dt_opassword)).decode('utf-8') + '"\n'
+
+                          if dt_mpassword != '':
+                            dt_yml += 'dt_mpassword: "' + binascii.hexlify(self.derive_key(dt_mpassword)).decode('utf-8') + '"\n'
+
+                        else:
+                          if mo != None:
+                            dt_yml += 'dt_password: "' + mo.group(1) + '"\n'
+
+                          if mm != None:
+                            dt_yml += 'dt_mpassword: "' + mm.group(1) + '"\n'
+
+                      return dt_yml, r
+
+                    def add_client_fields(dt_yml, user_agent, remote_addr):
+                      if user_agent != None:
+                        dt_yml += 'user_agent: "' + user_agent + '"\n'
+
+                      dt_yml += 'remote_addr: "' + remote_addr + '"\n'
+                      dt_yml += 'updated: "' + str(int(time.time()))  + '"\n'
+
+                      return dt_yml
+
+                    if aws_s3_url:
+                      try:
+                        rr = aws_s3_get(aws_s3_url, dt_filename)
+                        if rr.status_code == 200:
+                          m = re.search(r'revision: (\d+)', rr.text)
+                          if m != None:
+                            if dt_revision <= int(m.group(1)):
+                              r = [ 'text/plain', 409, '409 Conflict\r\n', sys._getframe().f_lineno ]
+
+                          if r[1] != 409:
+                            dt_yml, r = update_dt(rr.text, dt_yml, r)
+
+                        if r[1] == 500 or r[1] == 200:
+                          dt_yml = add_client_fields(dt_yml, user_agent, remote_addr)
                           rr = aws_s3_put(aws_s3_url, dt_filename, dt_yml, 'application/yaml')
 
                           if rr.status_code == 200:
-                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
+                            r = [ 'text/plain', 200, dt_link + '\r\n', sys._getframe().f_lineno ]
 
                           elif rr.status_code == 403:
-                            r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
-
-                          else:
-                            r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
+                            r = [ 'text/plain', 403, '403 Forbidden\r\n', sys._getframe().f_lineno ]
 
                       except Exception as e:
                         traceback.print_exc()
-                        r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
                     else:
                       try:
                         dt_filename = os.path.normpath(repository + '/' + dt_filename)
 
-                        if os.path.isfile(dt_filename + '.lock'):
-                          r = [ 'text/plain', 403, '403 Forbidden\r\n' ]
+                        if os.path.isfile(dt_filename):
+                          with open(dt_filename, 'rb') as f:
+                            rr = f.read()
 
-                        else:
+                          m = re.search(r'revision: (\d+)', rr.decode('utf-8'))
+                          if m != None:
+                            if dt_revision <= int(m.group(1)):
+                              r = [ 'text/plain', 409, '409 Conflict\r\n', sys._getframe().f_lineno ]
+
+                          if r[1] != 409:
+                            dt_yml, r = update_dt(rr.decode('utf-8'), dt_yml, r)
+
+                        if r[1] == 500 or r[1] == 200:
+                          dt_yml = add_client_fields(dt_yml, user_agent, remote_addr)
                           with open(dt_filename, 'w') as f:
                             f.write(dt_yml)
 
-                            r = [ 'text/plain', 200, dt_link + ':' + dt_hash + '\r\n' ]
+                            r = [ 'text/plain', 200, dt_link + '\r\n', sys._getframe().f_lineno ]
 
                       except Exception as e:
                         traceback.print_exc()
-                        r = [ 'text/plain', 500, '500 Internal Server Error\r\n' ]
 
                   else:
-                    r = [ 'text/plain', 429, '429 Too Many Requests\r\n' ]
+                    r = [ 'text/plain', 429, '429 Too Many Requests\r\n', sys._getframe().f_lineno ]
 
                 except Exception as e:
                   traceback.print_exc()
-                  r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                  r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
               else:
-                r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+                r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
             else:
-              r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
+              r = [ 'text/plain', 503, '503 Service Unavailable\r\n', sys._getframe().f_lineno ]
 
           else:
-            r = [ 'text/plain', 404, '404 Not Found\r\n' ]
+            r = [ 'text/plain', 404, '404 Not Found\r\n', sys._getframe().f_lineno ]
 
         else:
-          r = [ 'text/plain', 503, '503 Service Unavailable\r\n' ]
+          r = [ 'text/plain', 503, '503 Service Unavailable\r\n', sys._getframe().f_lineno ]
                     
       else:
-        r = [ 'text/plain', 413, '413 Request Entity Too Large\r\n' ]
+        r = [ 'text/plain', 413, '413 Request Entity Too Large\r\n', sys._getframe().f_lineno ]
 
     else:
-      r = [ 'text/plain', 400, '400 Bad Request\r\n' ]
+      r = [ 'text/plain', 400, '400 Bad Request\r\n', sys._getframe().f_lineno ]
 
+    self.lnumber = r[3]
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
@@ -561,7 +661,7 @@ def main(rflag=False):
 
     jinjafx.import_filters()
 
-    log('Starting JinjaFx Server on http://' + args.l + ':' + str(args.p) + '...')
+    log('Starting JinjaFx Server (PID is ' + str(os.getpid()) + ') on http://' + args.l + ':' + str(args.p) + '...')
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -595,7 +695,7 @@ def main(rflag=False):
 
 def log(t):
   with lock:
-    print('[' + datetime.datetime.now().strftime('%b %d %H:%M:%S.%f')[:19] + '] {' + str(os.getpid()) + '} ' + t)
+    print('[' + datetime.datetime.now().strftime('%b %d %H:%M:%S.%f')[:19] + '] ' + t)
 
 
 def w_directory(d):
@@ -643,7 +743,6 @@ def aws_s3_put(s3_url, fname, content, ctype):
 def aws_s3_get(s3_url, fname):
   headers = {
     'Host': s3_url,
-    'Cache-Control': 'no-store',
     'x-amz-content-sha256': hashlib.sha256(b'').hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }

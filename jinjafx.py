@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.4.0'
+__version__ = '1.5.0'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -412,6 +412,12 @@ class JinjaFx():
       [env.filters.update(f) for f in jinja2_filters]
       template = env.get_template(os.path.basename(template.name))
 
+    env.tests.update({
+      'regex': self.jfx_regex,
+      'match': self.jfx_match,
+      'search': self.jfx_search
+    })
+
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
@@ -734,6 +740,25 @@ class JinjaFx():
       pass
 
     return None
+
+
+  def jfx_regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
+    if ignorecase:
+      flags |= re.I
+
+    if multiline:
+      flags |= re.M
+
+    _re = re.compile(pattern, flags=flags)
+    return bool(getattr(_re, match_type, 'search')(value))
+
+
+  def jfx_match(self, value, pattern='', ignorecase=False, multiline=False):
+    return self.jfx_regex(value, pattern, ignorecase, multiline, 'match')
+
+
+  def jfx_search(self, value, pattern='', ignorecase=False, multiline=False):
+    return self.jfx_regex(value, pattern, ignorecase, multiline, 'search')
 
 
   def find_re_match(self, o, v, default=0):

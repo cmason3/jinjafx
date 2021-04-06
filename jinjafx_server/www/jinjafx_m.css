@@ -23,12 +23,13 @@ body {
 }
 .expand {
   position: absolute;
-  background: transparent;
-  z-index: 10;
-  right: 1px;
-  top: 1px;
+  background: #fff;
+  z-index: 2;
+  right: 2px;
+  top: 2px;
   padding-top: 2px;
   padding-right: 2px;
+  padding-left: 2px;
   cursor: pointer;
   stroke: gray;
 }
@@ -40,6 +41,9 @@ body {
   width: 20px;
   line-height: 0.8rem;
   overflow-y: hidden;
+}
+.caret-off::after {
+  display: none !important;
 }
 .gutter {
   background-color: #eee;
@@ -62,6 +66,9 @@ body {
   border: 1px solid lightgray;
   height: 100%;
   font-size: 12px;
+}
+.CodeMirror-dialog-bottom pre {
+  font-size: 14px;
 }
 .cm-trailingspace::after {
   color: steelblue;
