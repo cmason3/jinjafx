@@ -46,6 +46,7 @@ function getStatusText(code) {
   var dt_password = null;
   var dt_opassword = null;
   var dt_mpassword = null;
+  var input_form = null;
   var protect_action = 0;
   var cflag = false;
   var revision = 0;
@@ -110,7 +111,27 @@ function getStatusText(code) {
     switch_dataset(Object.keys(datasets)[0], false);
     fe.focus();
   }
+
+  function jinjafx_generate() {
+    var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
+    dt.vars = window.btoa(dt.vars);
+    dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
+    dt.id = dt_id;
+    dt.dataset = current_ds;
   
+    if (vaulted_vars) {
+      $("#vault_input").modal("show");
+    }
+    else {
+      if (dt_id != '') {
+        window.open("output.html?dt=" + dt_id, "_blank");
+      }
+      else {
+        window.open("output.html", "_blank");
+      }
+    }
+  }
+
   function jinjafx(method) {
     sobj.innerHTML = "";
   
@@ -169,7 +190,14 @@ function getStatusText(code) {
             var vars = jsyaml.safeLoad(dt.vars, 'utf8');
             if (vars !== null) {
               if (vars.hasOwnProperty('jinjafx_input') && vars['jinjafx_input'].hasOwnProperty('body')) {
-                document.getElementById('jinjafx_input_form').innerHTML = vars['jinjafx_input']['body'];
+                if (input_form !== vars['jinjafx_input']['body']) {
+                  input_form = vars['jinjafx_input']['body'];
+                  document.getElementById('jinjafx_input_form').innerHTML = input_form;
+                }
+                document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
+                if (vars['jinjafx_input'].hasOwnProperty('size')) {
+                  document.getElementById('input_modal').className += " modal-" + vars['jinjafx_input']['size'];
+                }
                 $("#jinjafx_input").modal("show");
                 return false;
               }
@@ -180,24 +208,7 @@ function getStatusText(code) {
             return false;
           }
         }
-
-        var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
-        dt.vars = window.btoa(dt.vars);
-        dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
-        dt.id = dt_id;
-        dt.dataset = current_ds;
-  
-        if (vaulted_vars) {
-          $("#vault_input").modal("show");
-        }
-        else {
-          if (dt_id != '') {
-            window.open("output.html?dt=" + dt_id, "_blank");
-          }
-          else {
-            window.open("output.html", "_blank");
-          }
-        }
+        jinjafx_generate();
       }
       else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
         if ((method === "update_link") && !dirty) {
@@ -621,12 +632,16 @@ function getStatusText(code) {
       };
 
       $('#jinjafx_input').on('shown.bs.modal', function() {
-        var focusable = $('#jinjafx_input_form').find('input,select,textarea');
+        var focusable = $('#jinjafx_input_form').find('input,select');
         if (focusable.length) {
           focusable[0].focus();
         }
       });
-  
+
+      $('#jinjafx_input').on('hidden.bs.modal', function() {
+        fe.focus();
+      });
+
       $('#vault_input').on('shown.bs.modal', function() {
         document.getElementById("vault").focus();
       });
@@ -693,13 +708,21 @@ function getStatusText(code) {
         protect_ok = true;
       };
 
+      document.getElementById('ml-input-reset').onclick = function(e) {
+        document.getElementById('jinjafx_input_form').innerHTML = input_form;
+        var focusable = $('#jinjafx_input_form').find('input,select');
+        if (focusable.length) {
+          focusable[0].focus();
+        }
+      };
+
       document.getElementById('ml-input-ok').onclick = function(e) {
         if (document.getElementById('input_form').checkValidity() !== false) {
           e.preventDefault();
           $("#jinjafx_input").modal("hide");
 
           var vars = {};
-          $('#input_form').find('input,select,textarea').filter('[data-var]').each(function(i, elem) {
+          $('#input_form').find('input,select').filter('[data-var]').each(function(i, elem) {
             if (elem.dataset.var.match(/\S/)) {
               var v = elem.value;
               if ((elem.tagName == 'INPUT') && ((elem.type == 'checkbox') || (elem.type == 'radio'))) {
@@ -713,7 +736,23 @@ function getStatusText(code) {
               }
             }
           });
-          console.log(JSON.stringify(vars));
+
+          var vars_yml = '';
+          Object.keys(vars).forEach(function(v) {
+            for (i = 0; i < vars[v].length; i++) {
+              if (typeof vars[v][i] !== "boolean") {
+                vars[v][i] = '"' + vars[v][i].replace('"', '\\x22') + '"';
+              }
+            }
+            if (vars[v].length > 1) {
+              vars_yml += v + ': [' + vars[v].join(', ') + ']\r\n';
+            }
+            else {
+              vars_yml += v + ': ' + vars[v][0] + '\r\n';
+            }
+          });
+          dt.vars += '\r\n' + vars_yml;
+          jinjafx_generate();
         }
       };
 
@@ -1025,6 +1064,7 @@ function getStatusText(code) {
     dt_password = null;
     dt_opassword = null;
     dt_mpassword = null;
+    input_form = null;
     $('#update').addClass('d-none');
     $('#get').removeClass('d-none');
     document.getElementById('mdd').disabled = true;

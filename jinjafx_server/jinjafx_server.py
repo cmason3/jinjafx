@@ -279,7 +279,9 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
                   yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
 
-                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+                if y != None:
+                  gvars.update(y)
   
               st = round(time.time() * 1000)
               outputs = jinjafx.JinjaFx().jinjafx(template, data, gvars, 'Output')
@@ -301,6 +303,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 raise Exception('nothing to output')
   
             except Exception as e:
+              traceback.print_exc()
               tb = traceback.format_exc()
               match = re.search(r'[\s\S]*File "<(?:template|unknown)>", line ([0-9]+), in.*template', tb, re.IGNORECASE)
               if match:
