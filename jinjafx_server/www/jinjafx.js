@@ -737,7 +737,7 @@ function getStatusText(code) {
             }
           });
 
-          var vars_yml = '';
+          var vars_yml = 'jinjafx_input:\r\n';
           Object.keys(vars).forEach(function(v) {
             for (i = 0; i < vars[v].length; i++) {
               if (typeof vars[v][i] !== "boolean") {
@@ -745,10 +745,10 @@ function getStatusText(code) {
               }
             }
             if (vars[v].length > 1) {
-              vars_yml += v + ': [' + vars[v].join(', ') + ']\r\n';
+              vars_yml += '  ' + v + ': [' + vars[v].join(', ') + ']\r\n';
             }
             else {
-              vars_yml += v + ': ' + vars[v][0] + '\r\n';
+              vars_yml += '  ' + v + ': ' + vars[v][0] + '\r\n';
             }
           });
           dt.vars += '\r\n' + vars_yml;
