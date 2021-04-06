@@ -81,4 +81,4 @@ Name: {{ jinjafx_input['name'] }}
 Gender: {{ jinjafx_input['gender'] }}
 ```
 
-If you specify the same `data-var` value more than once in the input form then the variable will be converted into a list with the values in the order they appear in the form.
+If you specify the same `data-var` value more than once in the input form then the variable will be converted into a list using the values in the order they appear in the form.
