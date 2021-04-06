@@ -50,3 +50,35 @@ As well as supporting the standard CodeMirror shortcut keys for the "data.csv", 
 ### Data Sets
 
 The Data Set feature allows you to include multiple different "data.csv" and "vars.yml" contents while maintaining the same "template.j2". This is to support scenarios where you have different Data Sets for your Live vs your Test environments, but the template should be the same. There are no limits on the number of different Data Sets that can be added to a single DataTemplate (the name must start with a letter and only contain alphanumerical, "-", " " or "_" characters). When you click "Generate" it will use the currently active Data Set to generate the output - clicking on the name of the current Data Set (by default there is a single "Default" Data Set) allows you to switch between the different Data Sets.
+
+### JinjaFx Input
+
+This advanced feature allows you to specify an input form that can be used to obtain inputs for your Jinja2 template when you click on "Generate". As JinjaFx is built on Bootstrap 4, it uses the <a href="https://getbootstrap.com/docs/4.6/components/modal/#modal-components">Bootstrap 4 Modal</a> syntax to specify what is contained in the body of your modal form. You define an input form using the `jinjafx_input` variable within your "vars.yml" file as per the following simple example:
+
+```yaml
+---
+jinjafx_input:
+  body: |2
+    <div class="row">
+      <div class="col-6">
+        <label for="name" class="col-form-label">Name</label>
+        <input id="name" class="form-control" data-var="name" required>
+      </div>
+      <div class="col-6">
+        <label for="gender" class="col-form-label">Gender</label>
+        <select id="gender" class="form-control" data-var="gender">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+    </div>
+```
+
+You can also specify an optional `size` attribute alongside the `body` attribute which sets the width of the modal using the pre-defined Bootstrap 4 sizes (i.e. "sm", "lg" and "xl"). The input form supports full native HTML validation using `required` and `pattern` attributes. The values which are input are then mapped to Jinja2 variables using the `data-var` custom attribute (e.g. `data-var="name"` would map to `jinjafx_input['name']`):
+
+```jinja2
+Name: {{ jinjafx_input['name'] }}
+Gender: {{ jinjafx_input['gender'] }}
+```
+
+If you specify the same `data-var` value more than once in the input form then the variable will be converted into a list with the values in the order they appear in the form.
