@@ -353,12 +353,19 @@ function getStatusText(code) {
               $('#update').removeClass('d-none');
               $('#get').addClass('d-none');
               document.getElementById('mdd').disabled = false;
+
+              $('#protect').removeClass('disabled');
+              if (dt.hasOwnProperty('dt_password') || dt.hasOwnProperty('dt_mpassword')) {
+                document.getElementById('protect_text').innerHTML = 'Update Protection';
+              }
+/*
               if (!dt.hasOwnProperty('dt_password') && !dt.hasOwnProperty('dt_mpassword')) {
                 $('#protect').removeClass('disabled');
               }
               else {
-                document.getElementById('protect').innerHTML = 'Link Protected';
+                document.getElementById('protect_text').innerHTML = 'Update Link Protection';
               }
+              */
   
               if (dt.hasOwnProperty('updated')) {
                 revision = dt.revision;
@@ -884,12 +891,13 @@ function getStatusText(code) {
           if (dt_opassword === dt_mpassword) {
             dt_mpassword = null;
           }
-          $('#protect').addClass('disabled');
-          document.getElementById('protect').innerHTML = 'Link Protected';
+          //$('#protect').addClass('disabled');
+          document.getElementById('protect_text').innerHTML = 'Update Protection';
           window.addEventListener('beforeunload', onBeforeUnload);
           document.title = 'JinjaFx [unsaved]';
           dirty = true;
           set_status("green", "OK", "Protection Set - Update Required", 10000);
+          dt_password = null;
         }
         else {
           set_status("darkred", "ERROR", "Invalid Password");
