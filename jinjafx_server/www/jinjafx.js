@@ -193,6 +193,11 @@ function getStatusText(code) {
                 if (input_form !== vars['jinjafx_input']['body']) {
                   input_form = vars['jinjafx_input']['body'];
                   document.getElementById('jinjafx_input_form').innerHTML = input_form;
+                  $('#jinjafx_input_form').find('script').each(function(i, elem) {
+                    var g = document.createElement('script');
+                    g.text = elem.innerText;
+                    document.getElementById('jinjafx_input_form').append(g);
+                  });
                 }
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
                 if (vars['jinjafx_input'].hasOwnProperty('size')) {
@@ -225,9 +230,6 @@ function getStatusText(code) {
         }
         else {
           dt.datasets = {};
-          switch_dataset(current_ds, true);
-          Object.keys(datasets).forEach(function(ds) {
-            dt.datasets[ds] = {};
             dt.datasets[ds].data = window.btoa(datasets[ds][0].getValue());
             dt.datasets[ds].vars = window.btoa(datasets[ds][1].getValue().replace(/\t/g, "  "));
           });
@@ -358,14 +360,6 @@ function getStatusText(code) {
               if (dt.hasOwnProperty('dt_password') || dt.hasOwnProperty('dt_mpassword')) {
                 document.getElementById('protect_text').innerHTML = 'Update Protection';
               }
-/*
-              if (!dt.hasOwnProperty('dt_password') && !dt.hasOwnProperty('dt_mpassword')) {
-                $('#protect').removeClass('disabled');
-              }
-              else {
-                document.getElementById('protect_text').innerHTML = 'Update Link Protection';
-              }
-              */
   
               if (dt.hasOwnProperty('updated')) {
                 revision = dt.revision;
@@ -940,6 +934,8 @@ function getStatusText(code) {
         if (document.getElementById('get_link').value != 'false') {
           try_to_load();
   
+          $('#lbuttons').removeClass('d-none');
+          
           if (fe != window.cmData) {
             onDataBlur();
           }
@@ -947,12 +943,13 @@ function getStatusText(code) {
         else {
           set_status("darkred", "HTTP ERROR 503", "Service Unavailable");
           window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-          $('#lbuttons').removeClass('d-none');
           loaded = true;
         }
       }
       else {
-        $('#lbuttons').removeClass('d-none');
+        if (document.getElementById('get_link').value != 'false') {
+          $('#lbuttons').removeClass('d-none');
+        }
         loaded = true;
       }
     }
