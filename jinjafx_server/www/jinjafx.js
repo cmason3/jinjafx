@@ -196,7 +196,7 @@ function getStatusText(code) {
                   $('#jinjafx_input_form').find('script').each(function(i, elem) {
                     var g = document.createElement('script');
                     g.text = elem.innerText;
-                    document.getElementById('jinjafx_input_form').append(g);
+                    document.getElementById('jinjafx_input_form').appendChild(g);
                   });
                 }
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
