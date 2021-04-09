@@ -230,6 +230,9 @@ function getStatusText(code) {
         }
         else {
           dt.datasets = {};
+          switch_dataset(current_ds, true);
+          Object.keys(datasets).forEach(function(ds) {
+            dt.datasets[ds] = {};
             dt.datasets[ds].data = window.btoa(datasets[ds][0].getValue());
             dt.datasets[ds].vars = window.btoa(datasets[ds][1].getValue().replace(/\t/g, "  "));
           });
