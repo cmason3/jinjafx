@@ -47,6 +47,7 @@ function getStatusText(code) {
   var dt_opassword = null;
   var dt_mpassword = null;
   var input_form = null;
+  var r_input_form = null;
   var protect_action = 0;
   var cflag = false;
   var revision = 0;
@@ -190,21 +191,66 @@ function getStatusText(code) {
             var vars = jsyaml.safeLoad(dt.vars, 'utf8');
             if (vars !== null) {
               if (vars.hasOwnProperty('jinjafx_input') && vars['jinjafx_input'].hasOwnProperty('body')) {
-                if (input_form !== vars['jinjafx_input']['body']) {
-                  input_form = vars['jinjafx_input']['body'];
-                  document.getElementById('jinjafx_input_form').innerHTML = input_form;
-                  $('#jinjafx_input_form').find('script').each(function(i, elem) {
-                    var g = document.createElement('script');
-                    g.text = elem.innerText;
-                    document.getElementById('jinjafx_input_form').appendChild(g);
-                  });
-                }
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
                 if (vars['jinjafx_input'].hasOwnProperty('size')) {
                   document.getElementById('input_modal').className += " modal-" + vars['jinjafx_input']['size'];
                 }
-                $("#jinjafx_input").modal("show");
-                return false;
+
+                if (input_form !== vars['jinjafx_input']['body']) {
+                  var xHR = new XMLHttpRequest();
+                  xHR.open("POST", 'jinjafx', true);
+
+                  r_input_form = null;
+
+                  xHR.onload = function() {
+                    if (this.status === 200) {
+                      try {
+                        obj = JSON.parse(xHR.responseText);
+                        if (obj.status === "ok") {
+                          r_input_form = window.atob(obj.outputs['Output']);
+                          document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
+                          $('#jinjafx_input_form').find('script').each(function(i, elem) {
+                            var g = document.createElement('script');
+                            g.text = elem.innerText;
+                            document.getElementById('jinjafx_input_form').appendChild(g);
+                          });
+                          input_form = vars['jinjafx_input']['body'];
+                          $("#jinjafx_input").modal("show");
+                        }
+                        else {
+                          set_status("darkred", "ERROR", obj.error);
+                        }
+                      }
+                      catch (e) {
+                        set_status("darkred", "ERROR", e);
+                      }
+                    }
+                    else {
+                      var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+                      set_status("darkred", "HTTP ERROR " + this.status, sT);
+                    }
+                    clear_wait();
+                  };
+                  xHR.onerror = function() {
+                    set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+                    clear_wait();
+                  };
+                  xHR.ontimeout = function() {
+                    set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+                    clear_wait();
+                  };
+
+                  set_wait();
+
+                  xHR.timeout = 10000;
+                  xHR.setRequestHeader("Content-Type", "application/json");
+                  xHR.send(JSON.stringify({ "template": window.btoa(vars['jinjafx_input']['body']) }));
+                  return false;
+                }
+                else {
+                  $("#jinjafx_input").modal("show");
+                  return false;
+                }
               }
             }
           }
@@ -713,7 +759,7 @@ function getStatusText(code) {
       };
 
       document.getElementById('ml-input-reset').onclick = function(e) {
-        document.getElementById('jinjafx_input_form').innerHTML = input_form;
+        document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
         var focusable = $('#jinjafx_input_form').find('input,select');
         if (focusable.length) {
           focusable[0].focus();
@@ -888,7 +934,6 @@ function getStatusText(code) {
           if (dt_opassword === dt_mpassword) {
             dt_mpassword = null;
           }
-          //$('#protect').addClass('disabled');
           document.getElementById('protect_text').innerHTML = 'Update Protection';
           window.addEventListener('beforeunload', onBeforeUnload);
           document.title = 'JinjaFx [unsaved]';
