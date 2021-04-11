@@ -198,7 +198,7 @@ function getStatusText(code) {
 
                 if (input_form !== vars['jinjafx_input']['body']) {
                   var xHR = new XMLHttpRequest();
-                  xHR.open("POST", 'jinjafx', true);
+                  xHR.open("POST", 'jinjafx?dt=jinjafx_input', true);
 
                   r_input_form = null;
 
@@ -218,7 +218,8 @@ function getStatusText(code) {
                           $("#jinjafx_input").modal("show");
                         }
                         else {
-                          set_status("darkred", "ERROR", obj.error);
+                          var e = obj.error.replace("template.j2", "jinjafx_input");
+                          set_status("darkred", 'ERROR', e.substring(5));
                         }
                       }
                       catch (e) {
@@ -242,9 +243,12 @@ function getStatusText(code) {
 
                   set_wait();
 
+                  var rbody = vars['jinjafx_input']['body'];
+                  rbody = rbody.replace(/<(?:output[\t ]+.+?|\/output[\t ]*)>.*?\n/gi, '');
+
                   xHR.timeout = 10000;
                   xHR.setRequestHeader("Content-Type", "application/json");
-                  xHR.send(JSON.stringify({ "template": window.btoa(vars['jinjafx_input']['body']) }));
+                  xHR.send(JSON.stringify({ "template": window.btoa(rbody) }));
                   return false;
                 }
                 else {
