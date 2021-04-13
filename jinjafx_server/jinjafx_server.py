@@ -58,7 +58,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     lnumber = " {" + str(self.lnumber) + "}" if hasattr(self, 'lnumber') else ''
 
     if not isinstance(args[0], int) and path != '/ping':
-      if args[1] == '200':
+      if args[1] == '200' or args[1] == '204':
         ansi = '32'
       elif args[1] == '304':
         ansi = '33'
@@ -239,6 +239,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.end_headers()
     if not head:
       self.wfile.write(r[2])
+
+
+  def do_OPTIONS(self):
+    self.lnumber = sys._getframe().f_lineno
+    self.send_response(204)
+    self.send_header('Allow', 'OPTIONS, HEAD, GET, POST')
+    self.end_headers()
 
 
   def do_HEAD(self):
