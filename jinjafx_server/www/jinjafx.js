@@ -47,6 +47,7 @@ function getStatusText(code) {
   var dt_opassword = null;
   var dt_mpassword = null;
   var input_form = null;
+  var r_input_form = null;
   var protect_action = 0;
   var cflag = false;
   var revision = 0;
@@ -190,16 +191,70 @@ function getStatusText(code) {
             var vars = jsyaml.safeLoad(dt.vars, 'utf8');
             if (vars !== null) {
               if (vars.hasOwnProperty('jinjafx_input') && vars['jinjafx_input'].hasOwnProperty('body')) {
-                if (input_form !== vars['jinjafx_input']['body']) {
-                  input_form = vars['jinjafx_input']['body'];
-                  document.getElementById('jinjafx_input_form').innerHTML = input_form;
-                }
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
                 if (vars['jinjafx_input'].hasOwnProperty('size')) {
                   document.getElementById('input_modal').className += " modal-" + vars['jinjafx_input']['size'];
                 }
-                $("#jinjafx_input").modal("show");
-                return false;
+
+                if (input_form !== vars['jinjafx_input']['body']) {
+                  var xHR = new XMLHttpRequest();
+                  xHR.open("POST", 'jinjafx?dt=jinjafx_input', true);
+
+                  r_input_form = null;
+
+                  xHR.onload = function() {
+                    if (this.status === 200) {
+                      try {
+                        obj = JSON.parse(xHR.responseText);
+                        if (obj.status === "ok") {
+                          r_input_form = window.atob(obj.outputs['Output']);
+                          document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
+                          $('#jinjafx_input_form').find('script').each(function(i, elem) {
+                            var g = document.createElement('script');
+                            g.text = elem.innerText;
+                            document.getElementById('jinjafx_input_form').appendChild(g);
+                          });
+                          input_form = vars['jinjafx_input']['body'];
+                          $("#jinjafx_input").modal("show");
+                        }
+                        else {
+                          var e = obj.error.replace("template.j2", "jinjafx_input");
+                          set_status("darkred", 'ERROR', e.substring(5));
+                        }
+                      }
+                      catch (e) {
+                        set_status("darkred", "ERROR", e);
+                      }
+                    }
+                    else {
+                      var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+                      set_status("darkred", "HTTP ERROR " + this.status, sT);
+                    }
+                    clear_wait();
+                  };
+                  xHR.onerror = function() {
+                    set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+                    clear_wait();
+                  };
+                  xHR.ontimeout = function() {
+                    set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+                    clear_wait();
+                  };
+
+                  set_wait();
+
+                  var rbody = vars['jinjafx_input']['body'];
+                  rbody = rbody.replace(/<(?:output[\t ]+.+?|\/output[\t ]*)>.*?\n/gi, '');
+
+                  xHR.timeout = 10000;
+                  xHR.setRequestHeader("Content-Type", "application/json");
+                  xHR.send(JSON.stringify({ "template": window.btoa(rbody) }));
+                  return false;
+                }
+                else {
+                  $("#jinjafx_input").modal("show");
+                  return false;
+                }
               }
             }
           }
@@ -353,11 +408,10 @@ function getStatusText(code) {
               $('#update').removeClass('d-none');
               $('#get').addClass('d-none');
               document.getElementById('mdd').disabled = false;
-              if (!dt.hasOwnProperty('dt_password') && !dt.hasOwnProperty('dt_mpassword')) {
-                $('#protect').removeClass('disabled');
-              }
-              else {
-                document.getElementById('protect').innerHTML = 'Link Protected';
+
+              $('#protect').removeClass('disabled');
+              if (dt.hasOwnProperty('dt_password') || dt.hasOwnProperty('dt_mpassword')) {
+                document.getElementById('protect_text').innerHTML = 'Update Protection';
               }
   
               if (dt.hasOwnProperty('updated')) {
@@ -709,7 +763,7 @@ function getStatusText(code) {
       };
 
       document.getElementById('ml-input-reset').onclick = function(e) {
-        document.getElementById('jinjafx_input_form').innerHTML = input_form;
+        document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
         var focusable = $('#jinjafx_input_form').find('input,select');
         if (focusable.length) {
           focusable[0].focus();
@@ -884,12 +938,12 @@ function getStatusText(code) {
           if (dt_opassword === dt_mpassword) {
             dt_mpassword = null;
           }
-          $('#protect').addClass('disabled');
-          document.getElementById('protect').innerHTML = 'Link Protected';
+          document.getElementById('protect_text').innerHTML = 'Update Protection';
           window.addEventListener('beforeunload', onBeforeUnload);
           document.title = 'JinjaFx [unsaved]';
           dirty = true;
           set_status("green", "OK", "Protection Set - Update Required", 10000);
+          dt_password = null;
         }
         else {
           set_status("darkred", "ERROR", "Invalid Password");
@@ -932,6 +986,8 @@ function getStatusText(code) {
         if (document.getElementById('get_link').value != 'false') {
           try_to_load();
   
+          $('#lbuttons').removeClass('d-none');
+          
           if (fe != window.cmData) {
             onDataBlur();
           }
@@ -939,12 +995,13 @@ function getStatusText(code) {
         else {
           set_status("darkred", "HTTP ERROR 503", "Service Unavailable");
           window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-          $('#lbuttons').removeClass('d-none');
           loaded = true;
         }
       }
       else {
-        $('#lbuttons').removeClass('d-none');
+        if (document.getElementById('get_link').value != 'false') {
+          $('#lbuttons').removeClass('d-none');
+        }
         loaded = true;
       }
     }
