@@ -55,7 +55,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def log_message(self, format, *args):
     path = self.path if hasattr(self, 'path') else ''
-    lnumber = " {" + str(self.lnumber) + "}" if hasattr(self, 'lnumber') else ''
+    lnumber = " {" + str(self.lnumber) + "}" if hasattr(self, 'lnumber') and 'beta' in jinjafx.__version__ else ''
 
     if not isinstance(args[0], int) and path != '/ping':
       if args[1] == '200' or args[1] == '204':

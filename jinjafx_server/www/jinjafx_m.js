@@ -188,7 +188,7 @@ function getStatusText(code) {
 
         if (dt.vars.match(/\S/)) {
           try {
-            var vars = jsyaml.safeLoad(dt.vars, 'utf8');
+            var vars = jsyaml.load(dt.vars, 'utf8');
             if (vars !== null) {
               if (vars.hasOwnProperty('jinjafx_input') && vars['jinjafx_input'].hasOwnProperty('body')) {
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
@@ -400,7 +400,7 @@ function getStatusText(code) {
           }
           else if (this.status === 200) {
             try {
-              var dt = jsyaml.safeLoad(this.responseText, 'utf8');
+              var dt = jsyaml.load(this.responseText, 'utf8');
   
               load_datatemplate(dt['dt'], qs);
               dt_id = qs.dt;
@@ -1134,7 +1134,7 @@ function getStatusText(code) {
       var t = change.text.join('\n');
   
       if (t.indexOf('---\ndt:\n') > -1) {
-        var obj = jsyaml.safeLoad(t, 'utf8');
+        var obj = jsyaml.load(t, 'utf8');
         if (obj != null) {
           change.cancel();
           pending_dt = obj['dt'];
