@@ -474,7 +474,8 @@ function getStatusText(code) {
   }
   
   window.onload = function() {
-    if (typeof window.btoa == 'function') {
+    var crypto = window.crypto ? window.crypto : window.msCrypto ? window.msCrypto : undefined;
+    if (typeof crypto !== 'undefined') {
       document.getElementById('delete_ds').onclick = function() { jinjafx('delete_dataset'); };
       document.getElementById('add_ds').onclick = function() { jinjafx('add_dataset'); };
       document.getElementById('get').onclick = function() { jinjafx('get_link'); };
@@ -1006,7 +1007,7 @@ function getStatusText(code) {
       }
     }
     else {
-      document.body.innerHTML = "<p style=\"padding: 15px;\">Sorry, a Modern Browser is Required (Chrome, Firefox, Safari or IE >= 10)</p>";
+      document.body.innerHTML = "<p style=\"padding: 15px;\">Sorry, a Modern Browser is Required (Chrome, Firefox, Edge, Safari or IE >= 11)</p>";
       document.body.style.display = "block";
     }
   };

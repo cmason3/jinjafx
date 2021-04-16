@@ -234,6 +234,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       self.send_header('Cache-Control', 'no-store')
 
     elif r[1] == 200 or r[1] == 304:
+      self.send_header('Content-Security-Policy', "default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; frame-ancestors 'none'")
       self.send_header('ETag', etag)
 
     self.end_headers()
