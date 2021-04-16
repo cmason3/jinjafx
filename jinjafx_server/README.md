@@ -55,7 +55,7 @@ The Data Set feature allows you to include multiple different "data.csv" and "va
 
 This feature allows you to specify an input form that can be used to obtain inputs for your Jinja2 template when you click on "Generate". As JinjaFx is built on Bootstrap 4, it uses the <a href="https://getbootstrap.com/docs/4.6/components/modal/#modal-components">Bootstrap 4 Modal</a> syntax to specify what is contained in the body of your modal form. Bootstrap works on a row and column grid with each row comprising of 12 columns - you use the various "col-n" classes to specify how wide each element is.
 
-You specify an input form using the `jinjafx_input` variable within your "vars.yml" file as per the following simple example (the "body" element supports the use of Jinja2 templating syntax as well as JavaScript using "script" tags):
+You specify an input form using the `jinjafx_input` variable within your "vars.yml" file as per the following simple example (the "body" element supports the use of Jinja2 templating syntax):
 
 ```yaml
 ---

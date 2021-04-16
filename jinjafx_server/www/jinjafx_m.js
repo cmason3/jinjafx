@@ -209,11 +209,13 @@ function getStatusText(code) {
                         if (obj.status === "ok") {
                           r_input_form = window.atob(obj.outputs['Output']);
                           document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
+                          /*
                           $('#jinjafx_input_form').find('script').each(function(i, elem) {
                             var g = document.createElement('script');
                             g.text = elem.innerText;
                             document.getElementById('jinjafx_input_form').appendChild(g);
                           });
+                          */
                           input_form = vars['jinjafx_input']['body'];
                           $("#jinjafx_input").modal("show");
                         }
