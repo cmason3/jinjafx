@@ -1007,7 +1007,7 @@ function getStatusText(code) {
       }
     }
     else {
-      document.body.innerHTML = "<p style=\"padding: 15px;\">Sorry, a Modern Browser is Required (Chrome, Firefox, Edge, Safari or IE >= 11)</p>";
+      document.body.innerHTML = "<p id=\"unsupported\">Sorry, a Modern Browser is Required (Chrome, Firefox, Edge, Safari or IE >= 11)</p>";
       document.body.style.display = "block";
     }
   };

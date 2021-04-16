@@ -4,7 +4,7 @@
     window.opener.reset_dt();
 
     if (Object.keys(dt).length !== 0) {
-      var dtx = '<span style="color: #0074D9;"># JinjaFx DataTemplate\n# https://github.com/cmason3/jinjafx</span>\n\n';
+      var dtx = '# JinjaFx DataTemplate\n# https://github.com/cmason3/jinjafx\n\n';
 
       dtx += '---\n';
       dtx += 'dt:\n';

@@ -17,9 +17,22 @@ body {
   border: 1px solid lightgray;
   background-color: #fff;
   font-size: 12px;
+  overflow: auto;
+  width: auto;
+  height: 100%;
+  display: none;
 }
 #csv th {
   background-color: lightgray;
+}
+#unsupported {
+  padding: 15px;
+}
+.mw-150 {
+  min-width: 150px;
+}
+.text-black {
+  color: black;
 }
 .expand {
   position: absolute;

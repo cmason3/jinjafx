@@ -33,24 +33,24 @@
     <div id="wrap">
       <div id="header" class="jumbotron">
         <a href="./" tabindex="-1">
-          <svg style="float: left; margin-right: 10px;" width="48" height="48" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <svg class="float-left mr-10" width="48" height="48" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
             <rect x="32" y="32" width="250" height="250" fill="#0074d9" stroke="#001f3f" />
             <rect x="304" y="162" width="120" height="120" fill="#0074d9" stroke="#001f3f" />
             <rect x="142" y="304" width="140" height="140" fill="#0074d9" stroke="#001f3f" />
             <rect x="304" y="304" width="177" height="177" fill="#0074d9" stroke="#001f3f" />
           </svg>
         </a>
-        <h5 id="title" style="color: black; float: left; margin: 0px 10px 0px 0px;">
+        <h5 id="title">
           <a class="text-decoration-none text-reset" href="./" tabindex="-1">
             <span class="font-weight-bold">JinjaFx</span><br />
-            <span class="small" style="color: black;">&nbsp;Jinja2&nbsp;Templating&nbsp;Tool</span>
+            <span class="small text-black">&nbsp;Jinja2&nbsp;Templating&nbsp;Tool</span>
           </a>
         </h5>
         <!-- https://github.com/feathericons/feather/tree/master/icons -->
-        <div class="btn-toolbar" role="group" style="margin-left: auto; display: flex;">
+        <div class="btn-toolbar ml-auto d-flex" role="group">
           <div class="btn-group mr-2">
             <div class="btn-group">
-              <button id="select_ds" type="button" class="btn btn-warning text-left" style="min-width: 150px;" data-toggle="dropdown" title="Select Data Set" disabled>
+              <button id="select_ds" type="button" class="btn btn-warning text-left mw-150" data-toggle="dropdown" title="Select Data Set" disabled>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="12 2 2 7 12 12 22 7 12 2" />
                   <polyline points="2 17 12 22 22 17" />
@@ -121,27 +121,27 @@
             </svg>&nbsp;Generate
           </button>
         </div>
-        <div style="clear: both;"></div>
+        <div class="clearfix"></div>
       </div>
       <div id="main" class="container-fluid">
         <div id="content">
           <div id="top">
-            <div id="cdata" class="split-horizontal" style="position: relative;">
+            <div id="cdata" class="split-horizontal position-relative">
               <div class="badge badge-secondary float-left labels">D<br />A<br />T<br />A<br />.<br />C<br />S<br />V<br /></div>
               <textarea id="data"></textarea>
-              <div id="csv" class="table-responsive" style="overflow: auto; width: auto; height: 100%; display: none;"></div>
+              <div id="csv" class="table-responsive"></div>
               <span id="ldata" title="Expand" class="expand">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
               </span>
-              <span id="ldata2" title="Restore" class="expand" style="display: none;">
+              <span id="ldata2" title="Restore" class="expand display-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
                 </svg>
               <span>
             </div>
-            <div id="cvars" class="split-horizontal" style="position: relative;">
+            <div id="cvars" class="split-horizontal position-relative">
               <div class="badge badge-danger float-left labels">V<br />A<br />R<br />S<br />.<br />Y<br />M<br />L<br /></div>
               <textarea id="vars"></textarea>
               <span id="lvars" title="Expand" class="expand">
@@ -149,14 +149,14 @@
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
               </span>
-              <span id="lvars2" title="Restore" class="expand" style="display: none;">
+              <span id="lvars2" title="Restore" class="expand display-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
                 </svg>
               <span>
             </div>
           </div>
-          <div id="ctemplate" style="position: relative;">
+          <div id="ctemplate" class="position-relative">
             <div class="badge badge-info float-left labels">T<br />E<br />M<br />P<br />L<br />A<br />T<br />E<br />.<br />J<br />2<br /></div>
             <textarea id="template"></textarea>
             <span id="ltemplate" title="Expand" class="expand">
@@ -164,11 +164,11 @@
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
             </span>
-              <span id="ltemplate2" title="Restore" class="expand" style="display: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-                </svg>
-              <span>
+            <span id="ltemplate2" title="Restore" class="expand display-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+              </svg>
+            <span>
           </div>
         </div>
       </div>
@@ -200,7 +200,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 id="ml-title" style="margin-top: 0px;">Ansible Vault</h4>
+            <h4 id="ml-title" class="mt-0">Ansible Vault</h4>
           </div>
           <div class="form-group row modal-body">
             <label for="vault" class="col-sm-12 col-form-label">Vault Password</label>
@@ -219,7 +219,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 id="ml-title" style="margin-top: 0px;">Protect DataTemplate</h4>
+            <h4 id="ml-title" class="mt-0">Protect DataTemplate</h4>
           </div>
           <div class="form-group modal-body">
             <div class="row">
@@ -254,7 +254,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 id="ml-title" style="margin-top: 0px;">Protected DataTemplate</h4>
+            <h4 id="ml-title" class="mt-0">Protected DataTemplate</h4>
           </div>
           <div class="form-group row modal-body">
             <label for="in_protect" class="col-sm-12 col-form-label">DataTemplate Password</label>
@@ -273,7 +273,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 id="ml-title" style="margin-top: 0px;">Add Data Set</h4>
+            <h4 id="ml-title" class="mt-0">Add Data Set</h4>
           </div>
           <div class="form-group row modal-body">
             <label for="ds_name" class="col-sm-12 col-form-label">Data Set Name</label>

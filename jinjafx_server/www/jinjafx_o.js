@@ -107,12 +107,17 @@
                 }).forEach(function(output) {
                   var g = window.opener.quote(output)
   
-                  tabs += '<div id="o' + oid + '" class="tab-pane fade' + ((oid == 1) ? ' show active"' : '"') + ' style="height: 100%;">';
+                  tabs += '<div id="o' + oid + '" class="h-100 tab-pane fade' + ((oid == 1) ? ' show active' : '') + '">';
                   tabs += '<h4 class="font-weight-bold">' + g + '</h4>';
   
                   var tc = window.atob(obj.outputs[output]);
                   if (tc.match(/<html.*?>[\s\S]+<\/html>/i)) {
-                    tabs += '<iframe id="t_o' + oid + '" class="output" doc="' + tc.replace(/"/g, "&quot;") + '" src="javascript: window.frameElement.getAttribute(\'doc\');"></iframe>';
+                    if (window.crypto) { // NOT IE 11
+                      tabs += '<iframe id="t_o' + oid + '" class="output" srcdoc="' + tc.replace(/"/g, "&quot;") + '"></iframe>';
+                    }
+                    else {
+                      tabs += '<iframe id="t_o' + oid + '" class="output" doc="' + tc.replace(/"/g, "&quot;") + '" src="javascript: window.frameElement.getAttribute(\'doc\');"></iframe>';
+                    }
                   }
                   else {
                     tabs += '<textarea id="t_o' + oid + '" class="output" readonly>' + window.opener.quote(tc) + '</textarea>';
