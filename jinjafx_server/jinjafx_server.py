@@ -191,7 +191,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           ctype = 'text/javascript'
         elif fpath.endswith('.css'):
           ctype = 'text/css'
-        elif fpath.endswith('png'):
+        elif fpath.endswith('.png'):
           ctype = 'image/png'
         else:
           ctype = 'text/html'
@@ -229,13 +229,15 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     if r[1] != 304:
       self.send_header('Content-Type', r[0])
       self.send_header('Content-Length', str(len(r[2])))
+      self.send_header('X-Content-Type-Options', 'nosniff')
 
     if not cache:
       self.send_header('Cache-Control', 'no-store')
 
     elif r[1] == 200 or r[1] == 304:
-      self.send_header('Content-Security-Policy', "default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; script-src 'self' https://cdnjs.cloudflare.com; frame-ancestors 'none'")
-      self.send_header('X-Content-Type-Options', 'nosniff')
+      if r[1] == 200 and r[0] == 'text/html':
+        self.send_header('Content-Security-Policy', "frame-ancestors 'none'")
+        self.send_header('Referrer-Policy', 'origin')
       self.send_header('ETag', etag)
 
     self.end_headers()
@@ -362,6 +364,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/zip')
                 self.send_header('Content-Length', str(len(zfile.getvalue())))
+                self.send_header('X-Content-Type-Options', 'nosniff')
                 self.send_header('X-Download-Filename', 'Outputs.' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.zip')
                 self.end_headers()
                 self.wfile.write(zfile.getvalue())
@@ -599,6 +602,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
+    self.send_header('X-Content-Type-Options', 'nosniff')
     self.end_headers()
     self.wfile.write(r[2].encode('utf-8'))
 
