@@ -479,6 +479,12 @@ function getStatusText(code) {
       document.getElementById('protect').onclick = function() { jinjafx('protect'); };
       document.getElementById('export').onclick = function() { jinjafx('export'); };
       document.getElementById('generate').onclick = function() { jinjafx('generate'); };
+
+      if (window.msCrypto) {
+        var xHR = new XMLHttpRequest();
+        xHR.open("GET", "ie11.html?" + moment().format('YYYYMMDDHHmm'), true);
+        xHR.send(null);
+      }
   
       sobj = document.getElementById("status");
   
