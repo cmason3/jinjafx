@@ -17,9 +17,22 @@ body {
   border: 1px solid lightgray;
   background-color: #fff;
   font-size: 12px;
+  overflow: auto;
+  width: auto;
+  height: 100%;
+  display: none;
 }
 #csv th {
   background-color: lightgray;
+}
+#unsupported {
+  padding: 15px;
+}
+.mw-150 {
+  min-width: 150px;
+}
+.text-black {
+  color: black;
 }
 .expand {
   position: absolute;
@@ -52,11 +65,11 @@ body {
 }
 .gutter.gutter-vertical {
   cursor: ns-resize;
-  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=");
+  background-image: url('split.gutter-vertical.png');
 }
 .gutter.gutter-horizontal {
   cursor: ew-resize;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+  background-image: url('split.gutter-horizontal.png');
 }
 .split-horizontal, .gutter.gutter-horizontal {
   height: 100%;

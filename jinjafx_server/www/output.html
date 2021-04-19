@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; script-src 'self' https://cdnjs.cloudflare.com">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=1024, user-scalable=no">
     <title>Generating...</title>
@@ -9,222 +10,37 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="jinjafx.css">
     <link rel="stylesheet" href="jinjafx_o.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-    <script>
-      var obj = null;
-      var tid = 0;
-      var qs = '';
-
-      function set_status(color, title, message) {
-        clearTimeout(tid);
-        tid = setTimeout(function() { sobj.innerHTML = "" }, 5000);
-        sobj.style.color = color;
-        sobj.innerHTML = "<strong>" + title + "</strong> " + message;
-      }
-
-      function copy_output() {
-        sobj.innerHTML = '';
-        try {
-          var t = document.getElementById('t_' + $('.tab-content .active').attr('id'));
-
-          if (t.nodeName == 'IFRAME') {
-            t.contentDocument.designMode = "on";
-            t.contentDocument.execCommand("selectAll", false, null);
-            t.contentDocument.execCommand("copy", false, null);
-            t.contentDocument.designMode = "off";
-            t.contentDocument.getSelection().removeAllRanges(); 
-          }
-          else {
-            var oss = t.selectionStart;
-            var ose = t.selectionEnd;
-            var ost = t.scrollTop;
-            t.focus();
-            t.setSelectionRange(0, t.value.length);
-            document.execCommand("copy", false, null);
-            t.setSelectionRange(oss, ose);
-            t.scrollTop = ost;
-          }
-          set_status("green", "OK", "Copied to Clipboard");
-        }
-        catch (e) {
-          set_status("darkred", "ERROR", e);
-        }
-      }
-
-      function download_outputs() {
-        sobj.innerHTML = '';
-        if (obj != null) {
-          var xHR = new XMLHttpRequest();
-          xHR.open("POST", 'download' + qs, true);
-  
-          xHR.onload = function() {
-            if (this.status === 200) {
-              var filename = xHR.getResponseHeader("X-Download-Filename");
-  
-              if (window.navigator.msSaveOrOpenBlob) {
-                window.navigator.msSaveOrOpenBlob(new Blob([ xHR.response ], { type: xHR.getResponseHeader("Content-Type") }), filename);
-              }
-              else {
-                var link = document.createElement('a');
-                link.href = window.URL.createObjectURL(xHR.response);
-                link.download = filename;
-                link.click();
-              }
-            }
-          };
-          xHR.responseType = "blob";
-          xHR.setRequestHeader("Content-Type", "application/json");
-          xHR.send(JSON.stringify(obj.outputs));
-        }
-        var t = document.getElementById('t_' + $('.tab-content .active').attr('id'));
-				t.focus();
-      }
-
-      window.onload = function() {
-        if (window.opener != null) {
-          var dt = window.opener.dt;
-          window.opener.reset_dt();
-
-          sobj = document.getElementById("ostatus");
-  
-          if (Object.keys(dt).length !== 0) {
-            var _qs = [];
-            if (dt.id != '') {
-              _qs.push('dt=' + dt.id);
-            }
-            if (dt.dataset != '') {
-              _qs.push('ds=' + dt.dataset);
-            }
-            qs = (_qs.length > 0) ? '?' + _qs.join('&') : '';
-
-            var xHR = new XMLHttpRequest();
-            xHR.open("POST", 'jinjafx' + qs, true);
-  
-            xHR.onload = function() {
-              if (this.status === 200) {
-                try {
-                  obj = JSON.parse(xHR.responseText);
-                  if (obj.status === "ok") {
-                    var oc = Object.keys(obj.outputs).length;
-                    var oid = 1;
-
-                    var links = '';
-                    var tabs = '';
-
-                    Object.keys(obj.outputs).sort(function(a, b) {
-                      if (a == 'Output') {
-                        return -1;
-                      }
-                      return a > b ? 1 : b > a ? -1 : 0;
-                    }).forEach(function(output) {
-                      var g = window.opener.quote(output)
-
-                      tabs += '<div id="o' + oid + '" class="tab-pane fade' + ((oid == 1) ? ' show active"' : '"') + ' style="height: 100%;">';
-                      tabs += '<h4 class="font-weight-bold">' + g + '</h4>';
-
-                      var tc = window.atob(obj.outputs[output]);
-                      if (tc.match(/<html.*?>[\s\S]+<\/html>/i)) {
-                        tabs += '<iframe id="t_o' + oid + '" class="output" doc="' + tc.replace(/"/g, "&quot;") + '" src="javascript: window.frameElement.getAttribute(\'doc\');"></iframe>';
-                        //document.getElementById('copy').style.display = 'none';
-                      }
-                      else {
-                        tabs += '<textarea id="t_o' + oid + '" class="output" readonly>' + window.opener.quote(tc) + '</textarea>';
-                      }
-
-                      tabs += '</div>';
-
-                      links += '<li class="nav-item">';
-                      links += '<a class="nav-link' + ((oid == 1) ? ' active"' : '"') + ' data-toggle="tab" href="#o' + oid + '">' + g + '</a>';
-                      links += '</li>';
-
-                      oid += 1;
-                    });
-
-                    document.body.style.display = 'none';
-                    document.getElementById('status').style.display = 'none';
-                    document.getElementById('summary').innerHTML = 'Generated at ' + moment().format('HH:mm') + ' on ' + moment().format('Do MMMM YYYY') + '<br />in ' + Math.ceil(obj.elapsed).toLocaleString() + ' milliseconds';
-                    document.getElementById('tabs').innerHTML = tabs;
-                    document.getElementById('nav-links').innerHTML = links;
-                    document.getElementById('wrap').style.display = 'block';
-                    document.getElementById('footer').style.display = 'block';
-
-                    document.title = 'Outputs' + ((dt.dataset != 'Default') ? ' (' + dt.dataset + ')' : '');
-
-                    if (oc > 1) {
-                      document.getElementById('pills').style.display = 'block';
-                    }
-
-                    window.onresize = function() {
-                      document.getElementById("row").style.height = (window.innerHeight - 200) + "px";
-                    };
-  
-                    window.onresize();
-                    document.body.style.display = 'block';
-                  }
-                  else {
-                    document.title = "Error";
-                    document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx Error</h4></strong><pre>"+ obj.error + "</pre></div>";
-                  }
-                }
-                catch (e) {
-                  document.title = "Error";
-                  document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>Internal Error</h4></strong>" + e + "</div>";
-                }
-              }
-              else {
-                document.title = "Error";
-                var sT = (this.statusText.length == 0) ? window.opener.getStatusText(this.status) : this.statusText;
-                document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>HTTP ERROR " + this.status + "</h4></strong>"+ sT + "</div>";
-              }
-            };
-            xHR.timeout = 0;
-            xHR.onerror = function() {
-              document.title = "Error";
-              document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx Error</h4></strong>XMLHttpRequest.onError()</div>";
-            };
-            xHR.setRequestHeader("Content-Type", "application/json");
-            xHR.send(JSON.stringify(dt));
-          }
-          else {
-            document.title = "Error";
-            document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx Error</h4></strong>DataTemplate Expired</div>";
-          }
-        }
-        else {
-          document.title = "Error";
-          document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx Error</h4></strong>DataTemplate Expired</div>";
-        }
-      };
-    </script>
-	</head>
-	<body>
+    <script src="jinjafx_o.js"></script>
+  </head>
+  <body>
     <div id="status" class="alert alert-info wait font-weight-bold">Generating Output...</div>
-    <div id="wrap" style="display: none;">
+    <div id="wrap" class="display-none">
       <div id="header" class="jumbotron">
         <a href="./">
-          <svg style="float: left; margin-right: 10px;" width="48" height="48" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <svg class="float-left mr-10" width="48" height="48" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
             <rect x="32" y="32" width="250" height="250" fill="#0074d9" stroke="#001f3f" />
             <rect x="304" y="162" width="120" height="120" fill="#0074d9" stroke="#001f3f" />
             <rect x="142" y="304" width="140" height="140" fill="#0074d9" stroke="#001f3f" />
             <rect x="304" y="304" width="177" height="177" fill="#0074d9" stroke="#001f3f" />
           </svg>
         </a>
-        <h5 id="title" style="color: black; float: left; margin: 0px 10px 0px 0px;">
+        <h5 id="title">
           <a class="text-decoration-none text-reset" href="./">
             <span class="font-weight-bold">JinjaFx</span><br />
-            <span class="small" style="color: black;">&nbsp;Jinja2&nbsp;Templating&nbsp;Tool</span>
+            <span class="small text-black">&nbsp;Jinja2&nbsp;Templating&nbsp;Tool</span>
           </a>
         </h5>
-        <div class="btn-toolbar" role="group" style="margin-left: auto; display: flex;">
-          <button id="copy" class="btn btn-info mr-2" type="button" onclick="copy_output();" title="Copy Output to Clipboard">
+        <div class="btn-toolbar ml-auto d-flex" role="group">
+          <button id="copy" class="btn btn-info mr-2" type="button" title="Copy Output to Clipboard">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>&nbsp;Copy
           </button>
-          <button id="download" class="btn btn-info mr-2" type="button" onclick="download_outputs();" title="Download Outputs as Zip">
+          <button id="download" class="btn btn-info mr-2" type="button" title="Download Outputs as Zip">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
@@ -232,17 +48,17 @@
             </svg>&nbsp;Download
           </button>
         </div>
-        <div style="clear: both;"></div>
+        <div class="clearfix"></div>
       </div>
-      <div id="main" class="container-fluid">        
+      <div id="main" class="container-fluid">
         <div id="content">
-          <div id="row" class="row no-gutters" style="margin: 10px;">
-            <div class="col" style="height: 100%;">
-              <div id="tabs" class="tab-content" style="height: 100%;"></div>
+          <div id="row" class="row no-gutters m-10">
+            <div class="col h-100">
+              <div id="tabs" class="tab-content h-100"></div>
             </div>
-            <div id="pills" class="col-auto" style="height: 100%; margin-left: 10px; display: none;">
+            <div id="pills" class="col-auto h-100 ml-10 display-none">
               <h4>&nbsp;</h4>
-              <div class="nosb" style="height: 100%;">
+              <div class="nosb h-100">
                 <ul id="nav-links" class="nav nav-pills flex-column"></ul>
               </div>
             </div>
@@ -251,10 +67,10 @@
       </div>
       <div id="push"></div>
     </div>
-    <div id="footer" style="display: none;">
+    <div id="footer" class="display-none">
       <div class="container-fluid">
         <h5 id="ostatus" class="float-left"></h5>
-        <span id="summary" style="width=100px; font-size: 85%;" class="float-right text-right"></span>
+        <span id="summary" class="float-right text-right fs-85"></span>
       </div>
     </div>
   </body>

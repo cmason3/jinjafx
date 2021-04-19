@@ -22,6 +22,12 @@ iframe.output {
   height: 100%;
   width: 100%;
 }
+.ml-10 {
+  margin-left: 10px;
+}
+.fs-85 {
+  font-size: 85%;
+}
 .nosb {
   overflow-y: scroll;
   scrollbar-width: none;

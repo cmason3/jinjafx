@@ -55,7 +55,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
   def log_message(self, format, *args):
     path = self.path if hasattr(self, 'path') else ''
-    lnumber = " {" + str(self.lnumber) + "}" if hasattr(self, 'lnumber') else ''
+    lnumber = " {" + str(self.lnumber) + "}" if hasattr(self, 'lnumber') and 'beta' in jinjafx.__version__ else ''
 
     if not isinstance(args[0], int) and path != '/ping':
       if args[1] == '200' or args[1] == '204':
@@ -191,7 +191,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
           ctype = 'text/javascript'
         elif fpath.endswith('.css'):
           ctype = 'text/css'
-        elif fpath.endswith('png'):
+        elif fpath.endswith('.png'):
           ctype = 'image/png'
         else:
           ctype = 'text/html'
@@ -229,11 +229,15 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     if r[1] != 304:
       self.send_header('Content-Type', r[0])
       self.send_header('Content-Length', str(len(r[2])))
+      self.send_header('X-Content-Type-Options', 'nosniff')
 
     if not cache:
       self.send_header('Cache-Control', 'no-store')
 
     elif r[1] == 200 or r[1] == 304:
+      if r[1] == 200:
+        self.send_header('Content-Security-Policy', "frame-ancestors 'none'")
+        self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
       self.send_header('ETag', etag)
 
     self.end_headers()
@@ -360,6 +364,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/zip')
                 self.send_header('Content-Length', str(len(zfile.getvalue())))
+                self.send_header('X-Content-Type-Options', 'nosniff')
                 self.send_header('X-Download-Filename', 'Outputs.' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.zip')
                 self.end_headers()
                 self.wfile.write(zfile.getvalue())
@@ -597,6 +602,11 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
+    self.send_header('X-Content-Type-Options', 'nosniff')
+
+    if r[1] == 200:
+      self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+
     self.end_headers()
     self.wfile.write(r[2].encode('utf-8'))
 

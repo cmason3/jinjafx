@@ -188,7 +188,7 @@ function getStatusText(code) {
 
         if (dt.vars.match(/\S/)) {
           try {
-            var vars = jsyaml.safeLoad(dt.vars, 'utf8');
+            var vars = jsyaml.load(dt.vars, 'utf8');
             if (vars !== null) {
               if (vars.hasOwnProperty('jinjafx_input') && vars['jinjafx_input'].hasOwnProperty('body')) {
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
@@ -209,11 +209,6 @@ function getStatusText(code) {
                         if (obj.status === "ok") {
                           r_input_form = window.atob(obj.outputs['Output']);
                           document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
-                          $('#jinjafx_input_form').find('script').each(function(i, elem) {
-                            var g = document.createElement('script');
-                            g.text = elem.innerText;
-                            document.getElementById('jinjafx_input_form').appendChild(g);
-                          });
                           input_form = vars['jinjafx_input']['body'];
                           $("#jinjafx_input").modal("show");
                         }
@@ -400,7 +395,7 @@ function getStatusText(code) {
           }
           else if (this.status === 200) {
             try {
-              var dt = jsyaml.safeLoad(this.responseText, 'utf8');
+              var dt = jsyaml.load(this.responseText, 'utf8');
   
               load_datatemplate(dt['dt'], qs);
               dt_id = qs.dt;
@@ -474,7 +469,8 @@ function getStatusText(code) {
   }
   
   window.onload = function() {
-    if (typeof window.btoa == 'function') {
+    var crypto = window.crypto ? window.crypto : window.msCrypto ? window.msCrypto : undefined;
+    if (typeof crypto !== 'undefined') {
       document.getElementById('delete_ds').onclick = function() { jinjafx('delete_dataset'); };
       document.getElementById('add_ds').onclick = function() { jinjafx('add_dataset'); };
       document.getElementById('get').onclick = function() { jinjafx('get_link'); };
@@ -483,6 +479,12 @@ function getStatusText(code) {
       document.getElementById('protect').onclick = function() { jinjafx('protect'); };
       document.getElementById('export').onclick = function() { jinjafx('export'); };
       document.getElementById('generate').onclick = function() { jinjafx('generate'); };
+
+      if (window.msCrypto) {
+        var xHR = new XMLHttpRequest();
+        xHR.open("GET", "ie11.html?" + moment().format('YYYYMMDDHHmm'), true);
+        xHR.send(null);
+      }
   
       sobj = document.getElementById("status");
   
@@ -1006,7 +1008,7 @@ function getStatusText(code) {
       }
     }
     else {
-      document.body.innerHTML = "<p style=\"padding: 15px;\">Sorry, a Modern Browser is Required (Chrome, Firefox, Safari or IE >= 10)</p>";
+      document.body.innerHTML = "<p id=\"unsupported\">Sorry, a Modern Browser is Required (Chrome, Firefox, Safari or Microsoft Edge)</p>";
       document.body.style.display = "block";
     }
   };
@@ -1134,7 +1136,7 @@ function getStatusText(code) {
       var t = change.text.join('\n');
   
       if (t.indexOf('---\ndt:\n') > -1) {
-        var obj = jsyaml.safeLoad(t, 'utf8');
+        var obj = jsyaml.load(t, 'utf8');
         if (obj != null) {
           change.cancel();
           pending_dt = obj['dt'];

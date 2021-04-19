@@ -30,6 +30,17 @@ svg {
 #main {
   padding-bottom: 30px;
 }
+h5#title {
+  color: black;
+  float: left;
+  margin: 0px 10px 0px 0px;
+}
+.mr-10 {
+  margin-right: 10px;
+}
+.display-none {
+  display: none;
+}
 #content {
   min-height: 125px;
 }
