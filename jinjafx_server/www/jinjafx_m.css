@@ -90,3 +90,6 @@ body {
 .cm-jfx-header {
   font-weight: bold;
 }
+.cm-jfx-invalid {
+  background: red;
+}
