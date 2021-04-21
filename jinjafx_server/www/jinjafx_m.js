@@ -1269,6 +1269,9 @@ function getStatusText(code) {
         return { n: 0 };
       },
       token: function(stream, state) {
+        if (stream.match(/[^\t -~]/)) {
+          return "jfx-invalid";
+        }        
         if (stream.sol() && stream.match(/[ \t]*#/)) {
           stream.skipToEnd();
           return "comment";
