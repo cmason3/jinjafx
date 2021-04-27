@@ -545,8 +545,8 @@ function getStatusText(code) {
         extraKeys: gExtraKeys,
         mode: "data",
         viewportMargin: 80,
-        smartIndent: false,
-        showTrailingSpace: true
+        smartIndent: false
+        //showTrailingSpace: true
       });
   
       window.cmVars = CodeMirror.fromTextArea(vars, {
@@ -1273,9 +1273,14 @@ function getStatusText(code) {
           stream.skipToEnd();
           return "comment";
         }
-        if (!state.n && stream.sol() && stream.match(/[ \t]*\S/)) {
+        if (stream.match(/[^\t -~]/)) {
+          return "jfx-invalid";
+        }
+        if ((state.n == 1) && stream.sol()) {
+          state.n = 2;
+        }
+        if ((state.n <= 1) && stream.match(/\S/)) {
           state.n = 1;
-          stream.skipToEnd();
           return "jfx-header";
         }
         stream.next();
