@@ -17,10 +17,6 @@
   
       sobj = document.getElementById("ostatus");
 
-      $('#warning_modal').on('shown.bs.modal', function() {
-        document.getElementById("btn_warning_close").focus();
-      });
-
       document.getElementById('copy').onclick = function() {
         sobj.innerHTML = '';
         try {
