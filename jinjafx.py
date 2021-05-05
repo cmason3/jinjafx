@@ -672,8 +672,9 @@ class JinjaFx():
     raise Exception('[jfx_exception] ' + message)
 
 
-  def jfx_warning(self, message):
-    self.g_warnings.append(message)
+  def jfx_warning(self, message, repeat=False):
+    if repeat or message not in self.g_warnings:
+      self.g_warnings.append(message)
     return ''
 
 
