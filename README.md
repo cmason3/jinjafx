@@ -355,6 +355,10 @@ This function is used to stop processing and raise an exception with a meaningfu
 
 ```
 
+- <b><code>jinjafx.warning("message")</code></b>
+
+Nearly identical to the previous function, except this won't stop processing of the template but will raise a warning message when the output is generated - this can be specified multiple times for multiple warnings.
+
 - <b><code>jinjafx.first([fields[]], [{ "filter_field": "regex", ... }])</code></b>
 
 This function is used to determine whether this is the first row where you have seen this particular field value or not - if you don't specify any fields then it will return `True` for the first row and `False` for the rest.

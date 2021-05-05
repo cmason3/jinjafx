@@ -184,33 +184,43 @@ def main():
     if args.od is not None:
       os.chdir(args.od)
 
+    if len(outputs['_stderr_']) > 0:
+      print('Warnings:')
+      for w in outputs['_stderr_']:
+        print(' - ' + w)
+
+      print()
+
     for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
-      output = '\n'.join(o[1]) + '\n'
-      if len(output.strip()) > 0:
-        if o[0] != '_stdout_':
-          ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o[0])))
-
-          if os.path.dirname(ofile) != '':
-            if not os.path.isdir(os.path.dirname(ofile)):
-              os.makedirs(os.path.dirname(ofile))
-
-          with open(ofile, 'w') as f:
-            f.write(output)
-
-          print(format_bytes(len(output)) + ' > ' + ofile)
-
-        else:
-          if ocount > 0:
-            print('\n-\n')
-          print(output)
-
-        ocount += 1
+      if o[0] != '_stderr_':
+        output = '\n'.join(o[1]) + '\n'
+        if len(output.strip()) > 0:
+          if o[0] == '_stdout_':
+            if ocount > 0:
+              print('\n-\n')
+            print(output)
+  
+          else:
+            ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o[0])))
+  
+            if os.path.dirname(ofile) != '':
+              if not os.path.isdir(os.path.dirname(ofile)):
+                os.makedirs(os.path.dirname(ofile))
+  
+            with open(ofile, 'w') as f:
+              f.write(output)
+  
+            print(format_bytes(len(output)) + ' > ' + ofile)
+  
+          ocount += 1
 
     if ocount > 0:
       if '_stdout_' not in outputs:
         print()
+
     else:
       raise Exception('nothing to output')
+
 
   except KeyboardInterrupt:
     sys.exit(-1)
@@ -239,6 +249,7 @@ class JinjaFx():
     self.g_datarows = []
     self.g_dict = {}
     self.g_row = 0 
+    self.g_warnings = []
 
     outputs = {}
     delim = None
@@ -424,6 +435,7 @@ class JinjaFx():
       'expand': self.jfx_expand,
       'counter': self.jfx_counter,
       'exception': self.jfx_exception,
+      'warning': self.jfx_warning,
       'first': self.jfx_first,
       'last': self.jfx_last,
       'fields': self.jfx_fields,
@@ -453,6 +465,10 @@ class JinjaFx():
 
       try:
         content = template.render(rowdata)
+
+        outputs['0:_stderr_'] = []
+        if len(self.g_warnings) > 0:
+          outputs['0:_stderr_'] = self.g_warnings
 
       except Exception as e:
         if e.args[0].startswith('[jfx_exception] '):
@@ -654,6 +670,11 @@ class JinjaFx():
 
   def jfx_exception(self, message):
     raise Exception('[jfx_exception] ' + message)
+
+
+  def jfx_warning(self, message):
+    self.g_warnings.append(message)
+    return ''
 
 
   def jfx_first(self, fields=None, ffilter={}):

@@ -303,12 +303,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 'elapsed': round(time.time() * 1000) - st,
                 'outputs': {}
               }
-  
+
               for o in outputs:
                 output = '\n'.join(outputs[o]) + '\n'
                 if len(output.strip()) > 0:
                   jsr['outputs'].update({ o: base64.b64encode(output.encode('utf-8')).decode('utf-8') })
-                  ocount += 1
+                  if o != '_stderr_':
+                    ocount += 1
   
               if ocount == 0:
                 raise Exception('nothing to output')
