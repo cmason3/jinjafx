@@ -185,11 +185,11 @@ def main():
       os.chdir(args.od)
 
     if len(outputs['_stderr_']) > 0:
-      print('Warnings:')
+      print('Warnings:', file=sys.stderr)
       for w in outputs['_stderr_']:
-        print(' - ' + w)
+        print(' - ' + w, file=sys.stderr)
 
-      print()
+      print('', file=sys.stderr)
 
     for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
       if o[0] != '_stderr_':
