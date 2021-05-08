@@ -263,6 +263,7 @@ Jinja2 supports the ability to provide extended functionality through [extension
 ---
 jinja2_extensions:
   - 'jinja2.ext.i18n'
+  - 'jinja2.ext.loopcontrols'
 ```
 
 JinjaFx will then attempt to load and enable the extensions that will then be used when processing your Jinja2 templates. You also have the ability to check whether an extensions is loaded within your template by querying `jinja2_extensions` directly.
