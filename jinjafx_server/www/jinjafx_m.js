@@ -797,7 +797,7 @@ function getStatusText(code) {
           Object.keys(vars).forEach(function(v) {
             for (i = 0; i < vars[v].length; i++) {
               if (typeof vars[v][i] !== "boolean") {
-                vars[v][i] = '"' + vars[v][i].replace('"', '\\x22') + '"';
+                vars[v][i] = '"' + vars[v][i].replace(/"/g, '\\x22') + '"';
               }
             }
             if (vars[v].length > 1) {
@@ -1260,7 +1260,7 @@ function getStatusText(code) {
       tid = setTimeout(function() { sobj.innerHTML = "" }, 5000);
     }
     sobj.style.color = color;
-    sobj.innerHTML = "<strong>" + title + "</strong> " + message;
+    sobj.innerHTML = "<strong>" + quote(title) + "</strong> " + message;
   }
 
   function cmDataMode() {
