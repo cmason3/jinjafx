@@ -1260,7 +1260,7 @@ function getStatusText(code) {
       tid = setTimeout(function() { sobj.innerHTML = "" }, 5000);
     }
     sobj.style.color = color;
-    sobj.innerHTML = "<strong>" + quote(title) + "</strong> " + message;
+    sobj.innerHTML = "<strong>" + quote(title) + "</strong> " + quote(message);
   }
 
   function cmDataMode() {
