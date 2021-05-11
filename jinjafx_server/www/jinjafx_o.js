@@ -93,6 +93,13 @@
             try {
               obj = JSON.parse(xHR.responseText);
               if (obj.status === "ok") {
+                var stderr = null;
+
+                if (obj.outputs.hasOwnProperty('_stderr_')) {
+                  stderr = window.atob(obj.outputs['_stderr_']);
+                  delete (obj.outputs['_stderr_']);
+                }
+
                 var oc = Object.keys(obj.outputs).length;
                 var oid = 1;
   
@@ -152,6 +159,20 @@
   
                 window.onresize();
                 document.body.style.display = 'block';
+
+                if (stderr != null) {
+                  var html = '<ul class="mb-0">'
+                  stderr.trim().split(/\n+/).forEach(function(w) {
+                    if (html.match(/<li>/)) {
+                      html += '<br />';
+                    }
+                    html += '<li>' + window.opener.quote(w) + '</li>';
+                  });
+                  html += '</ul>'
+
+                  document.getElementById('warnings').innerHTML = html;
+                  $("#warning_modal").modal("show");
+                }
               }
               else {
                 document.title = "Error";

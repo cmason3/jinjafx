@@ -263,6 +263,7 @@ Jinja2 supports the ability to provide extended functionality through [extension
 ---
 jinja2_extensions:
   - 'jinja2.ext.i18n'
+  - 'jinja2.ext.loopcontrols'
 ```
 
 JinjaFx will then attempt to load and enable the extensions that will then be used when processing your Jinja2 templates. You also have the ability to check whether an extensions is loaded within your template by querying `jinja2_extensions` directly.
@@ -340,7 +341,7 @@ This list of lists will contain all the row and column data that JinjaFx is curr
 
 This function is used to expand a string that contains static character classes (i.e. `[0-9]`), static groups (i.e. `(a|b)`) or active counters (i.e. `{ start-end:increment[:pad] }`) into a list of all the different permutations. You are permitted to use as many classes, groups or counters within the same string - if it doesn't detect any classes, groups or counters within the string then the "string" will be returned as the only list element. Character classes support "A-Z", "a-z" and "0-9" characters, whereas static groups allow any string of characters (including static character classes). If you wish to include "[", "]", "(", ")", "{" or "}" literals within the string then they will need to be escaped.
 
-- <b><code>jinjafx.counter(["key"], [increment], [start])</code></b>
+- <b><code>jinjafx.counter(["key"], [increment=1], [start=1])</code></b>
 
 This function is used to provide a persistent counter within a row or between rows. If you specify a `key` then it is a global counter that will persist between rows, but if you don't or you include `jinjafx.row` within the `key`, then the counter only persists within the template of the current row.
 
@@ -354,6 +355,10 @@ This function is used to stop processing and raise an exception with a meaningfu
 {% endif %}
 
 ```
+
+- <b><code>jinjafx.warning("message", [repeat=False])</code></b>
+
+Nearly identical to the previous function, except this won't stop processing of the template but will raise a warning message when the output is generated - this can be specified multiple times for multiple warnings, although repeated warnings are suppressed unless you set the second parameter to True.
 
 - <b><code>jinjafx.first([fields[]], [{ "filter_field": "regex", ... }])</code></b>
 
@@ -386,6 +391,6 @@ This function is used to set a global variable that will persist throughout the 
 
 This function is used to get a global variable that has been set with `jinjafx.setg()` - optionally you can specify a default value that is returned if the `key` doesn't exist.
 
-- <b><code>jinjafx.nslookup("query", ["family"])</code></b>
+- <b><code>jinjafx.nslookup("query", [family=46])</code></b>
 
 This function is used to perform a forward or reverse DNS lookup - it will return the result as a list or `None` if it can't resolve the query - for reverse lookups it will always be a list with a single entry. When performing forward lookups the "family" field can be set to "4" or "6" to force an IPv4 or IPv6 only lookup - by default it will return both if they exist. Be warned that this function can cause delays as it uses the `getnameinfo` and `getaddrinfo` system calls, which don't support a user defined timeout (it uses the defaults specified in `resolv.h` of 2 x 5 seconds per server in `/etc/resolv.conf`).

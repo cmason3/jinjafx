@@ -65,11 +65,11 @@ body {
 }
 .gutter.gutter-vertical {
   cursor: ns-resize;
-  background-image: url('split.gutter-vertical.png');
+  background-image: url('split-gutter-vertical.png');
 }
 .gutter.gutter-horizontal {
   cursor: ew-resize;
-  background-image: url('split.gutter-horizontal.png');
+  background-image: url('split-gutter-horizontal.png');
 }
 .split-horizontal, .gutter.gutter-horizontal {
   height: 100%;

@@ -186,7 +186,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         else:
           r = [ 'text/plain', 503, '503 Service Unavailable\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
-      elif not re.search(r'[^A-Za-z0-9_./-]', fpath) and not re.search(r'\.{2,}', fpath) and os.path.isfile(base + '/www' + fpath):
+      elif re.search(r'^/[A-Z0-9_-]+\.[A-Z0-9]+$', fpath, re.IGNORECASE) and os.path.isfile(base + '/www' + fpath):
         if fpath.endswith('.js'):
           ctype = 'text/javascript'
         elif fpath.endswith('.css'):
@@ -303,12 +303,13 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                 'elapsed': round(time.time() * 1000) - st,
                 'outputs': {}
               }
-  
+
               for o in outputs:
                 output = '\n'.join(outputs[o]) + '\n'
                 if len(output.strip()) > 0:
                   jsr['outputs'].update({ o: base64.b64encode(output.encode('utf-8')).decode('utf-8') })
-                  ocount += 1
+                  if o != '_stderr_':
+                    ocount += 1
   
               if ocount == 0:
                 raise Exception('nothing to output')
