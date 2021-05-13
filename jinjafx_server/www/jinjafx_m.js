@@ -411,7 +411,7 @@ function getStatusText(code) {
   
               if (dt.hasOwnProperty('updated')) {
                 revision = dt.revision;
-                set_status('green', 'Revision ' + revision, '<br /><span class="small">Updated ' + moment.unix(dt.updated).fromNow() + '</span>', 30000);
+                set_status('green', 'Revision ' + revision, 'Updated ' + moment.unix(dt.updated).fromNow(), 30000, true);
               }
               else {
                 revision = 1;
@@ -1251,7 +1251,7 @@ function getStatusText(code) {
     }
   }
   
-  function set_status(color, title, message, delay) {
+  function set_status(color, title, message, delay, mline) {
     clearTimeout(tid);
     if (typeof delay !== 'undefined') {
       tid = setTimeout(function() { sobj.innerHTML = "" }, delay);
@@ -1260,7 +1260,12 @@ function getStatusText(code) {
       tid = setTimeout(function() { sobj.innerHTML = "" }, 5000);
     }
     sobj.style.color = color;
-    sobj.innerHTML = "<strong>" + quote(title) + "</strong> " + quote(message);
+    if (typeof mline !== 'undefined') {
+      sobj.innerHTML = "<strong>" + quote(title) + "</strong><br /><span class=\"small\">" + quote(message) + "</span>";
+    } 
+    else {
+      sobj.innerHTML = "<strong>" + quote(title) + "</strong> " + quote(message);
+    }
   }
 
   function cmDataMode() {
