@@ -546,7 +546,6 @@ function getStatusText(code) {
         mode: "data",
         viewportMargin: 80,
         smartIndent: false
-        //showTrailingSpace: true
       });
   
       window.cmVars = CodeMirror.fromTextArea(vars, {
