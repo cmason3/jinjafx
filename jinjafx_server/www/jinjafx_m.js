@@ -558,6 +558,59 @@ function getStatusText(code) {
         smartIndent: false,
         showTrailingSpace: true
       });
+
+      CodeMirror.registerHelper("fold", "jinja2", function(cm, start) {
+        var startLine = cm.getLine(start.line);
+        var tokenStack = 1;
+
+        if ((startLine.indexOf('{#') != -1) && (startLine.indexOf('#}') == -1)) {
+          for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
+            var theLine = cm.getLine(ln);
+
+            if ((theLine.indexOf('{#') != -1) && (theLine.indexOf('#}') == -1)) {
+              return undefined;
+            }
+            else if ((theLine.indexOf('{#') == -1) && (theLine.indexOf('#}') != -1)) {
+              if (--tokenStack == 0) {
+                return {
+                  from: CodeMirror.Pos(start.line, startLine.indexOf('{#') + 2),
+                  to: CodeMirror.Pos(ln, theLine.indexOf('#}'))
+                };
+              }
+            }
+          }
+        }
+        else if (cm.getTokenTypeAt(CodeMirror.Pos(start.line, 0)) != 'comment') {
+          var smatch = startLine.match(/{%([+-]?[ \t]*(if|for|macro|call|filter))[ \t]+/);
+          if (smatch) {
+            var eregexp = new RegExp('{%([+-]?[ \t]*)end' + smatch[2] + '[ \t]*[+-]?%}');
+
+            if (!startLine.match(eregexp)) {
+              var sregexp = new RegExp('{%[+-]?[ \t]*' + smatch[2] + '[ \t]+');
+
+              for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
+                if (cm.getTokenTypeAt(CodeMirror.Pos(ln, 0)) != 'comment') {
+                  var theLine = cm.getLine(ln);
+
+                  if (theLine.match(sregexp) && !theLine.match(eregexp)) {
+                    tokenStack += 1;
+                  }
+                  else {
+                    var ematch = theLine.match(eregexp);
+                    if (ematch && (--tokenStack == 0)) {
+                      return {
+                        from: CodeMirror.Pos(start.line, smatch.index + 2 + smatch[1].length),
+                        to: CodeMirror.Pos(ln, ematch.index + 2 + ematch[1].length)
+                      };
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        return undefined;
+      });
   
       window.cmTemplate = CodeMirror.fromTextArea(template, {
         lineNumbers: true,
@@ -569,7 +622,12 @@ function getStatusText(code) {
         mode: "jinja2",
         viewportMargin: 80,
         smartIndent: false,
-        showTrailingSpace: true
+        showTrailingSpace: true,
+        foldGutter: true,
+        foldOptions: { 
+          rangeFinder: CodeMirror.helpers.fold.jinja2
+        },
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
       });
   
       fe = window.cmTemplate;
