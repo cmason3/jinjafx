@@ -83,6 +83,20 @@ body {
 .CodeMirror-dialog-bottom pre {
   font-size: 14px;
 }
+.CodeMirror-foldmarker {
+  color: blue;
+  cursor: pointer;
+  line-height: 0.3;
+  font-size: 22px;
+}
+.CodeMirror-foldgutter-open::after {
+  content: "\25BE";
+  color: blue;
+}
+.CodeMirror-foldgutter-folded::after {
+  content: "\25B8";
+  color: blue;
+}
 .cm-trailingspace::after {
   color: steelblue;
   content: '$';

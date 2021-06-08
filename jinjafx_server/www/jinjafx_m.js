@@ -591,13 +591,14 @@ function getStatusText(code) {
               for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
                 if (cm.getTokenTypeAt(CodeMirror.Pos(ln, 0)) != 'comment') {
                   var theLine = cm.getLine(ln);
+                  var sm = theLine.match(sregexp);
+                  var ematch = theLine.match(eregexp);
 
-                  if (theLine.match(sregexp) && !theLine.match(eregexp)) {
+                  if (sm && !ematch) {
                     tokenStack += 1;
                   }
-                  else {
-                    var ematch = theLine.match(eregexp);
-                    if (ematch && (--tokenStack == 0)) {
+                  else if (!sm && ematch) {
+                    if (--tokenStack == 0) {
                       return {
                         from: CodeMirror.Pos(start.line, smatch.index + 2 + smatch[1].length),
                         to: CodeMirror.Pos(ln, ematch.index + 2 + ematch[1].length)
@@ -625,7 +626,8 @@ function getStatusText(code) {
         showTrailingSpace: true,
         foldGutter: true,
         foldOptions: { 
-          rangeFinder: CodeMirror.helpers.fold.jinja2
+          rangeFinder: CodeMirror.helpers.fold.jinja2,
+          widget: ' ... '
         },
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
       });
