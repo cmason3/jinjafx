@@ -83,17 +83,20 @@ body {
 .CodeMirror-foldmarker {
   color: blue;
   cursor: pointer;
-  line-height: 0.3rem;
-  font-size: 22px;
 }
+/*
+.CodeMirror-foldgutter {
+  width: 12px;
+}
+*/
 .CodeMirror-foldgutter-open::after {
-  content: "-";
-  font-weight: bold;
+  content: "\2190";
+  #font-weight: bold;
   color: blue;
 }
 .CodeMirror-foldgutter-folded::after {
-  content: "+";
-  font-weight: bold;
+  content: "\2192";
+  #font-weight: bold;
   color: blue;
 }
 .cm-trailingspace::after {

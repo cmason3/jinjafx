@@ -627,7 +627,7 @@ function getStatusText(code) {
         foldGutter: true,
         foldOptions: { 
           rangeFinder: CodeMirror.helpers.fold.jinja2,
-          widget: ' ... '
+          widget: ' \u2194 '
         },
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
       });
