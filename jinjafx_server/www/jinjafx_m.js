@@ -567,10 +567,11 @@ function getStatusText(code) {
           for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
             var theLine = cm.getLine(ln);
 
-            if ((theLine.indexOf('{#') != -1) && (theLine.indexOf('#}') == -1)) {
-              return undefined;
-            }
-            else if ((theLine.indexOf('{#') == -1) && (theLine.indexOf('#}') != -1)) {
+            //if ((theLine.indexOf('{#') != -1) && (theLine.indexOf('#}') == -1)) {
+            //  return undefined;
+           // }
+            //else if ((theLine.indexOf('{#') == -1) && (theLine.indexOf('#}') != -1)) {
+            if (theLine.indexOf('#}') != -1) {
               if (--tokenStack == 0) {
                 return {
                   from: CodeMirror.Pos(start.line, startLine.indexOf('{#') + 2),

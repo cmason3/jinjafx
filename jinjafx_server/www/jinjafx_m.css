@@ -15,15 +15,32 @@ body {
 }
 #csv {
   border: 1px solid lightgray;
+  white-space: nowrap;
   background-color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   overflow: auto;
   width: auto;
   height: 100%;
   display: none;
 }
 #csv th {
+  border: 1px solid darkgray;
   background-color: lightgray;
+}
+#csv td {
+  border: 1px dashed darkgray;
+}
+#csv th:first-child {
+  border-left: none;
+}
+#csv th:last-child {
+  border-right: none;
+}
+#csv td:first-child {
+  border-left: none;
+}
+#csv td:last-child {
+  border-right: none;
 }
 #unsupported {
   padding: 15px;
@@ -84,19 +101,12 @@ body {
   color: blue;
   cursor: pointer;
 }
-/*
-.CodeMirror-foldgutter {
-  width: 12px;
-}
-*/
 .CodeMirror-foldgutter-open::after {
   content: "\2190";
-  #font-weight: bold;
   color: blue;
 }
 .CodeMirror-foldgutter-folded::after {
   content: "\2192";
-  #font-weight: bold;
   color: blue;
 }
 .cm-trailingspace::after {
