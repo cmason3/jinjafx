@@ -1148,7 +1148,7 @@ function getStatusText(code) {
   }
   
   function onDataBlur(cm, evt) {
-    var t = evt.relatedTarget || document.activeElement;
+    var t = (evt != null) ? (evt.relatedTarget || document.activeElement) : null;
     if ((t == null) || (t.tagName == 'TEXTAREA') | (window.msCrypto && t.tagName == 'BODY')) {
       var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
         return !e.match(/^[ \t]*#/) && e.match(/\S/);
