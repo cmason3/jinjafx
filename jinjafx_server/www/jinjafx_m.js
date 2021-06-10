@@ -567,10 +567,6 @@ function getStatusText(code) {
           for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
             var theLine = cm.getLine(ln);
 
-            //if ((theLine.indexOf('{#') != -1) && (theLine.indexOf('#}') == -1)) {
-            //  return undefined;
-           // }
-            //else if ((theLine.indexOf('{#') == -1) && (theLine.indexOf('#}') != -1)) {
             if (theLine.indexOf('#}') != -1) {
               if (--tokenStack == 0) {
                 return {
@@ -1152,7 +1148,8 @@ function getStatusText(code) {
   }
   
   function onDataBlur(cm, evt) {
-    if ((evt == null) || ((evt.relatedTarget != null) && (evt.relatedTarget.tagName != 'INPUT'))) {
+    var t = evt.relatedTarget || document.activeElement;
+    if ((t == null) || (t.tagName == 'TEXTAREA') | (window.msCrypto && t.tagName == 'BODY')) {
       var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
         return !e.match(/^[ \t]*#/) && e.match(/\S/);
       });
