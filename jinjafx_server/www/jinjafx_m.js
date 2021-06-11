@@ -1149,6 +1149,14 @@ function getStatusText(code) {
   
   function onDataBlur(cm, evt) {
     var t = (evt != null) ? (evt.relatedTarget || document.activeElement) : null;
+
+    if (t == null) {
+      set_status('green', 'DEBUG', 'null', 30000, true);
+    }
+    else {
+      set_status('green', 'DEBUG', t.tagName, 30000, true);
+    }
+
     if ((t == null) || (t.tagName == 'TEXTAREA') | (window.msCrypto && t.tagName == 'BODY')) {
       var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
         return !e.match(/^[ \t]*#/) && e.match(/\S/);
