@@ -79,7 +79,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
           
       elif self.command == 'POST':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype)
+        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype + ' [' + jinjafx.format_bytes(self.length) + ']')
 
       elif self.command != None:
         if (args[1] != '200' and args[1] != '304') or not re.match(r'.+\.(?:js|css|png)$', path):
@@ -265,6 +265,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
     if 'Content-Length' in self.headers:
       postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
+      self.length = len(postdata)
 
       if (len(postdata) < (512 * 1024)) or (fpath == '/download'):
         if fpath == '/jinjafx':

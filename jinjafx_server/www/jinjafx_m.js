@@ -135,7 +135,7 @@ function getStatusText(code) {
 
   function jinjafx(method) {
     sobj.innerHTML = "";
-  
+
     if (method == "delete_dataset") {
       if (window.cmData.getValue().match(/\S/) || window.cmVars.getValue().match(/\S/)) {
         if (confirm("Are You Sure?") === true) {
@@ -411,7 +411,7 @@ function getStatusText(code) {
   
               if (dt.hasOwnProperty('updated')) {
                 revision = dt.revision;
-                set_status('green', 'Revision ' + revision, '<br /><span class="small">Updated ' + moment.unix(dt.updated).fromNow() + '</span>', 30000);
+                set_status('green', 'Revision ' + revision, 'Updated ' + moment.unix(dt.updated).fromNow(), 30000, true);
               }
               else {
                 revision = 1;
@@ -546,7 +546,6 @@ function getStatusText(code) {
         mode: "data",
         viewportMargin: 80,
         smartIndent: false
-        //showTrailingSpace: true
       });
   
       window.cmVars = CodeMirror.fromTextArea(vars, {
@@ -559,6 +558,57 @@ function getStatusText(code) {
         smartIndent: false,
         showTrailingSpace: true
       });
+
+      CodeMirror.registerHelper("fold", "jinja2", function(cm, start) {
+        var startLine = cm.getLine(start.line);
+        var tokenStack = 1;
+
+        if ((startLine.indexOf('{#') != -1) && (startLine.indexOf('#}') == -1)) {
+          for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
+            var theLine = cm.getLine(ln);
+
+            if (theLine.indexOf('#}') != -1) {
+              if (--tokenStack == 0) {
+                return {
+                  from: CodeMirror.Pos(start.line, startLine.indexOf('{#') + 2),
+                  to: CodeMirror.Pos(ln, theLine.indexOf('#}'))
+                };
+              }
+            }
+          }
+        }
+        else if (cm.getTokenTypeAt(CodeMirror.Pos(start.line, 0)) != 'comment') {
+          var smatch = startLine.match(/{%([+-]?[ \t]*(if|for|macro|call|filter))[ \t]+/);
+          if (smatch) {
+            var eregexp = new RegExp('{%([+-]?[ \t]*)end' + smatch[2] + '[ \t]*[+-]?%}');
+
+            if (!startLine.match(eregexp)) {
+              var sregexp = new RegExp('{%[+-]?[ \t]*' + smatch[2] + '[ \t]+');
+
+              for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
+                if (cm.getTokenTypeAt(CodeMirror.Pos(ln, 0)) != 'comment') {
+                  var theLine = cm.getLine(ln);
+                  var sm = theLine.match(sregexp);
+                  var ematch = theLine.match(eregexp);
+
+                  if (sm && !ematch) {
+                    tokenStack += 1;
+                  }
+                  else if (!sm && ematch) {
+                    if (--tokenStack == 0) {
+                      return {
+                        from: CodeMirror.Pos(start.line, smatch.index + 2 + smatch[1].length),
+                        to: CodeMirror.Pos(ln, ematch.index + 2 + ematch[1].length)
+                      };
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        return undefined;
+      });
   
       window.cmTemplate = CodeMirror.fromTextArea(template, {
         lineNumbers: true,
@@ -570,15 +620,24 @@ function getStatusText(code) {
         mode: "jinja2",
         viewportMargin: 80,
         smartIndent: false,
-        showTrailingSpace: true
+        showTrailingSpace: true,
+        foldGutter: true,
+        foldOptions: { 
+          rangeFinder: CodeMirror.helpers.fold.jinja2,
+          widget: ' \u22EF '
+        },
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
       });
   
       fe = window.cmTemplate;
       window.cmData.on("focus", function() { fe = window.cmData });
-      window.cmVars.on("focus", function() { fe = window.cmVars });
-      window.cmTemplate.on("focus", function() { fe = window.cmTemplate });
-  
-      window.cmData.on("blur", onDataBlur);
+      window.cmVars.on("focus", function() { fe = window.cmVars; onDataBlur() });
+      window.cmTemplate.on("focus", function() { fe = window.cmTemplate; onDataBlur() });
+
+      document.getElementById('header').onclick = onDataBlur;
+      document.getElementById('push').onclick = onDataBlur;
+      document.getElementById('footer').onclick = onDataBlur;
+
       document.getElementById("csv").onclick = function() {
         window.cmData.getWrapperElement().style.display = 'block';
         document.getElementById("csv").style.display = 'none';
@@ -654,7 +713,6 @@ function getStatusText(code) {
         document.getElementById('lvars').style.display = 'none';
         document.getElementById('lvars2').style.display = 'block';
         window.cmVars.focus();
-        onDataBlur();
       };
       document.getElementById('lvars2').onclick = function() {
         hsplit.setSizes(hsize);
@@ -662,7 +720,6 @@ function getStatusText(code) {
         document.getElementById('lvars2').style.display = 'none';
         document.getElementById('lvars').style.display = 'block';
         window.cmVars.focus();
-        onDataBlur();
       };
   
       document.getElementById('ltemplate').onclick = function() {
@@ -676,7 +733,6 @@ function getStatusText(code) {
         document.getElementById('ltemplate').style.display = 'none';
         document.getElementById('ltemplate2').style.display = 'block';
         window.cmTemplate.focus();
-        onDataBlur();
       };
       document.getElementById('ltemplate2').onclick = function() {
         hsplit.setSizes(hsize);
@@ -684,7 +740,6 @@ function getStatusText(code) {
         document.getElementById('ltemplate2').style.display = 'none';
         document.getElementById('ltemplate').style.display = 'block';
         window.cmTemplate.focus();
-        onDataBlur();
       };
 
       $('#jinjafx_input').on('shown.bs.modal', function() {
@@ -1091,26 +1146,24 @@ function getStatusText(code) {
     return table;
   }
   
-  function onDataBlur(cm, evt) {
-    if ((evt == null) || ((evt.relatedTarget != null) && (evt.relatedTarget.tagName != 'INPUT'))) {
-      var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
-        return !e.match(/^[ \t]*#/) && e.match(/\S/);
-      });
-      if (datarows.length > 1) {
-        document.getElementById("csv").innerHTML = get_csv_astable(datarows);
-        document.getElementById("ldata").style.display = 'none';
-        document.getElementById("ldata2").style.display = 'none';
-        document.getElementById("csv").style.display = 'block';
-        window.cmData.getWrapperElement().style.display = 'none';
-        csv_on = true;
-      }
-      else {
-        window.cmData.getWrapperElement().style.display = 'block';
-        document.getElementById("csv").style.display = 'none';
-        document.getElementById(dicon).style.display = 'block';
-        window.cmData.refresh();
-        csv_on = false;
-      }
+  function onDataBlur() {
+    var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
+      return !e.match(/^[ \t]*#/) && e.match(/\S/);
+    });
+    if (datarows.length > 1) {
+      document.getElementById("csv").innerHTML = get_csv_astable(datarows);
+      document.getElementById("ldata").style.display = 'none';
+      document.getElementById("ldata2").style.display = 'none';
+      document.getElementById("csv").style.display = 'block';
+      window.cmData.getWrapperElement().style.display = 'none';
+      csv_on = true;
+    }
+    else {
+      window.cmData.getWrapperElement().style.display = 'block';
+      document.getElementById("csv").style.display = 'none';
+      document.getElementById(dicon).style.display = 'block';
+      window.cmData.refresh();
+      csv_on = false;
     }
   } 
   
@@ -1251,7 +1304,7 @@ function getStatusText(code) {
     }
   }
   
-  function set_status(color, title, message, delay) {
+  function set_status(color, title, message, delay, mline) {
     clearTimeout(tid);
     if (typeof delay !== 'undefined') {
       tid = setTimeout(function() { sobj.innerHTML = "" }, delay);
@@ -1260,7 +1313,12 @@ function getStatusText(code) {
       tid = setTimeout(function() { sobj.innerHTML = "" }, 5000);
     }
     sobj.style.color = color;
-    sobj.innerHTML = "<strong>" + quote(title) + "</strong> " + quote(message);
+    if (typeof mline !== 'undefined') {
+      sobj.innerHTML = "<strong>" + quote(title) + "</strong><br /><span class=\"small\">" + quote(message) + "</span>";
+    } 
+    else {
+      sobj.innerHTML = "<strong>" + quote(title) + "</strong> " + quote(message);
+    }
   }
 
   function cmDataMode() {

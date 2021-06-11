@@ -1,7 +1,7 @@
 ![Release](https://img.shields.io/github/v/release/cmason3/jinjafx)
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[<img src="https://img.shields.io/badge/Web%20Front--End-https%3A%2F%2Fjinjafx.io-orange" align="right">](https://jinjafx.io)
+[<img src="https://img.shields.io/badge/@-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
 
 <h1 align="center">JinjaFx Server - Jinja2 Templating Tool</h1>
 <h3 align="center">:star: Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input :star:</h3>
