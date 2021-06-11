@@ -135,7 +135,7 @@ function getStatusText(code) {
 
   function jinjafx(method) {
     sobj.innerHTML = "";
-  
+
     if (method == "delete_dataset") {
       if (window.cmData.getValue().match(/\S/) || window.cmVars.getValue().match(/\S/)) {
         if (confirm("Are You Sure?") === true) {
@@ -631,10 +631,13 @@ function getStatusText(code) {
   
       fe = window.cmTemplate;
       window.cmData.on("focus", function() { fe = window.cmData });
-      window.cmVars.on("focus", function() { fe = window.cmVars });
-      window.cmTemplate.on("focus", function() { fe = window.cmTemplate });
-  
-      window.cmData.on("blur", onDataBlur);
+      window.cmVars.on("focus", function() { fe = window.cmVars; onDataBlur() });
+      window.cmTemplate.on("focus", function() { fe = window.cmTemplate; onDataBlur() });
+
+      document.getElementById('header').onclick = onDataBlur;
+      document.getElementById('push').onclick = onDataBlur;
+      document.getElementById('footer').onclick = onDataBlur;
+
       document.getElementById("csv").onclick = function() {
         window.cmData.getWrapperElement().style.display = 'block';
         document.getElementById("csv").style.display = 'none';
@@ -710,7 +713,6 @@ function getStatusText(code) {
         document.getElementById('lvars').style.display = 'none';
         document.getElementById('lvars2').style.display = 'block';
         window.cmVars.focus();
-        onDataBlur();
       };
       document.getElementById('lvars2').onclick = function() {
         hsplit.setSizes(hsize);
@@ -718,7 +720,6 @@ function getStatusText(code) {
         document.getElementById('lvars2').style.display = 'none';
         document.getElementById('lvars').style.display = 'block';
         window.cmVars.focus();
-        onDataBlur();
       };
   
       document.getElementById('ltemplate').onclick = function() {
@@ -732,7 +733,6 @@ function getStatusText(code) {
         document.getElementById('ltemplate').style.display = 'none';
         document.getElementById('ltemplate2').style.display = 'block';
         window.cmTemplate.focus();
-        onDataBlur();
       };
       document.getElementById('ltemplate2').onclick = function() {
         hsplit.setSizes(hsize);
@@ -740,7 +740,6 @@ function getStatusText(code) {
         document.getElementById('ltemplate2').style.display = 'none';
         document.getElementById('ltemplate').style.display = 'block';
         window.cmTemplate.focus();
-        onDataBlur();
       };
 
       $('#jinjafx_input').on('shown.bs.modal', function() {
@@ -1147,35 +1146,24 @@ function getStatusText(code) {
     return table;
   }
   
-  function onDataBlur(cm, evt) {
-    var t = (evt != null) ? (evt.relatedTarget || document.activeElement) : null;
-
-    if (t == null) {
-      set_status('green', 'DEBUG', 'null', 30000, true);
+  function onDataBlur() {
+    var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
+      return !e.match(/^[ \t]*#/) && e.match(/\S/);
+    });
+    if (datarows.length > 1) {
+      document.getElementById("csv").innerHTML = get_csv_astable(datarows);
+      document.getElementById("ldata").style.display = 'none';
+      document.getElementById("ldata2").style.display = 'none';
+      document.getElementById("csv").style.display = 'block';
+      window.cmData.getWrapperElement().style.display = 'none';
+      csv_on = true;
     }
     else {
-      set_status('green', 'DEBUG', t.tagName, 30000, true);
-    }
-
-    if ((t == null) || (t.tagName == 'TEXTAREA') | (window.msCrypto && t.tagName == 'BODY')) {
-      var datarows = window.cmData.getValue().trim().split(/\r?\n/).filter(function(e) {
-        return !e.match(/^[ \t]*#/) && e.match(/\S/);
-      });
-      if (datarows.length > 1) {
-        document.getElementById("csv").innerHTML = get_csv_astable(datarows);
-        document.getElementById("ldata").style.display = 'none';
-        document.getElementById("ldata2").style.display = 'none';
-        document.getElementById("csv").style.display = 'block';
-        window.cmData.getWrapperElement().style.display = 'none';
-        csv_on = true;
-      }
-      else {
-        window.cmData.getWrapperElement().style.display = 'block';
-        document.getElementById("csv").style.display = 'none';
-        document.getElementById(dicon).style.display = 'block';
-        window.cmData.refresh();
-        csv_on = false;
-      }
+      window.cmData.getWrapperElement().style.display = 'block';
+      document.getElementById("csv").style.display = 'none';
+      document.getElementById(dicon).style.display = 'block';
+      window.cmData.refresh();
+      csv_on = false;
     }
   } 
   
