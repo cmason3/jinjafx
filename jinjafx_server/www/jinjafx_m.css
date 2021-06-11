@@ -72,6 +72,10 @@ body {
   line-height: 0.8rem;
   overflow-y: hidden;
 }
+.btn-curved {
+  border-top-left-radius: 0.3rem !important;
+  border-bottom-left-radius: 0.3rem !important;
+}
 .caret-off::after {
   display: none !important;
 }
