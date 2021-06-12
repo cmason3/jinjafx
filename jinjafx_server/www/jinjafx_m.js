@@ -1136,9 +1136,16 @@ function getStatusText(code) {
     for (var row = 1; row < datarows.length; row++) {
       var rowdata = datarows[row].split(delim);
   
-      table += '<tr>';
+      if (rowdata.length != hrow.length) {
+        table += '<tr class="bg-danger">';
+      }
+      else {
+        table += '<tr>';
+      }
+
       for (var col = 0; col < hrow.length; col++) {
-        table += '<td>' + ((col < rowdata.length) ? quote(rowdata[col]) : '') + '</td>';
+        var value = ((col < rowdata.length) ? quote(rowdata[col]) : '');
+        table += '<td>' + (!value.match(/\S/) ? '&nbsp;' : value) + '</td>';
       }
       table += '</tr>';
     }
