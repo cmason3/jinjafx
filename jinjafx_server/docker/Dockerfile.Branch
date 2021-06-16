@@ -2,6 +2,8 @@ FROM docker.io/library/python:3.9-slim
 
 ARG BRANCH="main"
 
+ENV PATH ${PATH}:/opt/jinjafx/.local/bin
+
 RUN set -eux; \
 
 apt-get update; \
@@ -10,17 +12,16 @@ apt-get install -y --no-install-recommends git; \
 useradd -m jinjafx -d /opt/jinjafx -m -k /dev/null; \
 
 runuser -u jinjafx -- /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --user --upgrade ansible-core netaddr requests; \
-which ansible-galaxy; \
-echo $PATH; \
-runuser -u jinjafx -- /usr/local/bin/ansible-galaxy collection install --upgrade ansible.netcommon; \
+runuser -u jinjafx -- ansible-galaxy collection install --upgrade ansible.netcommon; \
 
-runuser -u jinjafx -- git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx; \
+runuser -u jinjafx -- git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx/jinjafx; \
 
 apt-get purge -y --auto-remove git; \
+rm -rf /opt/jinjafx/jinjafx/.git*; \
 rm -rf /var/lib/apt/lists/*
 
 USER jinjafx
 
-WORKDIR /opt/jinjafx
+WORKDIR /opt/jinjafx/jinjafx
 
 ENTRYPOINT [ "/usr/local/bin/python3", "-u", "jinjafx_server/jinjafx_server.py", "-s", "-l", "0.0.0.0", "-p", "8080" ]
