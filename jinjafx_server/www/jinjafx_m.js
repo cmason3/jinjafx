@@ -54,6 +54,15 @@ function getStatusText(code) {
   var protect_ok = false;
   var csv_on = false;
   var dicon = "ldata";
+
+  var jsyaml_schema = {
+    schema: jsyaml.DEFAULT_SCHEMA.extend(['scalar', 'sequence', 'mapping'].map(function(kind) {
+      return new jsyaml.Type('!', {
+        kind: kind,
+        multi: true
+      });
+    }))
+  };
   
   function select_dataset(e) {
     switch_dataset(e.currentTarget.ds_name, true);
@@ -188,7 +197,7 @@ function getStatusText(code) {
 
         if (dt.vars.match(/\S/)) {
           try {
-            var vars = jsyaml.load(dt.vars, 'utf8');
+            var vars = jsyaml.load(dt.vars, jsyaml_schema);
             if (vars !== null) {
               if (vars.hasOwnProperty('jinjafx_input') && vars['jinjafx_input'].hasOwnProperty('body')) {
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
@@ -395,7 +404,7 @@ function getStatusText(code) {
           }
           else if (this.status === 200) {
             try {
-              var dt = jsyaml.load(this.responseText, 'utf8');
+              var dt = jsyaml.load(this.responseText, jsyaml_schema);
   
               load_datatemplate(dt['dt'], qs);
               dt_id = qs.dt;
@@ -495,6 +504,8 @@ function getStatusText(code) {
       window.onresize();
   
       document.body.style.display = "block";
+
+      jsyaml.customTags = [ '!vault sequence' ];
       
       var gExtraKeys = {
         "Alt-F": "findPersistent",
@@ -795,6 +806,16 @@ function getStatusText(code) {
         document.getElementById("in_protect").value = '';
         clear_wait();
       });
+
+      document.getElementById('ml-vault-ok').onclick = function() {
+        dt.vault_password = window.btoa(document.getElementById("vault").value);
+        if (dt_id != '') {
+          window.open("output.html?dt=" + dt_id, "_blank");
+        }
+        else {
+          window.open("output.html", "_blank");
+        }
+      };
   
       document.getElementById('ml-protect-ok').onclick = function() {
         dt_password = document.getElementById("in_protect").value;
@@ -1196,7 +1217,7 @@ function getStatusText(code) {
       var t = change.text.join('\n');
   
       if (t.indexOf('---\ndt:\n') > -1) {
-        var obj = jsyaml.load(t, 'utf8');
+        var obj = jsyaml.load(t, jsyaml_schema);
         if (obj != null) {
           change.cancel();
           pending_dt = obj['dt'];
