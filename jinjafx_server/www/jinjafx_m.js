@@ -505,8 +505,6 @@ function getStatusText(code) {
   
       document.body.style.display = "block";
 
-      jsyaml.customTags = [ '!vault sequence' ];
-      
       var gExtraKeys = {
         "Alt-F": "findPersistent",
         "Ctrl-F": "findPersistent",
