@@ -4,15 +4,15 @@ ARG BRANCH="main"
 
 RUN set -eux; \
 
-useradd -m jinjafx; \
-
 apt-get update; \
 apt-get install -y --no-install-recommends git; \
 
-/usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible-core netaddr requests; \
-ansible-galaxy collection install --upgrade ansible.netcommon; \
+useradd -m jinjafx -d /opt/jinjafx; \
 
-git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx; \
+runas -u jinjafx -- /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --user --upgrade ansible-core netaddr requests; \
+runas -u jinjafx -- /usr/local/bin/ansible-galaxy collection install --upgrade ansible.netcommon; \
+
+runas -u jinjafx -- git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx; \
 
 apt-get purge -y --auto-remove git; \
 rm -rf /var/lib/apt/lists/*
