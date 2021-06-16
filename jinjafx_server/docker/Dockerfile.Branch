@@ -11,7 +11,7 @@ apt-get install -y --no-install-recommends git; \
 
 python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr requests; \
 
-git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx \
+git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx; \
 
 apt-get purge -y --auto-remove git; \
 rm -rf /var/lib/apt/lists/*
