@@ -1,13 +1,21 @@
-FROM python:3.9-slim
+FROM docker.io/library/python:3.9-slim
 
 ARG BRANCH="main"
 
-RUN apt-get update; apt-get install -y git; apt-get clean
-RUN python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr requests
+RUN set -eux; \
 
-RUN git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx
+useradd -m jinjafx; \
 
-RUN useradd -m jinjafx
+apt-get update; \
+apt-get install -y --no-install-recommends git; \
+
+python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr requests; \
+
+git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx \
+
+apt-get purge -y --auto-remove git; \
+rm -rf /var/lib/apt/lists/*
+
 USER jinjafx
 
 WORKDIR /opt/jinjafx
