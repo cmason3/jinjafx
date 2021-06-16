@@ -7,7 +7,7 @@ useradd -m jinjafx; \
 apt-get update; \
 apt-get install -y --no-install-recommends curl; \
 
-python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr requests; \
+/usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr requests; \
 
 curl -s https://api.github.com/repos/cmason3/jinjafx/releases/latest \
 | grep "tarball_url" | cut -d'"' -f4 | xargs -I {} curl -sL {} \
