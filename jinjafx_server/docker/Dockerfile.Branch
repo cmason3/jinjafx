@@ -11,7 +11,7 @@ useradd -m jinjafx -d /opt/jinjafx -m -k /dev/null; \
 
 runuser -u jinjafx -- /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --user --upgrade ansible-core netaddr requests; \
 which ansible-galaxy; \
-export $PATH; \
+echo $PATH; \
 runuser -u jinjafx -- /usr/local/bin/ansible-galaxy collection install --upgrade ansible.netcommon; \
 
 runuser -u jinjafx -- git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx; \
