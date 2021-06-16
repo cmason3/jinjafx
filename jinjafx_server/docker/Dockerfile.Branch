@@ -10,7 +10,7 @@ apt-get update; \
 apt-get install -y --no-install-recommends git; \
 
 /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible-core netaddr requests; \
-/usr/bin/ansible-galaxy collection install ansible.netcommon
+ansible-galaxy collection install --upgrade ansible.netcommon; \
 
 git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx; \
 
