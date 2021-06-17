@@ -16,7 +16,7 @@ runuser -u jinjafx -- ansible-galaxy collection install --upgrade ansible.netcom
 
 runuser -u jinjafx -- git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx/jinjafx; \
 
-apt-get purge -y --auto-remove git perl-base coreutils; \
+apt-get purge -y --auto-remove git perl-base; \
 rm -rf /opt/jinjafx/jinjafx/.git*; \
 rm -rf /var/lib/apt/lists/*
 
