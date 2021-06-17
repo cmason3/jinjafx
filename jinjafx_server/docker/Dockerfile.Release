@@ -1,23 +1,26 @@
 FROM docker.io/library/python:3.9-slim
 
-RUN set -eux; \
+ENV PATH ${PATH}:/opt/jinjafx/.local/bin
 
-useradd -m jinjafx; \
+RUN set -eux; \
 
 apt-get update; \
 apt-get install -y --no-install-recommends curl; \
 
-/usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible netaddr requests; \
+useradd -m jinjafx -d /opt/jinjafx -m -k /dev/null; \
+
+runuser -u jinjafx -- /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --user --upgrade ansible-core netaddr requests; \
+runuser -u jinjafx -- ansible-galaxy collection install --upgrade ansible.netcommon; \
 
 curl -s https://api.github.com/repos/cmason3/jinjafx/releases/latest \
 | grep "tarball_url" | cut -d'"' -f4 | xargs -I {} curl -sL {} \
-| tar -zx -C /opt --one-top-level=jinjafx --strip-components 1; \
+| runuser -u jinjafx -- tar -zx -C /opt/jinjafx --one-top-level=jinjafx --strip-components 1; \
 
 apt-get purge -y --auto-remove curl; \
 rm -rf /var/lib/apt/lists/*
 
 USER jinjafx
 
-WORKDIR /opt/jinjafx
+WORKDIR /opt/jinjafx/jinjafx
 
 ENTRYPOINT [ "/usr/local/bin/python3", "-u", "jinjafx_server/jinjafx_server.py", "-s", "-l", "0.0.0.0", "-p", "8080" ]

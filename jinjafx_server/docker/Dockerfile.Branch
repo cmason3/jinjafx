@@ -2,23 +2,26 @@ FROM docker.io/library/python:3.9-slim
 
 ARG BRANCH="main"
 
-RUN set -eux; \
+ENV PATH ${PATH}:/opt/jinjafx/.local/bin
 
-useradd -m jinjafx; \
+RUN set -eux; \
 
 apt-get update; \
 apt-get install -y --no-install-recommends git; \
 
-/usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --upgrade ansible-core netaddr requests; \
-/usr/bin/ansible-galaxy collection install ansible.netcommon
+useradd -m jinjafx -d /opt/jinjafx -m -k /dev/null; \
 
-git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx; \
+runuser -u jinjafx -- /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --user --upgrade ansible-core netaddr requests; \
+runuser -u jinjafx -- ansible-galaxy collection install --upgrade ansible.netcommon; \
 
-apt-get purge -y --auto-remove git perl-base coreutils; \
+runuser -u jinjafx -- git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx/jinjafx; \
+
+apt-get purge -y --auto-remove git; \
+rm -rf /opt/jinjafx/jinjafx/.git*; \
 rm -rf /var/lib/apt/lists/*
 
 USER jinjafx
 
-WORKDIR /opt/jinjafx
+WORKDIR /opt/jinjafx/jinjafx
 
 ENTRYPOINT [ "/usr/local/bin/python3", "-u", "jinjafx_server/jinjafx_server.py", "-s", "-l", "0.0.0.0", "-p", "8080" ]
