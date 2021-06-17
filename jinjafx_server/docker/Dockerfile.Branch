@@ -14,7 +14,7 @@ apt-get install -y --no-install-recommends git; \
 
 git clone -b "${BRANCH}" https://github.com/cmason3/jinjafx.git /opt/jinjafx; \
 
-apt-get purge -y --auto-remove git; \
+apt-get purge -y --auto-remove git perl-base coreutils; \
 rm -rf /var/lib/apt/lists/*
 
 USER jinjafx
