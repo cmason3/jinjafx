@@ -1,4 +1,4 @@
-FROM docker.io/library/haproxy:2.4
+FROM docker.io/library/haproxy:2.3
 
 USER root
 
