@@ -1,0 +1,7 @@
+FROM docker.io/library/haproxy:2.4
+
+USER root
+
+ADD https://raw.githubusercontent.com/cmason3/jinjafx/main/jinjafx_server/docker/haproxy.cfg /usr/local/etc/haproxy/
+
+ENTRYPOINT [ "/usr/local/sbin/haproxy", "-f", "/usr/local/etc/haproxy/haproxy.cfg" ]
