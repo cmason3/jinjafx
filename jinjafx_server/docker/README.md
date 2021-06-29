@@ -17,7 +17,7 @@ systemctl daemon-reload
 systemctl enable --now jinjafx_haproxy
 ```
 
-The above commands will pass through the combined TLS certificate (private key and full certificate chain) to HAProxy - it assumes you are managing that outside of HAProxy and placing it at `/etc/haproxy/haproxy.pem` (this is presented inside the container as `/usr/local/etc/haproxy/fullchain.pem`) and you will HUP the container using `podman kill -s HUP jinjafx_haproxy` after you renew the certificate. The Dockerfile will download the [haproxy.cfg](https://raw.githubusercontent.com/cmason3/jinjafx/main/jinjafx_server/docker/haproxy.cfg) file from this repository (achieves an A+ Qualys rating).
+The above commands will pass through the combined TLS certificate (private key and full certificate chain) to HAProxy - it assumes you are managing that outside of HAProxy and placing it at `/etc/haproxy/haproxy.pem` (this is presented inside the container as `/usr/local/etc/haproxy/fullchain.pem`) and you will HUP the container using `podman kill -s HUP jinjafx_haproxy` after you renew the certificate. The Dockerfile will download the [haproxy.cfg](https://raw.githubusercontent.com/cmason3/jinjafx/main/jinjafx_server/docker/haproxy.cfg) file from this repository.
 
 ### JinjaFx Server
 
