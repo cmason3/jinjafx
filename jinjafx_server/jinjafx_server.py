@@ -323,7 +323,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               elif 'yaml.SafeLoader' in tb:
                 error = 'error[vars.yml]: ' + type(e).__name__ + ': ' + str(e)
               else:
-                traceback.print_exc()
                 error = 'error[' + str(sys.exc_info()[2].tb_lineno) + ']: ' + type(e).__name__ + ': ' + str(e)
 
               jsr = {
