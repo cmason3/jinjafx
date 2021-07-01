@@ -7,7 +7,7 @@ RUN set -eux; \
 apt-get update; \
 apt-get install -y --no-install-recommends curl; \
 
-useradd -m jinjafx -d /opt/jinjafx -m -k /dev/null; \
+useradd -m jinjafx -d /opt/jinjafx -k /dev/null; \
 
 runuser -u jinjafx -- /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --user --upgrade ansible-core netaddr requests; \
 runuser -u jinjafx -- ansible-galaxy collection install --upgrade ansible.netcommon; \
