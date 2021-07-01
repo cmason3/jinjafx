@@ -17,7 +17,7 @@
 
 from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import jinjafx, os, io, sys, socket, threading, yaml, json, base64, time, datetime
+import jinjafx, os, io, sys, socket, signal, threading, yaml, json, base64, time, datetime
 import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid, struct, binascii
 
 try:
@@ -628,7 +628,7 @@ class JinjaFxThread(threading.Thread):
     httpd.serve_forever()
 
 
-def main(rflag=False):
+def main(rflag=[0]):
   global aws_s3_url
   global aws_access_key
   global aws_secret_key
@@ -679,25 +679,31 @@ def main(rflag=False):
 
     jinjafx.import_filters()
 
+    def signal_handler(*args):
+      rflag[0] = 2
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     log('Starting JinjaFx Server (PID is ' + str(os.getpid()) + ') on http://' + args.l + ':' + str(args.p) + '...')
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((args.l, args.p))
-    s.listen(5)
+    s.listen(16)
 
+    rflag[0] = 1
     threads = []
-    rflag = True
     repository = args.r
 
     for i in range(64):
       threads.append(JinjaFxThread(s, (args.l, args.p)))
 
-    while True:
+    while rflag[0] < 2:
       time.sleep(0.1)
 
-  except KeyboardInterrupt:
-    sys.exit(-1)
+    log('Terminating JinjaFx Server...')
+
 
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -705,8 +711,7 @@ def main(rflag=False):
     sys.exit(-2)
 
   finally:
-    if rflag is True:
-      log('Terminating JinjaFx Server...')
+    if rflag[0] > 0:
       s.shutdown(1)
       s.close()
 

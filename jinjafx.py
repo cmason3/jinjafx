@@ -18,7 +18,7 @@
 from __future__ import print_function, division
 import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
 
-__version__ = '1.5.6'
+__version__ = '1.5.7'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
