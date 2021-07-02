@@ -17,6 +17,7 @@
 
 from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from jinja2 import __version__ as jinja2_version
 import jinjafx, os, io, sys, socket, signal, threading, yaml, json, base64, time, datetime
 import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid, struct, binascii
 
@@ -206,7 +207,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               else:
                 get_link = 'false'
 
-              r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__).replace('{{ get_link }}', get_link).encode('utf-8')
+              r[2] = r[2].decode('utf-8').replace('{{ jinjafx.version }}', jinjafx.__version__ + ' / Jinja2 v' + jinja2_version).replace('{{ get_link }}', get_link).encode('utf-8')
 
         except Exception:
           traceback.print_exc()
