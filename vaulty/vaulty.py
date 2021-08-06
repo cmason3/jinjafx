@@ -95,11 +95,10 @@ def main(m=args(), cols=80):
       if m == 'encrypt':
         if password == getpass.getpass('verify password: ').encode('utf-8'):
           if len(sys.argv) == 2:
-            ciphertext = Vaulty().encrypt(data, password, cols).decode('utf-8')
-            print(ciphertext, end='')
+            print(Vaulty().encrypt(data, password, cols).decode('utf-8'), end='')
       
           else:
-            b = Vaulty().encrypt_file(sys.argv[2], password, cols)
+            Vaulty().encrypt_file(sys.argv[2], password, cols)
   
         else:
           print('error: password verification failed', file=sys.stderr)
@@ -114,8 +113,7 @@ def main(m=args(), cols=80):
             print('error: invalid password or data not encrypted', file=sys.stderr)
   
         else:
-          b = Vaulty().decrypt_file(sys.argv[2], password)
-          if b is None:
+          if Vaulty().decrypt_file(sys.argv[2], password) is None:
             print('error: invalid password or file not encrypted', file=sys.stderr)
 
     else:
