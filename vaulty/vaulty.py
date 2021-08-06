@@ -91,32 +91,35 @@ def main(m=args(), cols=80):
       data = sys.stdin.read().encode('utf-8')
 
     password = getpass.getpass('enter password: ').encode('utf-8')
-
-    if m == 'encrypt':
-      if password == getpass.getpass('verify password: ').encode('utf-8'):
+    if len(password) > 0:
+      if m == 'encrypt':
+        if password == getpass.getpass('verify password: ').encode('utf-8'):
+          if len(sys.argv) == 2:
+            ciphertext = Vaulty().encrypt(data, password, cols).decode('utf-8')
+            print(ciphertext, end='')
+      
+          else:
+            b = Vaulty().encrypt_file(sys.argv[2], password, cols)
+  
+        else:
+          print('error: password verification failed', file=sys.stderr)
+  
+      elif m == 'decrypt':
         if len(sys.argv) == 2:
-          ciphertext = Vaulty().encrypt(data, password, cols).decode('utf-8')
-          print(ciphertext, end='')
-    
+          plaintext = Vaulty().decrypt(data, password)
+          if plaintext is not None:
+            print(plaintext.decode('utf-8'), end='')
+  
+          else:
+            print('error: invalid password or data not encrypted', file=sys.stderr)
+  
         else:
-          b = Vaulty().encrypt_file(sys.argv[2], password, cols)
+          b = Vaulty().decrypt_file(sys.argv[2], password)
+          if b is None:
+            print('error: invalid password or file not encrypted', file=sys.stderr)
 
-      else:
-        print('error: password verification failed', file=sys.stderr)
-
-    elif m == 'decrypt':
-      if len(sys.argv) == 2:
-        plaintext = Vaulty().decrypt(data, password)
-        if plaintext is not None:
-          print(plaintext.decode('utf-8'), end='')
-
-        else:
-          print('error: invalid password or data not encrypted', file=sys.stderr)
-
-      else:
-        b = Vaulty().decrypt_file(sys.argv[2], password)
-        if b is None:
-          print('error: invalid password or file not encrypted', file=sys.stderr)
+    else:
+      print('error: password is mandatory', file=sys.stderr)
 
   else:
     print('usage: vaulty encrypt|decrypt [file]', file=sys.stderr)
