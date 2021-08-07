@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # JinjaFx - Jinja2 Templating Tool
 # Copyright (c) 2020-2021 Chris Mason <chris@netnix.org>
@@ -16,9 +16,9 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
+import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback, vaulty.vaulty
 
-__version__ = '1.5.7'
+__version__ = '1.6.0-beta'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -250,6 +250,7 @@ class JinjaFx():
     self.g_dict = {}
     self.g_row = 0 
     self.g_warnings = []
+    self.g_vaulty = vaulty.vaulty.Vaulty()
 
     outputs = {}
     delim = None
@@ -439,6 +440,8 @@ class JinjaFx():
       'first': self.jfx_first,
       'last': self.jfx_last,
       'fields': self.jfx_fields,
+      'encrypt': self.jfx_encrypt,
+      'decrypt': self.jfx_decrypt,
       'setg': self.jfx_setg,
       'getg': self.jfx_getg,
       'nslookup': self.jfx_nslookup,
@@ -728,6 +731,18 @@ class JinjaFx():
     n = self.g_dict.get(key, int(start) - int(increment))
     self.g_dict[key] = n + int(increment)
     return self.g_dict[key]
+
+
+  def jfx_encrypt(self, plaintext, password):
+    ciphertext = self.g_vaulty.encrypt(plaintext.encode('utf-8'), password.encode('utf-8'))
+    if ciphertext is not None:
+      return ciphertext.decode('utf-8').strip()
+
+
+  def jfx_decrypt(self, ciphertext, password):
+    plaintext = self.g_vaulty.decrypt(ciphertext.encode('utf-8'), password.encode('utf-8'))
+    if plaintext is not None:
+      return plaintext.decode('utf-8')
 
 
   def jfx_setg(self, key, value):
