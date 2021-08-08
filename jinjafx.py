@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback, vaulty.vaulty
+import sys, os, socket, jinja2, yaml, argparse, re, copy, getpass, traceback, vaulty.vaulty
 
 __version__ = '1.6.0-beta'
 jinja2_filters = []
@@ -103,7 +103,6 @@ def main():
           from ansible.constants import DEFAULT_VAULT_ID_MATCH
           from ansible.parsing.vault import VaultLib
           from ansible.parsing.vault import VaultSecret
-          from getpass import getpass
 
           vpw = os.getenv('ANSIBLE_VAULT_PASSWORD')
 
@@ -114,7 +113,7 @@ def main():
                 vpw = f.read().strip()
 
           if vpw == None:
-            vpw = getpass('Vault Password: ')
+            vpw = getpass.getpass('Vault Password: ')
             print()
 
           vault[0] = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(vpw.encode('utf-8')))])
@@ -176,6 +175,22 @@ def main():
 
     if args.o is None:
       args.o = '_stdout_'
+
+    if 'jinjafx_input' in gvars and 'prompt' in gvars['jinjafx_input']:
+      if len(gvars['jinjafx_input']['prompt']) > 0:
+        jinjafx_input = {}
+
+        for f in gvars['jinjafx_input']['prompt']:
+          if isinstance(gvars['jinjafx_input']['prompt'][f], dict):
+            if 'type' in gvars['jinjafx_input']['prompt'][f] and gvars['jinjafx_input']['prompt'][f]['type'].lower() == 'password':
+              jinjafx_input[f] = getpass.getpass(gvars['jinjafx_input']['prompt'][f]['text'] + ': ')
+            else:
+              jinjafx_input[f] = input(gvars['jinjafx_input']['prompt'][f]['text'] + ': ')
+          else:
+            jinjafx_input[f] = input(gvars['jinjafx_input']['prompt'][f] + ': ')
+
+        gvars['jinjafx_input'] = jinjafx_input
+        print()
 
     import_filters()
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
