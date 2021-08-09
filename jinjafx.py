@@ -176,10 +176,10 @@ def main():
     if args.o is None:
       args.o = '_stdout_'
 
-    if 'jinjafx_input' in gvars and 'prompt' in gvars['jinjafx_input']:
-      if len(gvars['jinjafx_input']['prompt']) > 0:
-        jinjafx_input = {}
+    if 'jinjafx_input' in gvars:
+      jinjafx_input = {}
 
+      if 'prompt' in gvars['jinjafx_input'] and len(gvars['jinjafx_input']['prompt']) > 0:
         for f in gvars['jinjafx_input']['prompt']:
           if isinstance(gvars['jinjafx_input']['prompt'][f], dict):
             if 'type' in gvars['jinjafx_input']['prompt'][f] and gvars['jinjafx_input']['prompt'][f]['type'].lower() == 'password':
@@ -189,8 +189,9 @@ def main():
           else:
             jinjafx_input[f] = input(gvars['jinjafx_input']['prompt'][f] + ': ')
 
-        gvars['jinjafx_input'] = jinjafx_input
         print()
+
+      gvars['jinjafx_input'] = jinjafx_input
 
     import_filters()
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
