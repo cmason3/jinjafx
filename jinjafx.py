@@ -16,7 +16,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from __future__ import print_function, division
-import sys, os, socket, jinja2, yaml, argparse, re, copy, getpass, traceback, vaulty.vaulty
+import sys, os, socket, jinja2, yaml, argparse, re, copy, getpass, traceback
+# from vaulty.vaulty import Vaulty
 
 __version__ = '1.6.0-beta'
 jinja2_filters = []
@@ -266,7 +267,7 @@ class JinjaFx():
     self.g_dict = {}
     self.g_row = 0 
     self.g_warnings = []
-    self.g_vaulty = vaulty.vaulty.Vaulty()
+    # self.g_vaulty = Vaulty()
 
     outputs = {}
     delim = None
@@ -456,8 +457,8 @@ class JinjaFx():
       'first': self.jfx_first,
       'last': self.jfx_last,
       'fields': self.jfx_fields,
-      'encrypt': self.jfx_encrypt,
-      'decrypt': self.jfx_decrypt,
+      # 'encrypt': self.jfx_encrypt,
+      # 'decrypt': self.jfx_decrypt,
       'setg': self.jfx_setg,
       'getg': self.jfx_getg,
       'nslookup': self.jfx_nslookup,
@@ -749,16 +750,16 @@ class JinjaFx():
     return self.g_dict[key]
 
 
-  def jfx_encrypt(self, plaintext, password):
-    ciphertext = self.g_vaulty.encrypt(plaintext.encode('utf-8'), password.encode('utf-8'))
-    if ciphertext is not None:
-      return ciphertext.decode('utf-8').strip()
+  # def jfx_encrypt(self, plaintext, password):
+  #   ciphertext = self.g_vaulty.encrypt(plaintext.encode('utf-8'), password.encode('utf-8'))
+  #   if ciphertext is not None:
+  #     return ciphertext.decode('utf-8').strip()
 
 
-  def jfx_decrypt(self, ciphertext, password):
-    plaintext = self.g_vaulty.decrypt(ciphertext.encode('utf-8'), password.encode('utf-8'))
-    if plaintext is not None:
-      return plaintext.decode('utf-8')
+  # def jfx_decrypt(self, ciphertext, password):
+  #   plaintext = self.g_vaulty.decrypt(ciphertext.encode('utf-8'), password.encode('utf-8'))
+  #   if plaintext is not None:
+  #     return plaintext.decode('utf-8')
 
 
   def jfx_setg(self, key, value):
