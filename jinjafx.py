@@ -181,14 +181,37 @@ def main():
       jinjafx_input = {}
 
       if 'prompt' in gvars['jinjafx_input'] and len(gvars['jinjafx_input']['prompt']) > 0:
-        for f in gvars['jinjafx_input']['prompt']:
-          if isinstance(gvars['jinjafx_input']['prompt'][f], dict):
-            if 'type' in gvars['jinjafx_input']['prompt'][f] and gvars['jinjafx_input']['prompt'][f]['type'].lower() == 'password':
-              jinjafx_input[f] = getpass.getpass(gvars['jinjafx_input']['prompt'][f]['text'] + ': ')
-            else:
-              jinjafx_input[f] = input(gvars['jinjafx_input']['prompt'][f]['text'] + ': ')
+        for k in gvars['jinjafx_input']['prompt']:
+          v = gvars['jinjafx_input']['prompt'][k]
+
+          if isinstance(v, dict):
+            if 'pattern' not in v:
+              v['pattern'] = '.*$'
+            elif not v['pattern'].endswith('$'):
+              v['pattern'] += '$'
+
+            if 'required' not in v:
+              v['required'] = False
+
+            while True:
+              if 'type' in v and v['type'].lower() == 'password':
+                jinjafx_input[k] = getpass.getpass(v['text'] + ': ').strip()
+              else:
+                jinjafx_input[k] = input(v['text'] + ': ').strip()
+
+              if len(jinjafx_input[k]) == 0:
+                if v['required']:
+                  print('error: input is required', file=sys.stderr)
+                else:
+                  break
+              else:
+                if not re.match(v['pattern'], jinjafx_input[k], re.I):
+                  print('error: input doesn\'t match pattern "' + v['pattern'] + '"', file=sys.stderr)
+                else:
+                  break
+
           else:
-            jinjafx_input[f] = input(gvars['jinjafx_input']['prompt'][f] + ': ')
+            jinjafx_input[k] = input(v + ': ').strip()
 
         print()
 
