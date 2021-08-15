@@ -199,65 +199,92 @@ function getStatusText(code) {
           try {
             var vars = jsyaml.load(dt.vars, jsyaml_schema);
             if (vars !== null) {
-              if (vars.hasOwnProperty('jinjafx_input') && vars['jinjafx_input'].hasOwnProperty('body')) {
+              if (vars.hasOwnProperty('jinjafx_input')) {
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
                 if (vars['jinjafx_input'].hasOwnProperty('size')) {
                   document.getElementById('input_modal').className += " modal-" + vars['jinjafx_input']['size'];
                 }
-
-                if (input_form !== vars['jinjafx_input']['body']) {
-                  var xHR = new XMLHttpRequest();
-                  xHR.open("POST", 'jinjafx?dt=jinjafx_input', true);
-
-                  r_input_form = null;
-
-                  xHR.onload = function() {
-                    if (this.status === 200) {
-                      try {
-                        obj = JSON.parse(xHR.responseText);
-                        if (obj.status === "ok") {
-                          r_input_form = window.atob(obj.outputs['Output']);
-                          document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
-                          input_form = vars['jinjafx_input']['body'];
-                          $("#jinjafx_input").modal("show");
+  
+                if (vars['jinjafx_input'].hasOwnProperty('body')) {
+                  if (input_form !== vars['jinjafx_input']['body']) {
+                    var xHR = new XMLHttpRequest();
+                    xHR.open("POST", 'jinjafx?dt=jinjafx_input', true);
+  
+                    r_input_form = null;
+  
+                    xHR.onload = function() {
+                      if (this.status === 200) {
+                        try {
+                          obj = JSON.parse(xHR.responseText);
+                          if (obj.status === "ok") {
+                            r_input_form = window.atob(obj.outputs['Output']);
+                            document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
+                            input_form = vars['jinjafx_input']['body'];
+                            $("#jinjafx_input").modal("show");
+                          }
+                          else {
+                            var e = obj.error.replace("template.j2", "jinjafx_input");
+                            set_status("darkred", 'ERROR', e.substring(5));
+                          }
                         }
-                        else {
-                          var e = obj.error.replace("template.j2", "jinjafx_input");
-                          set_status("darkred", 'ERROR', e.substring(5));
+                        catch (e) {
+                          set_status("darkred", "ERROR", e);
                         }
                       }
-                      catch (e) {
-                        set_status("darkred", "ERROR", e);
+                      else {
+                        var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+                        set_status("darkred", "HTTP ERROR " + this.status, sT);
                       }
-                    }
-                    else {
-                      var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
-                      set_status("darkred", "HTTP ERROR " + this.status, sT);
-                    }
-                    clear_wait();
-                  };
-                  xHR.onerror = function() {
-                    set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
-                    clear_wait();
-                  };
-                  xHR.ontimeout = function() {
-                    set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
-                    clear_wait();
-                  };
-
-                  set_wait();
-
-                  var rbody = vars['jinjafx_input']['body'];
-                  rbody = rbody.replace(/<(?:output[\t ]+.+?|\/output[\t ]*)>.*?\n/gi, '');
-
-                  xHR.timeout = 10000;
-                  xHR.setRequestHeader("Content-Type", "application/json");
-                  xHR.send(JSON.stringify({ "template": window.btoa(rbody) }));
-                  return false;
+                      clear_wait();
+                    };
+                    xHR.onerror = function() {
+                      set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+                      clear_wait();
+                    };
+                    xHR.ontimeout = function() {
+                      set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+                      clear_wait();
+                    };
+  
+                    set_wait();
+  
+                    var rbody = vars['jinjafx_input']['body'];
+                    rbody = rbody.replace(/<(?:output[\t ]+.+?|\/output[\t ]*)>.*?\n/gi, '');
+  
+                    xHR.timeout = 10000;
+                    xHR.setRequestHeader("Content-Type", "application/json");
+                    xHR.send(JSON.stringify({ "template": window.btoa(rbody) }));
+                    return false;
+                  }
+                  else {
+                    $("#jinjafx_input").modal("show");
+                    return false;
+                  }
                 }
-                else {
-                  $("#jinjafx_input").modal("show");
-                  return false;
+                else if (vars['jinjafx_input'].hasOwnProperty('prompt')) {
+                  if (Array.isArray(vars['jinjafx_input'].hasOwnProperty('prompt'))) {
+                    var body = '';
+
+                    Object.keys(vars['jinjafx_input']['prompt']).forEach(function(f) {
+                      var v = vars['jinjafx_input']['prompt'][f];
+                      body += '<div class="row">';
+
+                      if (Array.isArray(v)) {
+
+
+                      }
+                      else {
+                        body += '<label for="' + f + '" class="col-form-label">' + v + '</label>';
+                        body += '<input id="' + f + '" class="form-control" data-var="' + f + '">';
+                      }
+
+                      body += '</div>';
+                    });
+
+                    document.getElementById('jinjafx_input_form').innerHTML = body;
+                    $("#jinjafx_input").modal("show");
+                    return false;
+                  }
                 }
               }
             }
