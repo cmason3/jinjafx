@@ -186,9 +186,7 @@ def main():
 
           if isinstance(v, dict):
             if 'pattern' not in v:
-              v['pattern'] = '.*$'
-            elif not v['pattern'].endswith('$'):
-              v['pattern'] += '$'
+              v['pattern'] = '.*'
 
             if 'required' not in v:
               v['required'] = False
@@ -205,7 +203,8 @@ def main():
                 else:
                   break
               else:
-                if not re.match(v['pattern'], jinjafx_input[k], re.I):
+                m = re.match(v['pattern'], jinjafx_input[k], re.I)
+                if not m or (m.span()[1] - m.span()[0]) != len(jinjafx_input[k]):
                   print('error: input doesn\'t match pattern "' + v['pattern'] + '"', file=sys.stderr)
                 else:
                   break
