@@ -271,7 +271,18 @@ function getStatusText(code) {
 
                       if (v.constructor.name === "Object") {
                         body += '<label for="' + f + '" class="col-form-label">' + v['text'] + '</label>';
-                        body += '<input id="' + f + '" class="form-control" data-var="' + f + '">';
+                        body += '<input id="' + f + '" class="form-control" data-var="' + f + '"';
+
+                        if (v.hasOwnProperty('pattern')) {
+                          body += ' pattern="' + v['pattern'] + '"';
+                        }
+
+                        if (v.hasOwnProperty('required') && v['required']) {
+                          body += ' required>';
+                        }
+                        else {
+                          body += '>';
+                        }
                       }
                       else {
                         body += '<label for="' + f + '" class="col-form-label">' + v + '</label>';
