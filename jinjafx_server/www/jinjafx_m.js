@@ -199,7 +199,7 @@ function getStatusText(code) {
           try {
             var vars = jsyaml.load(dt.vars, jsyaml_schema);
             if (vars !== null) {
-              if (vars.hasOwnProperty('jinjafx_input') && Array.isArray(vars['jinjafx_input'])) {
+              if (vars.hasOwnProperty('jinjafx_input') && (vars['jinjafx_input'].constructor.name === "Object")) {
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
                 if (vars['jinjafx_input'].hasOwnProperty('size')) {
                   document.getElementById('input_modal').className += " modal-" + vars['jinjafx_input']['size'];
@@ -262,26 +262,29 @@ function getStatusText(code) {
                   }
                 }
                 else if (vars['jinjafx_input'].hasOwnProperty('prompt')) {
-                  if (Array.isArray(vars['jinjafx_input']['prompt'])) {
+                  if (vars['jinjafx_input']['prompt'].constructor.name === "Object") {
                     var body = '';
 
                     Object.keys(vars['jinjafx_input']['prompt']).forEach(function(f) {
                       var v = vars['jinjafx_input']['prompt'][f];
-                      body += '<div class="row">';
+                      body += '<div class="row"><div class="col">';
 
-                      if (Array.isArray(v)) {
-
-
+                      if (v.constructor.name === "Object") {
+                        body += '<label for="' + f + '" class="col-form-label">' + v['text'] + '</label>';
+                        body += '<input id="' + f + '" class="form-control" data-var="' + f + '">';
                       }
                       else {
                         body += '<label for="' + f + '" class="col-form-label">' + v + '</label>';
                         body += '<input id="' + f + '" class="form-control" data-var="' + f + '">';
                       }
 
-                      body += '</div>';
+                      body += '</div></div>';
                     });
 
-                    document.getElementById('jinjafx_input_form').innerHTML = body;
+                    if (r_input_form !== body) {
+                      document.getElementById('jinjafx_input_form').innerHTML = body;
+                      r_input_form = body;
+                    }
                     $("#jinjafx_input").modal("show");
                     return false;
                   }
