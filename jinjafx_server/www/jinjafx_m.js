@@ -199,7 +199,7 @@ function getStatusText(code) {
           try {
             var vars = jsyaml.load(dt.vars, jsyaml_schema);
             if (vars !== null) {
-              if (vars.hasOwnProperty('jinjafx_input')) {
+              if (vars.hasOwnProperty('jinjafx_input') && Array.isArray(vars['jinjafx_input'])) {
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
                 if (vars['jinjafx_input'].hasOwnProperty('size')) {
                   document.getElementById('input_modal').className += " modal-" + vars['jinjafx_input']['size'];
@@ -262,7 +262,7 @@ function getStatusText(code) {
                   }
                 }
                 else if (vars['jinjafx_input'].hasOwnProperty('prompt')) {
-                  if (Array.isArray(vars['jinjafx_input'].hasOwnProperty('prompt'))) {
+                  if (Array.isArray(vars['jinjafx_input']['prompt'])) {
                     var body = '';
 
                     Object.keys(vars['jinjafx_input']['prompt']).forEach(function(f) {
