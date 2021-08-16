@@ -273,6 +273,10 @@ function getStatusText(code) {
                         body += '<label for="' + f + '" class="col-form-label">' + v['text'] + '</label>';
                         body += '<input id="' + f + '" class="form-control" data-var="' + f + '"';
 
+                        if (v.hasOwnProperty('type')) {
+                          body += ' type="' + v['type'] + '"';
+                        }
+
                         if (v.hasOwnProperty('pattern')) {
                           body += ' pattern="' + v['pattern'] + '"';
                         }

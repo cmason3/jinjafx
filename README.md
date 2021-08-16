@@ -256,6 +256,41 @@ jinjafx_sort:
 
 The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if yo specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
 
+### JinjaFx Input
+
+There might be some situations where you want inputs to be provided during the generation of the template which are not known beforehand. JinjaFx supports the ability to prompt the user for input using the `jinjafx_input` variable which can be specified in `vars.yml`. The following example demonstrates how we can prompt the user for two inputs ("Name" and "Age") before the template is generated:
+
+```yaml
+---
+jinjafx_input:
+  prompt:
+    name: "Name"
+    age: "Age"
+```
+
+These inputs can then be referenced in your template using `{{ jinjafx_input.name }}` or `{{ jinjafx_input['age'] }}` - the variable name is the field name and the prompt text is the value. However, there might be some situations where you want a certain pattern to be followed or where an input is mandatory, and this is where the advanced syntax comes into play (you can mix and match syntax for different fields):
+
+```yaml
+---
+jinjafx_input:
+  prompt:
+    name:
+      text: "Name"
+      required: True
+    age:
+      text: "Age"
+      required: True
+      pattern: "[1-9]+[0-9]*"
+```
+
+Under the field the `text` key is always mandatory, but the following optional keys are also valid:
+
+- `required` - can be True or False (default is False)
+
+- `pattern` - a regular expression that the input value must match
+
+- `type` - if set to "password" then echo is turned off - used for inputting sensitive values
+
 ### Jinja2 Extensions
 
 Jinja2 supports the ability to provide extended functionality through [extensions](https://jinja.palletsprojects.com/en/2.11.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja2_extensions` global variable, which you can set within one of your `vars.yml` files (it expects a list):
