@@ -15,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import print_function, division
+# from __future__ import print_function, division
 import sys, os, socket, jinja2, yaml, argparse, re, copy, getpass, traceback
 # from vaulty.vaulty import Vaulty
 
