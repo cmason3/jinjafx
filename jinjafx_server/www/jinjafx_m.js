@@ -199,65 +199,110 @@ function getStatusText(code) {
           try {
             var vars = jsyaml.load(dt.vars, jsyaml_schema);
             if (vars !== null) {
-              if (vars.hasOwnProperty('jinjafx_input') && vars['jinjafx_input'].hasOwnProperty('body')) {
+              if (vars.hasOwnProperty('jinjafx_input') && (vars['jinjafx_input'].constructor.name === "Object")) {
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
                 if (vars['jinjafx_input'].hasOwnProperty('size')) {
                   document.getElementById('input_modal').className += " modal-" + vars['jinjafx_input']['size'];
                 }
+  
+                if (vars['jinjafx_input'].hasOwnProperty('body')) {
+                  if (input_form !== vars['jinjafx_input']['body']) {
+                    var xHR = new XMLHttpRequest();
+                    xHR.open("POST", 'jinjafx?dt=jinjafx_input', true);
+  
+                    r_input_form = null;
+  
+                    xHR.onload = function() {
+                      if (this.status === 200) {
+                        try {
+                          obj = JSON.parse(xHR.responseText);
+                          if (obj.status === "ok") {
+                            r_input_form = window.atob(obj.outputs['Output']);
+                            document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
+                            input_form = vars['jinjafx_input']['body'];
+                            $("#jinjafx_input").modal("show");
+                          }
+                          else {
+                            var e = obj.error.replace("template.j2", "jinjafx_input");
+                            set_status("darkred", 'ERROR', e.substring(5));
+                          }
+                        }
+                        catch (e) {
+                          set_status("darkred", "ERROR", e);
+                        }
+                      }
+                      else {
+                        var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
+                        set_status("darkred", "HTTP ERROR " + this.status, sT);
+                      }
+                      clear_wait();
+                    };
+                    xHR.onerror = function() {
+                      set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
+                      clear_wait();
+                    };
+                    xHR.ontimeout = function() {
+                      set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
+                      clear_wait();
+                    };
+  
+                    set_wait();
+  
+                    var rbody = vars['jinjafx_input']['body'];
+                    rbody = rbody.replace(/<(?:output[\t ]+.+?|\/output[\t ]*)>.*?\n/gi, '');
+  
+                    xHR.timeout = 10000;
+                    xHR.setRequestHeader("Content-Type", "application/json");
+                    xHR.send(JSON.stringify({ "template": window.btoa(rbody) }));
+                    return false;
+                  }
+                  else {
+                    $("#jinjafx_input").modal("show");
+                    return false;
+                  }
+                }
+                else if (vars['jinjafx_input'].hasOwnProperty('prompt')) {
+                  if (vars['jinjafx_input']['prompt'].constructor.name === "Object") {
+                    var body = '';
 
-                if (input_form !== vars['jinjafx_input']['body']) {
-                  var xHR = new XMLHttpRequest();
-                  xHR.open("POST", 'jinjafx?dt=jinjafx_input', true);
+                    Object.keys(vars['jinjafx_input']['prompt']).forEach(function(f) {
+                      var v = vars['jinjafx_input']['prompt'][f];
+                      body += '<div class="row"><div class="col">';
 
-                  r_input_form = null;
+                      if (v.constructor.name === "Object") {
+                        body += '<label for="' + f + '" class="col-form-label">' + v['text'] + '</label>';
+                        body += '<input id="' + f + '" class="form-control" data-var="' + f + '"';
 
-                  xHR.onload = function() {
-                    if (this.status === 200) {
-                      try {
-                        obj = JSON.parse(xHR.responseText);
-                        if (obj.status === "ok") {
-                          r_input_form = window.atob(obj.outputs['Output']);
-                          document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
-                          input_form = vars['jinjafx_input']['body'];
-                          $("#jinjafx_input").modal("show");
+                        if (v.hasOwnProperty('type')) {
+                          body += ' type="' + v['type'] + '"';
+                        }
+
+                        if (v.hasOwnProperty('pattern')) {
+                          body += ' pattern="' + v['pattern'] + '"';
+                        }
+
+                        if (v.hasOwnProperty('required') && v['required']) {
+                          body += ' required>';
                         }
                         else {
-                          var e = obj.error.replace("template.j2", "jinjafx_input");
-                          set_status("darkred", 'ERROR', e.substring(5));
+                          body += '>';
                         }
                       }
-                      catch (e) {
-                        set_status("darkred", "ERROR", e);
+                      else {
+                        body += '<label for="' + f + '" class="col-form-label">' + v + '</label>';
+                        body += '<input id="' + f + '" class="form-control" data-var="' + f + '">';
                       }
+
+                      body += '</div></div>';
+                    });
+
+                    if (r_input_form !== body) {
+                      document.getElementById('jinjafx_input_form').innerHTML = body;
+                      r_input_form = body;
                     }
-                    else {
-                      var sT = (this.statusText.length == 0) ? getStatusText(this.status) : this.statusText;
-                      set_status("darkred", "HTTP ERROR " + this.status, sT);
-                    }
-                    clear_wait();
-                  };
-                  xHR.onerror = function() {
-                    set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
-                    clear_wait();
-                  };
-                  xHR.ontimeout = function() {
-                    set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
-                    clear_wait();
-                  };
-
-                  set_wait();
-
-                  var rbody = vars['jinjafx_input']['body'];
-                  rbody = rbody.replace(/<(?:output[\t ]+.+?|\/output[\t ]*)>.*?\n/gi, '');
-
-                  xHR.timeout = 10000;
-                  xHR.setRequestHeader("Content-Type", "application/json");
-                  xHR.send(JSON.stringify({ "template": window.btoa(rbody) }));
-                  return false;
-                }
-                else {
-                  $("#jinjafx_input").modal("show");
-                  return false;
+                    $("#jinjafx_input").modal("show");
+                    return false;
+                  }
                 }
               }
             }

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # JinjaFx - Jinja2 Templating Tool
 # Copyright (c) 2020-2021 Chris Mason <chris@netnix.org>
@@ -15,10 +15,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import print_function, division
-import sys, os, socket, jinja2, yaml, argparse, re, copy, traceback
+# from __future__ import print_function, division
+import sys, os, socket, jinja2, yaml, argparse, re, copy, getpass, traceback
+# from vaulty.vaulty import Vaulty
 
-__version__ = '1.5.7'
+__version__ = '1.6.0'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -103,7 +104,6 @@ def main():
           from ansible.constants import DEFAULT_VAULT_ID_MATCH
           from ansible.parsing.vault import VaultLib
           from ansible.parsing.vault import VaultSecret
-          from getpass import getpass
 
           vpw = os.getenv('ANSIBLE_VAULT_PASSWORD')
 
@@ -114,7 +114,7 @@ def main():
                 vpw = f.read().strip()
 
           if vpw == None:
-            vpw = getpass('Vault Password: ')
+            vpw = getpass.getpass('Vault Password: ')
             print()
 
           vault[0] = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(vpw.encode('utf-8')))])
@@ -176,6 +176,45 @@ def main():
 
     if args.o is None:
       args.o = '_stdout_'
+
+    if 'jinjafx_input' in gvars:
+      jinjafx_input = {}
+
+      if 'prompt' in gvars['jinjafx_input'] and len(gvars['jinjafx_input']['prompt']) > 0:
+        for k in gvars['jinjafx_input']['prompt']:
+          v = gvars['jinjafx_input']['prompt'][k]
+
+          if isinstance(v, dict):
+            if 'pattern' not in v:
+              v['pattern'] = '.*'
+
+            if 'required' not in v:
+              v['required'] = False
+
+            while True:
+              if 'type' in v and v['type'].lower() == 'password':
+                jinjafx_input[k] = getpass.getpass(v['text'] + ': ').strip()
+              else:
+                jinjafx_input[k] = input(v['text'] + ': ').strip()
+
+              if len(jinjafx_input[k]) == 0:
+                if v['required']:
+                  print('error: input is required', file=sys.stderr)
+                else:
+                  break
+              else:
+                m = re.match(v['pattern'], jinjafx_input[k], re.I)
+                if not m or (m.span()[1] - m.span()[0]) != len(jinjafx_input[k]):
+                  print('error: input doesn\'t match pattern "' + v['pattern'] + '"', file=sys.stderr)
+                else:
+                  break
+
+          else:
+            jinjafx_input[k] = input(v + ': ').strip()
+
+        print()
+
+      gvars['jinjafx_input'] = jinjafx_input
 
     import_filters()
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
@@ -250,6 +289,7 @@ class JinjaFx():
     self.g_dict = {}
     self.g_row = 0 
     self.g_warnings = []
+    # self.g_vaulty = Vaulty()
 
     outputs = {}
     delim = None
@@ -439,6 +479,8 @@ class JinjaFx():
       'first': self.jfx_first,
       'last': self.jfx_last,
       'fields': self.jfx_fields,
+      # 'encrypt': self.jfx_encrypt,
+      # 'decrypt': self.jfx_decrypt,
       'setg': self.jfx_setg,
       'getg': self.jfx_getg,
       'nslookup': self.jfx_nslookup,
@@ -728,6 +770,18 @@ class JinjaFx():
     n = self.g_dict.get(key, int(start) - int(increment))
     self.g_dict[key] = n + int(increment)
     return self.g_dict[key]
+
+
+  # def jfx_encrypt(self, plaintext, password):
+  #   ciphertext = self.g_vaulty.encrypt(plaintext.encode('utf-8'), password.encode('utf-8'))
+  #   if ciphertext is not None:
+  #     return ciphertext.decode('utf-8').strip()
+
+
+  # def jfx_decrypt(self, ciphertext, password):
+  #   plaintext = self.g_vaulty.decrypt(ciphertext.encode('utf-8'), password.encode('utf-8'))
+  #   if plaintext is not None:
+  #     return plaintext.decode('utf-8')
 
 
   def jfx_setg(self, key, value):

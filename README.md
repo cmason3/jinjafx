@@ -5,15 +5,17 @@
 
 <h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
 
-<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a></p>
+<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a></p>
 
 <h3 align="center">:star: Harness the Power of Jinja2 Templates with Dynamic CSV or YAML as Input :star:</h3>
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and strings or use custom Ansible filters. While it should work on Python 2.7 without modification, Python 3 is recommended as I no longer test against Python 2 as it is end of life.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and strings or use custom Ansible filters.
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
 
 JinjaFx Server is a add-on which provides a lightweight web server to support a web frontend to JinjaFx. It is a separate Python file which imports JinjaFx to generate outputs from a web interface - please see details within the [/jinjafx_server](jinjafx_server) directory.
+
+Python 2 support has been officially deprecated and won't work without modification as Python 2 is now end of life and a security risk.
 
 ### JinjaFx Usage
 
@@ -253,6 +255,41 @@ jinjafx_sort:
 ```
 
 The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if yo specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
+
+### JinjaFx Input
+
+There might be some situations where you want inputs to be provided during the generation of the template which are not known beforehand. JinjaFx supports the ability to prompt the user for input using the `jinjafx_input` variable which can be specified in `vars.yml`. The following example demonstrates how we can prompt the user for two inputs ("Name" and "Age") before the template is generated:
+
+```yaml
+---
+jinjafx_input:
+  prompt:
+    name: "Name"
+    age: "Age"
+```
+
+These inputs can then be referenced in your template using `{{ jinjafx_input.name }}` or `{{ jinjafx_input['age'] }}` - the variable name is the field name and the prompt text is the value. However, there might be some situations where you want a certain pattern to be followed or where an input is mandatory, and this is where the advanced syntax comes into play (you can mix and match syntax for different fields):
+
+```yaml
+---
+jinjafx_input:
+  prompt:
+    name:
+      text: "Name"
+      required: True
+    age:
+      text: "Age"
+      required: True
+      pattern: "[1-9]+[0-9]*"
+```
+
+Under the field the `text` key is always mandatory, but the following optional keys are also valid:
+
+- `required` - can be True or False (default is False)
+
+- `pattern` - a regular expression that the input value must match
+
+- `type` - if set to "password" then echo is turned off - used for inputting sensitive values
 
 ### Jinja2 Extensions
 

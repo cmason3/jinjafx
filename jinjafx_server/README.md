@@ -53,9 +53,9 @@ The Data Set feature allows you to include multiple different "data.csv" and "va
 
 ### JinjaFx Input
 
-This feature allows you to specify an input form that can be used to obtain inputs for your Jinja2 template when you click on "Generate". As JinjaFx is built on Bootstrap 4, it uses the <a href="https://getbootstrap.com/docs/4.6/components/modal/#modal-components">Bootstrap 4 Modal</a> syntax to specify what is contained in the body of your modal form. Bootstrap works on a row and column grid with each row comprising of 12 columns - you use the various "col-n" classes to specify how wide each element is.
+In addition to the prompt syntax (see JinjaFx Input for JinjaFx), which can be specified under `jinjafx_input`, we also support the ability to specify a custom html input form to provide greater flexibility. As JinjaFx is built on Bootstrap 4, it uses the <a href="https://getbootstrap.com/docs/4.6/components/modal/#modal-components">Bootstrap 4 Modal</a> syntax to specify what is contained in the body of your modal form. Bootstrap works on a row and column grid with each row comprising of 12 columns - you use the various "col-n" classes to specify how wide each element is.
 
-You specify an input form using the `jinjafx_input` variable within your "vars.yml" file as per the following simple example (the "body" element supports the use of Jinja2 templating syntax):
+You can specify a custom input form using the `body` variable under `jinjafx_input` within your "vars.yml" - if this exists then whatever you have in `prompt` is ignored.
 
 ```yaml
 ---
@@ -76,7 +76,7 @@ jinjafx_input:
     </div>
 ```
 
-You can also specify an optional `size` attribute alongside the `body` attribute which sets the width of the modal using the pre-defined Bootstrap 4 sizes (i.e. "sm", "lg" and "xl"). The input form supports full native HTML validation using `required` and `pattern` attributes. The values which are input are then mapped to Jinja2 variables using the `data-var` custom attribute (e.g. `data-var="name"` would map to `jinjafx_input['name']`):
+You can also specify an optional `size` attribute alongside the `body` attribute which sets the width of the modal using the pre-defined Bootstrap 4 sizes (i.e. "sm", "lg" and "xl"). The input form supports full native HTML validation using `required` and `pattern` attributes. The values which are input are then mapped to Jinja2 variables using the `data-var` custom attribute (e.g. `data-var="name"` would map to `jinjafx_input['name']` or `jinjafx_input.name`):
 
 ```jinja2
 Name: {{ jinjafx_input['name'] }}
