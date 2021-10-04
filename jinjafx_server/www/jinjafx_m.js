@@ -1128,6 +1128,9 @@ function getStatusText(code) {
           $('#lbuttons').removeClass('d-none');
         }
         loaded = true;
+        if (window.msCrypto) {
+          $("#ie11_warning").modal("show");
+        }
       }
     }
     else {
