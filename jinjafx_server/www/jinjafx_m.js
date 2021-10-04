@@ -523,6 +523,16 @@ function getStatusText(code) {
   }
   
   window.onload = function() {
+    query_string = window.location.search
+
+    if (window.msCrypto) {
+      query_string += query_string.length ? '&_ie11' : '?_ie11';
+    }
+
+    var xHR = new XMLHttpRequest();
+    xHR.open("GET", "jinjafx.init" + query_string, true);
+    xHR.send(null);
+
     var crypto = window.crypto ? window.crypto : window.msCrypto ? window.msCrypto : undefined;
     if (typeof crypto !== 'undefined') {
       document.getElementById('delete_ds').onclick = function() { jinjafx('delete_dataset'); };
@@ -534,12 +544,6 @@ function getStatusText(code) {
       document.getElementById('export').onclick = function() { jinjafx('export'); };
       document.getElementById('generate').onclick = function() { jinjafx('generate'); };
 
-      if (window.msCrypto) {
-        var xHR = new XMLHttpRequest();
-        xHR.open("GET", "ie11.html?" + moment().format('YYYYMMDDHHmm'), true);
-        xHR.send(null);
-      }
-  
       sobj = document.getElementById("status");
   
       window.onresize = function() {
