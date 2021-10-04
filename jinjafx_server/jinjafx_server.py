@@ -40,6 +40,7 @@ aws_access_key = None
 aws_secret_key = None
 repository = None
 api_only = False
+verbose = False
 
 rtable = {}
 rl_rate = 0
@@ -66,25 +67,26 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       else:
         ansi = '31'
 
-      src = str(self.client_address[0])
-      ctype = ''
+      if args[1] == '200' or args[1] == '304' or args[1] == 'ERR' or verbose:
+        src = str(self.client_address[0])
+        ctype = ''
 
-      if hasattr(self, 'headers'):
-        if 'X-Forwarded-For' in self.headers:
-          src = self.headers['X-Forwarded-For']
+        if hasattr(self, 'headers'):
+          if 'X-Forwarded-For' in self.headers:
+            src = self.headers['X-Forwarded-For']
 
-        if 'Content-Type' in self.headers:
-          ctype = ' (' + self.headers['Content-Type'] + ')'
+          if 'Content-Type' in self.headers:
+            ctype = ' (' + self.headers['Content-Type'] + ')'
 
-      if str(args[1]) == 'ERR':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
+        if str(args[1]) == 'ERR':
+          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
           
-      elif self.command == 'POST':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype + ' [' + jinjafx.format_bytes(self.length) + ']')
+        elif self.command == 'POST':
+          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype + ' [' + jinjafx.format_bytes(self.length) + ']')
 
-      elif self.command != None:
-        if (args[1] != '200' and args[1] != '304') or not re.match(r'.+\.(?:js|css|png)$', path):
-          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' ' + self.command + ' ' + path)
+        elif self.command != None:
+          if (args[1] != '200' and args[1] != '304') or not re.match(r'.+\.(?:js|css|png)$', path):
+            log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' ' + self.command + ' ' + path)
 
         
   def encode_link(self, bhash):
@@ -637,6 +639,7 @@ def main(rflag=[0]):
   global rl_rate
   global rl_limit
   global api_only
+  global verbose
 
   try:
     print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja2 Templating Tool')
@@ -651,8 +654,10 @@ def main(rflag=[0]):
     group_ex.add_argument('-s3', metavar='<aws s3 url>', type=str)
     parser.add_argument('-rl', metavar='<rate/limit>', type=rlimit)
     parser.add_argument('-api', action='store_true', default=False)
+    parser.add_argument('-v', action='store_true', default=False)
     args = parser.parse_args()
     api_only = args.api
+    verbose = args.v
     
     if args.s3 is not None:
       import requests
