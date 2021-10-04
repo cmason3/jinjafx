@@ -89,7 +89,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype + ' [' + jinjafx.format_bytes(self.length) + ']')
 
           elif self.command != None:
-            if (args[1] != '200' and args[1] != '304') or not re.match(r'.+\.(?:js|css|png)$', path):
+            if (args[1] != '200' and args[1] != '304') or not re.match(r'.+\.(?:js|css|png)$', path) or verbose:
               log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' ' + self.command + ' ' + path)
 
         
