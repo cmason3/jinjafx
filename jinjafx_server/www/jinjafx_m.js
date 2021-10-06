@@ -802,7 +802,7 @@ function getStatusText(code) {
       };
 
       $('#jinjafx_input').on('shown.bs.modal', function() {
-        var focusable = $('#jinjafx_input_form').find('input,select');
+        var focusable = document.getElementById('jinjafx_input_form').querySelectorAll('input,select');
         if (focusable.length) {
           focusable[0].focus();
         }
@@ -890,7 +890,7 @@ function getStatusText(code) {
 
       document.getElementById('ml-input-reset').onclick = function(e) {
         document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
-        var focusable = $('#jinjafx_input_form').find('input,select');
+        var focusable = document.getElementById('jinjafx_input_form').querySelectorAll('input,select');
         if (focusable.length) {
           focusable[0].focus();
         }
@@ -902,17 +902,19 @@ function getStatusText(code) {
           $("#jinjafx_input").modal("hide");
 
           var vars = {};
-          $('#input_form').find('input,select').filter('[data-var]').each(function(i, elem) {
-            if (elem.dataset.var.match(/\S/)) {
-              var v = elem.value;
-              if ((elem.tagName == 'INPUT') && ((elem.type == 'checkbox') || (elem.type == 'radio'))) {
-                v = elem.checked;
-              }
-              if (vars.hasOwnProperty(elem.dataset.var)) {
-                vars[elem.dataset.var].push(v);
-              }
-              else {
-                vars[elem.dataset.var] = [v];
+          document.getElementById('input_form').querySelectorAll('input,select').forEach(function(e, i) {
+            if (e.getAttribute('data-var') != null) {
+              if (e.dataset.var.match(/\S/)) {
+                var v = e.value;
+                if ((e.tagName == 'INPUT') && ((e.type == 'checkbox') || (e.type == 'radio'))) {
+                  v = e.checked;
+                }
+                if (vars.hasOwnProperty(e.dataset.var)) {
+                  vars[e.dataset.var].push(v);
+                }
+                else {
+                  vars[e.dataset.var] = [v];
+                }
               }
             }
           });
@@ -1082,23 +1084,25 @@ function getStatusText(code) {
         }
       };
 
-      document.querySelectorAll('.modal').forEach(function(e, i) {
-        if (e.keyCode === 9) {
-          var focusable = $(e.target).closest('.modal').find('input,select,textarea,button');
-          if (focusable.length) {
-            var first = focusable[0];
-            var last = focusable[focusable.length - 1];
-  
-            if ((e.target === first) && e.shiftKey) {
-              last.focus();
-              e.preventDefault();
-            }
-            else if ((e.target === last) && !e.shiftKey) {
-              first.focus();
-              e.preventDefault();
+      document.querySelectorAll('.modal').forEach(function(elem, i) {
+        elem.onkeydown = function(e) {
+          if (e.keyCode === 9) {
+            var focusable = elem.querySelectorAll('input,select,textarea,button');
+            if (focusable.length) {
+              var first = focusable[0];
+              var last = focusable[focusable.length - 1];
+    
+              if ((e.target === first) && e.shiftKey) {
+                last.focus();
+                e.preventDefault();
+              }
+              else if ((e.target === last) && !e.shiftKey) {
+                first.focus();
+                e.preventDefault();
+              }
             }
           }
-        }
+        };
       });
   
       if (window.location.href.indexOf('?') > -1) {
