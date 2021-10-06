@@ -197,9 +197,21 @@ function getStatusText(code) {
 
         if (dt.vars.match(/\S/)) {
           try {
+            console.log("about to load");
             var vars = jsyaml.load(dt.vars, jsyaml_schema);
             if (vars !== null) {
+              console.log("it is good");
+
+
+              if (vars.hasOwnProperty('jinjafx_input')) {
+                console.log("we have input");
+
+              }
+
+
+
               if (vars.hasOwnProperty('jinjafx_input') && (vars['jinjafx_input'].constructor.name === "Object")) {
+                console.log("yeh baby yeh");
                 document.getElementById('input_modal').className = "modal-dialog modal-dialog-centered";
                 if (vars['jinjafx_input'].hasOwnProperty('size')) {
                   document.getElementById('input_modal').className += " modal-" + vars['jinjafx_input']['size'];
@@ -526,16 +538,12 @@ function getStatusText(code) {
     dayjs.extend(window.dayjs_plugin_relativeTime);
     query_string = window.location.search
 
-    if (window.msCrypto) {
-      query_string += query_string.length ? '&_ie11' : '?_ie11';
-    }
-
     var xHR = new XMLHttpRequest();
     xHR.open("GET", "jinjafx.init" + query_string, true);
     xHR.send(null);
 
-    var crypto = window.crypto ? window.crypto : window.msCrypto ? window.msCrypto : undefined;
-    if (typeof crypto !== 'undefined') {
+    //var crypto = window.crypto ? window.crypto : window.msCrypto ? window.msCrypto : undefined;
+    if (window.crypto) {
       document.getElementById('delete_ds').onclick = function() { jinjafx('delete_dataset'); };
       document.getElementById('add_ds').onclick = function() { jinjafx('add_dataset'); };
       document.getElementById('get').onclick = function() { jinjafx('get_link'); };
@@ -1133,9 +1141,6 @@ function getStatusText(code) {
           document.getElementById('lbuttons').classList.remove('d-none');
         }
         loaded = true;
-        if (window.msCrypto) {
-          $("#ie11_warning").modal("show");
-        }
       }
     }
     else {
