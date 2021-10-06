@@ -14,13 +14,15 @@
     if (window.opener != null) {
       var dt = window.opener.dt;
       window.opener.reset_dt();
+
+      dayjs.extend(window.dayjs_plugin_advancedFormat);
   
       sobj = document.getElementById("ostatus");
 
       document.getElementById('copy').onclick = function() {
         sobj.innerHTML = '';
         try {
-          var t = document.getElementById('t_' + $('.tab-content .active').attr('id'));
+          var t = document.getElementById('t_' + document.querySelector('.tab-content > .active').getAttribute('id'));
 
           if (t.nodeName == 'IFRAME') {
             t.contentDocument.designMode = "on";
@@ -71,7 +73,7 @@
           xHR.setRequestHeader("Content-Type", "application/json");
           xHR.send(JSON.stringify(obj.outputs));
         }
-        var t = document.getElementById('t_' + $('.tab-content .active').attr('id'));
+        var t = document.getElementById('t_' + document.querySelector('.tab-content > .active').getAttribute('id'));
         t.focus();
       };
   
@@ -141,7 +143,7 @@
   
                 document.body.style.display = 'none';
                 document.getElementById('status').style.display = 'none';
-                document.getElementById('summary').innerHTML = 'Generated at ' + moment().format('HH:mm') + ' on ' + moment().format('Do MMMM YYYY') + '<br />in ' + Math.ceil(obj.elapsed).toLocaleString() + ' milliseconds';
+                document.getElementById('summary').innerHTML = 'Generated at ' + dayjs().format('HH:mm') + ' on ' + dayjs().format('Do MMMM YYYY') + '<br />in ' + Math.ceil(obj.elapsed).toLocaleString() + ' milliseconds';
                 document.getElementById('tabs').innerHTML = tabs;
                 document.getElementById('nav-links').innerHTML = links;
                 document.getElementById('wrap').style.display = 'block';

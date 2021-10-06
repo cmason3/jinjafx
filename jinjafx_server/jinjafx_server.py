@@ -71,7 +71,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         if not verbose:
           path = path.replace('/jinjafx.init', '/')
 
-        if (args[1] != '204' and args[1] != '404') or verbose:
+        if (args[1] != '204' and args[1] != '404' and args[1] != '501') or verbose:
           src = str(self.client_address[0])
           ctype = ''
 

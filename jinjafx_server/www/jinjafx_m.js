@@ -164,10 +164,10 @@ function getStatusText(code) {
     }
   
     if (method == "protect") {
-      $('#password_open2').removeClass('is-invalid');
-      $('#password_open2').removeClass('is-valid');
-      $('#password_modify2').removeClass('is-invalid');
-      $('#password_modify2').removeClass('is-valid');
+      document.getElementById('password_open2').classList.remove('is-invalid');
+      document.getElementById('password_open2').classList.remove('is-valid');
+      document.getElementById('password_modify2').classList.remove('is-invalid');
+      document.getElementById('password_modify2').classList.remove('is-valid');
       $("#protect_dt").modal("show");
       return false;
     }
@@ -454,18 +454,18 @@ function getStatusText(code) {
               load_datatemplate(dt['dt'], qs);
               dt_id = qs.dt;
 
-              $('#update').removeClass('d-none');
-              $('#get').addClass('d-none');
+              document.getElementById('update').classList.remove('d-none');
+              document.getElementById('get').classList.add('d-none');
               document.getElementById('mdd').disabled = false;
 
-              $('#protect').removeClass('disabled');
+              document.getElementById('protect').classList.remove('disabled');
               if (dt.hasOwnProperty('dt_password') || dt.hasOwnProperty('dt_mpassword')) {
                 document.getElementById('protect_text').innerHTML = 'Update Protection';
               }
   
               if (dt.hasOwnProperty('updated')) {
                 revision = dt.revision;
-                set_status('green', 'Revision ' + revision, 'Updated ' + moment.unix(dt.updated).fromNow(), 30000, true);
+                set_status('green', 'Revision ' + revision, 'Updated ' + dayjs.unix(dt.updated).fromNow(), 30000, true);
               }
               else {
                 revision = 1;
@@ -483,7 +483,7 @@ function getStatusText(code) {
             set_status("darkred", "HTTP ERROR " + this.status, sT);
             window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
           }
-          $('#lbuttons').removeClass('d-none');
+          document.getElementById('lbuttons').classList.remove('d-none');
           loaded = true;
           clear_wait();
         };
@@ -491,14 +491,14 @@ function getStatusText(code) {
         xHR.onerror = function() {
           set_status("darkred", "ERROR", "XMLHttpRequest.onError()");
           window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-          $('#lbuttons').removeClass('d-none');
+          document.getElementById('lbuttons').classList.remove('d-none');
           loaded = true;
           clear_wait();
         };
         xHR.ontimeout = function() {
           set_status("darkred", "ERROR", "XMLHttpRequest.onTimeout()");
           window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-          $('#lbuttons').removeClass('d-none');
+          document.getElementById('lbuttons').classList.remove('d-none');
           loaded = true;
           clear_wait();
         };
@@ -511,18 +511,19 @@ function getStatusText(code) {
       }
       else {
         update_from_qs();
-        $('#lbuttons').removeClass('d-none');
+        document.getElementById('lbuttons').classList.remove('d-none');
         loaded = true;
       }
     }
     catch (ex) {
       set_status("darkred", "ERROR", ex);
-      $('#lbuttons').removeClass('d-none');
+      document.getElementById('lbuttons').classList.remove('d-none');
       loaded = true; onChange(true);
     }
   }
   
   window.onload = function() {
+    dayjs.extend(window.dayjs_plugin_relativeTime);
     query_string = window.location.search
 
     if (window.msCrypto) {
@@ -570,7 +571,7 @@ function getStatusText(code) {
           }
         },
         "Ctrl-S": function(cm) {
-          if (!$('#update').hasClass('d-none')) {
+          if (!document.getElementById('update').classList.contains('d-none')) {
             jinjafx('update_link');
           }
           else {
@@ -578,7 +579,7 @@ function getStatusText(code) {
           }
         },
         "Cmd-S": function(cm) {
-          if (!$('#update').hasClass('d-none')) {
+          if (!document.getElementById('update').classList.contains('d-none')) {
             jinjafx('update_link');
           }
           else {
@@ -842,7 +843,7 @@ function getStatusText(code) {
         if (protect_ok == false) {
           if (protect_action == 1) {
             window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-            $('#lbuttons').removeClass('d-none');
+            document.getElementById('lbuttons').classList.remove('d-none');
             dt_password = null;
             loaded = true;
           }
@@ -880,7 +881,7 @@ function getStatusText(code) {
             dt_password = null;
           }
           loaded = true;
-          $('#lbuttons').removeClass('d-none');
+          document.getElementById('lbuttons').classList.remove('d-none');
           set_status("darkred", "ERROR", "Invalid Password");
           clear_wait();
         }
@@ -970,12 +971,12 @@ function getStatusText(code) {
 
       function check_open() {
         if (document.getElementById('password_open1').value == document.getElementById('password_open2').value) {
-          $('#password_open2').removeClass('is-invalid');
-          $('#password_open2').addClass('is-valid');
+          document.getElementById('password_open2').classList.remove('is-invalid');
+          document.getElementById('password_open2').classList.add('is-valid');
         }
         else {
-          $('#password_open2').removeClass('is-valid');
-          $('#password_open2').addClass('is-invalid');
+          document.getElementById('password_open2').classList.remove('is-valid');
+          document.getElementById('password_open2').classList.add('is-invalid');
         }
       }
 
@@ -983,7 +984,7 @@ function getStatusText(code) {
         if (document.getElementById('password_open1').value.match(/\S/)) {
           if (document.getElementById('password_open2').disabled == true) {
             document.getElementById('password_open2').disabled = false;
-            $('#password_open2').addClass('is-invalid');
+            document.getElementById('password_open2').classList.add('is-invalid');
           }
           else {
             check_open();
@@ -992,8 +993,8 @@ function getStatusText(code) {
         else {
           document.getElementById('password_open2').disabled = true;
           document.getElementById('password_open2').value = '';
-          $('#password_open2').removeClass('is-valid');
-          $('#password_open2').removeClass('is-invalid');
+          document.getElementById('password_open2').classList.remove('is-valid');
+          document.getElementById('password_open2').classList.remove('is-invalid');
         }
       };
 
@@ -1003,12 +1004,12 @@ function getStatusText(code) {
 
       function check_modify() {
         if (document.getElementById('password_modify1').value == document.getElementById('password_modify2').value) {
-          $('#password_modify2').removeClass('is-invalid');
-          $('#password_modify2').addClass('is-valid');
+          document.getElementById('password_modify2').classList.remove('is-invalid');
+          document.getElementById('password_modify2').classList.add('is-valid');
         }
         else {
-          $('#password_modify2').removeClass('is-valid');
-          $('#password_modify2').addClass('is-invalid');
+          document.getElementById('password_modify2').classList.remove('is-valid');
+          document.getElementById('password_modify2').classList.add('is-invalid');
         }
       }
 
@@ -1016,7 +1017,7 @@ function getStatusText(code) {
         if (document.getElementById('password_modify1').value.match(/\S/)) {
           if (document.getElementById('password_modify2').disabled == true) {
             document.getElementById('password_modify2').disabled = false;
-            $('#password_modify2').addClass('is-invalid');
+            document.getElementById('password_modify2').classList.add('is-invalid');
           }
           else {
             check_modify();
@@ -1025,8 +1026,8 @@ function getStatusText(code) {
         else {
           document.getElementById('password_modify2').disabled = true;
           document.getElementById('password_modify2').value = '';
-          $('#password_modify2').removeClass('is-valid');
-          $('#password_modify2').removeClass('is-invalid');
+          document.getElementById('password_modify2').classList.remove('is-valid');
+          document.getElementById('password_modify2').classList.remove('is-invalid');
         }
       };
 
@@ -1080,8 +1081,8 @@ function getStatusText(code) {
           document.getElementById('ml-dataset-ok').click();
         }
       };
-  
-      $('.modal').on('keydown', function(e) {
+
+      document.querySelectorAll('.modal').forEach(function(e, i) {
         if (e.keyCode === 9) {
           var focusable = $(e.target).closest('.modal').find('input,select,textarea,button');
           if (focusable.length) {
@@ -1111,7 +1112,7 @@ function getStatusText(code) {
         if (document.getElementById('get_link').value != 'false') {
           try_to_load();
   
-          $('#lbuttons').removeClass('d-none');
+          document.getElementById('lbuttons').classList.remove('d-none');
           
           if (fe != window.cmData) {
             onDataBlur();
@@ -1125,7 +1126,7 @@ function getStatusText(code) {
       }
       else {
         if (document.getElementById('get_link').value != 'false') {
-          $('#lbuttons').removeClass('d-none');
+          document.getElementById('lbuttons').classList.remove('d-none');
         }
         loaded = true;
         if (window.msCrypto) {
@@ -1159,7 +1160,9 @@ function getStatusText(code) {
   }
   
   function set_wait() {
-    $('.expand').css('background', '#eee');
+    document.querySelectorAll('.expand').forEach(function(e, i) {
+      e.style.background = '#eee';
+    });
     fe.setOption('readOnly', 'nocursor');
     var e = document.getElementById("csv").getElementsByTagName("th");
     for (var i = 0; i < e.length; i++) {
@@ -1183,7 +1186,9 @@ function getStatusText(code) {
       e[i].style.background = 'lightgray';
     }
     fe.setOption('readOnly', false);
-    $('.expand').css('background', '#fff');
+    document.querySelectorAll('.expand').forEach(function(e, i) {
+      e.style.background = '#fff';
+    });
     fe.focus();
   }
   
@@ -1255,10 +1260,10 @@ function getStatusText(code) {
     dt_opassword = null;
     dt_mpassword = null;
     input_form = null;
-    $('#update').addClass('d-none');
-    $('#get').removeClass('d-none');
+    document.getElementById('update').classList.add('d-none');
+    document.getElementById('get').classList.remove('d-none');
     document.getElementById('mdd').disabled = true;
-    $('#protect').addClass('disabled');
+    document.getElementById('protect').classList.add('disabled');
     document.getElementById('protect').innerHTML = 'Protect Link';
   }
   
