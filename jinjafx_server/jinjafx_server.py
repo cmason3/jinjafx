@@ -69,7 +69,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
       if (path.split('?')[0] != '/' and path.split('?')[0] != '/index.html') or verbose:
         if not verbose:
-          path = path.replace('/jinjafx.init', '/')
+          path = path.replace('/jinjafx.html', '/')
 
         if (args[1] != '204' and args[1] != '404' and args[1] != '501') or verbose:
           src = str(self.client_address[0])
@@ -120,7 +120,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
     r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
 
-    if fpath == '/ping' or fpath == '/jinjafx.init':
+    if fpath == '/ping' or fpath == '/jinjafx.html':
       cache = False
       r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 

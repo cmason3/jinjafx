@@ -526,619 +526,607 @@ function getStatusText(code) {
     dayjs.extend(window.dayjs_plugin_relativeTime);
     query_string = window.location.search
 
-    if (window.crypto) {
-      var xHR = new XMLHttpRequest();
-      xHR.open("GET", "jinjafx.init" + query_string, true);
-      xHR.send(null);
+    var xHR = new XMLHttpRequest();
+    xHR.open("GET", "jinjafx.html" + query_string, true);
+    xHR.send(null);
 
-      document.getElementById('delete_ds').onclick = function() { jinjafx('delete_dataset'); };
-      document.getElementById('add_ds').onclick = function() { jinjafx('add_dataset'); };
-      document.getElementById('get').onclick = function() { jinjafx('get_link'); };
-      document.getElementById('get2').onclick = function() { jinjafx('get_link'); };
-      document.getElementById('update').onclick = function() { jinjafx('update_link'); };
-      document.getElementById('protect').onclick = function() { jinjafx('protect'); };
-      document.getElementById('export').onclick = function() { jinjafx('export'); };
-      document.getElementById('generate').onclick = function() { jinjafx('generate'); };
+    document.getElementById('delete_ds').onclick = function() { jinjafx('delete_dataset'); };
+    document.getElementById('add_ds').onclick = function() { jinjafx('add_dataset'); };
+    document.getElementById('get').onclick = function() { jinjafx('get_link'); };
+    document.getElementById('get2').onclick = function() { jinjafx('get_link'); };
+    document.getElementById('update').onclick = function() { jinjafx('update_link'); };
+    document.getElementById('protect').onclick = function() { jinjafx('protect'); };
+    document.getElementById('export').onclick = function() { jinjafx('export'); };
+    document.getElementById('generate').onclick = function() { jinjafx('generate'); };
 
-      sobj = document.getElementById("status");
-  
-      window.onresize = function() {
-        document.getElementById("content").style.height = (window.innerHeight - 155) + "px";
-      };
-  
-      window.onresize();
-  
-      document.body.style.display = "block";
+    sobj = document.getElementById("status");
 
-      var gExtraKeys = {
-        "Alt-F": "findPersistent",
-        "Ctrl-F": "findPersistent",
-        "Cmd-F": "findPersistent",
-        "F11": function(cm) {
-          cm.setOption("fullScreen", !cm.getOption("fullScreen"));
-        },
-        "Cmd-Enter": function(cm) {
-          cm.setOption("fullScreen", !cm.getOption("fullScreen"));
-        },
-        "Esc": function(cm) {
-          if (cm.getOption("fullScreen")) {
-            cm.setOption("fullScreen", false);
-          }
-        },
-        "Ctrl-S": function(cm) {
-          if (!document.getElementById('update').classList.contains('d-none')) {
-            jinjafx('update_link');
-          }
-          else {
-            set_status("darkred", "ERROR", "No Link to Update");
-          }
-        },
-        "Cmd-S": function(cm) {
-          if (!document.getElementById('update').classList.contains('d-none')) {
-            jinjafx('update_link');
-          }
-          else {
-            set_status("darkred", "ERROR", "No Link to Update");
-          }
-        },
-        "Ctrl-G": function(cm) {
-          jinjafx('generate');
-        },
-        "Cmd-G": function(cm) {
-          jinjafx('generate');
-        },
-        "Ctrl-D": false,
-        "Cmd-D": false
-      };
-  
-      CodeMirror.defineMode("data", cmDataMode);    
-      window.cmData = CodeMirror.fromTextArea(data, {
-        tabSize: 2,
-        scrollbarStyle: "null",
-        styleSelectedText: false,
-        extraKeys: gExtraKeys,
-        mode: "data",
-        viewportMargin: 80,
-        smartIndent: false
-      });
-  
-      window.cmVars = CodeMirror.fromTextArea(vars, {
-        tabSize: 2,
-        scrollbarStyle: "null",
-        styleSelectedText: false,
-        extraKeys: gExtraKeys,
-        mode: "yaml",
-        viewportMargin: 80,
-        smartIndent: false,
-        showTrailingSpace: true
-      });
+    window.onresize = function() {
+      document.getElementById("content").style.height = (window.innerHeight - 155) + "px";
+    };
 
-      CodeMirror.registerHelper("fold", "jinja2", function(cm, start) {
-        var startLine = cm.getLine(start.line);
-        var tokenStack = 1;
+    window.onresize();
 
-        if ((startLine.indexOf('{#') != -1) && (startLine.indexOf('#}') == -1)) {
-          for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
-            var theLine = cm.getLine(ln);
+    document.body.style.display = "block";
 
-            if (theLine.indexOf('#}') != -1) {
-              if (--tokenStack == 0) {
-                return {
-                  from: CodeMirror.Pos(start.line, startLine.indexOf('{#') + 2),
-                  to: CodeMirror.Pos(ln, theLine.indexOf('#}'))
-                };
-              }
+    var gExtraKeys = {
+      "Alt-F": "findPersistent",
+      "Ctrl-F": "findPersistent",
+      "Cmd-F": "findPersistent",
+      "F11": function(cm) {
+        cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+      },
+      "Cmd-Enter": function(cm) {
+        cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+      },
+      "Esc": function(cm) {
+        if (cm.getOption("fullScreen")) {
+          cm.setOption("fullScreen", false);
+        }
+      },
+      "Ctrl-S": function(cm) {
+        if (!document.getElementById('update').classList.contains('d-none')) {
+          jinjafx('update_link');
+        }
+        else {
+          set_status("darkred", "ERROR", "No Link to Update");
+        }
+      },
+      "Cmd-S": function(cm) {
+        if (!document.getElementById('update').classList.contains('d-none')) {
+          jinjafx('update_link');
+        }
+        else {
+          set_status("darkred", "ERROR", "No Link to Update");
+        }
+      },
+      "Ctrl-G": function(cm) {
+        jinjafx('generate');
+      },
+      "Cmd-G": function(cm) {
+        jinjafx('generate');
+      },
+      "Ctrl-D": false,
+      "Cmd-D": false
+    };
+
+    CodeMirror.defineMode("data", cmDataMode);    
+    window.cmData = CodeMirror.fromTextArea(data, {
+      tabSize: 2,
+      scrollbarStyle: "null",
+      styleSelectedText: false,
+      extraKeys: gExtraKeys,
+      mode: "data",
+      viewportMargin: 80,
+      smartIndent: false
+    });
+
+    window.cmVars = CodeMirror.fromTextArea(vars, {
+      tabSize: 2,
+      scrollbarStyle: "null",
+      styleSelectedText: false,
+      extraKeys: gExtraKeys,
+      mode: "yaml",
+      viewportMargin: 80,
+      smartIndent: false,
+      showTrailingSpace: true
+    });
+
+    CodeMirror.registerHelper("fold", "jinja2", function(cm, start) {
+      var startLine = cm.getLine(start.line);
+      var tokenStack = 1;
+
+      if ((startLine.indexOf('{#') != -1) && (startLine.indexOf('#}') == -1)) {
+        for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
+          var theLine = cm.getLine(ln);
+
+          if (theLine.indexOf('#}') != -1) {
+            if (--tokenStack == 0) {
+              return {
+                from: CodeMirror.Pos(start.line, startLine.indexOf('{#') + 2),
+                to: CodeMirror.Pos(ln, theLine.indexOf('#}'))
+              };
             }
           }
         }
-        else if (cm.getTokenTypeAt(CodeMirror.Pos(start.line, 0)) != 'comment') {
-          var smatch = startLine.match(/{%([+-]?[ \t]*(if|for|macro|call|filter))[ \t]+/);
-          if (smatch) {
-            var eregexp = new RegExp('{%([+-]?[ \t]*)end' + smatch[2] + '[ \t]*[+-]?%}');
+      }
+      else if (cm.getTokenTypeAt(CodeMirror.Pos(start.line, 0)) != 'comment') {
+        var smatch = startLine.match(/{%([+-]?[ \t]*(if|for|macro|call|filter))[ \t]+/);
+        if (smatch) {
+          var eregexp = new RegExp('{%([+-]?[ \t]*)end' + smatch[2] + '[ \t]*[+-]?%}');
 
-            if (!startLine.match(eregexp)) {
-              var sregexp = new RegExp('{%[+-]?[ \t]*' + smatch[2] + '[ \t]+');
+          if (!startLine.match(eregexp)) {
+            var sregexp = new RegExp('{%[+-]?[ \t]*' + smatch[2] + '[ \t]+');
 
-              for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
-                if (cm.getTokenTypeAt(CodeMirror.Pos(ln, 0)) != 'comment') {
-                  var theLine = cm.getLine(ln);
-                  var sm = theLine.match(sregexp);
-                  var ematch = theLine.match(eregexp);
+            for (var ln = start.line + 1; (tokenStack > 0) && (ln <= cm.lastLine()); ln++) {
+              if (cm.getTokenTypeAt(CodeMirror.Pos(ln, 0)) != 'comment') {
+                var theLine = cm.getLine(ln);
+                var sm = theLine.match(sregexp);
+                var ematch = theLine.match(eregexp);
 
-                  if (sm && !ematch) {
-                    tokenStack += 1;
-                  }
-                  else if (!sm && ematch) {
-                    if (--tokenStack == 0) {
-                      return {
-                        from: CodeMirror.Pos(start.line, smatch.index + 2 + smatch[1].length),
-                        to: CodeMirror.Pos(ln, ematch.index + 2 + ematch[1].length)
-                      };
-                    }
+                if (sm && !ematch) {
+                  tokenStack += 1;
+                }
+                else if (!sm && ematch) {
+                  if (--tokenStack == 0) {
+                    return {
+                      from: CodeMirror.Pos(start.line, smatch.index + 2 + smatch[1].length),
+                      to: CodeMirror.Pos(ln, ematch.index + 2 + ematch[1].length)
+                    };
                   }
                 }
               }
             }
           }
         }
-        return undefined;
-      });
-  
-      window.cmTemplate = CodeMirror.fromTextArea(template, {
-        lineNumbers: true,
-        tabSize: 2,
-        autofocus: true,
-        scrollbarStyle: "null",
-        styleSelectedText: false,
-        extraKeys: gExtraKeys,
-        mode: "jinja2",
-        viewportMargin: 80,
-        smartIndent: false,
-        showTrailingSpace: true,
-        foldGutter: true,
-        foldOptions: { 
-          rangeFinder: CodeMirror.helpers.fold.jinja2,
-          widget: ' \u22EF '
-        },
-        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
-      });
-  
-      fe = window.cmTemplate;
-      window.cmData.on("focus", function() { fe = window.cmData });
-      window.cmVars.on("focus", function() { fe = window.cmVars; onDataBlur() });
-      window.cmTemplate.on("focus", function() { fe = window.cmTemplate; onDataBlur() });
-
-      document.getElementById('header').onclick = onDataBlur;
-      document.getElementById('push').onclick = onDataBlur;
-      document.getElementById('footer').onclick = onDataBlur;
-
-      document.getElementById("csv").onclick = function() {
-        window.cmData.getWrapperElement().style.display = 'block';
-        document.getElementById("csv").style.display = 'none';
-        document.getElementById(dicon).style.display = 'block';
-        window.cmData.refresh();
-        window.cmData.focus();
-        csv_on = false;
-      };
-      
-      window.cmData.on("beforeChange", onPaste);
-      window.cmTemplate.on("beforeChange", onPaste);
-      window.cmVars.on("beforeChange", onPaste);
-  
-      window.cmData.on("change", onChange);
-      window.cmVars.on("change", onChange);
-      window.cmTemplate.on("change", onChange);
-  
-      var hsize = [60, 40];
-      var vsize = [30, 70];
-  
-      var hsplit = Split(["#cdata", "#cvars"], {
-        direction: "horizontal",
-        cursor: "col-resize",
-        sizes: hsize,
-        snapOffset: 0,
-        minSize: 45,
-        onDragEnd: refresh_cm,
-        onDragStart: reset_icons
-      });
-  
-      var vsplit = Split(["#top", "#ctemplate"], {
-        direction: "vertical",
-        cursor: "row-resize",
-        sizes: vsize,
-        snapOffset: 0,
-        minSize: 30,
-        onDragEnd: refresh_cm,
-        onDragStart: reset_icons
-      });
-  
-      document.getElementById('ldata').onclick = function() {
-        if (cflag == false) {
-          hsize = hsplit.getSizes();
-          vsize = vsplit.getSizes();
-        }
-        cflag = true;
-        reset_icons();
-        hsplit.setSizes([100, 0]);
-        vsplit.setSizes([100, 0]);
-        document.getElementById('ldata').style.display = 'none';
-        document.getElementById('ldata2').style.display = 'block';
-        window.cmData.focus();
-        dicon = 'ldata2';
-      };
-      document.getElementById('ldata2').onclick = function() {
-        hsplit.setSizes(hsize);
-        vsplit.setSizes(vsize);
-        document.getElementById('ldata2').style.display = 'none';
-        document.getElementById('ldata').style.display = 'block';
-        window.cmData.focus();
-        dicon = 'ldata';
-      };
-  
-      document.getElementById('lvars').onclick = function() {
-        if (cflag == false) {
-          hsize = hsplit.getSizes();
-          vsize = vsplit.getSizes();
-        }
-        cflag = true;
-        reset_icons();
-        hsplit.setSizes([0, 100]);
-        vsplit.setSizes([100, 0]);
-        document.getElementById('lvars').style.display = 'none';
-        document.getElementById('lvars2').style.display = 'block';
-        window.cmVars.focus();
-      };
-      document.getElementById('lvars2').onclick = function() {
-        hsplit.setSizes(hsize);
-        vsplit.setSizes(vsize);
-        document.getElementById('lvars2').style.display = 'none';
-        document.getElementById('lvars').style.display = 'block';
-        window.cmVars.focus();
-      };
-  
-      document.getElementById('ltemplate').onclick = function() {
-        if (cflag == false) {
-          hsize = hsplit.getSizes();
-          vsize = vsplit.getSizes();
-        }
-        cflag = true;
-        reset_icons();
-        vsplit.setSizes([0, 100]);
-        document.getElementById('ltemplate').style.display = 'none';
-        document.getElementById('ltemplate2').style.display = 'block';
-        window.cmTemplate.focus();
-      };
-      document.getElementById('ltemplate2').onclick = function() {
-        hsplit.setSizes(hsize);
-        vsplit.setSizes(vsize);
-        document.getElementById('ltemplate2').style.display = 'none';
-        document.getElementById('ltemplate').style.display = 'block';
-        window.cmTemplate.focus();
-      };
-
-      $('#jinjafx_input').on('shown.bs.modal', function() {
-        var focusable = document.getElementById('jinjafx_input_form').querySelectorAll('input,select');
-        if (focusable.length) {
-          focusable[0].focus();
-        }
-      });
-
-      $('#jinjafx_input').on('hidden.bs.modal', function() {
-        fe.focus();
-      });
-
-      $('#vault_input').on('shown.bs.modal', function() {
-        document.getElementById("vault").focus();
-      });
-
-      $('#dataset_input').on('shown.bs.modal', function() {
-        document.getElementById("ds_name").focus();
-      });
-
-      $('#protect_dt').on('shown.bs.modal', function() {
-        document.getElementById("password_open1").focus();
-      });
-  
-      $('#protect_input').on('shown.bs.modal', function() {
-        protect_ok = false;
-        document.getElementById("in_protect").focus();
-      });
-  
-      $("#protect_dt").on("hidden.bs.modal", function () {
-        document.getElementById("password_open1").value = '';
-        document.getElementById("password_open2").value = '';
-        document.getElementById("password_open2").disabled = true;
-        document.getElementById("password_modify1").value = '';
-        document.getElementById("password_modify2").value = '';
-        document.getElementById("password_modify2").disabled = true;
-        fe.focus();
-      });
-
-      $("#protect_input").on("hidden.bs.modal", function () {
-        if (protect_ok == false) {
-          if (protect_action == 1) {
-            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-            document.getElementById('lbuttons').classList.remove('d-none');
-            dt_password = null;
-            loaded = true;
-          }
-          else {
-            set_status("#e64c00", "OK", "Link Not Updated");
-          }
-        }
-        document.getElementById("in_protect").value = '';
-        clear_wait();
-      });
-
-      document.getElementById('ml-vault-ok').onclick = function() {
-        dt.vault_password = window.btoa(document.getElementById("vault").value);
-        if (dt_id != '') {
-          window.open("output.html?dt=" + dt_id, "_blank");
-        }
-        else {
-          window.open("output.html", "_blank");
-        }
-      };
-  
-      document.getElementById('ml-protect-ok').onclick = function() {
-        dt_password = document.getElementById("in_protect").value;
-        if (dt_password.match(/\S/)) {
-          if (protect_action == 1) {
-            try_to_load();
-          }
-          else {
-            update_link(dt_id);
-          }
-        }
-        else {
-          if (protect_action == 1) {
-            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-            dt_password = null;
-          }
-          loaded = true;
-          document.getElementById('lbuttons').classList.remove('d-none');
-          set_status("darkred", "ERROR", "Invalid Password");
-          clear_wait();
-        }
-        protect_ok = true;
-      };
-
-      document.getElementById('ml-input-reset').onclick = function(e) {
-        document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
-        var focusable = document.getElementById('jinjafx_input_form').querySelectorAll('input,select');
-        if (focusable.length) {
-          focusable[0].focus();
-        }
-      };
-
-      document.getElementById('ml-input-ok').onclick = function(e) {
-        if (document.getElementById('input_form').checkValidity() !== false) {
-          e.preventDefault();
-          $("#jinjafx_input").modal("hide");
-
-          var vars = {};
-          document.getElementById('input_form').querySelectorAll('input,select').forEach(function(e, i) {
-            if (e.getAttribute('data-var') != null) {
-              if (e.dataset.var.match(/\S/)) {
-                var v = e.value;
-                if ((e.tagName == 'INPUT') && ((e.type == 'checkbox') || (e.type == 'radio'))) {
-                  v = e.checked;
-                }
-                if (vars.hasOwnProperty(e.dataset.var)) {
-                  vars[e.dataset.var].push(v);
-                }
-                else {
-                  vars[e.dataset.var] = [v];
-                }
-              }
-            }
-          });
-
-          var vars_yml = 'jinjafx_input:\r\n';
-          Object.keys(vars).forEach(function(v) {
-            for (i = 0; i < vars[v].length; i++) {
-              if (typeof vars[v][i] !== "boolean") {
-                vars[v][i] = '"' + vars[v][i].replace(/"/g, '\\x22') + '"';
-              }
-            }
-            if (vars[v].length > 1) {
-              vars_yml += '  ' + v + ': [' + vars[v].join(', ') + ']\r\n';
-            }
-            else {
-              vars_yml += '  ' + v + ': ' + vars[v][0] + '\r\n';
-            }
-          });
-          dt.vars += '\r\n' + vars_yml;
-          jinjafx_generate();
-        }
-      };
-
-      document.getElementById('ml-dataset-ok').onclick = function() {
-        var new_ds = document.getElementById("ds_name").value;
-  
-        if (new_ds.match(/^[A-Z][A-Z0-9_ -]*$/i)) {
-          if (!datasets.hasOwnProperty(new_ds)) {
-            datasets[new_ds] = [CodeMirror.Doc('', 'data'), CodeMirror.Doc('', 'yaml')];
-            rebuild_datasets();
-            window.addEventListener('beforeunload', onBeforeUnload);
-            if (document.getElementById('get_link').value != 'false') {
-              document.title = 'JinjaFx [unsaved]';
-            }
-            dirty = true;
-          }
-          switch_dataset(new_ds, true);
-        }
-        else {
-          set_status("darkred", "ERROR", "Invalid Data Set Name");
-          fe.focus();
-        }
-      };
-  
-      document.getElementById('vault').onkeyup = function(e) {
-        if (e.which == 13) {
-          document.getElementById('ml-vault-ok').click();
-        }
-      };
-  
-      document.getElementById('in_protect').onkeyup = function(e) {
-        if (e.which == 13) {
-          document.getElementById('ml-protect-ok').click();
-        }
-      };
-
-      function check_open() {
-        if (document.getElementById('password_open1').value == document.getElementById('password_open2').value) {
-          document.getElementById('password_open2').classList.remove('is-invalid');
-          document.getElementById('password_open2').classList.add('is-valid');
-        }
-        else {
-          document.getElementById('password_open2').classList.remove('is-valid');
-          document.getElementById('password_open2').classList.add('is-invalid');
-        }
       }
+      return undefined;
+    });
 
-      document.getElementById('password_open1').onkeyup = function(e) {
-        if (document.getElementById('password_open1').value.match(/\S/)) {
-          if (document.getElementById('password_open2').disabled == true) {
-            document.getElementById('password_open2').disabled = false;
-            document.getElementById('password_open2').classList.add('is-invalid');
-          }
-          else {
-            check_open();
-          }
-        }
-        else {
-          document.getElementById('password_open2').disabled = true;
-          document.getElementById('password_open2').value = '';
-          document.getElementById('password_open2').classList.remove('is-valid');
-          document.getElementById('password_open2').classList.remove('is-invalid');
-        }
-      };
+    window.cmTemplate = CodeMirror.fromTextArea(template, {
+      lineNumbers: true,
+      tabSize: 2,
+      autofocus: true,
+      scrollbarStyle: "null",
+      styleSelectedText: false,
+      extraKeys: gExtraKeys,
+      mode: "jinja2",
+      viewportMargin: 80,
+      smartIndent: false,
+      showTrailingSpace: true,
+      foldGutter: true,
+      foldOptions: { 
+        rangeFinder: CodeMirror.helpers.fold.jinja2,
+        widget: ' \u22EF '
+      },
+      gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+    });
 
-      document.getElementById('password_open2').onkeyup = function(e) {
-        check_open();
-      };
+    fe = window.cmTemplate;
+    window.cmData.on("focus", function() { fe = window.cmData });
+    window.cmVars.on("focus", function() { fe = window.cmVars; onDataBlur() });
+    window.cmTemplate.on("focus", function() { fe = window.cmTemplate; onDataBlur() });
 
-      function check_modify() {
-        if (document.getElementById('password_modify1').value == document.getElementById('password_modify2').value) {
-          document.getElementById('password_modify2').classList.remove('is-invalid');
-          document.getElementById('password_modify2').classList.add('is-valid');
-        }
-        else {
-          document.getElementById('password_modify2').classList.remove('is-valid');
-          document.getElementById('password_modify2').classList.add('is-invalid');
-        }
+    document.getElementById('header').onclick = onDataBlur;
+    document.getElementById('push').onclick = onDataBlur;
+    document.getElementById('footer').onclick = onDataBlur;
+
+    document.getElementById("csv").onclick = function() {
+      window.cmData.getWrapperElement().style.display = 'block';
+      document.getElementById("csv").style.display = 'none';
+      document.getElementById(dicon).style.display = 'block';
+      window.cmData.refresh();
+      window.cmData.focus();
+      csv_on = false;
+    };
+    
+    window.cmData.on("beforeChange", onPaste);
+    window.cmTemplate.on("beforeChange", onPaste);
+    window.cmVars.on("beforeChange", onPaste);
+
+    window.cmData.on("change", onChange);
+    window.cmVars.on("change", onChange);
+    window.cmTemplate.on("change", onChange);
+
+    var hsize = [60, 40];
+    var vsize = [30, 70];
+
+    var hsplit = Split(["#cdata", "#cvars"], {
+      direction: "horizontal",
+      cursor: "col-resize",
+      sizes: hsize,
+      snapOffset: 0,
+      minSize: 45,
+      onDragEnd: refresh_cm,
+      onDragStart: reset_icons
+    });
+
+    var vsplit = Split(["#top", "#ctemplate"], {
+      direction: "vertical",
+      cursor: "row-resize",
+      sizes: vsize,
+      snapOffset: 0,
+      minSize: 30,
+      onDragEnd: refresh_cm,
+      onDragStart: reset_icons
+    });
+
+    document.getElementById('ldata').onclick = function() {
+      if (cflag == false) {
+        hsize = hsplit.getSizes();
+        vsize = vsplit.getSizes();
       }
+      cflag = true;
+      reset_icons();
+      hsplit.setSizes([100, 0]);
+      vsplit.setSizes([100, 0]);
+      document.getElementById('ldata').style.display = 'none';
+      document.getElementById('ldata2').style.display = 'block';
+      window.cmData.focus();
+      dicon = 'ldata2';
+    };
+    document.getElementById('ldata2').onclick = function() {
+      hsplit.setSizes(hsize);
+      vsplit.setSizes(vsize);
+      document.getElementById('ldata2').style.display = 'none';
+      document.getElementById('ldata').style.display = 'block';
+      window.cmData.focus();
+      dicon = 'ldata';
+    };
 
-      document.getElementById('password_modify1').onkeyup = function(e) {
-        if (document.getElementById('password_modify1').value.match(/\S/)) {
-          if (document.getElementById('password_modify2').disabled == true) {
-            document.getElementById('password_modify2').disabled = false;
-            document.getElementById('password_modify2').classList.add('is-invalid');
-          }
-          else {
-            check_modify();
-          }
-        }
-        else {
-          document.getElementById('password_modify2').disabled = true;
-          document.getElementById('password_modify2').value = '';
-          document.getElementById('password_modify2').classList.remove('is-valid');
-          document.getElementById('password_modify2').classList.remove('is-invalid');
-        }
-      };
+    document.getElementById('lvars').onclick = function() {
+      if (cflag == false) {
+        hsize = hsplit.getSizes();
+        vsize = vsplit.getSizes();
+      }
+      cflag = true;
+      reset_icons();
+      hsplit.setSizes([0, 100]);
+      vsplit.setSizes([100, 0]);
+      document.getElementById('lvars').style.display = 'none';
+      document.getElementById('lvars2').style.display = 'block';
+      window.cmVars.focus();
+    };
+    document.getElementById('lvars2').onclick = function() {
+      hsplit.setSizes(hsize);
+      vsplit.setSizes(vsize);
+      document.getElementById('lvars2').style.display = 'none';
+      document.getElementById('lvars').style.display = 'block';
+      window.cmVars.focus();
+    };
 
-      document.getElementById('password_modify2').onkeyup = function(e) {
-        check_modify();
-      };
+    document.getElementById('ltemplate').onclick = function() {
+      if (cflag == false) {
+        hsize = hsplit.getSizes();
+        vsize = vsplit.getSizes();
+      }
+      cflag = true;
+      reset_icons();
+      vsplit.setSizes([0, 100]);
+      document.getElementById('ltemplate').style.display = 'none';
+      document.getElementById('ltemplate2').style.display = 'block';
+      window.cmTemplate.focus();
+    };
+    document.getElementById('ltemplate2').onclick = function() {
+      hsplit.setSizes(hsize);
+      vsplit.setSizes(vsize);
+      document.getElementById('ltemplate2').style.display = 'none';
+      document.getElementById('ltemplate').style.display = 'block';
+      window.cmTemplate.focus();
+    };
 
-      document.getElementById('ml-protect-dt-ok').onclick = function() {
-        dt_opassword = null;
-        dt_mpassword = null;
+    $('#jinjafx_input').on('shown.bs.modal', function() {
+      var focusable = document.getElementById('jinjafx_input_form').querySelectorAll('input,select');
+      if (focusable.length) {
+        focusable[0].focus();
+      }
+    });
 
-        if (document.getElementById('password_open1').value.match(/\S/)) {
-          if (document.getElementById('password_open1').value == document.getElementById('password_open2').value) {
-            dt_opassword = document.getElementById('password_open2').value;
-          }
-          else {
-            set_status("darkred", "ERROR", "Password Verification Failed");
-            return false;
-          }
-        }
+    $('#jinjafx_input').on('hidden.bs.modal', function() {
+      fe.focus();
+    });
 
-        if (document.getElementById('password_modify1').value.match(/\S/)) {
-          if (document.getElementById('password_modify1').value == document.getElementById('password_modify2').value) {
-            dt_mpassword = document.getElementById('password_modify2').value;
-          }
-          else {
-            set_status("darkred", "ERROR", "Password Verification Failed");
-            dt_opassword = null;
-            return false;
-          }
-        }
+    $('#vault_input').on('shown.bs.modal', function() {
+      document.getElementById("vault").focus();
+    });
 
-        if ((dt_opassword != null) || (dt_mpassword != null)) {
-          if (dt_opassword === dt_mpassword) {
-            dt_mpassword = null;
-          }
-          document.getElementById('protect_text').innerHTML = 'Update Protection';
-          window.addEventListener('beforeunload', onBeforeUnload);
-          document.title = 'JinjaFx [unsaved]';
-          dirty = true;
-          set_status("green", "OK", "Protection Set - Update Required", 10000);
-          dt_password = null;
-        }
-        else {
-          set_status("darkred", "ERROR", "Invalid Password");
-        }
-      };
+    $('#dataset_input').on('shown.bs.modal', function() {
+      document.getElementById("ds_name").focus();
+    });
 
-      document.getElementById('ds_name').onkeyup = function(e) {
-        if (e.which == 13) {
-          document.getElementById('ml-dataset-ok').click();
-        }
-      };
+    $('#protect_dt').on('shown.bs.modal', function() {
+      document.getElementById("password_open1").focus();
+    });
 
-      document.querySelectorAll('.modal').forEach(function(elem, i) {
-        elem.onkeydown = function(e) {
-          if (e.keyCode === 9) {
-            var focusable = elem.querySelectorAll('input,select,textarea,button');
-            if (focusable.length) {
-              var first = focusable[0];
-              var last = focusable[focusable.length - 1];
-    
-              if ((e.target === first) && e.shiftKey) {
-                last.focus();
-                e.preventDefault();
-              }
-              else if ((e.target === last) && !e.shiftKey) {
-                first.focus();
-                e.preventDefault();
-              }
-            }
-          }
-        };
-      });
-  
-      if (window.location.href.indexOf('?') > -1) {
-        var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
-    
-        for (var i = 0; i < v.length; i++) {
-          var p = v[i].split('=');
-          qs[p[0].toLowerCase()] = decodeURIComponent(p.length > 1 ? p[1] : '');
-        }
-  
-        if (document.getElementById('get_link').value != 'false') {
-          try_to_load();
-  
-          document.getElementById('lbuttons').classList.remove('d-none');
-          
-          if (fe != window.cmData) {
-            onDataBlur();
-          }
-        }
-        else {
-          set_status("darkred", "HTTP ERROR 503", "Service Unavailable");
+    $('#protect_input').on('shown.bs.modal', function() {
+      protect_ok = false;
+      document.getElementById("in_protect").focus();
+    });
+
+    $("#protect_dt").on("hidden.bs.modal", function () {
+      document.getElementById("password_open1").value = '';
+      document.getElementById("password_open2").value = '';
+      document.getElementById("password_open2").disabled = true;
+      document.getElementById("password_modify1").value = '';
+      document.getElementById("password_modify2").value = '';
+      document.getElementById("password_modify2").disabled = true;
+      fe.focus();
+    });
+
+    $("#protect_input").on("hidden.bs.modal", function () {
+      if (protect_ok == false) {
+        if (protect_action == 1) {
           window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          document.getElementById('lbuttons').classList.remove('d-none');
+          dt_password = null;
           loaded = true;
+        }
+        else {
+          set_status("#e64c00", "OK", "Link Not Updated");
+        }
+      }
+      document.getElementById("in_protect").value = '';
+      clear_wait();
+    });
+
+    document.getElementById('ml-vault-ok').onclick = function() {
+      dt.vault_password = window.btoa(document.getElementById("vault").value);
+      if (dt_id != '') {
+        window.open("output.html?dt=" + dt_id, "_blank");
+      }
+      else {
+        window.open("output.html", "_blank");
+      }
+    };
+
+    document.getElementById('ml-protect-ok').onclick = function() {
+      dt_password = document.getElementById("in_protect").value;
+      if (dt_password.match(/\S/)) {
+        if (protect_action == 1) {
+          try_to_load();
+        }
+        else {
+          update_link(dt_id);
         }
       }
       else {
-        if (document.getElementById('get_link').value != 'false') {
-          document.getElementById('lbuttons').classList.remove('d-none');
+        if (protect_action == 1) {
+          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          dt_password = null;
         }
+        loaded = true;
+        document.getElementById('lbuttons').classList.remove('d-none');
+        set_status("darkred", "ERROR", "Invalid Password");
+        clear_wait();
+      }
+      protect_ok = true;
+    };
+
+    document.getElementById('ml-input-reset').onclick = function(e) {
+      document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
+      var focusable = document.getElementById('jinjafx_input_form').querySelectorAll('input,select');
+      if (focusable.length) {
+        focusable[0].focus();
+      }
+    };
+
+    document.getElementById('ml-input-ok').onclick = function(e) {
+      if (document.getElementById('input_form').checkValidity() !== false) {
+        e.preventDefault();
+        $("#jinjafx_input").modal("hide");
+
+        var vars = {};
+        document.getElementById('input_form').querySelectorAll('input,select').forEach(function(e, i) {
+          if (e.getAttribute('data-var') != null) {
+            if (e.dataset.var.match(/\S/)) {
+              var v = e.value;
+              if ((e.tagName == 'INPUT') && ((e.type == 'checkbox') || (e.type == 'radio'))) {
+                v = e.checked;
+              }
+              if (vars.hasOwnProperty(e.dataset.var)) {
+                vars[e.dataset.var].push(v);
+              }
+              else {
+                vars[e.dataset.var] = [v];
+              }
+            }
+          }
+        });
+
+        var vars_yml = 'jinjafx_input:\r\n';
+        Object.keys(vars).forEach(function(v) {
+          for (i = 0; i < vars[v].length; i++) {
+            if (typeof vars[v][i] !== "boolean") {
+              vars[v][i] = '"' + vars[v][i].replace(/"/g, '\\x22') + '"';
+            }
+          }
+          if (vars[v].length > 1) {
+            vars_yml += '  ' + v + ': [' + vars[v].join(', ') + ']\r\n';
+          }
+          else {
+            vars_yml += '  ' + v + ': ' + vars[v][0] + '\r\n';
+          }
+        });
+        dt.vars += '\r\n' + vars_yml;
+        jinjafx_generate();
+      }
+    };
+
+    document.getElementById('ml-dataset-ok').onclick = function() {
+      var new_ds = document.getElementById("ds_name").value;
+
+      if (new_ds.match(/^[A-Z][A-Z0-9_ -]*$/i)) {
+        if (!datasets.hasOwnProperty(new_ds)) {
+          datasets[new_ds] = [CodeMirror.Doc('', 'data'), CodeMirror.Doc('', 'yaml')];
+          rebuild_datasets();
+          window.addEventListener('beforeunload', onBeforeUnload);
+          if (document.getElementById('get_link').value != 'false') {
+            document.title = 'JinjaFx [unsaved]';
+          }
+          dirty = true;
+        }
+        switch_dataset(new_ds, true);
+      }
+      else {
+        set_status("darkred", "ERROR", "Invalid Data Set Name");
+        fe.focus();
+      }
+    };
+
+    document.getElementById('vault').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-vault-ok').click();
+      }
+    };
+
+    document.getElementById('in_protect').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-protect-ok').click();
+      }
+    };
+
+    function check_open() {
+      if (document.getElementById('password_open1').value == document.getElementById('password_open2').value) {
+        document.getElementById('password_open2').classList.remove('is-invalid');
+        document.getElementById('password_open2').classList.add('is-valid');
+      }
+      else {
+        document.getElementById('password_open2').classList.remove('is-valid');
+        document.getElementById('password_open2').classList.add('is-invalid');
+      }
+    }
+
+    document.getElementById('password_open1').onkeyup = function(e) {
+      if (document.getElementById('password_open1').value.match(/\S/)) {
+        if (document.getElementById('password_open2').disabled == true) {
+          document.getElementById('password_open2').disabled = false;
+          document.getElementById('password_open2').classList.add('is-invalid');
+        }
+        else {
+          check_open();
+        }
+      }
+      else {
+        document.getElementById('password_open2').disabled = true;
+        document.getElementById('password_open2').value = '';
+        document.getElementById('password_open2').classList.remove('is-valid');
+        document.getElementById('password_open2').classList.remove('is-invalid');
+      }
+    };
+
+    document.getElementById('password_open2').onkeyup = function(e) {
+      check_open();
+    };
+
+    function check_modify() {
+      if (document.getElementById('password_modify1').value == document.getElementById('password_modify2').value) {
+        document.getElementById('password_modify2').classList.remove('is-invalid');
+        document.getElementById('password_modify2').classList.add('is-valid');
+      }
+      else {
+        document.getElementById('password_modify2').classList.remove('is-valid');
+        document.getElementById('password_modify2').classList.add('is-invalid');
+      }
+    }
+
+    document.getElementById('password_modify1').onkeyup = function(e) {
+      if (document.getElementById('password_modify1').value.match(/\S/)) {
+        if (document.getElementById('password_modify2').disabled == true) {
+          document.getElementById('password_modify2').disabled = false;
+          document.getElementById('password_modify2').classList.add('is-invalid');
+        }
+        else {
+          check_modify();
+        }
+      }
+      else {
+        document.getElementById('password_modify2').disabled = true;
+        document.getElementById('password_modify2').value = '';
+        document.getElementById('password_modify2').classList.remove('is-valid');
+        document.getElementById('password_modify2').classList.remove('is-invalid');
+      }
+    };
+
+    document.getElementById('password_modify2').onkeyup = function(e) {
+      check_modify();
+    };
+
+    document.getElementById('ml-protect-dt-ok').onclick = function() {
+      dt_opassword = null;
+      dt_mpassword = null;
+
+      if (document.getElementById('password_open1').value.match(/\S/)) {
+        if (document.getElementById('password_open1').value == document.getElementById('password_open2').value) {
+          dt_opassword = document.getElementById('password_open2').value;
+        }
+        else {
+          set_status("darkred", "ERROR", "Password Verification Failed");
+          return false;
+        }
+      }
+
+      if (document.getElementById('password_modify1').value.match(/\S/)) {
+        if (document.getElementById('password_modify1').value == document.getElementById('password_modify2').value) {
+          dt_mpassword = document.getElementById('password_modify2').value;
+        }
+        else {
+          set_status("darkred", "ERROR", "Password Verification Failed");
+          dt_opassword = null;
+          return false;
+        }
+      }
+
+      if ((dt_opassword != null) || (dt_mpassword != null)) {
+        if (dt_opassword === dt_mpassword) {
+          dt_mpassword = null;
+        }
+        document.getElementById('protect_text').innerHTML = 'Update Protection';
+        window.addEventListener('beforeunload', onBeforeUnload);
+        document.title = 'JinjaFx [unsaved]';
+        dirty = true;
+        set_status("green", "OK", "Protection Set - Update Required", 10000);
+        dt_password = null;
+      }
+      else {
+        set_status("darkred", "ERROR", "Invalid Password");
+      }
+    };
+
+    document.getElementById('ds_name').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-dataset-ok').click();
+      }
+    };
+
+    document.querySelectorAll('.modal').forEach(function(elem, i) {
+      elem.onkeydown = function(e) {
+        if (e.keyCode === 9) {
+          var focusable = elem.querySelectorAll('input,select,textarea,button');
+          if (focusable.length) {
+            var first = focusable[0];
+            var last = focusable[focusable.length - 1];
+  
+            if ((e.target === first) && e.shiftKey) {
+              last.focus();
+              e.preventDefault();
+            }
+            else if ((e.target === last) && !e.shiftKey) {
+              first.focus();
+              e.preventDefault();
+            }
+          }
+        }
+      };
+    });
+
+    if (window.location.href.indexOf('?') > -1) {
+      var v = window.location.href.substr(window.location.href.indexOf('?') + 1).split('&');
+  
+      for (var i = 0; i < v.length; i++) {
+        var p = v[i].split('=');
+        qs[p[0].toLowerCase()] = decodeURIComponent(p.length > 1 ? p[1] : '');
+      }
+
+      if (document.getElementById('get_link').value != 'false') {
+        try_to_load();
+
+        document.getElementById('lbuttons').classList.remove('d-none');
+        
+        if (fe != window.cmData) {
+          onDataBlur();
+        }
+      }
+      else {
+        set_status("darkred", "HTTP ERROR 503", "Service Unavailable");
+        window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
         loaded = true;
       }
     }
     else {
-      query_string += (query_string.length ? '&' : '?') + '_unsupported_browser';
-
-      var xHR = new XMLHttpRequest();
-      xHR.open("GET", "jinjafx.init" + query_string, true);
-      xHR.send(null);
-
-      document.body.innerHTML = "<p id=\"unsupported\">Sorry, a Modern Browser is Required (Chrome, Firefox, Safari or Microsoft Edge)</p>";
-      document.body.style.display = "block";
+      if (document.getElementById('get_link').value != 'false') {
+        document.getElementById('lbuttons').classList.remove('d-none');
+      }
+      loaded = true;
     }
   };
   
