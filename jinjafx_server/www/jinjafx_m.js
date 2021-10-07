@@ -524,10 +524,9 @@ function getStatusText(code) {
   
   window.onload = function() {
     dayjs.extend(window.dayjs_plugin_relativeTime);
-    query_string = window.location.search
 
     var xHR = new XMLHttpRequest();
-    xHR.open("GET", "jinjafx.html" + query_string, true);
+    xHR.open("GET", "jinjafx.html" + window.location.search, true);
     xHR.send(null);
 
     document.getElementById('delete_ds').onclick = function() { jinjafx('delete_dataset'); };
