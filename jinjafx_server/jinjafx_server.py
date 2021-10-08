@@ -19,7 +19,7 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from jinja2 import __version__ as jinja2_version
 import jinjafx, os, io, sys, socket, signal, threading, yaml, json, base64, time, datetime
-import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid, struct, binascii
+import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid, struct, binascii, gzip
 
 try:
   import requests
@@ -234,6 +234,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
 
     if r[1] != 304:
+      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers and 'gzip' in self.headers['Accept-Encoding']:
+        self.send_header('Content-Encoding', 'gzip')
+        r[2] = gzip.compress(r[2])
+
       self.send_header('Content-Type', r[0])
       self.send_header('Content-Length', str(len(r[2])))
       self.send_header('X-Content-Type-Options', 'nosniff')
@@ -245,6 +249,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       if r[1] == 200:
         self.send_header('Content-Security-Policy', "frame-ancestors 'none'")
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+
       self.send_header('ETag', etag)
 
     self.end_headers()
@@ -608,15 +613,21 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
     self.lnumber = r[3]
     self.send_response(r[1])
-    self.send_header('Content-Type', r[0])
-    self.send_header('Content-Length', str(len(r[2])))
-    self.send_header('X-Content-Type-Options', 'nosniff')
+
+    r[2] = r[2].encode('utf-8')
 
     if r[1] == 200:
       self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
 
+      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers and 'gzip' in self.headers['Accept-Encoding']:
+        self.send_header('Content-Encoding', 'gzip')
+        r[2] = gzip.compress(r[2])
+
+    self.send_header('Content-Type', r[0])
+    self.send_header('Content-Length', str(len(r[2])))
+    self.send_header('X-Content-Type-Options', 'nosniff')
     self.end_headers()
-    self.wfile.write(r[2].encode('utf-8'))
+    self.wfile.write(r[2])
 
 
 class JinjaFxThread(threading.Thread):

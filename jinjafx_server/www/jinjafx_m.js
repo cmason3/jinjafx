@@ -435,16 +435,21 @@ function getStatusText(code) {
   }
   
   function try_to_load() {
+    console.log("DEBUG: try_to_load()");
     try {
       if (qs.hasOwnProperty('dt')) {
         set_wait();
         var xHR = new XMLHttpRequest();
         xHR.open("GET", "get_dt/" + qs.dt, true);
+
+        console.log("DEBUG: GET get_dt/" + qs.dt);
     
         xHR.onload = function() {
           if (this.status === 401) {
+            console.log("DEBUG: this.status = 401");
             protect_action = 1;
             $("#protect_input").modal("show");
+            console.log("DEBUG: #protect_input shown");
             return false;
           }
           else if (this.status === 200) {
@@ -862,6 +867,7 @@ function getStatusText(code) {
       dt_password = document.getElementById("in_protect").value;
       if (dt_password.match(/\S/)) {
         if (protect_action == 1) {
+          console.log("DEBUG: calling try_to_load() from ml-protect-ok");
           try_to_load();
         }
         else {
