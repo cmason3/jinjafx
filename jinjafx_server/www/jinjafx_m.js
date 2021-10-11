@@ -823,8 +823,10 @@ function getStatusText(code) {
     });
 
     $('#protect_input').on('shown.bs.modal', function() {
+      console.log("DEBUG: #protect_input shown.bs.modal");
       protect_ok = false;
       document.getElementById("in_protect").focus();
+      console.log("DEBUG: #protect_input.focus()");
     });
 
     $("#protect_dt").on("hidden.bs.modal", function () {
