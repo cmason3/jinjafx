@@ -450,7 +450,7 @@ function getStatusText(code) {
             protect_action = 1;
             $("#protect_input").modal("show");
             console.log("DEBUG: calling #protect_input shown");
-            return true;
+            return false;
           }
           else if (this.status === 200) {
             try {
@@ -550,42 +550,6 @@ function getStatusText(code) {
     };
 
     window.onresize();
-
-
-
-    $('#protect_input').on('shown.bs.modal', function() {
-      console.log("DEBUG: #protect_input shown.bs.modal");
-      protect_ok = false;
-      console.log("DEBUG: #protect_input shown.bs.modal 2");
-      document.getElementById("in_protect").focus();
-      console.log("DEBUG: #protect_input.focus()");
-    });
-
-    $("#protect_input").on("hidden.bs.modal", function () {
-      if (protect_ok == false) {
-        if (protect_action == 1) {
-          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-          document.getElementById('lbuttons').classList.remove('d-none');
-          dt_password = null;
-          loaded = true;
-        }
-        else {
-          set_status("#e64c00", "OK", "Link Not Updated");
-        }
-      }
-      document.getElementById("in_protect").value = '';
-      console.log("#protect_input hidden.bs.modal");
-      clear_wait();
-    });
-
-
-
-
-
-
-
-
-
 
     document.body.style.display = "block";
 
@@ -866,6 +830,35 @@ function getStatusText(code) {
       document.getElementById("password_modify2").value = '';
       document.getElementById("password_modify2").disabled = true;
       fe.focus();
+    });
+
+    $('#protect_input').on('show.bs.modal', function() {
+      console.log("in show.bs.modal");
+    });
+
+    $('#protect_input').on('shown.bs.modal', function() {
+      console.log("DEBUG: #protect_input shown.bs.modal");
+      protect_ok = false;
+      console.log("DEBUG: #protect_input shown.bs.modal 2");
+      document.getElementById("in_protect").focus();
+      console.log("DEBUG: #protect_input.focus()");
+    });
+
+    $("#protect_input").on("hidden.bs.modal", function () {
+      if (protect_ok == false) {
+        if (protect_action == 1) {
+          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          document.getElementById('lbuttons').classList.remove('d-none');
+          dt_password = null;
+          loaded = true;
+        }
+        else {
+          set_status("#e64c00", "OK", "Link Not Updated");
+        }
+      }
+      document.getElementById("in_protect").value = '';
+      console.log("#protect_input hidden.bs.modal");
+      clear_wait();
     });
 
     document.getElementById('ml-vault-ok').onclick = function() {
