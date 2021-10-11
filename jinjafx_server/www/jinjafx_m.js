@@ -822,13 +822,6 @@ function getStatusText(code) {
       document.getElementById("password_open1").focus();
     });
 
-    $('#protect_input').on('shown.bs.modal', function() {
-      console.log("DEBUG: #protect_input shown.bs.modal");
-      protect_ok = false;
-      document.getElementById("in_protect").focus();
-      console.log("DEBUG: #protect_input.focus()");
-    });
-
     $("#protect_dt").on("hidden.bs.modal", function () {
       document.getElementById("password_open1").value = '';
       document.getElementById("password_open2").value = '';
@@ -837,6 +830,14 @@ function getStatusText(code) {
       document.getElementById("password_modify2").value = '';
       document.getElementById("password_modify2").disabled = true;
       fe.focus();
+    });
+
+    $('#protect_input').on('shown.bs.modal', function() {
+      console.log("DEBUG: #protect_input shown.bs.modal");
+      protect_ok = false;
+      console.log("DEBUG: #protect_input shown.bs.modal 2");
+      //document.getElementById("in_protect").focus();
+      console.log("DEBUG: #protect_input.focus()");
     });
 
     $("#protect_input").on("hidden.bs.modal", function () {
