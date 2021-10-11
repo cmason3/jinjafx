@@ -836,7 +836,7 @@ function getStatusText(code) {
       console.log("DEBUG: #protect_input shown.bs.modal");
       protect_ok = false;
       console.log("DEBUG: #protect_input shown.bs.modal 2");
-      //document.getElementById("in_protect").focus();
+      document.getElementById("in_protect").focus();
       console.log("DEBUG: #protect_input.focus()");
     });
 
@@ -889,6 +889,7 @@ function getStatusText(code) {
         clear_wait();
       }
       protect_ok = true;
+      console.log("done ml-protect-ok");
     };
 
     document.getElementById('ml-input-reset').onclick = function(e) {
