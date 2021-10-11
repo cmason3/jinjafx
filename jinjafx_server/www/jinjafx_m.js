@@ -449,8 +449,8 @@ function getStatusText(code) {
             console.log("DEBUG: this.status = 401");
             protect_action = 1;
             $("#protect_input").modal("show");
-            console.log("DEBUG: #protect_input shown");
-            return false;
+            console.log("DEBUG: calling #protect_input shown");
+            return true;
           }
           else if (this.status === 200) {
             try {
