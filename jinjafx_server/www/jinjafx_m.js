@@ -852,6 +852,7 @@ function getStatusText(code) {
         }
       }
       document.getElementById("in_protect").value = '';
+      console.log("#protect_input hidden.bs.modal");
       clear_wait();
     });
 
