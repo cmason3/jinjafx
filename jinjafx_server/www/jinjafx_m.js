@@ -48,6 +48,7 @@ function getStatusText(code) {
   var dt_mpassword = null;
   var input_form = null;
   var r_input_form = null;
+  var jinput = null;
   var protect_action = 0;
   var cflag = false;
   var revision = 0;
@@ -162,7 +163,7 @@ function getStatusText(code) {
     else if (method == "add_dataset") {
       document.getElementById("ds_name").value = '';
       new bootstrap.Modal(document.getElementById('dataset_input'), {
-        keyboard: false
+        keyboard: true
       }).show();
       return false;
     }
@@ -226,9 +227,10 @@ function getStatusText(code) {
                             r_input_form = window.atob(obj.outputs['Output']);
                             document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
                             input_form = vars['jinjafx_input']['body'];
-                            new bootstrap.Modal(document.getElementById('jinjafx_input'), {
+                            jinput = new bootstrap.Modal(document.getElementById('jinjafx_input'), {
                               keyboard: false
-                            }).show();
+                            });
+                            jinput.show();
                           }
                           else {
                             var e = obj.error.replace("template.j2", "jinjafx_input");
@@ -265,9 +267,10 @@ function getStatusText(code) {
                     return false;
                   }
                   else {
-                    new bootstrap.Modal(document.getElementById('jinjafx_input'), {
+                    jinput = new bootstrap.Modal(document.getElementById('jinjafx_input'), {
                       keyboard: false
-                    }).show();
+                    });
+                    jinput.show();
                     return false;
                   }
                 }
@@ -310,9 +313,10 @@ function getStatusText(code) {
                       document.getElementById('jinjafx_input_form').innerHTML = body;
                       r_input_form = body;
                     }
-                    new bootstrap.Modal(document.getElementById('jinjafx_input'), {
+                    jinput = new bootstrap.Modal(document.getElementById('jinjafx_input'), {
                       keyboard: false
-                    }).show();
+                    });
+                    jinput.show();
                     return false;
                   }
                 }
@@ -829,7 +833,7 @@ function getStatusText(code) {
     document.getElementById('ml-input-ok').onclick = function(e) {
       if (document.getElementById('input_form').checkValidity() !== false) {
         e.preventDefault();
-        //$("#jinjafx_input").modal("hide"); // FIXME
+        jinput.hide();
 
         var vars = {};
         document.getElementById('input_form').querySelectorAll('input,select').forEach(function(e, i) {
@@ -1159,8 +1163,8 @@ function getStatusText(code) {
       document.getElementById('ldata2').classList.add('d-none');
       document.getElementById('ldata').classList.remove('d-none');
     }
-    document.getElementById('ldata2').classList.add('d-none');
-    document.getElementById('ldata').classList.remove('d-none');
+    document.getElementById('lvars2').classList.add('d-none');
+    document.getElementById('lvars').classList.remove('d-none');
     document.getElementById('ltemplate2').classList.add('d-none');
     document.getElementById('ltemplate').classList.remove('d-none');
     dicon = 'ldata';
@@ -1209,8 +1213,8 @@ function getStatusText(code) {
     var delim = new RegExp(cc > tc ? '[ \\t]*,[ \\t]*' : ' *\\t *');
     var hrow = datarows[0].split(delim);
   
-    var table = '<table class="table table-sm">';
-    table += '<thead><tr class="table-secondary">';
+    var table = '<table class="table table-hover table-sm">';
+    table += '<thead><tr>';
     for (var col = 0; col < hrow.length; col++) {
       table += '<th>' + quote(hrow[col]) + '</th>';
     }

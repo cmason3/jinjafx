@@ -48,3 +48,9 @@ h5#title {
 .wait, .wait * {
   cursor: wait !important;
 }
+a:link {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}

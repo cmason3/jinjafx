@@ -6,21 +6,20 @@
     <meta name="viewport" content="width=1536, user-scalable=no">
     <title>Generating...</title>
     <link rel="shortcut icon" href="jinjafx.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="jinjafx.css">
     <link rel="stylesheet" href="jinjafx_o.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.slim.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/dayjs.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/plugin/advancedFormat.min.js" crossorigin="anonymous"></script>
     <script src="jinjafx_o.js"></script>
   </head>
   <body>
-    <div id="status" class="alert alert-info wait font-weight-bold">Generating Output...</div>
+    <div id="status" class="alert alert-info wait fw-bold">Generating Output...</div>
     <div id="wrap" class="d-none">
-      <div id="header" class="jumbotron">
+      <div id="header" class="p-3">
         <a href="./">
-          <svg class="float-left mr-10" width="48" height="48" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <svg class="float-start me-10" width="48" height="48" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
             <rect x="32" y="32" width="250" height="250" fill="#0074d9" stroke="#001f3f" />
             <rect x="304" y="162" width="120" height="120" fill="#0074d9" stroke="#001f3f" />
             <rect x="142" y="304" width="140" height="140" fill="#0074d9" stroke="#001f3f" />
@@ -29,18 +28,18 @@
         </a>
         <h5 id="title">
           <a class="text-decoration-none text-reset" href="./">
-            <span class="font-weight-bold">JinjaFx</span><br />
+            <span class="fw-bold">JinjaFx</span><br />
             <span class="small text-black">&nbsp;Jinja2&nbsp;Templating&nbsp;Tool</span>
           </a>
         </h5>
-        <div class="btn-toolbar ml-auto d-flex" role="group">
-          <button id="copy" class="btn btn-info mr-2" type="button" title="Copy Output to Clipboard">
+        <div class="btn-toolbar ms-auto d-flex" role="group">
+          <button id="copy" class="btn btn-info text-white me-2" type="button" title="Copy Output to Clipboard">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>&nbsp;Copy
           </button>
-          <button id="download" class="btn btn-info mr-2" type="button" title="Download Outputs as Zip">
+          <button id="download" class="btn btn-info text-white me-2" type="button" title="Download Outputs as Zip">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
@@ -52,11 +51,11 @@
       </div>
       <div id="main" class="container-fluid">
         <div id="content">
-          <div id="row" class="row no-gutters m-10">
+          <div id="row" class="row g-0">
             <div class="col h-100">
               <div id="tabs" class="tab-content h-100"></div>
             </div>
-            <div id="pills" class="col-auto h-100 ml-10 d-none">
+            <div id="pills" class="col-auto h-100 ms-10 d-none">
               <h4>&nbsp;</h4>
               <div class="nosb h-100">
                 <ul id="nav-links" class="nav nav-pills flex-column"></ul>
@@ -69,8 +68,8 @@
     </div>
     <div id="footer" class="d-none">
       <div class="container-fluid">
-        <h5 id="ostatus" class="float-left"></h5>
-        <span id="summary" class="float-right text-right fs-85"></span>
+        <h5 id="ostatus" class="float-start"></h5>
+        <span id="summary" class="float-end text-end fs-85"></span>
       </div>
     </div>
     <div id="warning_modal" class="modal fade" tabindex="-1" role="dialog">
@@ -78,15 +77,12 @@
         <div class="modal-content">
           <div class="modal-header">
             <h4 id="ml-title" class="mt-0">Warnings</h4>
-            <button type="button" class="close" data-dismiss="modal">
-              <span>&times;</span>
-            </button>
           </div>
           <div class="form-group row modal-body">
             <div id="warnings" class="col-sm-12"></div>
           </div>
           <div class="modal-footer">
-            <button id="btn_warning_close" type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            <button id="btn_warning_close" type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
