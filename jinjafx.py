@@ -19,7 +19,7 @@
 import sys, os, socket, jinja2, yaml, argparse, re, copy, getpass, traceback
 # from vaulty.vaulty import Vaulty
 
-__version__ = '1.6.0'
+__version__ = '1.6.1'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):

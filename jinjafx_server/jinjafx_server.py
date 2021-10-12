@@ -19,7 +19,7 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from jinja2 import __version__ as jinja2_version
 import jinjafx, os, io, sys, socket, signal, threading, yaml, json, base64, time, datetime
-import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid, struct, binascii
+import re, argparse, zipfile, hashlib, traceback, glob, hmac, uuid, struct, binascii, gzip
 
 try:
   import requests
@@ -40,6 +40,7 @@ aws_access_key = None
 aws_secret_key = None
 repository = None
 api_only = False
+verbose = False
 
 rtable = {}
 rl_rate = 0
@@ -66,25 +67,30 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       else:
         ansi = '31'
 
-      src = str(self.client_address[0])
-      ctype = ''
+      if (path.split('?')[0] != '/' and path.split('?')[0] != '/index.html') or verbose:
+        if not verbose:
+          path = path.replace('/jinjafx.html', '/')
 
-      if hasattr(self, 'headers'):
-        if 'X-Forwarded-For' in self.headers:
-          src = self.headers['X-Forwarded-For']
+        if (args[1] != '204' and args[1] != '404' and args[1] != '501') or verbose:
+          src = str(self.client_address[0])
+          ctype = ''
 
-        if 'Content-Type' in self.headers:
-          ctype = ' (' + self.headers['Content-Type'] + ')'
+          if hasattr(self, 'headers'):
+            if 'X-Forwarded-For' in self.headers:
+              src = self.headers['X-Forwarded-For']
 
-      if str(args[1]) == 'ERR':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
+            if 'Content-Type' in self.headers:
+              ctype = ' (' + self.headers['Content-Type'] + ')'
+
+          if str(args[1]) == 'ERR':
+            log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
           
-      elif self.command == 'POST':
-        log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype + ' [' + jinjafx.format_bytes(self.length) + ']')
+          elif self.command == 'POST':
+            log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;33m' + self.command + '\033[0m ' + path + ctype + ' [' + jinjafx.format_bytes(self.length) + ']')
 
-      elif self.command != None:
-        if (args[1] != '200' and args[1] != '304') or not re.match(r'.+\.(?:js|css|png)$', path):
-          log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' ' + self.command + ' ' + path)
+          elif self.command != None:
+            if (args[1] != '200' and args[1] != '304') or not re.match(r'.+\.(?:js|css|png)$', path) or verbose:
+              log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' ' + self.command + ' ' + path)
 
         
   def encode_link(self, bhash):
@@ -114,7 +120,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
     r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
 
-    if fpath == '/ping':
+    if fpath == '/ping' or fpath == '/jinjafx.html':
       cache = False
       r = [ 'text/plain', 200, 'OK\r\n'.encode('utf-8'), sys._getframe().f_lineno ]
 
@@ -228,6 +234,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
 
     if r[1] != 304:
+      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers and 'gzip' in self.headers['Accept-Encoding']:
+        self.send_header('Content-Encoding', 'gzip')
+        r[2] = gzip.compress(r[2])
+
       self.send_header('Content-Type', r[0])
       self.send_header('Content-Length', str(len(r[2])))
       self.send_header('X-Content-Type-Options', 'nosniff')
@@ -239,6 +249,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       if r[1] == 200:
         self.send_header('Content-Security-Policy', "frame-ancestors 'none'")
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+
       self.send_header('ETag', etag)
 
     self.end_headers()
@@ -602,15 +613,21 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
 
     self.lnumber = r[3]
     self.send_response(r[1])
-    self.send_header('Content-Type', r[0])
-    self.send_header('Content-Length', str(len(r[2])))
-    self.send_header('X-Content-Type-Options', 'nosniff')
+
+    r[2] = r[2].encode('utf-8')
 
     if r[1] == 200:
       self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
 
+      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers and 'gzip' in self.headers['Accept-Encoding']:
+        self.send_header('Content-Encoding', 'gzip')
+        r[2] = gzip.compress(r[2])
+
+    self.send_header('Content-Type', r[0])
+    self.send_header('Content-Length', str(len(r[2])))
+    self.send_header('X-Content-Type-Options', 'nosniff')
     self.end_headers()
-    self.wfile.write(r[2].encode('utf-8'))
+    self.wfile.write(r[2])
 
 
 class JinjaFxThread(threading.Thread):
@@ -637,6 +654,7 @@ def main(rflag=[0]):
   global rl_rate
   global rl_limit
   global api_only
+  global verbose
 
   try:
     print('JinjaFx Server v' + jinjafx.__version__ + ' - Jinja2 Templating Tool')
@@ -651,8 +669,10 @@ def main(rflag=[0]):
     group_ex.add_argument('-s3', metavar='<aws s3 url>', type=str)
     parser.add_argument('-rl', metavar='<rate/limit>', type=rlimit)
     parser.add_argument('-api', action='store_true', default=False)
+    parser.add_argument('-v', action='store_true', default=False)
     args = parser.parse_args()
     api_only = args.api
+    verbose = args.v
     
     if args.s3 is not None:
       import requests
