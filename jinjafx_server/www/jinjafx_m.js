@@ -435,21 +435,16 @@ function getStatusText(code) {
   }
   
   function try_to_load() {
-    console.log("DEBUG: try_to_load()");
     try {
       if (qs.hasOwnProperty('dt')) {
         set_wait();
         var xHR = new XMLHttpRequest();
         xHR.open("GET", "get_dt/" + qs.dt, true);
 
-        console.log("DEBUG: GET get_dt/" + qs.dt);
-    
         xHR.onload = function() {
           if (this.status === 401) {
-            console.log("DEBUG: this.status = 401");
             protect_action = 1;
             $("#protect_input").modal("show");
-            console.log("DEBUG: calling #protect_input shown");
             return false;
           }
           else if (this.status === 200) {
@@ -832,50 +827,22 @@ function getStatusText(code) {
       fe.focus();
     });
 
-    $('#protect_input').on('show.bs.modal', function() {
-      console.log("in show.bs.modal");
-    });
+
+
+
+
+
 
     $('#protect_input').on('shown.bs.modal', function() {
-      console.log("DEBUG: #protect_input shown.bs.modal");
-      protect_ok = false;
-      console.log("DEBUG: #protect_input shown.bs.modal 2");
       document.getElementById("in_protect").focus();
-      console.log("DEBUG: #protect_input.focus()");
+      protect_ok = false;
     });
-
-    $("#protect_input").on("hidden.bs.modal", function () {
-      if (protect_ok == false) {
-        if (protect_action == 1) {
-          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-          document.getElementById('lbuttons').classList.remove('d-none');
-          dt_password = null;
-          loaded = true;
-        }
-        else {
-          set_status("#e64c00", "OK", "Link Not Updated");
-        }
-      }
-      document.getElementById("in_protect").value = '';
-      console.log("#protect_input hidden.bs.modal");
-      clear_wait();
-    });
-
-    document.getElementById('ml-vault-ok').onclick = function() {
-      dt.vault_password = window.btoa(document.getElementById("vault").value);
-      if (dt_id != '') {
-        window.open("output.html?dt=" + dt_id, "_blank");
-      }
-      else {
-        window.open("output.html", "_blank");
-      }
-    };
 
     document.getElementById('ml-protect-ok').onclick = function() {
+    /*
       dt_password = document.getElementById("in_protect").value;
       if (dt_password.match(/\S/)) {
         if (protect_action == 1) {
-          console.log("DEBUG: calling try_to_load() from ml-protect-ok");
           try_to_load();
         }
         else {
@@ -892,8 +859,65 @@ function getStatusText(code) {
         set_status("darkred", "ERROR", "Invalid Password");
         clear_wait();
       }
+      */
       protect_ok = true;
-      console.log("done ml-protect-ok");
+    };
+
+    $("#protect_input").on("hidden.bs.modal", function () {
+      if (protect_ok == true) {
+        dt_password = document.getElementById("in_protect").value;
+        if (dt_password.match(/\S/)) {
+          if (protect_action == 1) {
+            try_to_load();
+          }
+          else {
+            update_link(dt_id);
+          }
+        }
+        else {
+          if (protect_action == 1) {
+            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+            dt_password = null;
+          }
+          loaded = true;
+          document.getElementById('lbuttons').classList.remove('d-none');
+          set_status("darkred", "ERROR", "Invalid Password");
+        }
+      }
+      else {
+        if (protect_action == 1) {
+          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          document.getElementById('lbuttons').classList.remove('d-none');
+          dt_password = null;
+          loaded = true;
+        }
+        else {
+          set_status("#e64c00", "OK", "Link Not Updated");
+        }
+      }
+      document.getElementById("in_protect").value = '';
+      clear_wait();
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+    document.getElementById('ml-vault-ok').onclick = function() {
+      dt.vault_password = window.btoa(document.getElementById("vault").value);
+      if (dt_id != '') {
+        window.open("output.html?dt=" + dt_id, "_blank");
+      }
+      else {
+        window.open("output.html", "_blank");
+      }
     };
 
     document.getElementById('ml-input-reset').onclick = function(e) {
