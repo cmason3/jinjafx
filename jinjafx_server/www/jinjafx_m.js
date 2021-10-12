@@ -130,8 +130,6 @@ function getStatusText(code) {
     dt.id = dt_id;
     dt.dataset = current_ds;
 
-    //fe.focus();
-  
     if (vaulted_vars) {
       new bootstrap.Modal(document.getElementById('vault_input'), {
         keyboard: false
@@ -336,7 +334,6 @@ function getStatusText(code) {
       else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
         if ((method === "update_link") && !dirty) {
           set_status("#e64c00", "OK", 'No Changes Detected');
-          //fe.focus();
           return false;
         }
   
@@ -1026,7 +1023,6 @@ function getStatusText(code) {
       }
       else {
         set_status("darkred", "ERROR", "Invalid Data Set Name");
-        //fe.focus();
       }
     };
 
