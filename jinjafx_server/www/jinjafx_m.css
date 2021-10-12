@@ -48,6 +48,13 @@ body {
 .me-10 {
   margin-right: 10px;
 }
+.caret-off::after {
+  display: none !important;
+}
+.btn-curved {
+  border-top-left-radius: 0.3rem !important;
+  border-bottom-left-radius: 0.3rem !important;
+}
 .expand {
   position: absolute;
   background: #fff;
@@ -69,8 +76,6 @@ body {
   line-height: 0.8rem;
   overflow-y: hidden;
 }
-
-
 .gutter {
   background-color: #eee;
   background-repeat: no-repeat;
