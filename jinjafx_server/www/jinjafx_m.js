@@ -129,6 +129,8 @@ function getStatusText(code) {
     dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
     dt.id = dt_id;
     dt.dataset = current_ds;
+
+    //fe.focus();
   
     if (vaulted_vars) {
       new bootstrap.Modal(document.getElementById('vault_input'), {
@@ -148,6 +150,8 @@ function getStatusText(code) {
   function jinjafx(method) {
     sobj.innerHTML = "";
 
+    fe.focus();
+
     if (method == "delete_dataset") {
       if (window.cmData.getValue().match(/\S/) || window.cmVars.getValue().match(/\S/)) {
         if (confirm("Are You Sure?") === true) {
@@ -157,7 +161,6 @@ function getStatusText(code) {
       else {
         delete_dataset(current_ds);
       }
-      fe.focus();
       return false;
     }
     else if (method == "add_dataset") {
@@ -333,7 +336,7 @@ function getStatusText(code) {
       else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
         if ((method === "update_link") && !dirty) {
           set_status("#e64c00", "OK", 'No Changes Detected');
-          fe.focus();
+          //fe.focus();
           return false;
         }
   
@@ -1023,7 +1026,7 @@ function getStatusText(code) {
       }
       else {
         set_status("darkred", "ERROR", "Invalid Data Set Name");
-        fe.focus();
+        //fe.focus();
       }
     };
 
