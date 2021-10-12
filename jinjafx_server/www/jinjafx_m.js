@@ -801,125 +801,6 @@ function getStatusText(code) {
       }
     });
 
-    $('#jinjafx_input').on('hidden.bs.modal', function() {
-      fe.focus();
-    });
-
-    $('#vault_input').on('shown.bs.modal', function() {
-      document.getElementById("vault").focus();
-    });
-
-    $('#dataset_input').on('shown.bs.modal', function() {
-      document.getElementById("ds_name").focus();
-    });
-
-    $('#protect_dt').on('shown.bs.modal', function() {
-      document.getElementById("password_open1").focus();
-    });
-
-    $("#protect_dt").on("hidden.bs.modal", function () {
-      document.getElementById("password_open1").value = '';
-      document.getElementById("password_open2").value = '';
-      document.getElementById("password_open2").disabled = true;
-      document.getElementById("password_modify1").value = '';
-      document.getElementById("password_modify2").value = '';
-      document.getElementById("password_modify2").disabled = true;
-      fe.focus();
-    });
-
-
-
-
-
-
-
-    $('#protect_input').on('shown.bs.modal', function() {
-      document.getElementById("in_protect").focus();
-      protect_ok = false;
-    });
-
-    document.getElementById('ml-protect-ok').onclick = function() {
-    /*
-      dt_password = document.getElementById("in_protect").value;
-      if (dt_password.match(/\S/)) {
-        if (protect_action == 1) {
-          try_to_load();
-        }
-        else {
-          update_link(dt_id);
-        }
-      }
-      else {
-        if (protect_action == 1) {
-          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-          dt_password = null;
-        }
-        loaded = true;
-        document.getElementById('lbuttons').classList.remove('d-none');
-        set_status("darkred", "ERROR", "Invalid Password");
-        clear_wait();
-      }
-      */
-      protect_ok = true;
-    };
-
-    $("#protect_input").on("hidden.bs.modal", function () {
-      if (protect_ok == true) {
-        dt_password = document.getElementById("in_protect").value;
-        if (dt_password.match(/\S/)) {
-          if (protect_action == 1) {
-            try_to_load();
-          }
-          else {
-            update_link(dt_id);
-          }
-        }
-        else {
-          if (protect_action == 1) {
-            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-            dt_password = null;
-          }
-          loaded = true;
-          document.getElementById('lbuttons').classList.remove('d-none');
-          set_status("darkred", "ERROR", "Invalid Password");
-        }
-      }
-      else {
-        if (protect_action == 1) {
-          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
-          document.getElementById('lbuttons').classList.remove('d-none');
-          dt_password = null;
-          loaded = true;
-        }
-        else {
-          set_status("#e64c00", "OK", "Link Not Updated");
-        }
-      }
-      document.getElementById("in_protect").value = '';
-      clear_wait();
-    });
-
-
-
-
-
-
-
-
-
-
-
-
-    document.getElementById('ml-vault-ok').onclick = function() {
-      dt.vault_password = window.btoa(document.getElementById("vault").value);
-      if (dt_id != '') {
-        window.open("output.html?dt=" + dt_id, "_blank");
-      }
-      else {
-        window.open("output.html", "_blank");
-      }
-    };
-
     document.getElementById('ml-input-reset').onclick = function(e) {
       document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
       var focusable = document.getElementById('jinjafx_input_form').querySelectorAll('input,select');
@@ -970,6 +851,140 @@ function getStatusText(code) {
       }
     };
 
+    $('#jinjafx_input').on('hidden.bs.modal', function() {
+      fe.focus();
+    });
+
+    $('#vault_input').on('shown.bs.modal', function() {
+      document.getElementById("vault").focus();
+    });
+
+    document.getElementById('ml-vault-ok').onclick = function() {
+      dt.vault_password = window.btoa(document.getElementById("vault").value);
+      if (dt_id != '') {
+        window.open("output.html?dt=" + dt_id, "_blank");
+      }
+      else {
+        window.open("output.html", "_blank");
+      }
+    };
+
+    document.getElementById('vault').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-vault-ok').click();
+      }
+    };
+
+    $('#protect_dt').on('shown.bs.modal', function() {
+      document.getElementById("password_open1").focus();
+    });
+
+    document.getElementById('ml-protect-dt-ok').onclick = function() {
+      dt_opassword = null;
+      dt_mpassword = null;
+
+      if (document.getElementById('password_open1').value.match(/\S/)) {
+        if (document.getElementById('password_open1').value == document.getElementById('password_open2').value) {
+          dt_opassword = document.getElementById('password_open2').value;
+        }
+        else {
+          set_status("darkred", "ERROR", "Password Verification Failed");
+          return false;
+        }
+      }
+
+      if (document.getElementById('password_modify1').value.match(/\S/)) {
+        if (document.getElementById('password_modify1').value == document.getElementById('password_modify2').value) {
+          dt_mpassword = document.getElementById('password_modify2').value;
+        }
+        else {
+          set_status("darkred", "ERROR", "Password Verification Failed");
+          dt_opassword = null;
+          return false;
+        }
+      }
+
+      if ((dt_opassword != null) || (dt_mpassword != null)) {
+        if (dt_opassword === dt_mpassword) {
+          dt_mpassword = null;
+        }
+        document.getElementById('protect_text').innerHTML = 'Update Protection';
+        window.addEventListener('beforeunload', onBeforeUnload);
+        document.title = 'JinjaFx [unsaved]';
+        dirty = true;
+        set_status("green", "OK", "Protection Set - Update Required", 10000);
+        dt_password = null;
+      }
+      else {
+        set_status("darkred", "ERROR", "Invalid Password");
+      }
+    };
+
+    $("#protect_dt").on("hidden.bs.modal", function () {
+      document.getElementById("password_open1").value = '';
+      document.getElementById("password_open2").value = '';
+      document.getElementById("password_open2").disabled = true;
+      document.getElementById("password_modify1").value = '';
+      document.getElementById("password_modify2").value = '';
+      document.getElementById("password_modify2").disabled = true;
+      fe.focus();
+    });
+
+    $('#protect_input').on('shown.bs.modal', function() {
+      document.getElementById("in_protect").focus();
+      protect_ok = false;
+    });
+
+    document.getElementById('ml-protect-ok').onclick = function() {
+      protect_ok = true;
+    };
+
+    document.getElementById('in_protect').onkeyup = function(e) {
+      if (e.which == 13) {
+        document.getElementById('ml-protect-ok').click();
+      }
+    };
+
+    $("#protect_input").on("hidden.bs.modal", function () {
+      if (protect_ok == true) {
+        dt_password = document.getElementById("in_protect").value;
+        if (dt_password.match(/\S/)) {
+          if (protect_action == 1) {
+            try_to_load();
+          }
+          else {
+            update_link(dt_id);
+          }
+        }
+        else {
+          if (protect_action == 1) {
+            window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+            dt_password = null;
+          }
+          loaded = true;
+          document.getElementById('lbuttons').classList.remove('d-none');
+          set_status("darkred", "ERROR", "Invalid Password");
+        }
+      }
+      else {
+        if (protect_action == 1) {
+          window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
+          document.getElementById('lbuttons').classList.remove('d-none');
+          dt_password = null;
+          loaded = true;
+        }
+        else {
+          set_status("#e64c00", "OK", "Link Not Updated");
+        }
+      }
+      document.getElementById("in_protect").value = '';
+      clear_wait();
+    });
+
+    $('#dataset_input').on('shown.bs.modal', function() {
+      document.getElementById("ds_name").focus();
+    });
+
     document.getElementById('ml-dataset-ok').onclick = function() {
       var new_ds = document.getElementById("ds_name").value;
 
@@ -991,15 +1006,9 @@ function getStatusText(code) {
       }
     };
 
-    document.getElementById('vault').onkeyup = function(e) {
+    document.getElementById('ds_name').onkeyup = function(e) {
       if (e.which == 13) {
-        document.getElementById('ml-vault-ok').click();
-      }
-    };
-
-    document.getElementById('in_protect').onkeyup = function(e) {
-      if (e.which == 13) {
-        document.getElementById('ml-protect-ok').click();
+        document.getElementById('ml-dataset-ok').click();
       }
     };
 
@@ -1067,53 +1076,6 @@ function getStatusText(code) {
 
     document.getElementById('password_modify2').onkeyup = function(e) {
       check_modify();
-    };
-
-    document.getElementById('ml-protect-dt-ok').onclick = function() {
-      dt_opassword = null;
-      dt_mpassword = null;
-
-      if (document.getElementById('password_open1').value.match(/\S/)) {
-        if (document.getElementById('password_open1').value == document.getElementById('password_open2').value) {
-          dt_opassword = document.getElementById('password_open2').value;
-        }
-        else {
-          set_status("darkred", "ERROR", "Password Verification Failed");
-          return false;
-        }
-      }
-
-      if (document.getElementById('password_modify1').value.match(/\S/)) {
-        if (document.getElementById('password_modify1').value == document.getElementById('password_modify2').value) {
-          dt_mpassword = document.getElementById('password_modify2').value;
-        }
-        else {
-          set_status("darkred", "ERROR", "Password Verification Failed");
-          dt_opassword = null;
-          return false;
-        }
-      }
-
-      if ((dt_opassword != null) || (dt_mpassword != null)) {
-        if (dt_opassword === dt_mpassword) {
-          dt_mpassword = null;
-        }
-        document.getElementById('protect_text').innerHTML = 'Update Protection';
-        window.addEventListener('beforeunload', onBeforeUnload);
-        document.title = 'JinjaFx [unsaved]';
-        dirty = true;
-        set_status("green", "OK", "Protection Set - Update Required", 10000);
-        dt_password = null;
-      }
-      else {
-        set_status("darkred", "ERROR", "Invalid Password");
-      }
-    };
-
-    document.getElementById('ds_name').onkeyup = function(e) {
-      if (e.which == 13) {
-        document.getElementById('ml-dataset-ok').click();
-      }
     };
 
     document.querySelectorAll('.modal').forEach(function(elem, i) {

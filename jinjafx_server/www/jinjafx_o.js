@@ -56,18 +56,10 @@
 
           xHR.onload = function() {
             if (this.status === 200) {
-              //var filename = xHR.getResponseHeader("X-Download-Filename");
-
-              //if (window.navigator.msSaveOrOpenBlob) {
-               // window.navigator.msSaveOrOpenBlob(new Blob([ xHR.response ], { type: xHR.getResponseHeader("Content-Type") }), filename);
-             // }
-              //else {
               var link = document.createElement('a');
               link.href = window.URL.createObjectURL(xHR.response);
-              //link.download = filename;
               link.download = xHR.getResponseHeader("X-Download-Filename");
               link.click();
-             // }
             }
           };
           xHR.responseType = "blob";
@@ -122,12 +114,7 @@
   
                   var tc = window.atob(obj.outputs[output]);
                   if (tc.match(/<html.*?>[\s\S]+<\/html>/i)) {
-                    //if (window.crypto) {
                     tabs += '<iframe id="t_o' + oid + '" class="output" srcdoc="' + tc.replace(/"/g, "&quot;") + '"></iframe>';
-                  //  }
-                   // else {
-                  //    tabs += '<iframe id="t_o' + oid + '" class="output" doc="' + tc.replace(/"/g, "&quot;") + '" src="javascript: window.frameElement.getAttribute(\'doc\');"></iframe>';
-                  //  }
                   }
                   else {
                     tabs += '<textarea id="t_o' + oid + '" class="output" readonly>' + window.opener.quote(tc) + '</textarea>';
