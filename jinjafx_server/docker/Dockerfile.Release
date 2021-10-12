@@ -9,7 +9,7 @@ apt-get install -y --no-install-recommends curl; \
 
 useradd -m jinjafx -d /opt/jinjafx -k /dev/null; \
 
-runuser -u jinjafx -- /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --user --upgrade jinja2~=2.11 ansible-core~=2.11 netaddr requests cryptography; \
+runuser -u jinjafx -- /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --user --upgrade jinja2~=3.0 ansible-core~=2.11 netaddr requests cryptography; \
 runuser -u jinjafx -- ansible-galaxy collection install --upgrade ansible.netcommon; \
 
 curl -s https://api.github.com/repos/cmason3/jinjafx/releases/latest \
