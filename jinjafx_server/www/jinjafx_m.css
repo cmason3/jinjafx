@@ -42,14 +42,11 @@ body {
 #csv td:last-child {
   border-right: none;
 }
-#unsupported {
-  padding: 15px;
-}
 .mw-150 {
   min-width: 150px;
 }
-.text-black {
-  color: black;
+.me-10 {
+  margin-right: 10px;
 }
 .expand {
   position: absolute;
@@ -72,13 +69,8 @@ body {
   line-height: 0.8rem;
   overflow-y: hidden;
 }
-.btn-curved {
-  border-top-left-radius: 0.3rem !important;
-  border-bottom-left-radius: 0.3rem !important;
-}
-.caret-off::after {
-  display: none !important;
-}
+
+
 .gutter {
   background-color: #eee;
   background-repeat: no-repeat;

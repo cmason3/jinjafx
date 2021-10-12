@@ -22,8 +22,11 @@ iframe.output {
   height: 100%;
   width: 100%;
 }
-.ml-10 {
+.ms-10 {
   margin-left: 10px;
+}
+.me-10 {
+  margin-right: 10px;
 }
 .fs-85 {
   font-size: 85%;
