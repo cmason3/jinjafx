@@ -70,7 +70,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         if not verbose:
           path = path.replace('/jinjafx.html', '/')
 
-        if (args[1] != '204' and args[1] != '404' and args[1] != '501') or verbose:
+        if (args[1] != '204' and args[1] != '404' and args[1] != '501') or hasattr(self, 'critical') or verbose:
           src = str(self.client_address[0])
           ctype = ''
 
@@ -132,6 +132,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       if re.search(r'^/get_dt/[A-Za-z0-9_-]{1,24}$', fpath):
         cache = False
         dt = ''
+
+        self.critical = True
 
         if aws_s3_url or repository:
           if aws_s3_url:
