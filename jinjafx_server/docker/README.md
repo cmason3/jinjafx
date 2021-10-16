@@ -1,4 +1,4 @@
-## Docker for JinjaFx Server
+## Docker/Podman for JinjaFx Server
 
 JinjaFx Server will always be available in Docker Hub at [https://hub.docker.com/repository/docker/cmason3/jinjafx_server](https://hub.docker.com/repository/docker/cmason3/jinjafx_server) - the `latest` tag will always refer to the latest released version.
 
