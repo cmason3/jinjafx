@@ -9,7 +9,7 @@ Using HAProxy in front of JinjaFx Server is the preferred way with HAProxy deali
 ```
 podman build -t jinjafx_haproxy:latest https://raw.githubusercontent.com/cmason3/jinjafx/main/jinjafx_server/docker/Dockerfile.HAProxy
 
-podman create --name jinjafx_haproxy --tz=local --cap-add net_bind_service --network host -v /etc/haproxy/haproxy.pem:/usr/local/etc/haproxy/fullchain.pem:Z jinjafx_haproxy:latest
+podman create --name jinjafx_haproxy --tz=local --cap-add net_bind_service --network host -v /etc/haproxy/haproxy.pem:/usr/local/etc/haproxy/fullchain.pem:ro jinjafx_haproxy:latest
 
 podman generate systemd -n --restart-policy=always jinjafx_haproxy | tee /etc/systemd/system/jinjafx_haproxy.service 1>/dev/null
 
