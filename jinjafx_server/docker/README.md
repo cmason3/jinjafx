@@ -9,7 +9,8 @@ Using HAProxy in front of JinjaFx Server is the preferred way with HAProxy deali
 ```
 podman build -t jinjafx_haproxy:latest https://raw.githubusercontent.com/cmason3/jinjafx/main/jinjafx_server/docker/Dockerfile.HAProxy
 
-podman create --name jinjafx_haproxy --tz=local --cap-add net_bind_service --network host -v /etc/haproxy/haproxy.pem:/usr/local/etc/haproxy/fullchain.pem:ro jinjafx_haproxy:latest
+chmod 644 <certificate.pem>
+podman create --name jinjafx_haproxy --tz=local --cap-add net_bind_service --network host -v <certificate.pem>:/usr/local/etc/haproxy/fullchain.pem:Z jinjafx_haproxy:latest
 
 podman generate systemd -n --restart-policy=always jinjafx_haproxy | tee /etc/systemd/system/jinjafx_haproxy.service 1>/dev/null
 
@@ -17,7 +18,7 @@ systemctl daemon-reload
 systemctl enable --now jinjafx_haproxy
 ```
 
-The above commands will pass through the combined TLS certificate (private key and full certificate chain) to HAProxy - it assumes you are managing that outside of HAProxy and placing it at `/etc/haproxy/haproxy.pem` (this is presented inside the container as `/usr/local/etc/haproxy/fullchain.pem`) and you will HUP the container using `podman kill -s HUP jinjafx_haproxy` after you renew the certificate. The Dockerfile will download the [haproxy.cfg](https://raw.githubusercontent.com/cmason3/jinjafx/main/jinjafx_server/docker/haproxy.cfg) file from this repository.
+The above commands will pass through the combined TLS certificate (private key and full certificate chain) to HAProxy - you will need to replace `<certificate.pem>` with the location of your certicate (this is presented inside the container as `/usr/local/etc/haproxy/fullchain.pem`) and you will HUP the container using `podman kill -s HUP jinjafx_haproxy` after you renew the certificate. The Dockerfile will download the [haproxy.cfg](https://raw.githubusercontent.com/cmason3/jinjafx/main/jinjafx_server/docker/haproxy.cfg) file from this repository.
 
 ### JinjaFx Server
 
