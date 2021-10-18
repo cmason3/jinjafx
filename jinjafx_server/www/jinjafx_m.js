@@ -418,7 +418,7 @@ function getStatusText(code) {
           window.removeEventListener('beforeunload', onBeforeUnload);
           window.location.href = window.location.pathname + "?dt=" + this.responseText.trim();
         }
-        document.title = 'JinjaFx';
+        document.title = 'JinjaFx - Jinja2 Templating Tool';
         dirty = false;
       }
       else if (this.status == 401) {
