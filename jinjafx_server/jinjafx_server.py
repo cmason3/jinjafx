@@ -799,12 +799,12 @@ def aws_s3_get(s3_url, fname):
   headers = aws_s3_authorization('GET', fname, s3_url.split('.')[2], headers)
   rr = requests.get('https://' + s3_url + '/' + fname, headers=headers)
 
-  print("Check for Content-Encoding")
+  print("Check for Content-Encoding on " + fname)
   if 'Content-Encoding' in rr.headers:
     print("Found Content Encoding")
     if 'gzip' in rr.headers['Content-Encoding']:
       print("We have GZIP")
-      rr.text = gzip.uncompress(rr.text).decode('utf-8')
+      rr.text = gzip.decompress(rr.text).decode('utf-8')
 
   return rr
 
