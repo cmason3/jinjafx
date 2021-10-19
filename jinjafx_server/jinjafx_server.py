@@ -785,7 +785,6 @@ def aws_s3_put(s3_url, fname, content, ctype):
     'x-amz-content-sha256': hashlib.sha256(content).hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
-  print("about to upload " + str(content))
   headers = aws_s3_authorization('PUT', fname, s3_url.split('.')[2], headers)
   return requests.put('https://' + s3_url + '/' + fname, headers=headers, data=content)
 
@@ -798,16 +797,7 @@ def aws_s3_get(s3_url, fname):
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
   headers = aws_s3_authorization('GET', fname, s3_url.split('.')[2], headers)
-  rr = requests.get('https://' + s3_url + '/' + fname, headers=headers)
-
-  print("Check for Content-Encoding on " + fname)
-  if 'Content-Encoding' in rr.headers:
-    print("Found Content Encoding")
-    if 'gzip' in rr.headers['Content-Encoding']:
-      print("We have GZIP")
-      rr.text = gzip.decompress(rr.content).decode('utf-8')
-
-  return rr
+  return requests.get('https://' + s3_url + '/' + fname, headers=headers)
 
 
 if __name__ == '__main__':
