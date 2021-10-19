@@ -235,9 +235,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
 
     if r[1] != 304:
-      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers and 'gzip' in self.headers['Accept-Encoding']:
-        self.send_header('Content-Encoding', 'gzip')
-        r[2] = gzip.compress(r[2])
+      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers and r[0] != 'image/png':
+        if 'gzip' in self.headers['Accept-Encoding']:
+          self.send_header('Content-Encoding', 'gzip')
+          r[2] = gzip.compress(r[2])
 
       self.send_header('Content-Type', r[0])
       self.send_header('Content-Length', str(len(r[2])))
@@ -775,9 +776,9 @@ def aws_s3_authorization(method, fname, region, headers):
 
 def aws_s3_put(s3_url, fname, content, ctype):
   headers = {
+    'Host': s3_url,
     'Content-Length': str(len(content)),
     'Content-Type': ctype,
-    'Host': s3_url,
     'x-amz-content-sha256': hashlib.sha256(content.encode('utf-8')).hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
@@ -788,11 +789,20 @@ def aws_s3_put(s3_url, fname, content, ctype):
 def aws_s3_get(s3_url, fname):
   headers = {
     'Host': s3_url,
+    'Accept-Encoding': 'gzip',
     'x-amz-content-sha256': hashlib.sha256(b'').hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
   headers = aws_s3_authorization('GET', fname, s3_url.split('.')[2], headers)
-  return requests.get('https://' + s3_url + '/' + fname, headers=headers)
+  rr = requests.get('https://' + s3_url + '/' + fname, headers=headers)
+
+  if 'Content-Encoding' in rr.headers:
+    print("got content encoding")
+    if 'gzip' in rr.headers['Content-Encoding']:
+      print("it is gzip")
+      rr.text = gzip.uncompress(rr.text)
+
+  return rr
 
 
 if __name__ == '__main__':
