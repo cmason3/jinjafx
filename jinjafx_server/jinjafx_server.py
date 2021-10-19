@@ -288,11 +288,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               gvars = {}
 
               dt = json.loads(postdata)
-              template = gzip.decompress(base64.b64decode(dt['template'])) if 'template' in dt and len(dt['template'].strip()) > 0 else ''
-              data = gzip.decompress(base64.b64decode(dt['data'])) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
+              # template = gzip.decompress(base64.b64decode(dt['template'])) if 'template' in dt and len(dt['template'].strip()) > 0 else ''
+              template = base64.b64decode(dt['template']) if 'template' in dt and len(dt['template'].strip()) > 0 else ''
+              # data = gzip.decompress(base64.b64decode(dt['data'])) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
+              data = base64.b64decode(dt['data']) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
   
               if 'vars' in dt and len(dt['vars'].strip()) > 0:
-                gyaml = gzip.decompress(base64.b64decode(dt['vars']))
+                # gyaml = gzip.decompress(base64.b64decode(dt['vars']))
+                gyaml = base64.b64decode(dt['vars'])
 
                 if 'vault_password' in dt:
                   vault = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(base64.b64decode(dt['vault_password'])))])
