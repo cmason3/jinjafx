@@ -776,7 +776,7 @@ def aws_s3_authorization(method, fname, region, headers):
 
 
 def aws_s3_put(s3_url, fname, content, ctype):
-  content = gzip.compress(content)
+  content = gzip.compress(content.encode('utf-8'))
   headers = {
     'Host': s3_url,
     'Content-Length': str(len(content)),
@@ -799,6 +799,7 @@ def aws_s3_get(s3_url, fname):
   headers = aws_s3_authorization('GET', fname, s3_url.split('.')[2], headers)
   rr = requests.get('https://' + s3_url + '/' + fname, headers=headers)
 
+  print("Check for Content-Encoding")
   if 'Content-Encoding' in rr.headers:
     print("Found Content Encoding")
     if 'gzip' in self.headers['Content-Encoding']:
