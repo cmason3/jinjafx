@@ -64,7 +64,8 @@
           };
           xHR.responseType = "blob";
           xHR.setRequestHeader("Content-Type", "application/json");
-          xHR.send(JSON.stringify(obj.outputs));
+          xHR.setRequestHeader("Content-Encoding", "gzip");
+          xHR.send(pako.gzip(JSON.stringify(obj.outputs)));
         }
         var t = document.getElementById('t_' + document.querySelector('.tab-content > .active').getAttribute('id'));
         t.focus();
@@ -188,7 +189,8 @@
           document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx Error</h4></strong>XMLHttpRequest.onError()</div>";
         };
         xHR.setRequestHeader("Content-Type", "application/json");
-        xHR.send(JSON.stringify(dt));
+        xHR.setRequestHeader("Content-Encoding", "gzip");
+        xHR.send(pako.gzip(JSON.stringify(dt)));
       }
       else {
         document.title = "Error";

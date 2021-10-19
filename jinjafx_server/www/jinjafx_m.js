@@ -125,9 +125,7 @@ function getStatusText(code) {
 
   function jinjafx_generate() {
     var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
-    // dt.vars = window.btoa(String.fromCharCode.apply(null, pako.gzip(dt.vars, { to: "string" })));
     dt.vars = window.btoa(dt.vars);
-    // dt.template = window.btoa(String.fromCharCode.apply(null, pako.gzip(window.cmTemplate.getValue().replace(/\t/g, "  "), { to: "string" })));
     dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
     dt.id = dt_id;
     dt.dataset = current_ds;
@@ -202,7 +200,6 @@ function getStatusText(code) {
           return false;
         }
 
-        // dt.data = window.btoa(String.fromCharCode.apply(null, pako.gzip(dt.data.join("\n"), { to: "string" })));
         dt.data = window.btoa(dt.data.join("\n"));
         dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
 
@@ -268,8 +265,8 @@ function getStatusText(code) {
   
                     xHR.timeout = 10000;
                     xHR.setRequestHeader("Content-Type", "application/json");
-                    // xHR.send(JSON.stringify({ "template": window.btoa(String.fromCharCode.apply(null, pako.gzip(rbody, { to: "string" }))) }));
-                    xHR.send(JSON.stringify({ "template": window.btoa(rbody) }));
+                    xHR.setRequestHeader("Content-Encoding", "gzip");
+                    xHR.send(pako.gzip(JSON.stringify({ "template": window.btoa(rbody) })));
                     return false;
                   }
                   else {
@@ -456,7 +453,8 @@ function getStatusText(code) {
   
     xHR.timeout = 10000;
     xHR.setRequestHeader("Content-Type", "application/json");
-    xHR.send(JSON.stringify(dt));
+    xHR.setRequestHeader("Content-Encoding", "gzip");
+    xHR.send(pako.gzip(JSON.stringify(dt)));
   }
   
   function try_to_load() {

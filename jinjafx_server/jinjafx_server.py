@@ -79,7 +79,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               src = self.headers['X-Forwarded-For']
 
             if 'Content-Type' in self.headers:
-              ctype = ' (' + self.headers['Content-Type'] + ')'
+              if 'Content-Encoding' in self.headers:
+                ctype = ' (' + self.headers['Content-Type'] + ':' + self.headers['Content-Encoding'] + ')'
+              else:
+                ctype = ' (' + self.headers['Content-Type'] + ')'
 
           if str(args[1]) == 'ERR':
             log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
@@ -278,7 +281,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
 
     if 'Content-Length' in self.headers:
-      postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
+      postdata = self.rfile.read(int(self.headers['Content-Length'])) #.decode('utf-8')
       self.length = len(postdata)
 
       if (len(postdata) < (512 * 1024)) or (fpath == '/download'):
@@ -287,14 +290,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             try:
               gvars = {}
 
-              dt = json.loads(postdata)
-              # template = gzip.decompress(base64.b64decode(dt['template'])) if 'template' in dt and len(dt['template'].strip()) > 0 else ''
+              if 'Content-Encoding' in self.headers and self.headers['Content-Encoding'] == 'gzip':
+                postdata = gzip.decompress(postdata)
+
+              dt = json.loads(postdata.decode('utf-8'))
               template = base64.b64decode(dt['template']) if 'template' in dt and len(dt['template'].strip()) > 0 else ''
-              # data = gzip.decompress(base64.b64decode(dt['data'])) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
               data = base64.b64decode(dt['data']) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
   
               if 'vars' in dt and len(dt['vars'].strip()) > 0:
-                # gyaml = gzip.decompress(base64.b64decode(dt['vars']))
                 gyaml = base64.b64decode(dt['vars'])
 
                 if 'vault_password' in dt:
@@ -358,8 +361,11 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             if self.headers['Content-Type'] == 'application/json':
               lterminator = '\r\n' if 'User-Agent' in self.headers and 'windows' in self.headers['User-Agent'].lower() else '\n'
 
+              if 'Content-Encoding' in self.headers and self.headers['Content-Encoding'] == 'gzip':
+                postdata = gzip.decompress(postdata)
+
               try:
-                outputs = json.loads(postdata)
+                outputs = json.loads(postdata.decode('utf-8'))
 
                 zfile = io.BytesIO()
                 z = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
@@ -431,7 +437,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       rtable[remote_addr] = rtable[remote_addr][-rl_rate:]
 
                   if not ratelimit:
-                    dt = json.loads(postdata)
+                    if 'Content-Encoding' in self.headers and self.headers['Content-Encoding'] == 'gzip':
+                      postdata = gzip.decompress(postdata)
+
+                    dt = json.loads(postdata.decode('utf-8'))
 
                     vdt = {}
 
