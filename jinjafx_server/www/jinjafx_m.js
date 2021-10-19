@@ -125,8 +125,8 @@ function getStatusText(code) {
 
   function jinjafx_generate() {
     var vaulted_vars = dt.vars.indexOf('$ANSIBLE_VAULT;') > -1;
-    dt.vars = window.btoa(dt.vars);
-    dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
+    dt.vars = window.btoa(String.fromCharCode.apply(null, pako.gzip(dt.vars, { to: "string" })));
+    dt.template = window.btoa(String.fromCharCode.apply(null, pako.gzip(window.cmTemplate.getValue().replace(/\t/g, "  "), { to: "string" })));
     dt.id = dt_id;
     dt.dataset = current_ds;
 
@@ -200,7 +200,7 @@ function getStatusText(code) {
           return false;
         }
 
-        dt.data = window.btoa(dt.data.join("\n"));
+        dt.data = window.btoa(String.fromCharCode.apply(null, pako.gzip(dt.data.join("\n"), { to: "string" })));
         dt.vars = window.cmVars.getValue().replace(/\t/g, "  ");
 
         if (dt.vars.match(/\S/)) {
@@ -239,6 +239,7 @@ function getStatusText(code) {
                           }
                         }
                         catch (e) {
+                          console.log(e);
                           set_status("darkred", "ERROR", e);
                         }
                       }
@@ -264,7 +265,7 @@ function getStatusText(code) {
   
                     xHR.timeout = 10000;
                     xHR.setRequestHeader("Content-Type", "application/json");
-                    xHR.send(JSON.stringify({ "template": window.btoa(rbody) }));
+                    xHR.send(JSON.stringify({ "template": window.btoa(String.fromCharCode.apply(null, pako.gzip(rbody, { to: "string" }))) }));
                     return false;
                   }
                   else {
@@ -325,6 +326,7 @@ function getStatusText(code) {
             }
           }
           catch (e) {
+            console.log(e);
             set_status("darkred", "ERROR", '[vars.yml] ' + e);
             return false;
           }
@@ -374,6 +376,7 @@ function getStatusText(code) {
       }
     }
     catch (ex) {
+      console.log(ex);
       set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
       clear_wait();
     }
@@ -494,6 +497,7 @@ function getStatusText(code) {
               window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);
             }
             catch (e) {
+              console.log(e);
               set_status("darkred", "INTERNAL ERROR", e);
               window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
             }
@@ -536,6 +540,7 @@ function getStatusText(code) {
       }
     }
     catch (ex) {
+      console.log(ex);
       set_status("darkred", "ERROR", ex);
       document.getElementById('lbuttons').classList.remove('d-none');
       loaded = true; onChange(true);
@@ -1368,6 +1373,7 @@ function getStatusText(code) {
       loaded = true;
     }
     catch (ex) {
+      console.log(ex);
       set_status("darkred", "ERROR", ex);
       loaded = true; onChange(true);
     }
@@ -1393,6 +1399,7 @@ function getStatusText(code) {
       }
     }
     catch (ex) {
+      console.log(ex);
       set_status("darkred", "ERROR", ex);
     }
   }
