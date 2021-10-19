@@ -804,7 +804,7 @@ def aws_s3_get(s3_url, fname):
     print("Found Content Encoding")
     if 'gzip' in rr.headers['Content-Encoding']:
       print("We have GZIP")
-      rr.text = gzip.decompress(rr.text).decode('utf-8')
+      rr.text = gzip.decompress(rr.content).decode('utf-8')
 
   return rr
 
