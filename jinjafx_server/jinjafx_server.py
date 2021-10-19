@@ -782,7 +782,7 @@ def aws_s3_put(s3_url, fname, content, ctype):
     'Content-Length': str(len(content)),
     'Content-Type': ctype,
     'Content-Encoding': 'gzip',
-    'x-amz-content-sha256': hashlib.sha256(content.encode('utf-8')).hexdigest(),
+    'x-amz-content-sha256': hashlib.sha256(content).hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
   headers = aws_s3_authorization('PUT', fname, s3_url.split('.')[2], headers)
