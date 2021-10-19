@@ -776,10 +776,12 @@ def aws_s3_authorization(method, fname, region, headers):
 
 
 def aws_s3_put(s3_url, fname, content, ctype):
+  content = gzip.compress(content)
   headers = {
     'Host': s3_url,
     'Content-Length': str(len(content)),
     'Content-Type': ctype,
+    'Content-Encoding': 'gzip',
     'x-amz-content-sha256': hashlib.sha256(content.encode('utf-8')).hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
@@ -790,11 +792,20 @@ def aws_s3_put(s3_url, fname, content, ctype):
 def aws_s3_get(s3_url, fname):
   headers = {
     'Host': s3_url,
+    'Accept-Encoding': 'gzip',
     'x-amz-content-sha256': hashlib.sha256(b'').hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
   headers = aws_s3_authorization('GET', fname, s3_url.split('.')[2], headers)
-  return requests.get('https://' + s3_url + '/' + fname, headers=headers)
+  rr = requests.get('https://' + s3_url + '/' + fname, headers=headers)
+
+  if 'Content-Encoding' in rr.headers:
+    print("Found Content Encoding")
+    if 'gzip' in self.headers['Content-Encoding']:
+      print("We have GZIP")
+      rr.text = gzip.uncompress(rr.text)
+
+  return rr
 
 
 if __name__ == '__main__':
