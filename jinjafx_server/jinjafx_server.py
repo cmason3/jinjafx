@@ -785,6 +785,7 @@ def aws_s3_put(s3_url, fname, content, ctype):
     'x-amz-content-sha256': hashlib.sha256(content).hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
+  print("about to upload " + str(content))
   headers = aws_s3_authorization('PUT', fname, s3_url.split('.')[2], headers)
   return requests.put('https://' + s3_url + '/' + fname, headers=headers, data=content)
 
