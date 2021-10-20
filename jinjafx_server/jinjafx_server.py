@@ -281,7 +281,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
 
     if 'Content-Length' in self.headers:
-      if (int(self.headers['Content-Length']) < (256 * 1024)) or (fpath == '/download'):
+      if int(self.headers['Content-Length']) < (512 * 1024):
         postdata = self.rfile.read(int(self.headers['Content-Length']))
         self.length = len(postdata)
 
