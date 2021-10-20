@@ -67,7 +67,7 @@
           xHR.setRequestHeader("Content-Type", "application/json");
 
           var rd = JSON.stringify(obj.outputs);
-          if (len(rd) > 1024) {
+          if (rd.length > 1024) {
             xHR.setRequestHeader("Content-Encoding", "gzip");
             xHR.send(pako.gzip(rd));
           }
@@ -200,7 +200,7 @@
         xHR.setRequestHeader("Content-Type", "application/json");
         
         var rd = JSON.stringify(dt);
-        if (len(rd) > 1024) {
+        if (rd.length > 1024) {
           xHR.setRequestHeader("Content-Encoding", "gzip");
           xHR.send(pako.gzip(rd));
         }
