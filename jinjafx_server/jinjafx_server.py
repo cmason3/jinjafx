@@ -238,7 +238,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
 
     if r[1] != 304:
-      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers and r[0] != 'image/png':
+      if len(r[2]) > 1024 and 'Accept-Encoding' in self.headers and r[0] != 'image/png':
         if 'gzip' in self.headers['Accept-Encoding']:
           self.send_header('Content-Encoding', 'gzip')
           r[2] = gzip.compress(r[2])
@@ -633,7 +633,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     if r[1] == 200:
       self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers:
+      if len(r[2]) > 1024 and 'Accept-Encoding' in self.headers:
         if 'gzip' in self.headers['Accept-Encoding']:
           self.send_header('Content-Encoding', 'gzip')
           r[2] = gzip.compress(r[2])

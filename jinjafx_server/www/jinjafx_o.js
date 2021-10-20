@@ -44,6 +44,7 @@
           set_status("green", "OK", "Copied to Clipboard");
         }
         catch (e) {
+          console.log(e);
           set_status("darkred", "ERROR", e);
         }
       };
@@ -64,8 +65,15 @@
           };
           xHR.responseType = "blob";
           xHR.setRequestHeader("Content-Type", "application/json");
-          xHR.setRequestHeader("Content-Encoding", "gzip");
-          xHR.send(pako.gzip(JSON.stringify(obj.outputs)));
+
+          var rd = JSON.stringify(obj.outputs);
+          if (len(rd) > 1024) {
+            xHR.setRequestHeader("Content-Encoding", "gzip");
+            xHR.send(pako.gzip(rd));
+          }
+          else {
+            xHR.send(rd);
+          }
         }
         var t = document.getElementById('t_' + document.querySelector('.tab-content > .active').getAttribute('id'));
         t.focus();
@@ -173,6 +181,7 @@
               }
             }
             catch (e) {
+              console.log(e);
               document.title = "Error";
               document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>Internal Error</h4></strong>" + e + "</div>";
             }
@@ -189,8 +198,15 @@
           document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx Error</h4></strong>XMLHttpRequest.onError()</div>";
         };
         xHR.setRequestHeader("Content-Type", "application/json");
-        xHR.setRequestHeader("Content-Encoding", "gzip");
-        xHR.send(pako.gzip(JSON.stringify(dt)));
+        
+        var rd = JSON.stringify(dt);
+        if (len(rd) > 1024) {
+          xHR.setRequestHeader("Content-Encoding", "gzip");
+          xHR.send(pako.gzip(rd));
+        }
+        else {
+          xHR.send(rd);
+        }
       }
       else {
         document.title = "Error";

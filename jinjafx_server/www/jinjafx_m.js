@@ -265,8 +265,15 @@ function getStatusText(code) {
   
                     xHR.timeout = 10000;
                     xHR.setRequestHeader("Content-Type", "application/json");
-                    xHR.setRequestHeader("Content-Encoding", "gzip");
-                    xHR.send(pako.gzip(JSON.stringify({ "template": window.btoa(rbody) })));
+
+                    var rd = JSON.stringify({ "template": window.btoa(rbody) });
+                    if (len(rd) > 1024) {
+                      xHR.setRequestHeader("Content-Encoding", "gzip");
+                      xHR.send(pako.gzip(rd));
+                    }
+                    else {
+                      xHR.send(rd);
+                    }
                     return false;
                   }
                   else {
@@ -453,8 +460,15 @@ function getStatusText(code) {
   
     xHR.timeout = 10000;
     xHR.setRequestHeader("Content-Type", "application/json");
-    xHR.setRequestHeader("Content-Encoding", "gzip");
-    xHR.send(pako.gzip(JSON.stringify(dt)));
+
+    var rd = JSON.stringify(dt);
+    if (len(rd) > 1024) {
+      xHR.setRequestHeader("Content-Encoding", "gzip");
+      xHR.send(pako.gzip(rd));
+    }
+    else {
+      xHR.send(rd);
+    }
   }
   
   function try_to_load() {
