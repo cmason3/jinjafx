@@ -42,14 +42,18 @@ body {
 #csv td:last-child {
   border-right: none;
 }
-#unsupported {
-  padding: 15px;
-}
 .mw-150 {
   min-width: 150px;
 }
-.text-black {
-  color: black;
+.me-10 {
+  margin-right: 10px;
+}
+.caret-off::after {
+  display: none !important;
+}
+.btn-curved {
+  border-top-left-radius: 0.3rem !important;
+  border-bottom-left-radius: 0.3rem !important;
 }
 .expand {
   position: absolute;
@@ -72,13 +76,6 @@ body {
   line-height: 0.8rem;
   overflow-y: hidden;
 }
-.btn-curved {
-  border-top-left-radius: 0.3rem !important;
-  border-bottom-left-radius: 0.3rem !important;
-}
-.caret-off::after {
-  display: none !important;
-}
 .gutter {
   background-color: #eee;
   background-repeat: no-repeat;
@@ -86,11 +83,11 @@ body {
 }
 .gutter.gutter-vertical {
   cursor: ns-resize;
-  background-image: url('split-gutter-vertical.png');
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
 }
 .gutter.gutter-horizontal {
   cursor: ew-resize;
-  background-image: url('split-gutter-horizontal.png');
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
 }
 .split-horizontal, .gutter.gutter-horizontal {
   height: 100%;

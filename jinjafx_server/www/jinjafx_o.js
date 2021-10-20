@@ -44,6 +44,7 @@
           set_status("green", "OK", "Copied to Clipboard");
         }
         catch (e) {
+          console.log(e);
           set_status("darkred", "ERROR", e);
         }
       };
@@ -64,12 +65,20 @@
           };
           xHR.responseType = "blob";
           xHR.setRequestHeader("Content-Type", "application/json");
-          xHR.send(JSON.stringify(obj.outputs));
+
+          var rd = JSON.stringify(obj.outputs);
+          if (rd.length > 1024) {
+            xHR.setRequestHeader("Content-Encoding", "gzip");
+            xHR.send(pako.gzip(rd));
+          }
+          else {
+            xHR.send(rd);
+          }
         }
         var t = document.getElementById('t_' + document.querySelector('.tab-content > .active').getAttribute('id'));
         t.focus();
       };
-  
+
       if (Object.keys(dt).length !== 0) {
         var _qs = [];
         if (dt.id != '') {
@@ -110,7 +119,7 @@
                   var g = window.opener.quote(output)
   
                   tabs += '<div id="o' + oid + '" class="h-100 tab-pane fade' + ((oid == 1) ? ' show active' : '') + '">';
-                  tabs += '<h4 class="font-weight-bold">' + g + '</h4>';
+                  tabs += '<h4 class="fw-bold">' + g + '</h4>';
   
                   var tc = window.atob(obj.outputs[output]);
                   if (tc.match(/<html.*?>[\s\S]+<\/html>/i)) {
@@ -123,7 +132,7 @@
                   tabs += '</div>';
   
                   links += '<li class="nav-item">';
-                  links += '<a class="nav-link' + ((oid == 1) ? ' active"' : '"') + ' data-toggle="tab" href="#o' + oid + '">' + g + '</a>';
+                  links += '<a class="nav-link' + ((oid == 1) ? ' active"' : '"') + ' data-bs-toggle="tab" href="#o' + oid + '">' + g + '</a>';
                   links += '</li>';
   
                   oid += 1;
@@ -134,13 +143,13 @@
                 document.getElementById('summary').innerHTML = 'Generated at ' + dayjs().format('HH:mm') + ' on ' + dayjs().format('Do MMMM YYYY') + '<br />in ' + Math.ceil(obj.elapsed).toLocaleString() + ' milliseconds';
                 document.getElementById('tabs').innerHTML = tabs;
                 document.getElementById('nav-links').innerHTML = links;
-                document.getElementById('wrap').style.display = 'block';
-                document.getElementById('footer').style.display = 'block';
+                document.getElementById('wrap').classList.remove('d-none');
+                document.getElementById('footer').classList.remove('d-none');
   
                 document.title = 'Outputs' + ((dt.dataset != 'Default') ? ' (' + dt.dataset + ')' : '');
   
                 if (oc > 1) {
-                  document.getElementById('pills').style.display = 'block';
+                  document.getElementById('pills').classList.remove('d-none');
                 }
   
                 window.onresize = function() {
@@ -161,7 +170,9 @@
                   html += '</ul>'
 
                   document.getElementById('warnings').innerHTML = html;
-                  $("#warning_modal").modal("show");
+                  new bootstrap.Modal(document.getElementById('warning_modal'), {
+                    keyboard: true
+                  }).show();
                 }
               }
               else {
@@ -170,6 +181,7 @@
               }
             }
             catch (e) {
+              console.log(e);
               document.title = "Error";
               document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>Internal Error</h4></strong>" + e + "</div>";
             }
@@ -186,7 +198,15 @@
           document.body.innerHTML = "<div id=\"status\" class=\"alert alert-danger\"><strong><h4>JinjaFx Error</h4></strong>XMLHttpRequest.onError()</div>";
         };
         xHR.setRequestHeader("Content-Type", "application/json");
-        xHR.send(JSON.stringify(dt));
+        
+        var rd = JSON.stringify(dt);
+        if (rd.length > 1024) {
+          xHR.setRequestHeader("Content-Encoding", "gzip");
+          xHR.send(pako.gzip(rd));
+        }
+        else {
+          xHR.send(rd);
+        }
       }
       else {
         document.title = "Error";

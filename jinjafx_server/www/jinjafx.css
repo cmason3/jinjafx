@@ -35,12 +35,6 @@ h5#title {
   float: left;
   margin: 0px 10px 0px 0px;
 }
-.mr-10 {
-  margin-right: 10px;
-}
-.display-none {
-  display: none;
-}
 #content {
   min-height: 125px;
 }
@@ -53,4 +47,10 @@ h5#title {
 }
 .wait, .wait * {
   cursor: wait !important;
+}
+a:link {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
 }

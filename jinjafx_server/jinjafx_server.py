@@ -15,7 +15,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-# from __future__ import print_function
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from jinja2 import __version__ as jinja2_version
 import jinjafx, os, io, sys, socket, signal, threading, yaml, json, base64, time, datetime
@@ -71,7 +70,7 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         if not verbose:
           path = path.replace('/jinjafx.html', '/')
 
-        if (args[1] != '204' and args[1] != '404' and args[1] != '501') or verbose:
+        if (args[1] != '204' and args[1] != '404' and args[1] != '501') or hasattr(self, 'critical') or verbose:
           src = str(self.client_address[0])
           ctype = ''
 
@@ -80,7 +79,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
               src = self.headers['X-Forwarded-For']
 
             if 'Content-Type' in self.headers:
-              ctype = ' (' + self.headers['Content-Type'] + ')'
+              if 'Content-Encoding' in self.headers:
+                ctype = ' (' + self.headers['Content-Type'] + ':' + self.headers['Content-Encoding'] + ')'
+              else:
+                ctype = ' (' + self.headers['Content-Type'] + ')'
 
           if str(args[1]) == 'ERR':
             log('[' + src + '] [\033[1;' + ansi + 'm' + str(args[1]) + '\033[0m]' + lnumber + ' \033[1;' + ansi + 'm' + str(args[2]) + '\033[0m')
@@ -133,6 +135,8 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       if re.search(r'^/get_dt/[A-Za-z0-9_-]{1,24}$', fpath):
         cache = False
         dt = ''
+
+        self.critical = True
 
         if aws_s3_url or repository:
           if aws_s3_url:
@@ -234,9 +238,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     self.send_response(r[1])
 
     if r[1] != 304:
-      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers and 'gzip' in self.headers['Accept-Encoding']:
-        self.send_header('Content-Encoding', 'gzip')
-        r[2] = gzip.compress(r[2])
+      if len(r[2]) > 1024 and 'Accept-Encoding' in self.headers and r[0] != 'image/png':
+        if 'gzip' in self.headers['Accept-Encoding']:
+          self.send_header('Content-Encoding', 'gzip')
+          r[2] = gzip.compress(r[2])
 
       self.send_header('Content-Type', r[0])
       self.send_header('Content-Length', str(len(r[2])))
@@ -276,16 +281,20 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     r = [ 'text/plain', 500, '500 Internal Server Error\r\n', sys._getframe().f_lineno ]
 
     if 'Content-Length' in self.headers:
-      postdata = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
-      self.length = len(postdata)
+      if int(self.headers['Content-Length']) < (512 * 1024):
+        postdata = self.rfile.read(int(self.headers['Content-Length']))
+        self.length = len(postdata)
 
-      if (len(postdata) < (512 * 1024)) or (fpath == '/download'):
+      # if (len(postdata) < (512 * 1024)) or (fpath == '/download'):
         if fpath == '/jinjafx':
           if self.headers['Content-Type'] == 'application/json':
             try:
               gvars = {}
-  
-              dt = json.loads(postdata)
+
+              if 'Content-Encoding' in self.headers and self.headers['Content-Encoding'] == 'gzip':
+                postdata = gzip.decompress(postdata)
+
+              dt = json.loads(postdata.decode('utf-8'))
               template = base64.b64decode(dt['template']) if 'template' in dt and len(dt['template'].strip()) > 0 else ''
               data = base64.b64decode(dt['data']) if 'data' in dt and len(dt['data'].strip()) > 0 else ''
   
@@ -353,8 +362,11 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
             if self.headers['Content-Type'] == 'application/json':
               lterminator = '\r\n' if 'User-Agent' in self.headers and 'windows' in self.headers['User-Agent'].lower() else '\n'
 
+              if 'Content-Encoding' in self.headers and self.headers['Content-Encoding'] == 'gzip':
+                postdata = gzip.decompress(postdata)
+
               try:
-                outputs = json.loads(postdata)
+                outputs = json.loads(postdata.decode('utf-8'))
 
                 zfile = io.BytesIO()
                 z = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
@@ -426,7 +438,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
                       rtable[remote_addr] = rtable[remote_addr][-rl_rate:]
 
                   if not ratelimit:
-                    dt = json.loads(postdata)
+                    if 'Content-Encoding' in self.headers and self.headers['Content-Encoding'] == 'gzip':
+                      postdata = gzip.decompress(postdata)
+
+                    dt = json.loads(postdata.decode('utf-8'))
 
                     vdt = {}
 
@@ -619,9 +634,10 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
     if r[1] == 200:
       self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-      if len(r[2]) > 100 and 'Accept-Encoding' in self.headers and 'gzip' in self.headers['Accept-Encoding']:
-        self.send_header('Content-Encoding', 'gzip')
-        r[2] = gzip.compress(r[2])
+      if len(r[2]) > 1024 and 'Accept-Encoding' in self.headers:
+        if 'gzip' in self.headers['Accept-Encoding']:
+          self.send_header('Content-Encoding', 'gzip')
+          r[2] = gzip.compress(r[2])
 
     self.send_header('Content-Type', r[0])
     self.send_header('Content-Length', str(len(r[2])))
@@ -773,11 +789,13 @@ def aws_s3_authorization(method, fname, region, headers):
 
 
 def aws_s3_put(s3_url, fname, content, ctype):
+  content = gzip.compress(content.encode('utf-8'))
   headers = {
+    'Host': s3_url,
     'Content-Length': str(len(content)),
     'Content-Type': ctype,
-    'Host': s3_url,
-    'x-amz-content-sha256': hashlib.sha256(content.encode('utf-8')).hexdigest(),
+    'Content-Encoding': 'gzip',
+    'x-amz-content-sha256': hashlib.sha256(content).hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }
   headers = aws_s3_authorization('PUT', fname, s3_url.split('.')[2], headers)
@@ -787,6 +805,7 @@ def aws_s3_put(s3_url, fname, content, ctype):
 def aws_s3_get(s3_url, fname):
   headers = {
     'Host': s3_url,
+    'Accept-Encoding': 'gzip',
     'x-amz-content-sha256': hashlib.sha256(b'').hexdigest(),
     'x-amz-date': datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
   }

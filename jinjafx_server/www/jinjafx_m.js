@@ -48,6 +48,7 @@ function getStatusText(code) {
   var dt_mpassword = null;
   var input_form = null;
   var r_input_form = null;
+  var jinput = null;
   var protect_action = 0;
   var cflag = false;
   var revision = 0;
@@ -128,9 +129,11 @@ function getStatusText(code) {
     dt.template = window.btoa(window.cmTemplate.getValue().replace(/\t/g, "  "));
     dt.id = dt_id;
     dt.dataset = current_ds;
-  
+
     if (vaulted_vars) {
-      $("#vault_input").modal("show");
+      new bootstrap.Modal(document.getElementById('vault_input'), {
+        keyboard: false
+      }).show();
     }
     else {
       if (dt_id != '') {
@@ -145,6 +148,8 @@ function getStatusText(code) {
   function jinjafx(method) {
     sobj.innerHTML = "";
 
+    fe.focus();
+
     if (method == "delete_dataset") {
       if (window.cmData.getValue().match(/\S/) || window.cmVars.getValue().match(/\S/)) {
         if (confirm("Are You Sure?") === true) {
@@ -154,12 +159,13 @@ function getStatusText(code) {
       else {
         delete_dataset(current_ds);
       }
-      fe.focus();
       return false;
     }
     else if (method == "add_dataset") {
       document.getElementById("ds_name").value = '';
-      $("#dataset_input").modal("show");
+      new bootstrap.Modal(document.getElementById('dataset_input'), {
+        keyboard: true
+      }).show();
       return false;
     }
   
@@ -168,7 +174,9 @@ function getStatusText(code) {
       document.getElementById('password_open2').classList.remove('is-valid');
       document.getElementById('password_modify2').classList.remove('is-invalid');
       document.getElementById('password_modify2').classList.remove('is-valid');
-      $("#protect_dt").modal("show");
+      new bootstrap.Modal(document.getElementById('protect_dt'), {
+        keyboard: false
+      }).show();
       return false;
     }
   
@@ -220,7 +228,10 @@ function getStatusText(code) {
                             r_input_form = window.atob(obj.outputs['Output']);
                             document.getElementById('jinjafx_input_form').innerHTML = r_input_form;
                             input_form = vars['jinjafx_input']['body'];
-                            $("#jinjafx_input").modal("show");
+                            jinput = new bootstrap.Modal(document.getElementById('jinjafx_input'), {
+                              keyboard: false
+                            });
+                            jinput.show();
                           }
                           else {
                             var e = obj.error.replace("template.j2", "jinjafx_input");
@@ -228,6 +239,7 @@ function getStatusText(code) {
                           }
                         }
                         catch (e) {
+                          console.log(e);
                           set_status("darkred", "ERROR", e);
                         }
                       }
@@ -253,11 +265,22 @@ function getStatusText(code) {
   
                     xHR.timeout = 10000;
                     xHR.setRequestHeader("Content-Type", "application/json");
-                    xHR.send(JSON.stringify({ "template": window.btoa(rbody) }));
+
+                    var rd = JSON.stringify({ "template": window.btoa(rbody) });
+                    if (rd.length > 1024) {
+                      xHR.setRequestHeader("Content-Encoding", "gzip");
+                      xHR.send(pako.gzip(rd));
+                    }
+                    else {
+                      xHR.send(rd);
+                    }
                     return false;
                   }
                   else {
-                    $("#jinjafx_input").modal("show");
+                    jinput = new bootstrap.Modal(document.getElementById('jinjafx_input'), {
+                      keyboard: false
+                    });
+                    jinput.show();
                     return false;
                   }
                 }
@@ -300,7 +323,10 @@ function getStatusText(code) {
                       document.getElementById('jinjafx_input_form').innerHTML = body;
                       r_input_form = body;
                     }
-                    $("#jinjafx_input").modal("show");
+                    jinput = new bootstrap.Modal(document.getElementById('jinjafx_input'), {
+                      keyboard: false
+                    });
+                    jinput.show();
                     return false;
                   }
                 }
@@ -308,6 +334,7 @@ function getStatusText(code) {
             }
           }
           catch (e) {
+            console.log(e);
             set_status("darkred", "ERROR", '[vars.yml] ' + e);
             return false;
           }
@@ -317,7 +344,6 @@ function getStatusText(code) {
       else if ((method === "export") || (method === "get_link") || (method === "update_link")) {
         if ((method === "update_link") && !dirty) {
           set_status("#e64c00", "OK", 'No Changes Detected');
-          fe.focus();
           return false;
         }
   
@@ -358,6 +384,7 @@ function getStatusText(code) {
       }
     }
     catch (ex) {
+      console.log(ex);
       set_status("darkred", "ERROR", "Invalid Character Encoding in DataTemplate");
       clear_wait();
     }
@@ -402,12 +429,14 @@ function getStatusText(code) {
           window.removeEventListener('beforeunload', onBeforeUnload);
           window.location.href = window.location.pathname + "?dt=" + this.responseText.trim();
         }
-        document.title = 'JinjaFx';
+        document.title = 'JinjaFx - Jinja2 Templating Tool';
         dirty = false;
       }
       else if (this.status == 401) {
         protect_action = 2;
-        $("#protect_input").modal("show");
+        new bootstrap.Modal(document.getElementById('protect_input'), {
+          keyboard: false
+        }).show();
         return false;
       }
       else if (this.status == 409) {
@@ -431,7 +460,15 @@ function getStatusText(code) {
   
     xHR.timeout = 10000;
     xHR.setRequestHeader("Content-Type", "application/json");
-    xHR.send(JSON.stringify(dt));
+
+    var rd = JSON.stringify(dt);
+    if (rd.length > 1024) {
+      xHR.setRequestHeader("Content-Encoding", "gzip");
+      xHR.send(pako.gzip(rd));
+    }
+    else {
+      xHR.send(rd);
+    }
   }
   
   function try_to_load() {
@@ -444,7 +481,9 @@ function getStatusText(code) {
         xHR.onload = function() {
           if (this.status === 401) {
             protect_action = 1;
-            $("#protect_input").modal("show");
+            new bootstrap.Modal(document.getElementById('protect_input'), {
+              keyboard: false
+            }).show();
             return false;
           }
           else if (this.status === 200) {
@@ -474,6 +513,7 @@ function getStatusText(code) {
               window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')) + '?dt=' + dt_id);
             }
             catch (e) {
+              console.log(e);
               set_status("darkred", "INTERNAL ERROR", e);
               window.history.replaceState({}, document.title, window.location.href.substr(0, window.location.href.indexOf('?')));
             }
@@ -516,6 +556,7 @@ function getStatusText(code) {
       }
     }
     catch (ex) {
+      console.log(ex);
       set_status("darkred", "ERROR", ex);
       document.getElementById('lbuttons').classList.remove('d-none');
       loaded = true; onChange(true);
@@ -693,7 +734,7 @@ function getStatusText(code) {
     document.getElementById("csv").onclick = function() {
       window.cmData.getWrapperElement().style.display = 'block';
       document.getElementById("csv").style.display = 'none';
-      document.getElementById(dicon).style.display = 'block';
+      document.getElementById(dicon).classList.remove('d-none');
       window.cmData.refresh();
       window.cmData.focus();
       csv_on = false;
@@ -739,16 +780,17 @@ function getStatusText(code) {
       reset_icons();
       hsplit.setSizes([100, 0]);
       vsplit.setSizes([100, 0]);
-      document.getElementById('ldata').style.display = 'none';
-      document.getElementById('ldata2').style.display = 'block';
+
+      document.getElementById('ldata').classList.add('d-none');
+      document.getElementById('ldata2').classList.remove('d-none');
       window.cmData.focus();
       dicon = 'ldata2';
     };
     document.getElementById('ldata2').onclick = function() {
       hsplit.setSizes(hsize);
       vsplit.setSizes(vsize);
-      document.getElementById('ldata2').style.display = 'none';
-      document.getElementById('ldata').style.display = 'block';
+      document.getElementById('ldata2').classList.add('d-none');
+      document.getElementById('ldata').classList.remove('d-none');
       window.cmData.focus();
       dicon = 'ldata';
     };
@@ -762,15 +804,15 @@ function getStatusText(code) {
       reset_icons();
       hsplit.setSizes([0, 100]);
       vsplit.setSizes([100, 0]);
-      document.getElementById('lvars').style.display = 'none';
-      document.getElementById('lvars2').style.display = 'block';
+      document.getElementById('lvars').classList.add('d-none');
+      document.getElementById('lvars2').classList.remove('d-none');
       window.cmVars.focus();
     };
     document.getElementById('lvars2').onclick = function() {
       hsplit.setSizes(hsize);
       vsplit.setSizes(vsize);
-      document.getElementById('lvars2').style.display = 'none';
-      document.getElementById('lvars').style.display = 'block';
+      document.getElementById('lvars2').classList.add('d-none');
+      document.getElementById('lvars').classList.remove('d-none');
       window.cmVars.focus();
     };
 
@@ -782,19 +824,19 @@ function getStatusText(code) {
       cflag = true;
       reset_icons();
       vsplit.setSizes([0, 100]);
-      document.getElementById('ltemplate').style.display = 'none';
-      document.getElementById('ltemplate2').style.display = 'block';
+      document.getElementById('ltemplate').classList.add('d-none');
+      document.getElementById('ltemplate2').classList.remove('d-none');
       window.cmTemplate.focus();
     };
     document.getElementById('ltemplate2').onclick = function() {
       hsplit.setSizes(hsize);
       vsplit.setSizes(vsize);
-      document.getElementById('ltemplate2').style.display = 'none';
-      document.getElementById('ltemplate').style.display = 'block';
+      document.getElementById('ltemplate2').classList.add('d-none');
+      document.getElementById('ltemplate').classList.remove('d-none');
       window.cmTemplate.focus();
     };
 
-    $('#jinjafx_input').on('shown.bs.modal', function() {
+    document.getElementById('jinjafx_input').addEventListener('shown.bs.modal', function (e) {
       var focusable = document.getElementById('jinjafx_input_form').querySelectorAll('input,select');
       if (focusable.length) {
         focusable[0].focus();
@@ -812,7 +854,7 @@ function getStatusText(code) {
     document.getElementById('ml-input-ok').onclick = function(e) {
       if (document.getElementById('input_form').checkValidity() !== false) {
         e.preventDefault();
-        $("#jinjafx_input").modal("hide");
+        jinput.hide();
 
         var vars = {};
         document.getElementById('input_form').querySelectorAll('input,select').forEach(function(e, i) {
@@ -851,11 +893,11 @@ function getStatusText(code) {
       }
     };
 
-    $('#jinjafx_input').on('hidden.bs.modal', function() {
+    document.getElementById('jinjafx_input').addEventListener('hidden.bs.modal', function (e) {
       fe.focus();
     });
 
-    $('#vault_input').on('shown.bs.modal', function() {
+    document.getElementById('vault_input').addEventListener('shown.bs.modal', function (e) {
       document.getElementById("vault").focus();
     });
 
@@ -875,7 +917,7 @@ function getStatusText(code) {
       }
     };
 
-    $('#protect_dt').on('shown.bs.modal', function() {
+    document.getElementById('protect_dt').addEventListener('shown.bs.modal', function (e) {
       document.getElementById("password_open1").focus();
     });
 
@@ -920,7 +962,7 @@ function getStatusText(code) {
       }
     };
 
-    $("#protect_dt").on("hidden.bs.modal", function () {
+    document.getElementById('protect_dt').addEventListener('hidden.bs.modal', function (e) {
       document.getElementById("password_open1").value = '';
       document.getElementById("password_open2").value = '';
       document.getElementById("password_open2").disabled = true;
@@ -930,7 +972,7 @@ function getStatusText(code) {
       fe.focus();
     });
 
-    $('#protect_input').on('shown.bs.modal', function() {
+    document.getElementById('protect_input').addEventListener('shown.bs.modal', function (e) {
       document.getElementById("in_protect").focus();
       protect_ok = false;
     });
@@ -945,7 +987,7 @@ function getStatusText(code) {
       }
     };
 
-    $("#protect_input").on("hidden.bs.modal", function () {
+    document.getElementById('protect_input').addEventListener('hidden.bs.modal', function (e) {
       if (protect_ok == true) {
         dt_password = document.getElementById("in_protect").value;
         if (dt_password.match(/\S/)) {
@@ -981,7 +1023,7 @@ function getStatusText(code) {
       clear_wait();
     });
 
-    $('#dataset_input').on('shown.bs.modal', function() {
+    document.getElementById('dataset_input').addEventListener('shown.bs.modal', function (e) {
       document.getElementById("ds_name").focus();
     });
 
@@ -1002,7 +1044,6 @@ function getStatusText(code) {
       }
       else {
         set_status("darkred", "ERROR", "Invalid Data Set Name");
-        fe.focus();
       }
     };
 
@@ -1139,13 +1180,13 @@ function getStatusText(code) {
   
   function reset_icons() {
     if (!csv_on) {
-      document.getElementById('ldata2').style.display = 'none';
-      document.getElementById('ldata').style.display = 'block';
+      document.getElementById('ldata2').classList.add('d-none');
+      document.getElementById('ldata').classList.remove('d-none');
     }
-    document.getElementById('lvars2').style.display = 'none';
-    document.getElementById('lvars').style.display = 'block';
-    document.getElementById('ltemplate2').style.display = 'none';
-    document.getElementById('ltemplate').style.display = 'block';
+    document.getElementById('lvars2').classList.add('d-none');
+    document.getElementById('lvars').classList.remove('d-none');
+    document.getElementById('ltemplate2').classList.add('d-none');
+    document.getElementById('ltemplate').classList.remove('d-none');
     dicon = 'ldata';
   }
   
@@ -1192,8 +1233,8 @@ function getStatusText(code) {
     var delim = new RegExp(cc > tc ? '[ \\t]*,[ \\t]*' : ' *\\t *');
     var hrow = datarows[0].split(delim);
   
-    var table = '<table class="table table-sm">';
-    table += '<thead><tr class="table-secondary">';
+    var table = '<table class="table table-hover table-sm">';
+    table += '<thead><tr>';
     for (var col = 0; col < hrow.length; col++) {
       table += '<th>' + quote(hrow[col]) + '</th>';
     }
@@ -1225,8 +1266,8 @@ function getStatusText(code) {
     });
     if (datarows.length > 1) {
       document.getElementById("csv").innerHTML = get_csv_astable(datarows);
-      document.getElementById("ldata").style.display = 'none';
-      document.getElementById("ldata2").style.display = 'none';
+      document.getElementById('ldata').classList.add('d-none');
+      document.getElementById('ldata2').classList.add('d-none');
       document.getElementById("csv").style.display = 'block';
       window.cmData.getWrapperElement().style.display = 'none';
       csv_on = true;
@@ -1234,7 +1275,7 @@ function getStatusText(code) {
     else {
       window.cmData.getWrapperElement().style.display = 'block';
       document.getElementById("csv").style.display = 'none';
-      document.getElementById(dicon).style.display = 'block';
+      document.getElementById(dicon).classList.remove('d-none');
       window.cmData.refresh();
       csv_on = false;
     }
@@ -1348,6 +1389,7 @@ function getStatusText(code) {
       loaded = true;
     }
     catch (ex) {
+      console.log(ex);
       set_status("darkred", "ERROR", ex);
       loaded = true; onChange(true);
     }
@@ -1373,6 +1415,7 @@ function getStatusText(code) {
       }
     }
     catch (ex) {
+      console.log(ex);
       set_status("darkred", "ERROR", ex);
     }
   }

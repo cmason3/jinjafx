@@ -9,7 +9,8 @@ RUN set -eux; \
 apt-get update; \
 apt-get install -y --no-install-recommends git; \
 
-useradd -m jinjafx -d /opt/jinjafx -k /dev/null; \
+groupadd -g 99 -r jinjafx; \
+useradd -m jinjafx -u 99 -g 99 -d /opt/jinjafx -k /dev/null; \
 
 runuser -u jinjafx -- /usr/local/bin/python3 -m pip --disable-pip-version-check --no-cache-dir install --user --upgrade jinja2~=3.0 ansible-core~=2.11 netaddr requests cryptography; \
 runuser -u jinjafx -- ansible-galaxy collection install --upgrade ansible.netcommon; \

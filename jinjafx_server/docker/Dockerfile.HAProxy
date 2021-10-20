@@ -1,5 +1,5 @@
 FROM docker.io/library/haproxy:2.3
 
-USER root
+ADD --chmod=644 https://raw.githubusercontent.com/cmason3/jinjafx/main/jinjafx_server/docker/haproxy.cfg /usr/local/etc/haproxy/
 
-ADD https://raw.githubusercontent.com/cmason3/jinjafx/main/jinjafx_server/docker/haproxy.cfg /usr/local/etc/haproxy/
+USER haproxy
