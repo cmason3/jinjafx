@@ -133,7 +133,6 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
         fpath = '/index.html'
 
       if re.search(r'^/get_dt/[A-Za-z0-9_-]{1,24}$', fpath):
-        cache = False
         dt = ''
 
         self.critical = True
@@ -248,13 +247,14 @@ class JinjaFxRequest(BaseHTTPRequestHandler):
       self.send_header('X-Content-Type-Options', 'nosniff')
 
     if not cache:
-      self.send_header('Cache-Control', 'no-store')
+      self.send_header('Cache-Control', 'no-store, max-age=0')
 
     elif r[1] == 200 or r[1] == 304:
       if r[1] == 200:
         self.send_header('Content-Security-Policy', "frame-ancestors 'none'")
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
 
+      self.send_header('Cache-Control', 'max-age=0, must-revalidate')
       self.send_header('ETag', etag)
 
     self.end_headers()
