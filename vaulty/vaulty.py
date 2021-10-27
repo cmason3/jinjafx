@@ -22,27 +22,28 @@ from cryptography.exceptions import InvalidTag
 
 class Vaulty():
   def __init__(self):
-    self.prefix = b'$VAULTY;'
-    self.kcache = {}
+    self.__version__ = '1.0'
+    self.__prefix = b'$VAULTY;'
+    self.__kcache = {}
 
-  def derive_key(self, password, salt=None):
+  def __derive_key(self, password, salt=None):
     ckey = (password, salt)
   
-    if ckey in self.kcache:
-      return self.kcache[ckey]
+    if ckey in self.__kcache:
+      return self.__kcache[ckey]
   
     if salt is None:
       salt = os.urandom(16)
       
     key = Scrypt(salt, 32, 2**16, 8, 1).derive(password)
-    self.kcache[ckey] = [salt, key]
+    self.__kcache[ckey] = [salt, key]
     return salt, key
   
   def encrypt(self, plaintext, password, cols=None):
-    salt, key = self.derive_key(password)
+    salt, key = self.__derive_key(password)
     nonce = os.urandom(12)
     ciphertext = ChaCha20Poly1305(key).encrypt(nonce, plaintext, None)
-    r = self.prefix + base64.b64encode(b'\x01' + salt + nonce + ciphertext)
+    r = self.__prefix + base64.b64encode(b'\x01' + salt + nonce + ciphertext)
 
     if cols is not None:
       r = b'\n'.join([r[i:i + cols] for i in range(0, len(r), cols)])
@@ -51,10 +52,11 @@ class Vaulty():
   
   def decrypt(self, ciphertext, password):
     try:
-      if ciphertext.startswith(self.prefix):
+      ciphertext = ciphertext.strip()
+      if ciphertext.startswith(self.__prefix):
         ciphertext = base64.b64decode(ciphertext[8:])
         if ciphertext.startswith(b'\x01') and len(ciphertext) > 29:
-          key = self.derive_key(password, ciphertext[1:17])[1]
+          key = self.__derive_key(password, ciphertext[1:17])[1]
           return ChaCha20Poly1305(key).decrypt(ciphertext[17:29], ciphertext[29:], None)
 
     except InvalidTag:
