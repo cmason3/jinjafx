@@ -81,10 +81,10 @@ class Vaulty():
 
 
 def args():
-  if 2 <= len(sys.argv) <= 3:
+  if len(sys.argv) >= 2:
     m = sys.argv[1].lower()
     if m == 'encrypt' or m == 'decrypt':
-      if len(sys.argv) == 2 or os.path.isfile(sys.argv[2]):
+      if len(sys.argv) == 2 or all([os.path.isfile(f) for f in sys.argv[2:]]):
         return m
 
 def main(m=args(), cols=80):
@@ -94,35 +94,47 @@ def main(m=args(), cols=80):
 
     password = getpass.getpass('enter password: ').encode('utf-8')
     if len(password) > 0:
+      v = Vaulty()
+
       if m == 'encrypt':
         if password == getpass.getpass('verify password: ').encode('utf-8'):
           if len(sys.argv) == 2:
-            print(Vaulty().encrypt(data, password, cols).decode('utf-8'), end='')
+            print(v.encrypt(data, password, cols).decode('utf-8'), flush=True, end='')
       
           else:
-            Vaulty().encrypt_file(sys.argv[2], password, cols)
+            print()
+            for f in sys.argv[2:]:
+              print('encrypting ' + f + '... ', flush=True, end='')
+              v.encrypt_file(f, password, cols)
+              print('ok')
   
         else:
-          print('error[' + str(sys._getframe().f_lineno) + ']: password verification failed', file=sys.stderr)
+          print('error: password verification failed', file=sys.stderr)
   
       elif m == 'decrypt':
         if len(sys.argv) == 2:
-          plaintext = Vaulty().decrypt(data, password)
+          plaintext = v.decrypt(data, password)
           if plaintext is not None:
-            print(plaintext.decode('utf-8'), end='')
+            print(plaintext.decode('utf-8'), flush=True, end='')
   
           else:
-            print('error[' + str(sys._getframe().f_lineno) + ']: invalid password or data not encrypted', file=sys.stderr)
+            print('error: invalid password or data not encrypted', file=sys.stderr)
   
         else:
-          if Vaulty().decrypt_file(sys.argv[2], password) is None:
-            print('error[' + str(sys._getframe().f_lineno) + ']: invalid password or file not encrypted', file=sys.stderr)
+          print()
+          for f in sys.argv[2:]:
+            print('decrypting ' + f + '... ', flush=True, end='')
+            if v.decrypt_file(f, password) is None:
+              print('failed\nerror: invalid password or file not encrypted', file=sys.stderr)
+
+            else:
+              print('ok')
 
     else:
-      print('error[' + str(sys._getframe().f_lineno) + ']: password is mandatory', file=sys.stderr)
+      print('error: password is mandatory', file=sys.stderr)
 
   else:
-    print('usage: vaulty encrypt|decrypt [file]', file=sys.stderr)
+    print('usage: vaulty encrypt|decrypt [file1[ file2[ ...]]]', file=sys.stderr)
 
 
 if __name__ == '__main__':
