@@ -67,7 +67,6 @@ class Vaulty():
       ciphertext = self.encrypt(fh.read(), password, cols)
 
     if ciphertext is not None:
-      os.system('shred -u ' + filepath)
       with open(filepath, 'wb') as fh:
         return fh.write(ciphertext)
 
