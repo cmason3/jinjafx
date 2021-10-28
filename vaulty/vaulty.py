@@ -128,5 +128,6 @@ def main(m=args(), cols=80):
 if __name__ == '__main__':
   try:
     main()
+
   except KeyboardInterrupt:
     pass
