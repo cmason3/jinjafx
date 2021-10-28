@@ -22,7 +22,7 @@ from cryptography.exceptions import InvalidTag
 
 class Vaulty():
   def __init__(self):
-    self.__version__ = '1.0'
+    self.__version__ = '1.0.0'
     self.__prefix = b'$VAULTY;'
     self.__kcache = {}
 
