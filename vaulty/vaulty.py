@@ -18,6 +18,7 @@
 import sys, os, base64, getpass
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidTag
 
 class Vaulty():
@@ -35,7 +36,7 @@ class Vaulty():
     if salt is None:
       salt = os.urandom(16)
       
-    key = Scrypt(salt, 32, 2**16, 8, 1).derive(password)
+    key = Scrypt(salt, 32, 2**16, 8, 1, default_backend()).derive(password)
     self.__kcache[ckey] = [salt, key]
     return salt, key
   
