@@ -28,14 +28,14 @@ class Vaulty():
     self.__kcache = {}
 
   def __derive_key(self, password, salt=None):
+    if salt is None:
+      salt = os.urandom(16)
+      
     ckey = (password, salt)
   
     if ckey in self.__kcache:
       return self.__kcache[ckey]
   
-    if salt is None:
-      salt = os.urandom(16)
-      
     key = Scrypt(salt, 32, 2**16, 8, 1, default_backend()).derive(password)
     self.__kcache[ckey] = [salt, key]
     return salt, key
