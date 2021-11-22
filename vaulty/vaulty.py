@@ -25,6 +25,7 @@ class Vaulty():
   def __init__(self):
     self.__version__ = '1.0.0'
     self.__prefix = b'$VAULTY;'
+    self.__extension = '.vaulty'
     self.__kcache = {}
 
   def __derive_key(self, password, salt=None):
@@ -69,7 +70,9 @@ class Vaulty():
 
     if ciphertext is not None:
       with open(filepath, 'wb') as fh:
-        return fh.write(ciphertext)
+        fh.write(ciphertext)
+      os.rename(filepath, filepath + self.__extension)
+      return True
 
   def decrypt_file(self, filepath, password):
     with open(filepath, 'rb') as fh:
@@ -77,7 +80,10 @@ class Vaulty():
 
     if plaintext is not None:
       with open(filepath, 'wb') as fh:
-        return fh.write(plaintext)
+        fh.write(plaintext)
+      if filepath.endswith(self.__extension):
+        os.rename(filepath, filepath[:-len(self.__extension)])
+      return True
 
 
 def args():
