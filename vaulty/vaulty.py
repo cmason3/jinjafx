@@ -24,8 +24,8 @@ from cryptography.exceptions import InvalidTag
 class Vaulty():
   def __init__(self):
     self.__version__ = '1.0.0'
-    self.__prefix = b'$VAULTY;'
-    self.__extension = '.vaulty'
+    self.__prefix = '$VAULTY;'
+    self.__extension = '.vy'
     self.__kcache = {}
 
   def __derive_key(self, password, salt=None):
@@ -45,7 +45,7 @@ class Vaulty():
     salt, key = self.__derive_key(password)
     nonce = os.urandom(12)
     ciphertext = ChaCha20Poly1305(key).encrypt(nonce, plaintext, None)
-    r = self.__prefix + base64.b64encode(b'\x01' + salt + nonce + ciphertext)
+    r = self.__prefix.encode('utf-8') + base64.b64encode(b'\x01' + salt + nonce + ciphertext)
 
     if cols is not None:
       r = b'\n'.join([r[i:i + cols] for i in range(0, len(r), cols)])
@@ -55,7 +55,7 @@ class Vaulty():
   def decrypt(self, ciphertext, password):
     try:
       ciphertext = ciphertext.strip()
-      if ciphertext.startswith(self.__prefix):
+      if ciphertext.startswith(self.__prefix.encode('utf-8')):
         ciphertext = base64.b64decode(ciphertext[8:])
         if ciphertext.startswith(b'\x01') and len(ciphertext) > 29:
           key = self.__derive_key(password, ciphertext[1:17])[1]
@@ -71,6 +71,7 @@ class Vaulty():
     if ciphertext is not None:
       with open(filepath, 'wb') as fh:
         fh.write(ciphertext)
+
       os.rename(filepath, filepath + self.__extension)
       return True
 
@@ -81,29 +82,33 @@ class Vaulty():
     if plaintext is not None:
       with open(filepath, 'wb') as fh:
         fh.write(plaintext)
+
       if filepath.endswith(self.__extension):
         os.rename(filepath, filepath[:-len(self.__extension)])
+
       return True
 
 
 def args():
   if len(sys.argv) >= 2:
     m = sys.argv[1].lower()
-    if m == 'encrypt' or m == 'decrypt':
-      if len(sys.argv) == 2 or all([os.path.isfile(f) for f in sys.argv[2:]]):
-        return m
+    if len(sys.argv) == 2 or all([os.path.isfile(f) for f in sys.argv[2:]]):
+      if m == 'encrypt'[0:len(m)]:
+        return 'encrypt'
+      elif m == 'decrypt'[0:len(m)]:
+        return 'decrypt'
 
 def main(m=args(), cols=80):
   if m is not None:
     if len(sys.argv) == 2:
       data = sys.stdin.read().encode('utf-8')
 
-    password = getpass.getpass('enter password: ').encode('utf-8')
+    password = getpass.getpass('Vaulty Password: ').encode('utf-8')
     if len(password) > 0:
       v = Vaulty()
 
       if m == 'encrypt':
-        if password == getpass.getpass('verify password: ').encode('utf-8'):
+        if password == getpass.getpass('Verify Password: ').encode('utf-8'):
           if len(sys.argv) == 2:
             print(v.encrypt(data, password, cols).decode('utf-8'), flush=True, end='')
       
@@ -112,10 +117,10 @@ def main(m=args(), cols=80):
             for f in sys.argv[2:]:
               print('encrypting ' + f + '... ', flush=True, end='')
               v.encrypt_file(f, password, cols)
-              print('ok')
+              print('\x1b[1;32mok\x1b[0m')
   
         else:
-          print('error: password verification failed', file=sys.stderr)
+          print('\x1b[1;31merror: password verification failed\x1b[0m', file=sys.stderr)
   
       elif m == 'decrypt':
         if len(sys.argv) == 2:
@@ -124,23 +129,23 @@ def main(m=args(), cols=80):
             print(plaintext.decode('utf-8'), flush=True, end='')
   
           else:
-            print('error: invalid password or data not encrypted', file=sys.stderr)
+            print('\x1b[1;31merror: invalid password or data not encrypted\x1b[0m', file=sys.stderr)
   
         else:
           print()
           for f in sys.argv[2:]:
             print('decrypting ' + f + '... ', flush=True, end='')
             if v.decrypt_file(f, password) is None:
-              print('failed\nerror: invalid password or file not encrypted', file=sys.stderr)
+              print('\x1b[1;31mfailed\nerror: invalid password or file not encrypted\x1b[0m', file=sys.stderr)
 
             else:
-              print('ok')
+              print('\x1b[1;32mok\x1b[0m')
 
     else:
-      print('error: password is mandatory', file=sys.stderr)
+      print('\x1b[1;31merror: password is mandatory\x1b[0m', file=sys.stderr)
 
   else:
-    print('usage: vaulty encrypt|decrypt [file1[ file2[ ...]]]', file=sys.stderr)
+    print('usage: ' + os.path.basename(sys.argv[0]) + ' encrypt|decrypt [file1[ file2[ ...]]]', file=sys.stderr)
 
 
 if __name__ == '__main__':
