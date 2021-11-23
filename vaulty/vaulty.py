@@ -93,9 +93,9 @@ def args():
   if len(sys.argv) >= 2:
     m = sys.argv[1].lower()
     if len(sys.argv) == 2 or all([os.path.isfile(f) for f in sys.argv[2:]]):
-      if m == 'encrypt'[0:len(m)]:
+      if m.lower() == 'encrypt'[0:len(m)]:
         return 'encrypt'
-      elif m == 'decrypt'[0:len(m)]:
+      elif m.lower() == 'decrypt'[0:len(m)]:
         return 'decrypt'
 
 def main(m=args(), cols=80):
