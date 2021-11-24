@@ -98,17 +98,15 @@ def args():
       elif m.lower() == 'decrypt'[0:len(m)]:
         return 'decrypt'
 
-def main(m=args(), cols=80):
+def main(m=args(), cols=80, v = Vaulty()):
   if m is not None:
     if len(sys.argv) == 2:
       data = sys.stdin.read().encode('utf-8')
 
     password = getpass.getpass('Vaulty Password: ').encode('utf-8')
     if len(password) > 0:
-      v = Vaulty()
-
       if m == 'encrypt':
-        if password == getpass.getpass('Verify Password: ').encode('utf-8'):
+        if password == getpass.getpass('Password Verification: ').encode('utf-8'):
           if len(sys.argv) == 2:
             print(v.encrypt(data, password, cols).decode('utf-8'), flush=True, end='')
       
@@ -116,8 +114,13 @@ def main(m=args(), cols=80):
             print()
             for f in sys.argv[2:]:
               print('encrypting ' + f + '... ', flush=True, end='')
-              v.encrypt_file(f, password, cols)
-              print('\x1b[1;32mok\x1b[0m')
+
+              if os.path.abspath(sys.argv[0]) == os.path.abspath(f):
+                print('\x1b[1;31mfailed\nerror: file prohibited from being encrypted\x1b[0m', file=sys.stderr)
+                
+              else:
+                v.encrypt_file(f, password, cols)
+                print('\x1b[1;32mok\x1b[0m')
   
         else:
           print('\x1b[1;31merror: password verification failed\x1b[0m', file=sys.stderr)
