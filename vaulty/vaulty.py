@@ -71,15 +71,16 @@ class Vaulty():
       pass
 
   def encrypt_file(self, filepath, password, cols=None):
-    with open(filepath, 'rb') as fh:
-      ciphertext = self.encrypt(fh.read(), password, cols, False)
+    if os.path.getsize(filepath) < 2**31:
+      with open(filepath, 'rb') as fh:
+        ciphertext = self.encrypt(fh.read(), password, cols, False)
 
-    if ciphertext is not None:
-      with open(filepath, 'wb') as fh:
-        fh.write(ciphertext)
+      if ciphertext is not None:
+        with open(filepath, 'wb') as fh:
+          fh.write(ciphertext)
 
-      os.rename(filepath, filepath + self.__extension)
-      return True
+        os.rename(filepath, filepath + self.__extension)
+        return True
 
   def decrypt_file(self, filepath, password):
     with open(filepath, 'rb') as fh:
@@ -125,8 +126,11 @@ def main(m=args(), cols=80, v = Vaulty()):
                 print('\x1b[1;31mfailed\nerror: file prohibited from being encrypted\x1b[0m', file=sys.stderr)
                 
               else:
-                v.encrypt_file(f, password, cols)
-                print('\x1b[1;32mok\x1b[0m')
+                if v.encrypt_file(f, password, cols) is None:
+                  print('\x1b[1;31mfailed\nerror: file is too big to be encrypted (max size is <2gb)\x1b[0m', file=sys.stderr)
+
+                else:
+                  print('\x1b[1;32mok\x1b[0m')
   
         else:
           print('\x1b[1;31merror: password verification failed\x1b[0m', file=sys.stderr)
