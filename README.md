@@ -209,7 +209,7 @@ This filter allows IP address manipulation and is documented in [playbooks_filte
 
 ### Ansible Tests
 
-In additional to Ansible Filters, Ansible also introduces [tests](https://docs.ansible.com/ansible/latest/user_guide/playbooks_tests.html) that can be performed with various filters (e.g. `select` and `select_attr`) - the following "Core" Ansible tests have been included in JinjaFx: 'regex', `match` and `search`.
+In additional to Ansible Filters, Ansible also introduces [tests](https://docs.ansible.com/ansible/latest/user_guide/playbooks_tests.html) that can be performed with various filters (e.g. `select` and `select_attr`) - the following "Core" Ansible tests have been included in JinjaFx: `regex`, `match` and `search`.
 
 ### JinjaFx Variables
 
