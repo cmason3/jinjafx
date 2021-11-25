@@ -428,7 +428,3 @@ This function is used to set a global variable that will persist throughout the 
 - <b><code>jinjafx.getg("key", ["default"])</code></b>
 
 This function is used to get a global variable that has been set with `jinjafx.setg()` - optionally you can specify a default value that is returned if the `key` doesn't exist.
-
-- <b><code>jinjafx.nslookup("query", [family=46])</code></b>
-
-This function is used to perform a forward or reverse DNS lookup - it will return the result as a list or `None` if it can't resolve the query - for reverse lookups it will always be a list with a single entry. When performing forward lookups the "family" field can be set to "4" or "6" to force an IPv4 or IPv6 only lookup - by default it will return both if they exist. Be warned that this function can cause delays as it uses the `getnameinfo` and `getaddrinfo` system calls, which don't support a user defined timeout (it uses the defaults specified in `resolv.h` of 2 x 5 seconds per server in `/etc/resolv.conf`).
