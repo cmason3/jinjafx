@@ -12,7 +12,7 @@ setup(
   description="Jinja2 Templating Tool",
   long_description=README,
   long_description_content_type="text/markdown",
-  url="https://github.com/cmason3/jinjafx",
+  url="https://jinjafx.io",
   author="Chris Mason",
   author_email="chris@netnix.org",
   license="MIT",
