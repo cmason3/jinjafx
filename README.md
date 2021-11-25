@@ -1,8 +1,8 @@
 ![Release](https://img.shields.io/github/v/release/cmason3/jinjafx)
+[![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [<img src="https://img.shields.io/badge/@-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
-[![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
 
 ## JinjaFx - Jinja2 Templating Tool
 
