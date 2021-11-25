@@ -2,6 +2,7 @@
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [<img src="https://img.shields.io/badge/@-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
+[![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
 
 ## JinjaFx - Jinja2 Templating Tool
 
@@ -13,10 +14,16 @@ JinjaFx differs from the Ansible "template" module as it allows data to be speci
 
 Python 2 support has been officially deprecated and won't work without modification as Python 2 is now end of life and a security risk.
 
+### Installation
+
+```
+python3 -m pip install --upgrade --user jinjafx
+```
+
 ### JinjaFx Usage
 
 ```
- jinjafx.py (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]
+ jinjafx (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]
    -t <template.j2>              - specify a Jinja2 template
    -d <data.csv>                 - specify row/column based data (comma or tab separated)
    -dt <dt.yml>                  - specify a JinjaFx DataTemplate (contains template and data)
