@@ -15,9 +15,9 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, socket, jinja2, yaml, argparse, re, copy, getpass, traceback
+import sys, os, jinja2, yaml, argparse, re, copy, getpass, traceback
 
-__version__ = '1.7.0'
+__version__ = '1.7.1'
 jinja2_filters = []
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -476,11 +476,9 @@ class JinjaFx():
       'first': self.jfx_first,
       'last': self.jfx_last,
       'fields': self.jfx_fields,
-      # 'encrypt': self.jfx_encrypt,
-      # 'decrypt': self.jfx_decrypt,
       'setg': self.jfx_setg,
       'getg': self.jfx_getg,
-      'nslookup': self.jfx_nslookup,
+#      'nslookup': self.jfx_nslookup,
       'rows': max([0, len(self.g_datarows) - 1]),
       'data': [r[1:] if isinstance(r[0], int) else r for r in self.g_datarows]
     }})
@@ -778,29 +776,29 @@ class JinjaFx():
     return self.g_dict.get('_val_' + str(key), default)
 
 
-  def jfx_nslookup(self, v, family=46):
-    try:
-      if re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I): # IPv6
-        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
-
-      elif re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v): # IPv4
-        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
-
-      else:
-        if int(family) == 46:
-          s = socket.getaddrinfo(v, 0, 0, socket.SOCK_STREAM)
-          return [e[4][0] for e in s]
-        elif int(family) == 4:
-          s = socket.getaddrinfo(v, 0, socket.AF_INET, socket.SOCK_STREAM)
-          return [e[4][0] for e in s]
-        elif int(family) == 6:
-          s = socket.getaddrinfo(v, 0, socket.AF_INET6, socket.SOCK_STREAM)
-          return [e[4][0] for e in s]
-
-    except:
-      pass
-
-    return None
+#  def jfx_nslookup(self, v, family=46):
+#    try:
+#      if re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I): # IPv6
+#        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
+#
+#      elif re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v): # IPv4
+#        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
+#
+#      else:
+#        if int(family) == 46:
+#          s = socket.getaddrinfo(v, 0, 0, socket.SOCK_STREAM)
+#          return [e[4][0] for e in s]
+#        elif int(family) == 4:
+#          s = socket.getaddrinfo(v, 0, socket.AF_INET, socket.SOCK_STREAM)
+#          return [e[4][0] for e in s]
+#        elif int(family) == 6:
+#          s = socket.getaddrinfo(v, 0, socket.AF_INET6, socket.SOCK_STREAM)
+#          return [e[4][0] for e in s]
+#
+#    except:
+#      pass
+#
+#    return None
 
 
   def jfx_regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
