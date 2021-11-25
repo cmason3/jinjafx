@@ -22,7 +22,7 @@ setup(
   ],
   packages=["jinjafx"],
   include_package_data=True,
-  install_requires=["jinja2", "ansible-core", "netaddr"],
+  install_requires=["jinja2", "netaddr"],
   entry_points={
     "console_scripts": [
       "jinjafx=jinjafx:main",
