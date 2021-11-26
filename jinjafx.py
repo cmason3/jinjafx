@@ -18,20 +18,12 @@
 import sys, os, jinja2, yaml, argparse, re, copy, getpass, traceback
 
 __version__ = '1.7.1'
-jinja2_filters = []
-
-class ArgumentParser(argparse.ArgumentParser):
-  def error(self, message):
-    if '-q' not in sys.argv:
-      print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
-      print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
-    raise Exception(message)
-
+__jinja2_filters = []
 
 def import_filters(errc = 0):
   try:
     from ansible.plugins.filter import core
-    jinja2_filters.append(core.FilterModule().filters())
+    __jinja2_filters.append(core.FilterModule().filters())
   except Exception:
     print('warning: unable to import ansible \'core\' filters - requires ansible', file=sys.stderr)
     errc += 1
@@ -52,17 +44,16 @@ def import_filters(errc = 0):
       filters[k] = v
       filters['ansible.netcommon.' + k] = v
 
-    jinja2_filters.append(filters)
+    __jinja2_filters.append(filters)
 
   except Exception:
     print('warning: unable to import ansible \'ipaddr\' filter - requires ansible and netaddr', file=sys.stderr)
     errc += 1
 
-  if errc > 0:
-    print()
+  return errc
 
 
-def format_bytes(b):
+def __format_bytes(b):
   for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
     if b >= 1000:
       b /= 1000
@@ -78,7 +69,7 @@ def main():
 
     jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]'
 
-    parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
+    parser = __ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
     group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
     group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
@@ -222,7 +213,9 @@ def main():
 
       gvars['jinjafx_input'] = jinjafx_input
 
-    import_filters()
+    if import_filters() > 0:
+      print()
+
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
     ocount = 0
 
@@ -255,7 +248,7 @@ def main():
             with open(ofile, 'w') as f:
               f.write(output)
   
-            print(format_bytes(len(output)) + ' > ' + ofile)
+            print(__format_bytes(len(output)) + ' > ' + ofile)
   
           ocount += 1
 
@@ -278,6 +271,14 @@ def main():
       print('error[' + str(sys.exc_info()[2].tb_lineno) + ']: ' + type(e).__name__ + ': ' + str(e), file=sys.stderr)
 
     sys.exit(-2)
+
+
+class __ArgumentParser(argparse.ArgumentParser):
+  def error(self, message):
+    if '-q' not in sys.argv:
+      print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
+      print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
+    raise Exception(message)
 
 
 class JinjaFx():
@@ -453,14 +454,14 @@ class JinjaFx():
 
     if isinstance(template, bytes) or isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
-      [env.filters.update(f) for f in jinja2_filters]
+      [env.filters.update(f) for f in __jinja2_filters]
       if isinstance(template, bytes):
         template = env.from_string(template.decode('utf-8'))
       else:
         template = env.from_string(template)
     else:
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
-      [env.filters.update(f) for f in jinja2_filters]
+      [env.filters.update(f) for f in __jinja2_filters]
       template = env.get_template(os.path.basename(template.name))
 
     env.tests.update({
