@@ -15,18 +15,10 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, socket, jinja2, yaml, argparse, re, copy, getpass, traceback
+import sys, os, jinja2, yaml, argparse, re, copy, getpass, traceback
 
-__version__ = '1.7.0'
+__version__ = '1.7.1'
 jinja2_filters = []
-
-class ArgumentParser(argparse.ArgumentParser):
-  def error(self, message):
-    if '-q' not in sys.argv:
-      print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
-      print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
-    raise Exception(message)
-
 
 def import_filters(errc = 0):
   try:
@@ -58,8 +50,15 @@ def import_filters(errc = 0):
     print('warning: unable to import ansible \'ipaddr\' filter - requires ansible and netaddr', file=sys.stderr)
     errc += 1
 
-  if errc > 0:
-    print()
+  return errc
+
+
+def __format_bytes(b):
+  for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
+    if b >= 1000:
+      b /= 1000
+    else:
+      return '{:.2f}'.format(b).rstrip('0').rstrip('.') + u + 'B'
 
 
 def main():
@@ -70,7 +69,7 @@ def main():
 
     jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]'
 
-    parser = ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
+    parser = __ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
     group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
     group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
@@ -214,7 +213,9 @@ def main():
 
       gvars['jinjafx_input'] = jinjafx_input
 
-    import_filters()
+    if import_filters() > 0:
+      print()
+
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
     ocount = 0
 
@@ -247,7 +248,7 @@ def main():
             with open(ofile, 'w') as f:
               f.write(output)
   
-            print(format_bytes(len(output)) + ' > ' + ofile)
+            print(__format_bytes(len(output)) + ' > ' + ofile)
   
           ocount += 1
 
@@ -257,7 +258,6 @@ def main():
 
     else:
       raise Exception('nothing to output')
-
 
   except KeyboardInterrupt:
     sys.exit(-1)
@@ -273,20 +273,20 @@ def main():
     sys.exit(-2)
 
 
-def format_bytes(b):
-  for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
-    if b >= 1000:
-      b /= 1000
-    else:
-      return '{:.2f}'.format(b).rstrip('0').rstrip('.') + u + 'B'
+class __ArgumentParser(argparse.ArgumentParser):
+  def error(self, message):
+    if '-q' not in sys.argv:
+      print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
+      print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
+    raise Exception(message)
 
 
 class JinjaFx():
   def jinjafx(self, template, data, gvars, output):
-    self.g_datarows = []
-    self.g_dict = {}
-    self.g_row = 0 
-    self.g_warnings = []
+    self.__g_datarows = []
+    self.__g_dict = {}
+    self.__g_row = 0 
+    self.__g_warnings = []
 
     outputs = {}
     delim = None
@@ -301,7 +301,7 @@ class JinjaFx():
 
       for l in data.splitlines():
         if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
-          if len(self.g_datarows) == 0:
+          if len(self.__g_datarows) == 0:
             if l.count(',') > l.count('\t'):
               delim = r'[ \t]*,[ \t]*'
               schars = ' \t'
@@ -334,21 +334,24 @@ class JinjaFx():
               
               if fields[i] == '':
                 raise Exception('empty header field detected at column position ' + str(i + 1))
+
               elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
                 raise Exception('header field at column position ' + str(i + 1) + ' contains invalid characters')
 
             if len(set(fields)) != len(fields):
               raise Exception('duplicate header field detected in data')
+
             else:
-              self.g_datarows.append(fields)
+              self.__g_datarows.append(fields)
 
             if 'jinjafx_filter' in gvars and len(gvars['jinjafx_filter']) > 0:
               for field in gvars['jinjafx_filter']:
-                jinjafx_filter[self.g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
+                jinjafx_filter[self.__g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
 
           else:
             gcount = 1
             fields = []
+
             for f in re.split(delim, l.strip(schars)):
               delta = 0
 
@@ -357,6 +360,7 @@ class JinjaFx():
                   if not re.search(r'\\' + str(gcount), l):
                     if re.search(r'\\[0-9]+', l):
                       raise Exception('parenthesis in row ' + str(rowkey) + ' at \'' + str(m.group(0)) + '\' should be escaped or removed')
+
                     else:
                       f = f[:m.start() + delta] + '\\(' + m.group(1) + '\\)' + f[m.end() + delta:]
                       delta += 2
@@ -365,8 +369,8 @@ class JinjaFx():
 
               fields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
 
-            n = len(self.g_datarows[0])
-            fields = [list(map(self.jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
+            n = len(self.__g_datarows[0])
+            fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
             recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'
 
@@ -391,10 +395,10 @@ class JinjaFx():
                 groups = []
 
                 for col in range(1, len(fields[row])):
-                  fields[row][col][0] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
+                  fields[row][col][0] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
 
                   for g in range(len(fields[row][col][1])):
-                    fields[row][col][1][g] = re.sub(recm, lambda m: self.jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
+                    fields[row][col][1][g] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
 
                   groups.append(fields[row][col][1])
 
@@ -415,11 +419,11 @@ class JinjaFx():
                       break
 
                 if include_row:
-                  self.g_datarows.append(fields[row])
+                  self.__g_datarows.append(fields[row])
 
                 row += 1
 
-      if len(self.g_datarows) <= 1:
+      if len(self.__g_datarows) <= 1:
         raise Exception('not enough data rows - need at least two')
 
     if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
@@ -432,11 +436,11 @@ class JinjaFx():
           for rx, v in field[fn].items():
             mv.append([re.compile(rx + '$'), v])
 
-          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: (self.find_re_match(mv, n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), n[self.g_datarows[0].index(fn.lstrip('+-')) + 1]), reverse=r)
+          self.__g_datarows[1:] = sorted(self.__g_datarows[1:], key=lambda n: (self.__find_re_match(mv, n[self.__g_datarows[0].index(fn.lstrip('+-')) + 1]), n[self.__g_datarows[0].index(fn.lstrip('+-')) + 1]), reverse=r)
 
         else:
           r = True if field.startswith('-') else False
-          self.g_datarows[1:] = sorted(self.g_datarows[1:], key=lambda n: n[self.g_datarows[0].index(field.lstrip('+-')) + 1], reverse=r)
+          self.__g_datarows[1:] = sorted(self.__g_datarows[1:], key=lambda n: n[self.__g_datarows[0].index(field.lstrip('+-')) + 1], reverse=r)
 
     if 'jinja2_extensions' not in gvars:
       gvars.update({ 'jinja2_extensions': [] })
@@ -461,60 +465,58 @@ class JinjaFx():
       template = env.get_template(os.path.basename(template.name))
 
     env.tests.update({
-      'regex': self.jfx_regex,
-      'match': self.jfx_match,
-      'search': self.jfx_search
+      'regex': self.__jfx_regex,
+      'match': self.__jfx_match,
+      'search': self.__jfx_search
     })
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
-      'expand': self.jfx_expand,
-      'counter': self.jfx_counter,
-      'exception': self.jfx_exception,
-      'warning': self.jfx_warning,
-      'first': self.jfx_first,
-      'last': self.jfx_last,
-      'fields': self.jfx_fields,
-      # 'encrypt': self.jfx_encrypt,
-      # 'decrypt': self.jfx_decrypt,
-      'setg': self.jfx_setg,
-      'getg': self.jfx_getg,
-      'nslookup': self.jfx_nslookup,
-      'rows': max([0, len(self.g_datarows) - 1]),
-      'data': [r[1:] if isinstance(r[0], int) else r for r in self.g_datarows]
+      'expand': self.__jfx_expand,
+      'counter': self.__jfx_counter,
+      'exception': self.__jfx_exception,
+      'warning': self.__jfx_warning,
+      'first': self.__jfx_first,
+      'last': self.__jfx_last,
+      'fields': self.__jfx_fields,
+      'setg': self.__jfx_setg,
+      'getg': self.__jfx_getg,
+#      'nslookup': self.__jfx_nslookup,
+      'rows': max([0, len(self.__g_datarows) - 1]),
+      'data': [r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows]
     }})
 
     if len(gvars) > 0:
       env.globals.update(gvars)
 
-    for row in range(1, max(2, len(self.g_datarows))):
+    for row in range(1, max(2, len(self.__g_datarows))):
       rowdata = {}
 
-      if len(self.g_datarows) > 0:
-        for col in range(len(self.g_datarows[0])):
-          rowdata.update({ self.g_datarows[0][col]: self.g_datarows[row][col + 1] })
+      if len(self.__g_datarows) > 0:
+        for col in range(len(self.__g_datarows[0])):
+          rowdata.update({ self.__g_datarows[0][col]: self.__g_datarows[row][col + 1] })
 
         env.globals['jinjafx'].update({ 'row': row })
-        self.g_row = row
+        self.__g_row = row
 
       else:
         env.globals['jinjafx'].update({ 'row': 0 })
-        self.g_row = 0
+        self.__g_row = 0
 
       try:
         content = template.render(rowdata)
 
         outputs['0:_stderr_'] = []
-        if len(self.g_warnings) > 0:
-          outputs['0:_stderr_'] = self.g_warnings
+        if len(self.__g_warnings) > 0:
+          outputs['0:_stderr_'] = self.__g_warnings
 
       except Exception as e:
         if e.args[0].startswith('[jfx_exception] '):
           e.args = (e.args[0][16:],)
         else:
-          if len(e.args) >= 1 and self.g_row != 0:
-            e.args = (e.args[0] + ' at data row ' + str(self.g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
+          if len(e.args) >= 1 and self.__g_row != 0:
+            e.args = (e.args[0] + ' at data row ' + str(self.__g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
       stack = ['0:' + env.from_string(output).render(rowdata)]
@@ -554,21 +556,21 @@ class JinjaFx():
     return outputs
 
 
-  def jfx_data_counter(self, m, orow, col, row):
+  def __jfx_data_counter(self, m, orow, col, row):
     start = m.group(1)
     increment = m.group(2)
     pad = int(m.group(3)) if m.lastindex == 3 else 0
 
     key = '_datacnt_r_' + str(orow) + '_' + str(col) + '_' + m.group()
 
-    if self.g_dict.get(key + '_' + str(row), True):
-      n = self.g_dict.get(key, int(start) - int(increment))
-      self.g_dict[key] = n + int(increment)
-      self.g_dict[key + '_' + str(row)] = False
-    return str(self.g_dict[key]).zfill(pad)
+    if self.__g_dict.get(key + '_' + str(row), True):
+      n = self.__g_dict.get(key, int(start) - int(increment))
+      self.__g_dict[key] = n + int(increment)
+      self.__g_dict[key + '_' + str(row)] = False
+    return str(self.__g_dict[key]).zfill(pad)
 
 
-  def jfx_expand(self, s, rg=False):
+  def __jfx_expand(self, s, rg=False):
     pofa = [s]
     groups = [[s]]
 
@@ -662,37 +664,37 @@ class JinjaFx():
     return [pofa, groups] if rg else pofa
 
 
-  def jfx_fandl(self, forl, fields, ffilter):
+  def __jfx_fandl(self, forl, fields, ffilter):
     fpos = []
 
-    if self.g_row == 0:
+    if self.__g_row == 0:
       return True
 
     if fields is not None:
       for f in fields:
-        if f in self.g_datarows[0]:
-          fpos.append(self.g_datarows[0].index(f) + 1)
+        if f in self.__g_datarows[0]:
+          fpos.append(self.__g_datarows[0].index(f) + 1)
         else:
           raise Exception('invalid field \'' + f + '\' passed to jinjafx.' + forl + '()')
     elif forl == 'first':
-      return True if self.g_row == 1 else False
+      return True if self.__g_row == 1 else False
     else:
-      return True if self.g_row == (len(self.g_datarows) - 1) else False
+      return True if self.__g_row == (len(self.__g_datarows) - 1) else False
 
-    tv = ':'.join([self.g_datarows[self.g_row][i] for i in fpos])
+    tv = ':'.join([self.__g_datarows[self.__g_row][i] for i in fpos])
 
     if forl == 'first':
-      rows = range(1, len(self.g_datarows))
+      rows = range(1, len(self.__g_datarows))
     else:
-      rows = range(len(self.g_datarows) - 1, 0, -1)
+      rows = range(len(self.__g_datarows) - 1, 0, -1)
 
     for r in rows:
       fmatch = True
 
       for f in ffilter:
-        if f in self.g_datarows[0]:
+        if f in self.__g_datarows[0]:
           try:
-            if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f) + 1]):
+            if not re.match(ffilter[f], self.__g_datarows[r][self.__g_datarows[0].index(f) + 1]):
               fmatch = False
               break
           except Exception:
@@ -701,34 +703,34 @@ class JinjaFx():
           raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.' + forl + '()')
 
       if fmatch:
-        if tv == ':'.join([self.g_datarows[r][i] for i in fpos]):
-          return True if self.g_row == r else False
+        if tv == ':'.join([self.__g_datarows[r][i] for i in fpos]):
+          return True if self.__g_row == r else False
 
     return False
 
 
-  def jfx_exception(self, message):
+  def __jfx_exception(self, message):
     raise Exception('[jfx_exception] ' + message)
 
 
-  def jfx_warning(self, message, repeat=False):
-    if repeat or message not in self.g_warnings:
-      self.g_warnings.append(message)
+  def __jfx_warning(self, message, repeat=False):
+    if repeat or message not in self.__g_warnings:
+      self.__g_warnings.append(message)
     return ''
 
 
-  def jfx_first(self, fields=None, ffilter={}):
-    return self.jfx_fandl('first', fields, ffilter)
+  def __jfx_first(self, fields=None, ffilter={}):
+    return self.__jfx_fandl('first', fields, ffilter)
 
 
-  def jfx_last(self, fields=None, ffilter={}):
-    return self.jfx_fandl('last', fields, ffilter)
+  def __jfx_last(self, fields=None, ffilter={}):
+    return self.__jfx_fandl('last', fields, ffilter)
 
   
-  def jfx_fields(self, field=None, ffilter={}):
+  def __jfx_fields(self, field=None, ffilter={}):
     if field is not None:
-      if field in self.g_datarows[0]:
-        fpos = self.g_datarows[0].index(field) + 1
+      if field in self.__g_datarows[0]:
+        fpos = self.__g_datarows[0].index(field) + 1
       else:
         raise Exception('invalid field \'' + field + '\' passed to jinjafx.fields()')
     else:
@@ -736,15 +738,15 @@ class JinjaFx():
     
     field_values = []
         
-    for r in range(1, len(self.g_datarows)):
+    for r in range(1, len(self.__g_datarows)):
       fmatch = True
-      field_value = self.g_datarows[r][fpos]
+      field_value = self.__g_datarows[r][fpos]
 
       if field_value not in field_values and len(field_value.strip()) > 0:
         for f in ffilter:
-          if f in self.g_datarows[0]:
+          if f in self.__g_datarows[0]:
             try:
-              if not re.match(ffilter[f], self.g_datarows[r][self.g_datarows[0].index(f) + 1]):
+              if not re.match(ffilter[f], self.__g_datarows[r][self.__g_datarows[0].index(f) + 1]):
                 fmatch = False
                 break
             except Exception:
@@ -758,52 +760,52 @@ class JinjaFx():
     return field_values
 
  
-  def jfx_counter(self, key=None, increment=1, start=1):
+  def __jfx_counter(self, key=None, increment=1, start=1):
     if key is None:
-      key = '_cnt_r_' + str(self.g_row)
+      key = '_cnt_r_' + str(self.__g_row)
     else:
       key = '_cnt_k_' + str(key)
 
-    n = self.g_dict.get(key, int(start) - int(increment))
-    self.g_dict[key] = n + int(increment)
-    return self.g_dict[key]
+    n = self.__g_dict.get(key, int(start) - int(increment))
+    self.__g_dict[key] = n + int(increment)
+    return self.__g_dict[key]
 
 
-  def jfx_setg(self, key, value):
-    self.g_dict['_val_' + str(key)] = value
+  def __jfx_setg(self, key, value):
+    self.__g_dict['_val_' + str(key)] = value
     return ''
 
 
-  def jfx_getg(self, key, default=None):
-    return self.g_dict.get('_val_' + str(key), default)
+  def __jfx_getg(self, key, default=None):
+    return self.__g_dict.get('_val_' + str(key), default)
 
 
-  def jfx_nslookup(self, v, family=46):
-    try:
-      if re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I): # IPv6
-        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
+#  def __jfx_nslookup(self, v, family=46):
+#    try:
+#      if re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I): # IPv6
+#        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
+#
+#      elif re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v): # IPv4
+#        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
+#
+#      else:
+#        if int(family) == 46:
+#          s = socket.getaddrinfo(v, 0, 0, socket.SOCK_STREAM)
+#          return [e[4][0] for e in s]
+#        elif int(family) == 4:
+#          s = socket.getaddrinfo(v, 0, socket.AF_INET, socket.SOCK_STREAM)
+#          return [e[4][0] for e in s]
+#        elif int(family) == 6:
+#          s = socket.getaddrinfo(v, 0, socket.AF_INET6, socket.SOCK_STREAM)
+#          return [e[4][0] for e in s]
+#
+#    except:
+#      pass
+#
+#    return None
 
-      elif re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v): # IPv4
-        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
 
-      else:
-        if int(family) == 46:
-          s = socket.getaddrinfo(v, 0, 0, socket.SOCK_STREAM)
-          return [e[4][0] for e in s]
-        elif int(family) == 4:
-          s = socket.getaddrinfo(v, 0, socket.AF_INET, socket.SOCK_STREAM)
-          return [e[4][0] for e in s]
-        elif int(family) == 6:
-          s = socket.getaddrinfo(v, 0, socket.AF_INET6, socket.SOCK_STREAM)
-          return [e[4][0] for e in s]
-
-    except:
-      pass
-
-    return None
-
-
-  def jfx_regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
+  def __jfx_regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
     if ignorecase:
       flags |= re.I
 
@@ -814,15 +816,15 @@ class JinjaFx():
     return bool(getattr(_re, match_type, 'search')(value))
 
 
-  def jfx_match(self, value, pattern='', ignorecase=False, multiline=False):
-    return self.jfx_regex(value, pattern, ignorecase, multiline, 'match')
+  def __jfx_match(self, value, pattern='', ignorecase=False, multiline=False):
+    return self.__jfx_regex(value, pattern, ignorecase, multiline, 'match')
 
 
-  def jfx_search(self, value, pattern='', ignorecase=False, multiline=False):
-    return self.jfx_regex(value, pattern, ignorecase, multiline, 'search')
+  def __jfx_search(self, value, pattern='', ignorecase=False, multiline=False):
+    return self.__jfx_regex(value, pattern, ignorecase, multiline, 'search')
 
 
-  def find_re_match(self, o, v, default=0):
+  def __find_re_match(self, o, v, default=0):
     for rx in o:
       if rx[0].match(v):
         return rx[1]

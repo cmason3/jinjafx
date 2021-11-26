@@ -8,7 +8,7 @@ README = re.sub(r'<p.+</p>', '', README[README.find('#'):])
 
 setup(
   name="jinjafx",
-  version="1.7.0",
+  version="1.7.1",
   description="Jinja2 Templating Tool",
   long_description=README,
   long_description_content_type="text/markdown",
