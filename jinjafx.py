@@ -18,12 +18,12 @@
 import sys, os, jinja2, yaml, argparse, re, copy, getpass, traceback
 
 __version__ = '1.7.1'
-__jinja2_filters = []
+jinja2_filters = []
 
 def import_filters(errc = 0):
   try:
     from ansible.plugins.filter import core
-    __jinja2_filters.append(core.FilterModule().filters())
+    jinja2_filters.append(core.FilterModule().filters())
   except Exception:
     print('warning: unable to import ansible \'core\' filters - requires ansible', file=sys.stderr)
     errc += 1
@@ -44,7 +44,7 @@ def import_filters(errc = 0):
       filters[k] = v
       filters['ansible.netcommon.' + k] = v
 
-    __jinja2_filters.append(filters)
+    jinja2_filters.append(filters)
 
   except Exception:
     print('warning: unable to import ansible \'ipaddr\' filter - requires ansible and netaddr', file=sys.stderr)
@@ -454,14 +454,14 @@ class JinjaFx():
 
     if isinstance(template, bytes) or isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
-      [env.filters.update(f) for f in __jinja2_filters]
+      [env.filters.update(f) for f in jinja2_filters]
       if isinstance(template, bytes):
         template = env.from_string(template.decode('utf-8'))
       else:
         template = env.from_string(template)
     else:
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
-      [env.filters.update(f) for f in __jinja2_filters]
+      [env.filters.update(f) for f in jinja2_filters]
       template = env.get_template(os.path.basename(template.name))
 
     env.tests.update({
