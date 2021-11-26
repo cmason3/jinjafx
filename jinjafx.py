@@ -17,7 +17,7 @@
 
 import sys, os, jinja2, yaml, argparse, re, copy, getpass, traceback
 
-__version__ = '1.7.1'
+__version__ = '1.7.2'
 jinja2_filters = []
 
 def import_filters(errc = 0):
