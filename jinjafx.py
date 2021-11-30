@@ -17,7 +17,7 @@
 
 import sys, os, jinja2, yaml, argparse, re, copy, getpass, traceback
 
-__version__ = '1.7.2'
+__version__ = '1.7.3'
 jinja2_filters = []
 
 def import_filters(errc = 0):
@@ -444,6 +444,9 @@ class JinjaFx():
 
     if 'jinja2_extensions' not in gvars:
       gvars.update({ 'jinja2_extensions': [] })
+
+    else:
+      sys.path.append(os.getcwd())
 
     jinja2_options = {
       'undefined': jinja2.StrictUndefined,
