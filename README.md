@@ -312,18 +312,18 @@ Unfortunately writing Jinja2 Extensions isn't that obvious - well, I didn't find
 {{ 10|add(1) }}
 ```
 
-We start off by creating our Extension in a file called `jinjafx_extensions.py` (the name of the file is arbitrary) - this file basically defines a new class which extends Extension and an `_add` method that is mapped to a new filter called `add`:
+We start off by creating our Extension in a file called `jinjafx_extensions.py` (the name of the file is arbitrary) - this file basically defines a new class which extends Extension and a private `__add` method that is mapped to a new filter called `add`:
 
 ```python
 from jinja2.ext import Extension
 
 class AddExtension(Extension):
-  def _add(self, number, value):
-    return number + value
-
   def __init__(self, environment):
     Extension.__init__(self, environment)
-    environment.filters['add'] = self._add
+    environment.filters['add'] = self.__add
+
+  def __add(self, number, value):
+    return number + value
 ```
 
 We would then use the new Extension by adding the following YAML to our `vars.yml` file - based on the name it will automatically look in `jinjafx_extensions.py` for the `AddExtension` class and will then load and enable the `add` filter.
