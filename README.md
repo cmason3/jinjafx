@@ -16,7 +16,7 @@ Python 2 support has been officially deprecated and won't work without modificat
 ### Installation
 
 ```
-python3 -m pip install --upgrade --user jinjafx
+python3 -m pip install --upgrade --user jinjafx [ansible-core]
 ```
 
 ### JinjaFx Usage
