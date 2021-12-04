@@ -1,6 +1,8 @@
 import pathlib, re
 from setuptools import setup
 
+from jinjafx import __version__
+
 HERE = pathlib.Path(__file__).parent
 
 README = (HERE / "README.md").read_text()
@@ -8,7 +10,7 @@ README = re.sub(r'<p.+</p>', '', README[README.find('#'):])
 
 setup(
   name="jinjafx",
-  version="1.7.3",
+  version=__version__,
   description="JinjaFx - Jinja2 Templating Tool",
   long_description=README,
   long_description_content_type="text/markdown",
