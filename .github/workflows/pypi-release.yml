@@ -1,0 +1,28 @@
+name: "PyPI"
+
+on: release
+
+jobs:
+  build-n-publish:
+    name: "build-n-publish"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "checkout repository"
+        uses: actions/checkout@v2
+
+      - name: "setup python"
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+
+      - name: "install wheel"
+        run: "python -m pip install --user wheel"
+
+      - name: "build distribution"
+        run: "python setup.py sdist bdist_wheel"
+
+      - name: "publish to pypi"
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
