@@ -142,6 +142,31 @@ NUMBER:int, NAME
 20, twenty
 ```
 
+#### Pad Operator
+
+JinjaFx supports the ability to add or remove leading zeros from numbers using the `%` pad operator. The pad operator is used by suffixing a `%` to a number followed by the number of zeros to pad the number to (e.g. `100%4` would result in `0100` and `003%0` would result in `3`). Using the following example, we might want to have no padding on the `INTERFACE` field but pad the `HOST` field to 2 characters, e.g:
+
+```
+DEVICE, INTERFACE, HOST
+spine-01, et-0/0/\1%0, leaf-([1-4]|1[0-3])%2
+```
+
+This would then be expanded to the following:
+
+```
+DEVICE, INTERFACE, HOST
+spine-01, et-0/0/1, leaf-01
+spine-01, et-0/0/2, leaf-02
+spine-01, et-0/0/3, leaf-03
+spine-01, et-0/0/4, leaf-04
+spine-01, et-0/0/10, leaf-10
+spine-01, et-0/0/11, leaf-11
+spine-01, et-0/0/12, leaf-12
+spine-01, et-0/0/13, leaf-13
+```
+
+If you are using capture groups then you need to ensure the `%` character is outside the group (as per the above example) else it will be copied as well. In the event you want to use a `%` character then you can escape it using `\%`.
+
 The `-o` argument is used to specify the output file, as by default the output is sent to `stdout`. This can be a static file, where all the row outputs will be appended, or you can use Jinja2 syntax (e.g. `-o "{{ DEVICE }}.txt"`) to specify a different output file per row. If you specify a directory path then all required directories will be automatically created - any existing files will be overwritten.
 
 ### JinjaFx Templates

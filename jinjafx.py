@@ -406,7 +406,18 @@ class JinjaFx():
 
                 for col in range(1, len(fields[row])):
                   fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
-                  fields[row][col] = re.sub(r'\\([}{])', r'\1', fields[row][col])
+
+                  delta = 0
+                  for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', fields[row][col]):
+                    pvalue = str(int(m.group(1))).zfill(int(m.group(2)))
+                    fields[row][col] = fields[row][col][:m.start() + delta] + pvalue + fields[row][col][m.end() + delta:]
+
+                    if len(m.group(0)) > len(pvalue):
+                      delta -= len(m.group(0)) - len(pvalue)
+                    else:
+                      delta += len(pvalue) - len(m.group(0))
+
+                  fields[row][col] = re.sub(r'\\([}{%])', r'\1', fields[row][col])
 
                   if col in int_indices:
                     fields[row][col] = int(fields[row][col])
