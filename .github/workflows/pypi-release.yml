@@ -1,6 +1,8 @@
 name: "PyPI"
 
-on: release
+on:
+  release:
+    types: [published]
 
 jobs:
   build-n-publish:
