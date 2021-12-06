@@ -372,6 +372,7 @@ class JinjaFx():
             n = len(self.__g_datarows[0])
             fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
+            # recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}' # TODO: REMOVE PAD
             recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'
 
             row = 0
@@ -573,7 +574,12 @@ class JinjaFx():
   def __jfx_data_counter(self, m, orow, col, row):
     start = m.group(1)
     increment = m.group(2)
-    pad = int(m.group(3)) if m.lastindex == 3 else 0
+    pad = int(m.group(3)) if m.lastindex == 3 else 0 # TODO: REMOVE PAD
+
+    if pad > 0:
+      message = "padding on counters has been deprecated - please use the '%' pad operator instead"
+      if message not in self.__g_warnings:
+        self.__g_warnings.append(message)
 
     key = '_datacnt_r_' + str(orow) + '_' + str(col) + '_' + m.group()
 
@@ -581,6 +587,7 @@ class JinjaFx():
       n = self.__g_dict.get(key, int(start) - int(increment))
       self.__g_dict[key] = n + int(increment)
       self.__g_dict[key + '_' + str(row)] = False
+    # return str(self.__g_dict[key]) # TODO: REMOVE PAD
     return str(self.__g_dict[key]).zfill(pad)
 
 
@@ -605,6 +612,7 @@ class JinjaFx():
 
       i = 0
       while i < len(pofa):
+        # m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)[ \t]*(?<!\\)\}', pofa[i]) # TODO: REMOVE PAD
         m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)\}', pofa[i])
         if m:
           mpos = groups[i][0].index(m.group())
@@ -620,7 +628,13 @@ class JinjaFx():
           step = int(m.group(2)) if end > start else 0 - int(m.group(2))
 
           for n in range(start, end, step):
-            n = str(n).zfill(int(m.group(3)) if m.lastindex == 3 else 0)
+            if m.lastindex == 3:
+              message = "padding on counters has been deprecated - please use the '%' pad operator instead"
+              if message not in self.__g_warnings:
+                self.__g_warnings.append(message)
+
+            n = str(n).zfill(int(m.group(3)) if m.lastindex == 3 else 0) # TODO: REMOVE PAD
+            # pofa.append(pofa[i][:m.start(1) - 1] + str(n) + pofa[i][m.end(m.lastindex) + 1:]) # TODO: REMOVE PAD
             pofa.append(pofa[i][:m.start(1) - 1] + n + pofa[i][m.end(m.lastindex) + 1:])
 
             ngroups = list(groups[i])

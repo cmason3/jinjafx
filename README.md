@@ -100,18 +100,18 @@ spine-03, et-0/0/4, leaf-04
 
 #### Expansion Counters
 
-We also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step[:pad] }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
+We also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
 
 ```
 INTERFACE
 et-0/0/{0-9:1}
 ```
 
-Passive counters (i.e. counters where you don't specify an end) don't actually create any additional rows or determine the range of the expansion (they are unbounded). They are used in combination with static character classes, static groups or active counters to increment as the data is expanded into multiple rows. If we take our previous example and modify it to allocate a HOST field to each interface, which uses a number starting at 33 (the optional "pad" element is used to specify the zero padding width), then the following:
+Passive counters (i.e. counters where you don't specify an end) don't actually create any additional rows or determine the range of the expansion (they are unbounded). They are used in combination with static character classes, static groups or active counters to increment as the data is expanded into multiple rows. If we take our previous example and modify it to allocate a HOST field to each interface, which uses a number starting at 33, then the following (see 'Pad Operator' for explanation of `%3`):
 
 ```
 INTERFACE, HOST
-et-0/0/{0-9:1}, {33:1:3}
+et-0/0/{0-9:1}, r740-{33:1}%3
 ```
 
 Would be expanded to the following (we haven't actually specified 42 as the end number, but it will increment based on the number of rows it is being expanded into):
@@ -402,7 +402,7 @@ This list of lists will contain all the row and column data that JinjaFx is curr
 
 - <b><code>jinjafx.expand("string")</code></b>
 
-This function is used to expand a string that contains static character classes (i.e. `[0-9]`), static groups (i.e. `(a|b)`) or active counters (i.e. `{ start-end:increment[:pad] }`) into a list of all the different permutations. You are permitted to use as many classes, groups or counters within the same string - if it doesn't detect any classes, groups or counters within the string then the "string" will be returned as the only list element. Character classes support "A-Z", "a-z" and "0-9" characters, whereas static groups allow any string of characters (including static character classes). If you wish to include "[", "]", "(", ")", "{" or "}" literals within the string then they will need to be escaped.
+This function is used to expand a string that contains static character classes (i.e. `[0-9]`), static groups (i.e. `(a|b)`) or active counters (i.e. `{ start-end:increment }`) into a list of all the different permutations. You are permitted to use as many classes, groups or counters within the same string - if it doesn't detect any classes, groups or counters within the string then the "string" will be returned as the only list element. Character classes support "A-Z", "a-z" and "0-9" characters, whereas static groups allow any string of characters (including static character classes). If you wish to include "[", "]", "(", ")", "{" or "}" literals within the string then they will need to be escaped.
 
 - <b><code>jinjafx.counter(["key"], [increment=1], [start=1])</code></b>
 
