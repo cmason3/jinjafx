@@ -3,7 +3,7 @@
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
 
-<h2 align="center">JinjaFx - Jinja2 Templating Tool</h2>
+<h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a></p>
 
