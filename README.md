@@ -147,7 +147,7 @@ JinjaFx supports the ability to add or remove leading zeros from numbers using t
 
 ```
 DEVICE, INTERFACE, HOST
-spine-01, et-0/0/\1%0, leaf-([1-4]|1[0-3])%2
+spine-01, et-0/0/\1%0, leaf-(0[1-4]|1[0-3])
 ```
 
 This would then be expanded to the following:
