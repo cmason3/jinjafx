@@ -286,6 +286,7 @@ class JinjaFx():
     self.__g_datarows = []
     self.__g_dict = {}
     self.__g_row = 0 
+    self.__g_vars = {}
     self.__g_warnings = []
 
     outputs = {}
@@ -485,6 +486,10 @@ class JinjaFx():
       'search': self.__jfx_search
     })
 
+    env.globals.update({
+      'lookup': self.__jfx_lookup
+    })
+
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
@@ -518,6 +523,9 @@ class JinjaFx():
       else:
         env.globals['jinjafx'].update({ 'row': 0 })
         self.__g_row = 0
+
+      self.__g_vars = gvars
+      self.__g_vars.update(rowdata)
 
       try:
         content = template.render(rowdata)
@@ -569,6 +577,21 @@ class JinjaFx():
       del outputs[o]
 
     return outputs
+
+
+  def __jfx_lookup(self, method, variable, default=None):
+    if method == 'vars':
+      if variable in self.__g_vars:
+        return self.__g_vars[variable]
+
+      elif default is not None:
+        return default
+  
+      else:
+        raise jinja2.exceptions.UndefinedError('\'lookup\' variable \'' + variable + '\' is undefined')
+
+    else:
+      raise jinja2.exceptions.UndefinedError('\'lookup\' with method \'' + method + '\' is undefined')
 
 
   def __jfx_data_counter(self, m, orow, col, row):

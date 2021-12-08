@@ -234,6 +234,10 @@ This filter allows IP address manipulation and is documented in [playbooks_filte
 
 In additional to Ansible Filters, Ansible also introduces [tests](https://docs.ansible.com/ansible/latest/user_guide/playbooks_tests.html) that can be performed with various filters (e.g. `select` and `select_attr`) - the following "Core" Ansible tests have been included in JinjaFx: `regex`, `match` and `search`.
 
+### Ansible Lookups
+
+JinjaFx also support the ability to use the [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/vars_lookup.html) builtin to lookup a dynamic variable name (e.g. `{{ lookup('vars', 'my' ~ 'variable', default=None) }}`).
+
 ### JinjaFx Variables
 
 The following variables, if defined within `vars.yml` control how JinjaFx works:
