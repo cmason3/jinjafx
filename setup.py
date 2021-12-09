@@ -27,7 +27,7 @@ setup(
   ],
   packages=["jinjafx"],
   include_package_data=True,
-  install_requires=["jinja2", "netaddr"],
+  install_requires=["jinja2", "netaddr", "pytz"],
   entry_points={
     "console_scripts": [
       "jinjafx=jinjafx:main",

@@ -836,10 +836,10 @@ class JinjaFx():
     tz = pytz.timezone(tz)
 
     if fmt is not None:
-      return datetime.datetime.now(tz).strftime(fmt)
+      return datetime.datetime.utcnow().astimezone(tz).strftime(fmt)
 
     else:
-      return datetime.datetime.now(tz)
+      return str(datetime.datetime.utcnow().astimezone(tz))
 
 
 #  def __jfx_nslookup(self, v, family=46):
