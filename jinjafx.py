@@ -15,9 +15,9 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, jinja2, yaml, argparse, re, copy, getpass, traceback
+import sys, os, jinja2, yaml, argparse, re, copy, getpass, datetime, pytz, traceback
 
-__version__ = '1.8.1'
+__version__ = '1.8.2'
 jinja2_filters = []
 
 def import_filters(errc = 0):
@@ -502,6 +502,7 @@ class JinjaFx():
       'fields': self.__jfx_fields,
       'setg': self.__jfx_setg,
       'getg': self.__jfx_getg,
+      'now': self.__jfx_now,
 #      'nslookup': self.__jfx_nslookup,
       'rows': max([0, len(self.__g_datarows) - 1]),
       'data': [r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows]
@@ -829,6 +830,16 @@ class JinjaFx():
 
   def __jfx_getg(self, key, default=None):
     return self.__g_dict.get('_val_' + str(key), default)
+
+
+  def __jfx_now(self, fmt=None, tz='UTC'):
+    tz = pytz.timezone(tz)
+
+    if fmt is not None:
+      return datetime.datetime.utcnow().astimezone(tz).strftime(fmt)
+
+    else:
+      return str(datetime.datetime.utcnow().astimezone(tz))
 
 
 #  def __jfx_nslookup(self, v, family=46):

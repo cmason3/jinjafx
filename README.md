@@ -410,6 +410,10 @@ This function is used to expand a string that contains static character classes 
 
 This function is used to provide a persistent counter within a row or between rows. If you specify a `key` then it is a global counter that will persist between rows, but if you don't or you include `jinjafx.row` within the `key`, then the counter only persists within the template of the current row.
 
+- <b><code>jinjafx.now(["format"], [tz="UTC"])</code></b>
+
+This function is used to output the current date and time. If you don't specify the optional `format` argument then it will output using the default ISO 8601 format - if you wish to specify a custom format then it needs to be as per [strftime](https://strftime.org/). The `tz` argument is also optional and allows you to specify a timezone as opposed to `UTC` which is used by default.
+
 - <b><code>jinjafx.exception("message")</code></b>
 
 This function is used to stop processing and raise an exception with a meaningful message - for example, if an expected header field doesn't exist you could use it as follows:
