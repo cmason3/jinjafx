@@ -17,7 +17,7 @@
 
 import sys, os, jinja2, yaml, argparse, re, copy, getpass, datetime, pytz, traceback
 
-__version__ = '1.8.4'
+__version__ = '1.8.5'
 jinja2_filters = []
 
 def import_filters(errc = 0):
@@ -67,7 +67,7 @@ def main():
       print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-o <output file>] [-od <output dir>] [-m] [-q]'
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]'
 
     parser = __ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
@@ -75,6 +75,7 @@ def main():
     group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
     parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
+    parser.add_argument('-ed', metavar='<exts dir>', type=str, action='append', default=[])
     parser.add_argument('-o', metavar='<output file>', type=str)
     parser.add_argument('-od', metavar='<output dir>', type=str)
     parser.add_argument('-m', action='store_true')
@@ -216,7 +217,8 @@ def main():
     if import_filters() > 0:
       print()
 
-    outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o)
+    args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
+    outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
     ocount = 0
 
     if args.od is not None:
@@ -282,7 +284,7 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template, data, gvars, output):
+  def jinjafx(self, template, data, gvars, output, exts_dirs=[]):
     self.__g_datarows = []
     self.__g_dict = {}
     self.__g_row = 0 
@@ -458,15 +460,14 @@ class JinjaFx():
     if 'jinja2_extensions' not in gvars:
       gvars.update({ 'jinja2_extensions': [] })
 
-    else:
-      sys.path.append(os.getcwd())
-
     jinja2_options = {
       'undefined': jinja2.StrictUndefined,
       'trim_blocks': True,
       'lstrip_blocks': True,
       'keep_trailing_newline': True
     }
+
+    sys.path += exts_dirs
 
     if isinstance(template, bytes) or isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
