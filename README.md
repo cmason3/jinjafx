@@ -460,3 +460,34 @@ This function is used to set a global variable that will persist throughout the 
 - <b><code>jinjafx.getg("key", ["default"])</code></b>
 
 This function is used to get a global variable that has been set with `jinjafx.setg()` - optionally you can specify a default value that is returned if the `key` doesn't exist.
+
+### JinjaFx Custom Filters
+
+JinjaFx comes with a built in Jinja2 Extension (`extensions/ext.py`) which provides the following custom filters:
+
+- <b><code>cisco_snmpv3_key("engineid", [algorithm="sha1"])</code></b>
+
+This filter is used to generate localised SNMPv3 authentication and privacy keys (section A.2 of [RFC3414](https://datatracker.ietf.org/doc/html/rfc3414#appendix-A.2)) for use by Cisco devices, e.g:
+
+```jinja2
+snmp-server engineID local {{ engineID }}
+snmp-server user {{ snmpUser }} {{ snmpGroup }} v3 encrypted auth sha {{ authPassword|cisco_snmpv3_key(engineID) }} priv aes 128 {{ privPassword|cisco_snmpv3_key(engineID) }}
+```
+
+- <b><code>junos_snmpv3_key("engineid", [algorithm="sha1"])</code></b>
+
+This filter is used to generate localised SNMPv3 authentication and privacy keys (section A.2 of [RFC3414](https://datatracker.ietf.org/doc/html/rfc3414#appendix-A.2)) for use by Juniper devices, e.g:
+
+```jinja2
+set snmp engine-id local {{ engineID }}
+set snmp v3 usm local-engine user {{ snmpUser }} authentication-sha authentication-key {{ authPassword|junos_snmpv3_key(engineID) }}
+set snmp v3 usm local-engine user {{ snmpUser }} privacy-aes128 privacy-key {{ privPassword|junos_snmpv3_key(engineID) }}
+```
+
+- <b><code>cisco7encode("string", ["seed"])</code></b>
+
+This filter will encode a string using Cisco's Type 7 encoding scheme. An optional "seed" can be provided which makes the encoded string deterministic for idempotent operations.
+
+- <b><code>junos9encode("string", ["seed"])</code></b>
+
+This filter will encode a string using Juniper's Type 9 encoding scheme. An optional "seed" can be provided which makes the encoded string deterministic for idempotent operations.
