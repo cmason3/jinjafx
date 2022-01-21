@@ -17,7 +17,7 @@
 
 import sys, os, jinja2, yaml, argparse, re, copy, getpass, datetime, pytz, traceback
 
-__version__ = '1.9.0'
+__version__ = '1.9.1'
 jinja2_filters = []
 
 def import_filters(errc = 0):
@@ -217,8 +217,7 @@ def main():
     if import_filters() > 0:
       print()
 
-    base = os.path.abspath(os.path.dirname(__file__))
-    args.ed = [base + '/extensions', os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
+    args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
     ocount = 0
 
@@ -469,7 +468,7 @@ class JinjaFx():
       gvars.update({ 'jinja2_extensions': [] })
 
     gvars['jinja2_extensions'].insert(0, 'ext.jinjafx')
-    sys.path += exts_dirs
+    sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
 
     if isinstance(template, bytes) or isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
