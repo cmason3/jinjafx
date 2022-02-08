@@ -15,9 +15,10 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, jinja2, yaml, argparse, re, copy, getpass, datetime, pytz, traceback
+import sys, os, io, argparse, re, copy, getpass, datetime, traceback
+import jinja2, yaml, pytz
 
-__version__ = '1.9.1'
+__version__ = '1.9.2'
 jinja2_filters = []
 
 def import_filters(errc = 0):
@@ -295,151 +296,154 @@ class JinjaFx():
     delim = None
     rowkey = 1
     int_indices = []
-    
-    if isinstance(data, bytes):
-      data = data.decode('utf-8')
 
-    if data is not None and len(data.strip()) > 0:
-      jinjafx_filter = {}
+    if not isinstance(template, str) and not isinstance(template, io.IOBase):
+      raise TypeError('template must be of type str or type FileType')
 
-      for l in data.splitlines():
-        if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
-          if len(self.__g_datarows) == 0:
-            if l.count(',') > l.count('\t'):
-              delim = r'[ \t]*,[ \t]*'
-              schars = ' \t'
-            else:
-              delim = r' *\t *'
-              schars = ' '
+    if data is not None:
+      if not isinstance(data, str):
+        raise TypeError('data must be of type str')
 
-            fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l.strip(schars)))
-            fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
-
-            for i in range(len(fields)):
-              if fields[i].lower().endswith(':int'):
-                int_indices.append(i + 1)
-                fields[i] = fields[i][:-4]
-
-              if 'jinjafx_adjust_headers' in gvars:
-                jinjafx_adjust_headers = str(gvars['jinjafx_adjust_headers']).strip().lower()
-
-                if jinjafx_adjust_headers == 'yes':
-                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i], flags=re.UNICODE | re.IGNORECASE)
-
-                elif jinjafx_adjust_headers == 'upper':
-                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].upper(), flags=re.UNICODE | re.IGNORECASE)
-
-                elif jinjafx_adjust_headers == 'lower':
-                  fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].lower(), flags=re.UNICODE | re.IGNORECASE)
-
-                elif jinjafx_adjust_headers != 'no':
-                  raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
-              
-              if fields[i] == '':
-                raise Exception('empty header field detected at column position ' + str(i + 1))
-
-              elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
-                raise Exception('header field at column position ' + str(i + 1) + ' contains invalid characters')
-
-            if len(set(fields)) != len(fields):
-              raise Exception('duplicate header field detected in data')
-
-            else:
-              self.__g_datarows.append(fields)
-
-            if 'jinjafx_filter' in gvars and len(gvars['jinjafx_filter']) > 0:
-              for field in gvars['jinjafx_filter']:
-                jinjafx_filter[self.__g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
-
-          else:
-            gcount = 1
-            fields = []
-
-            for f in re.split(delim, l.strip(schars)):
-              delta = 0
-
-              for m in re.finditer(r'(?<!\\)\((.+?)(?<!\\)\)', f):
-                if not re.search(r'(?<!\\)\|', m.group(1)):
-                  if not re.search(r'\\' + str(gcount), l):
-                    if re.search(r'\\[0-9]+', l):
-                      raise Exception('parenthesis in row ' + str(rowkey) + ' at \'' + str(m.group(0)) + '\' should be escaped or removed')
-
-                    else:
-                      f = f[:m.start() + delta] + '\\(' + m.group(1) + '\\)' + f[m.end() + delta:]
-                      delta += 2
-
-                gcount += 1
-
-              fields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
-
-            n = len(self.__g_datarows[0])
-            fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
-
-            # recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}' # TODO: REMOVE PAD
-            recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'
-
-            row = 0
-            while row < len(fields):
-              if not isinstance(fields[row][0], int):
-                fields[row].insert(0, rowkey)
-                rowkey += 1
-
-              if any(isinstance(col[0], list) for col in fields[row][1:]):
-                for col in range(1, len(fields[row])):
-                  if isinstance(fields[row][col][0], list):
-                    for v in range(len(fields[row][col][0])):
-                      nrow = copy.deepcopy(fields[row])
-                      nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
-                      fields.append(nrow)
-
-                    fields.pop(row)
-                    break
-
+      if len(data.strip()) > 0:
+        jinjafx_filter = {}
+  
+        for l in data.splitlines():
+          if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
+            if len(self.__g_datarows) == 0:
+              if l.count(',') > l.count('\t'):
+                delim = r'[ \t]*,[ \t]*'
+                schars = ' \t'
               else:
-                groups = []
-
-                for col in range(1, len(fields[row])):
-                  fields[row][col][0] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
-
-                  for g in range(len(fields[row][col][1])):
-                    fields[row][col][1][g] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
-
-                  groups.append(fields[row][col][1])
-
-                groups = dict(enumerate(sum(groups, ['\\0'])))
-
-                for col in range(1, len(fields[row])):
-                  fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
-
-                  delta = 0
-                  for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', fields[row][col]):
-                    pvalue = str(int(m.group(1))).zfill(int(m.group(2)))
-                    fields[row][col] = fields[row][col][:m.start() + delta] + pvalue + fields[row][col][m.end() + delta:]
-
-                    if len(m.group(0)) > len(pvalue):
-                      delta -= len(m.group(0)) - len(pvalue)
-                    else:
-                      delta += len(pvalue) - len(m.group(0))
-
-                  fields[row][col] = re.sub(r'\\([}{%])', r'\1', fields[row][col])
-
-                  if col in int_indices:
-                    fields[row][col] = int(fields[row][col])
-
-                include_row = True
-                if len(jinjafx_filter) > 0:
-                  for index in jinjafx_filter:
-                    if not re.search(jinjafx_filter[index], fields[row][index]):
-                      include_row = False
+                delim = r' *\t *'
+                schars = ' '
+  
+              fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l.strip(schars)))
+              fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
+  
+              for i in range(len(fields)):
+                if fields[i].lower().endswith(':int'):
+                  int_indices.append(i + 1)
+                  fields[i] = fields[i][:-4]
+  
+                if 'jinjafx_adjust_headers' in gvars:
+                  jinjafx_adjust_headers = str(gvars['jinjafx_adjust_headers']).strip().lower()
+  
+                  if jinjafx_adjust_headers == 'yes':
+                    fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i], flags=re.UNICODE | re.IGNORECASE)
+  
+                  elif jinjafx_adjust_headers == 'upper':
+                    fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].upper(), flags=re.UNICODE | re.IGNORECASE)
+  
+                  elif jinjafx_adjust_headers == 'lower':
+                    fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].lower(), flags=re.UNICODE | re.IGNORECASE)
+  
+                  elif jinjafx_adjust_headers != 'no':
+                    raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
+                
+                if fields[i] == '':
+                  raise Exception('empty header field detected at column position ' + str(i + 1))
+  
+                elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
+                  raise Exception('header field at column position ' + str(i + 1) + ' contains invalid characters')
+  
+              if len(set(fields)) != len(fields):
+                raise Exception('duplicate header field detected in data')
+  
+              else:
+                self.__g_datarows.append(fields)
+  
+              if 'jinjafx_filter' in gvars and len(gvars['jinjafx_filter']) > 0:
+                for field in gvars['jinjafx_filter']:
+                  jinjafx_filter[self.__g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
+  
+            else:
+              gcount = 1
+              fields = []
+  
+              for f in re.split(delim, l.strip(schars)):
+                delta = 0
+  
+                for m in re.finditer(r'(?<!\\)\((.+?)(?<!\\)\)', f):
+                  if not re.search(r'(?<!\\)\|', m.group(1)):
+                    if not re.search(r'\\' + str(gcount), l):
+                      if re.search(r'\\[0-9]+', l):
+                        raise Exception('parenthesis in row ' + str(rowkey) + ' at \'' + str(m.group(0)) + '\' should be escaped or removed')
+  
+                      else:
+                        f = f[:m.start() + delta] + '\\(' + m.group(1) + '\\)' + f[m.end() + delta:]
+                        delta += 2
+  
+                  gcount += 1
+  
+                fields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
+  
+              n = len(self.__g_datarows[0])
+              fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
+  
+              recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}'
+  
+              row = 0
+              while row < len(fields):
+                if not isinstance(fields[row][0], int):
+                  fields[row].insert(0, rowkey)
+                  rowkey += 1
+  
+                if any(isinstance(col[0], list) for col in fields[row][1:]):
+                  for col in range(1, len(fields[row])):
+                    if isinstance(fields[row][col][0], list):
+                      for v in range(len(fields[row][col][0])):
+                        nrow = copy.deepcopy(fields[row])
+                        nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
+                        fields.append(nrow)
+  
+                      fields.pop(row)
                       break
-
-                if include_row:
-                  self.__g_datarows.append(fields[row])
-
-                row += 1
-
-      if len(self.__g_datarows) <= 1:
-        raise Exception('not enough data rows - need at least two')
+  
+                else:
+                  groups = []
+  
+                  for col in range(1, len(fields[row])):
+                    fields[row][col][0] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
+  
+                    for g in range(len(fields[row][col][1])):
+                      fields[row][col][1][g] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
+  
+                    groups.append(fields[row][col][1])
+  
+                  groups = dict(enumerate(sum(groups, ['\\0'])))
+  
+                  for col in range(1, len(fields[row])):
+                    fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
+  
+                    delta = 0
+                    for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', fields[row][col]):
+                      pvalue = str(int(m.group(1))).zfill(int(m.group(2)))
+                      fields[row][col] = fields[row][col][:m.start() + delta] + pvalue + fields[row][col][m.end() + delta:]
+  
+                      if len(m.group(0)) > len(pvalue):
+                        delta -= len(m.group(0)) - len(pvalue)
+                      else:
+                        delta += len(pvalue) - len(m.group(0))
+  
+                    fields[row][col] = re.sub(r'\\([}{%])', r'\1', fields[row][col])
+  
+                    if col in int_indices:
+                      fields[row][col] = int(fields[row][col])
+  
+                  include_row = True
+                  if len(jinjafx_filter) > 0:
+                    for index in jinjafx_filter:
+                      if not re.search(jinjafx_filter[index], fields[row][index]):
+                        include_row = False
+                        break
+  
+                  if include_row:
+                    self.__g_datarows.append(fields[row])
+  
+                  row += 1
+  
+        if len(self.__g_datarows) <= 1:
+          raise Exception('not enough data rows - need at least two')
 
     if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
       for field in reversed(gvars['jinjafx_sort']):
@@ -470,13 +474,10 @@ class JinjaFx():
     gvars['jinja2_extensions'].insert(0, 'ext.jinjafx')
     sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
 
-    if isinstance(template, bytes) or isinstance(template, str):
+    if isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
-      if isinstance(template, bytes):
-        template = env.from_string(template.decode('utf-8'))
-      else:
-        template = env.from_string(template)
+      template = env.from_string(template)
     else:
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
@@ -600,21 +601,13 @@ class JinjaFx():
   def __jfx_data_counter(self, m, orow, col, row):
     start = m.group(1)
     increment = m.group(2)
-    pad = int(m.group(3)) if m.lastindex == 3 else 0 # TODO: REMOVE PAD
-
-    if pad > 0:
-      message = "padding on counters has been deprecated - please use the '%' pad operator instead"
-      if message not in self.__g_warnings:
-        self.__g_warnings.append(message)
-
     key = '_datacnt_r_' + str(orow) + '_' + str(col) + '_' + m.group()
 
     if self.__g_dict.get(key + '_' + str(row), True):
       n = self.__g_dict.get(key, int(start) - int(increment))
       self.__g_dict[key] = n + int(increment)
       self.__g_dict[key + '_' + str(row)] = False
-    # return str(self.__g_dict[key]) # TODO: REMOVE PAD
-    return str(self.__g_dict[key]).zfill(pad)
+    return str(self.__g_dict[key])
 
 
   def __jfx_expand(self, s, rg=False):
@@ -638,8 +631,7 @@ class JinjaFx():
 
       i = 0
       while i < len(pofa):
-        # m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)[ \t]*(?<!\\)\}', pofa[i]) # TODO: REMOVE PAD
-        m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)\}', pofa[i])
+        m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)[ \t]*(?<!\\)\}', pofa[i])
         if m:
           mpos = groups[i][0].index(m.group())
           nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
@@ -654,14 +646,7 @@ class JinjaFx():
           step = int(m.group(2)) if end > start else 0 - int(m.group(2))
 
           for n in range(start, end, step):
-            if m.lastindex == 3:
-              message = "padding on counters has been deprecated - please use the '%' pad operator instead"
-              if message not in self.__g_warnings:
-                self.__g_warnings.append(message)
-
-            n = str(n).zfill(int(m.group(3)) if m.lastindex == 3 else 0) # TODO: REMOVE PAD
-            # pofa.append(pofa[i][:m.start(1) - 1] + str(n) + pofa[i][m.end(m.lastindex) + 1:]) # TODO: REMOVE PAD
-            pofa.append(pofa[i][:m.start(1) - 1] + n + pofa[i][m.end(m.lastindex) + 1:])
+            pofa.append(pofa[i][:m.start(1) - 1] + str(n) + pofa[i][m.end(m.lastindex) + 1:])
 
             ngroups = list(groups[i])
             if group > 0 and group < len(ngroups):
