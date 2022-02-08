@@ -15,9 +15,10 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, jinja2, yaml, argparse, re, copy, getpass, datetime, pytz, traceback
+import sys, os, io, argparse, re, copy, getpass, datetime, traceback
+import jinja2, yaml, pytz
 
-__version__ = '1.9.1'
+__version__ = '1.9.2'
 jinja2_filters = []
 
 def import_filters(errc = 0):
@@ -295,9 +296,12 @@ class JinjaFx():
     delim = None
     rowkey = 1
     int_indices = []
-    
-    if isinstance(data, bytes):
-      data = data.decode('utf-8')
+
+    if not isinstance(template, str) and not isinstance(template, io.IOBase):
+      raise TypeError('template must be of type str or type FileType')
+
+    if not isinstance(data, str):
+      raise TypeError('data must be of type str')
 
     if data is not None and len(data.strip()) > 0:
       jinjafx_filter = {}
@@ -375,8 +379,7 @@ class JinjaFx():
             n = len(self.__g_datarows[0])
             fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
 
-            # recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}' # TODO: REMOVE PAD
-            recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)}'
+            recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}'
 
             row = 0
             while row < len(fields):
@@ -470,13 +473,10 @@ class JinjaFx():
     gvars['jinja2_extensions'].insert(0, 'ext.jinjafx')
     sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
 
-    if isinstance(template, bytes) or isinstance(template, str):
+    if isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
-      if isinstance(template, bytes):
-        template = env.from_string(template.decode('utf-8'))
-      else:
-        template = env.from_string(template)
+      template = env.from_string(template)
     else:
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
@@ -600,21 +600,13 @@ class JinjaFx():
   def __jfx_data_counter(self, m, orow, col, row):
     start = m.group(1)
     increment = m.group(2)
-    pad = int(m.group(3)) if m.lastindex == 3 else 0 # TODO: REMOVE PAD
-
-    if pad > 0:
-      message = "padding on counters has been deprecated - please use the '%' pad operator instead"
-      if message not in self.__g_warnings:
-        self.__g_warnings.append(message)
-
     key = '_datacnt_r_' + str(orow) + '_' + str(col) + '_' + m.group()
 
     if self.__g_dict.get(key + '_' + str(row), True):
       n = self.__g_dict.get(key, int(start) - int(increment))
       self.__g_dict[key] = n + int(increment)
       self.__g_dict[key + '_' + str(row)] = False
-    # return str(self.__g_dict[key]) # TODO: REMOVE PAD
-    return str(self.__g_dict[key]).zfill(pad)
+    return str(self.__g_dict[key])
 
 
   def __jfx_expand(self, s, rg=False):
@@ -638,8 +630,7 @@ class JinjaFx():
 
       i = 0
       while i < len(pofa):
-        # m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)[ \t]*(?<!\\)\}', pofa[i]) # TODO: REMOVE PAD
-        m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)(?::([0-9]+))?[ \t]*(?<!\\)\}', pofa[i])
+        m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)[ \t]*(?<!\\)\}', pofa[i])
         if m:
           mpos = groups[i][0].index(m.group())
           nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
@@ -654,14 +645,7 @@ class JinjaFx():
           step = int(m.group(2)) if end > start else 0 - int(m.group(2))
 
           for n in range(start, end, step):
-            if m.lastindex == 3:
-              message = "padding on counters has been deprecated - please use the '%' pad operator instead"
-              if message not in self.__g_warnings:
-                self.__g_warnings.append(message)
-
-            n = str(n).zfill(int(m.group(3)) if m.lastindex == 3 else 0) # TODO: REMOVE PAD
-            # pofa.append(pofa[i][:m.start(1) - 1] + str(n) + pofa[i][m.end(m.lastindex) + 1:]) # TODO: REMOVE PAD
-            pofa.append(pofa[i][:m.start(1) - 1] + n + pofa[i][m.end(m.lastindex) + 1:])
+            pofa.append(pofa[i][:m.start(1) - 1] + str(n) + pofa[i][m.end(m.lastindex) + 1:])
 
             ngroups = list(groups[i])
             if group > 0 and group < len(ngroups):
