@@ -491,7 +491,3 @@ This filter will encode a string using Cisco's Type 7 encoding scheme. An option
 - <b><code>junos9encode("string", ["seed"])</code></b>
 
 This filter will encode a string using Juniper's Type 9 encoding scheme. An optional "seed" can be provided which makes the encoded string deterministic for idempotent operations.
-
-- <b><code>sha512crypt("string", ["salt"])</code></b>
-
-This filter will hash a string using the standard Unix crypt function which is also used by Juniper Type 6 hashes. The "salt" (if provided) should be in the format of `$6$salt`.
