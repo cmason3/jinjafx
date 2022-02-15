@@ -494,4 +494,4 @@ This filter will encode a string using Juniper's Type 9 encoding scheme. An opti
 
 - <b><code>sha512crypt("string", ["salt"])</code></b>
 
-This filter will hash a string using the standard Unix crypt function which is also used by Juniper Type 6 hashes. The `salt` (if provided) should be in the format of "$6$salt".
+This filter will hash a string using the standard Unix crypt function which is also used by Juniper Type 6 hashes. The "salt" (if provided) should be in the format of `$6$salt`.
