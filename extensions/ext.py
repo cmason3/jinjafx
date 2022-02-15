@@ -8,8 +8,8 @@ class jinjafx(Extension):
     environment.filters['cisco_snmpv3_key'] = self.__cisco_snmpv3_key
     environment.filters['junos_snmpv3_key'] = self.__junos_snmpv3_key
     environment.filters['cisco7encode'] = self.__cisco7encode
-    environment.filters['junos6hash'] = self.__junos6hash
     environment.filters['junos9encode'] = self.__junos9encode
+    environment.filters['sha512crypt'] = self.__sha512crypt
 
   def __expand_snmpv3_key(self, password, algorithm):
     h = hashlib.new(algorithm)
@@ -52,11 +52,11 @@ class jinjafx(Extension):
 
     return result
 
-  def __junos6hash(self, string, salt=None):
+  def __sha512crypt(self, string, salt=None):
     if salt is None:
-      salt = '$6$yMQuH03o' # FIXME
+      salt = crypt.mksalt(crypt.METHOD_SHA512)
 
-    return salt + '$' + crypt.crypt(string, salt)
+    return crypt.crypt(string, salt)
 
   def __junos9encode(self, string, seed=False):
     ENCODING = [[1, 4, 32], [1, 16, 32], [1, 8, 32], [1, 64], [1, 32], [1, 4, 16, 128], [1, 32, 64]]
