@@ -498,7 +498,7 @@ This filter will hash a string using Cisco's Type 8 hashing scheme (SHA256 with 
 
 - <b><code>cisco9hash("string", ["salt"])</code></b>
 
-This filter will hash a string using Cisco's Type 9 hashing scheme (scrypt). An optional "salt" (length must be 14 characters) can be provided which makes the hashed string deterministic for idempotent operations.
+This filter will hash a string using Cisco's Type 9 hashing scheme (SCrypt). An optional "salt" (length must be 14 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
 - <b><code>junos6hash("string", ["salt"])</code></b>
 
