@@ -1,6 +1,9 @@
 from jinja2.ext import Extension
-
-import hashlib, re, random
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from cryptography.hazmat.backends import default_backend
+import base64, random, re, crypt
 
 class jinjafx(Extension):
   def __init__(self, environment):
@@ -9,18 +12,26 @@ class jinjafx(Extension):
     environment.filters['junos_snmpv3_key'] = self.__junos_snmpv3_key
     environment.filters['cisco7encode'] = self.__cisco7encode
     environment.filters['junos9encode'] = self.__junos9encode
+    environment.filters['cisco8hash'] = self.__cisco8hash
+    environment.filters['cisco9hash'] = self.__cisco9hash
+    environment.filters['junos6hash'] = self.__junos6hash
+
+    self.__std_b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    self.__mod_b64chars = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    self.__mod_b64table = str.maketrans(self.__std_b64chars, self.__mod_b64chars)
 
   def __expand_snmpv3_key(self, password, algorithm):
-    h = hashlib.new(algorithm)
+    h = hashes.Hash(getattr(hashes, algorithm.upper())())
     h.update(((password * (1048576 // len(password))) + password[:1048576 % len(password)]).encode('utf-8'))
-    return h.digest()
+    return h.finalize()
 
   def __cisco_snmpv3_key(self, password, engineid, algorithm='sha1'):
     ekey = self.__expand_snmpv3_key(password, algorithm)
 
-    h = hashlib.new(algorithm)
+    h = hashes.Hash(getattr(hashes, algorithm.upper())())
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
-    return ':'.join([h.hexdigest()[i:i + 2] for i in range(0, len(h.hexdigest()), 2)])
+    hexdigest = h.finalize().hex()
+    return ':'.join([hexdigest[i:i + 2] for i in range(0, len(hexdigest), 2)])
 
   def __junos_snmpv3_key(self, password, engineid, algorithm='sha1', prefix='80000a4c'):
     ekey = self.__expand_snmpv3_key(password, algorithm)
@@ -34,9 +45,9 @@ class jinjafx(Extension):
     else:
       engineid = prefix + '04' + ''.join("{:02x}".format(ord(c)) for c in engineid)
 
-    h = hashlib.new(algorithm)
+    h = hashes.Hash(getattr(hashes, algorithm.upper())())
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
-    return h.hexdigest()
+    return h.finalize().hex()
 
   def __cisco7encode(self, string, seed=False):
     KEY = 'dsfd;kfoA,.iyewrkldJKDHSUBsgvca69834ncxv9873254k;fg87'
@@ -97,3 +108,35 @@ class jinjafx(Extension):
       pos += 1
   
     return result
+
+  def __generate_salt(self, length=16):
+    return ''.join(random.choice(self.__mod_b64chars) for _ in range(length))
+
+  def __cisco8hash(self, string, salt=None):
+    if salt is None:
+      salt = self.__generate_salt(14)
+
+    elif len(salt) != 14 or any(c not in self.__mod_b64chars for c in salt):
+      raise Exception('invalid salt provided to cisco8hash')
+
+    h = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt.encode('utf-8'), iterations=20000).derive(string.encode('utf-8'))
+    return '$8$' + salt + '$' + base64.b64encode(h).decode('utf-8').translate(self.__mod_b64table)[:-1]
+
+  def __cisco9hash(self, string, salt=None):
+    if salt is None:
+      salt = self.__generate_salt(14)
+
+    elif len(salt) != 14 or any(c not in self.__mod_b64chars for c in salt):
+      raise Exception('invalid salt provided to cisco9hash')
+
+    h = Scrypt(salt.encode('utf-8'), 32, 16384, 1, 1, default_backend()).derive(string.encode('utf-8'))
+    return '$9$' + salt + '$' + base64.b64encode(h).decode('utf-8').translate(self.__mod_b64table)[:-1]
+
+  def __junos6hash(self, string, salt=None):
+    if salt is None:
+      salt = self.__generate_salt(8)
+
+    elif len(salt) != 8 or any(c not in self.__mod_b64chars for c in salt):
+      raise Exception('invalid salt provided to junos6hash')
+
+    return crypt.crypt(string, '$6$' + salt)

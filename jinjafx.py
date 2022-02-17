@@ -18,7 +18,7 @@
 import sys, os, io, argparse, re, copy, getpass, datetime, traceback
 import jinja2, yaml, pytz
 
-__version__ = '1.9.5-beta'
+__version__ = '1.9.5'
 jinja2_filters = []
 
 def import_filters(errc = 0):
