@@ -18,7 +18,7 @@
 import sys, os, io, argparse, re, copy, getpass, datetime, traceback
 import jinja2, yaml, pytz
 
-__version__ = '1.9.7'
+__version__ = '1.9.8'
 jinja2_filters = []
 
 def import_filters(errc = 0):
@@ -26,7 +26,7 @@ def import_filters(errc = 0):
     from ansible.plugins.filter import core
     jinja2_filters.append(core.FilterModule().filters())
   except Exception:
-    print('warning: unable to import ansible \'core\' filters - requires ansible', file=sys.stderr)
+    print('warning: unable to import ansible \'core\' filters - requires ansible-core', file=sys.stderr)
     errc += 1
       
   try:
@@ -38,20 +38,18 @@ def import_filters(errc = 0):
       try:
         from ansible_collections.ansible.netcommon.plugins.filter import ipaddr
       except Exception:
-        try:
-          from ansible_collections.ansible.utils.plugins.filter import ipaddr
-        except Exception:
-          raise Exception()
+        raise Exception()
 
     filters = {}
     for k, v in ipaddr.FilterModule().filters().items():
       filters[k] = v
       filters['ansible.netcommon.' + k] = v
+      filters['ansible.utils.' + k] = v
 
     jinja2_filters.append(filters)
 
   except Exception:
-    print('warning: unable to import ansible \'ipaddr\' filter - requires ansible and netaddr', file=sys.stderr)
+    print('warning: unable to import ansible \'ipaddr\' filter - requires ansible-core, netaddr and ansible.netcommon:<2.6.0 collection', file=sys.stderr)
     errc += 1
 
   return errc
