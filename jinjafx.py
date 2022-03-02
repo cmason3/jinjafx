@@ -18,7 +18,7 @@
 import sys, os, io, argparse, re, copy, getpass, datetime, traceback
 import jinja2, yaml, pytz
 
-__version__ = '1.9.11'
+__version__ = '1.10.0'
 
 def __format_bytes(b):
   for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
