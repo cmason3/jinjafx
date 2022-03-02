@@ -18,8 +18,7 @@
 import sys, os, io, argparse, re, copy, getpass, datetime, traceback
 import jinja2, yaml, pytz
 
-__version__ = '1.9.10'
-jinja2_filters = []
+__version__ = '1.9.11'
 
 def __format_bytes(b):
   for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
@@ -181,9 +180,6 @@ def main():
         print()
 
       gvars['jinjafx_input'] = jinjafx_input
-
-    #if import_filters() > 0:
-    #  print()
 
     args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
@@ -441,43 +437,40 @@ class JinjaFx():
     gvars['jinja2_extensions'].insert(0, 'ext.jinjafx')
     sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
 
-    try:
-      import ansible_ipaddr
-
-      filters = {}
-      for k, v in ansible_ipaddr.FilterModule().filters().items():
-        filters[k] = v
-        filters['ansible.netcommon.' + k] = v
-        filters['ansible.utils.' + k] = v
-
-      jinja2_filters.append(filters)
-
-    except:
-      pass
-
     jinja2_tests = {
       'regex': self.__jfx_regex,
       'match': self.__jfx_match,
       'search': self.__jfx_search
     }
 
-    if isinstance(template, str):
-      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
-      [env.filters.update(f) for f in jinja2_filters]
-      env.tests.update(jinja2_tests)
-      template = env.from_string(template)
-    else:
-      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
-      [env.filters.update(f) for f in jinja2_filters]
-      env.tests.update(jinja2_tests)
-      template = env.get_template(os.path.basename(template.name))
-
-    env.globals.update({
+    jinja2_filters = {
       'lookup': self.__jfx_lookup,
       'regex_replace': self.__jfx_regex_replace,
       'regex_search': self.__jfx_regex_search,
       'regex_findall': self.__jfx_regex_findall
-    })
+    }
+
+    try:
+      import ansible_ipaddr
+
+      for k, v in ansible_ipaddr.FilterModule().filters().items():
+        jinja2_filters[k] = v
+        jinja2_filters['ansible.netcommon.' + k] = v
+        jinja2_filters['ansible.utils.' + k] = v
+
+    except:
+      pass
+
+    if isinstance(template, str):
+      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
+      env.tests.update(jinja2_tests)
+      env.filters.update(jinja2_filters)
+      template = env.from_string(template)
+    else:
+      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
+      env.tests.update(jinja2_tests)
+      env.filters.update(jinja2_filters)
+      template = env.get_template(os.path.basename(template.name))
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
