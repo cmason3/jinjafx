@@ -18,39 +18,40 @@
 import sys, os, io, argparse, re, copy, getpass, datetime, traceback
 import jinja2, yaml, pytz
 
-__version__ = '1.9.8'
+__version__ = '1.9.9'
 jinja2_filters = []
 
 def import_filters(errc = 0):
   try:
     from ansible.plugins.filter import core
     jinja2_filters.append(core.FilterModule().filters())
+
   except Exception:
     print('warning: unable to import ansible \'core\' filters - requires ansible-core', file=sys.stderr)
     errc += 1
       
-  try:
-    import netaddr
+  #try:
+  #  import netaddr
 
-    try:
-      from ansible.plugins.filter import ipaddr
-    except Exception:
-      try:
-        from ansible_collections.ansible.netcommon.plugins.filter import ipaddr
-      except Exception:
-        raise Exception()
+  #  try:
+  #    from ansible.plugins.filter import ipaddr
+  #  except Exception:
+  #    try:
+  #      from ansible_collections.ansible.netcommon.plugins.filter import ipaddr
+  #    except Exception:
+  #      raise Exception()
 
-    filters = {}
-    for k, v in ipaddr.FilterModule().filters().items():
-      filters[k] = v
-      filters['ansible.netcommon.' + k] = v
-      filters['ansible.utils.' + k] = v
+  #  filters = {}
+  #  for k, v in ipaddr.FilterModule().filters().items():
+  #    filters[k] = v
+  #    filters['ansible.netcommon.' + k] = v
+  #    filters['ansible.utils.' + k] = v
 
-    jinja2_filters.append(filters)
+  #  jinja2_filters.append(filters)
 
-  except Exception:
-    print('warning: unable to import ansible \'ipaddr\' filter - requires ansible-core, netaddr and ansible.netcommon:<2.6.0 collection', file=sys.stderr)
-    errc += 1
+  #except Exception:
+  #  print('warning: unable to import ansible \'ipaddr\' filter - requires ansible-core, netaddr and ansible.netcommon:<2.6.0 collection', file=sys.stderr)
+  #  errc += 1
 
   return errc
 
@@ -475,20 +476,36 @@ class JinjaFx():
     gvars['jinja2_extensions'].insert(0, 'ext.jinjafx')
     sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
 
+    try:
+      import ansible_ipaddr
+
+      filters = {}
+      for k, v in ansible_ipaddr.FilterModule().filters().items():
+        filters[k] = v
+        filters['ansible.netcommon.' + k] = v
+        filters['ansible.utils.' + k] = v
+
+      jinja2_filters.append(filters)
+
+    except:
+      pass
+
+    jinja2_tests = {
+      'regex': self.__jfx_regex,
+      'match': self.__jfx_match,
+      'search': self.__jfx_search
+    }
+
     if isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
+      env.tests.update(jinja2_tests)
       template = env.from_string(template)
     else:
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       [env.filters.update(f) for f in jinja2_filters]
+      env.tests.update(jinja2_tests)
       template = env.get_template(os.path.basename(template.name))
-
-    env.tests.update({
-      'regex': self.__jfx_regex,
-      'match': self.__jfx_match,
-      'search': self.__jfx_search
-    })
 
     env.globals.update({
       'lookup': self.__jfx_lookup
