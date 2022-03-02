@@ -221,11 +221,11 @@ keep_trailing_newline = True
 
 ### Ansible Filters
 
-Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx will silently attempt to enable the following Ansible filters if it detects they are installed:
+Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx conains some of them that have been ported from Ansible.
 
 - <b><code>core</code></b>
 
-This contains the "Core" Ansible filters, which includes `groupby`, `b64decode`, `b64encode`, `to_uuid`, `to_json`, `to_nice_json`, `from_json`, `to_yaml`, `to_nice_yaml`, `from_yaml`, `from_yaml_all`, `basename`, `dirname`, `expanduser`, `expandvars`, `realpath`, `relpath`, `splitext`, `win_basename`, `win_dirname`, `win_splitdrive`, `fileglob`, `bool`, `to_datetime`, `strftime`, `quote`, `md5`, `sha1`, `checksum`, `password_hash`, `hash`, `regex_replace`, `regex_escape`, `regex_search`, `regex_findall`, `ternary`, `random`, `shuffle`, `mandatory`, `comment`, `type_debug`, `combine`, `extract`, `flatten`, `dict2items`, `items2dict`, `subelements` and `random_mac`.
+This contains the following "Core" Ansible filters: `regex_replace`, `regex_search` and `regex_findall`.
 
 - <b><code>ansible.netcommon.ipaddr</code></b>
 

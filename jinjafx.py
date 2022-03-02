@@ -18,43 +18,8 @@
 import sys, os, io, argparse, re, copy, getpass, datetime, traceback
 import jinja2, yaml, pytz
 
-__version__ = '1.9.9'
+__version__ = '1.9.10'
 jinja2_filters = []
-
-def import_filters(errc = 0):
-  try:
-    from ansible.plugins.filter import core
-    jinja2_filters.append(core.FilterModule().filters())
-
-  except Exception:
-    print('warning: unable to import ansible \'core\' filters - requires ansible-core', file=sys.stderr)
-    errc += 1
-      
-  #try:
-  #  import netaddr
-
-  #  try:
-  #    from ansible.plugins.filter import ipaddr
-  #  except Exception:
-  #    try:
-  #      from ansible_collections.ansible.netcommon.plugins.filter import ipaddr
-  #    except Exception:
-  #      raise Exception()
-
-  #  filters = {}
-  #  for k, v in ipaddr.FilterModule().filters().items():
-  #    filters[k] = v
-  #    filters['ansible.netcommon.' + k] = v
-  #    filters['ansible.utils.' + k] = v
-
-  #  jinja2_filters.append(filters)
-
-  #except Exception:
-  #  print('warning: unable to import ansible \'ipaddr\' filter - requires ansible-core, netaddr and ansible.netcommon:<2.6.0 collection', file=sys.stderr)
-  #  errc += 1
-
-  return errc
-
 
 def __format_bytes(b):
   for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
@@ -217,8 +182,8 @@ def main():
 
       gvars['jinjafx_input'] = jinjafx_input
 
-    if import_filters() > 0:
-      print()
+    #if import_filters() > 0:
+    #  print()
 
     args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
     outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
@@ -508,7 +473,10 @@ class JinjaFx():
       template = env.get_template(os.path.basename(template.name))
 
     env.globals.update({
-      'lookup': self.__jfx_lookup
+      'lookup': self.__jfx_lookup,
+      'regex_replace': self.__jfx_regex_replace,
+      'regex_search': self.__jfx_regex_search,
+      'regex_findall': self.__jfx_regex_findall
     })
 
     env.globals.update({ 'jinjafx': {
@@ -881,6 +849,51 @@ class JinjaFx():
 
     _re = re.compile(pattern, flags=flags)
     return bool(getattr(_re, match_type, 'search')(value))
+
+
+  def __jfx_regex_replace(self, value='', pattern='', replacement='', ignorecase=False, multiline=False, flags=0):
+    if ignorecase:
+      flags |= re.I
+
+    if multiline:
+      flags |= re.M
+
+    _re = re.compile(pattern, flags=flags)
+    return _re.sub(replacement, value)
+
+
+  def __jfx_regex_search(self, value, regex, *args, **kwargs):
+    groups = list()
+    flags = 0
+
+    for arg in args:
+      if arg.startswith('\\g'):
+        match = re.match(r'\\g<(\S+)>', arg).group(1)
+        groups.append(match)
+      elif arg.startswith('\\'):
+        match = int(re.match(r'\\(\d+)', arg).group(1))
+        groups.append(match)
+      else:
+        raise Exception('Unknown argument')
+
+    if kwargs.get('ignorecase'):
+      flags |= re.I
+    if kwargs.get('multiline'):
+      flags |= re.M
+
+    match = re.search(regex, value, flags)
+    if match:
+      if not groups:
+        return match.group()
+      else:
+        items = list()
+        for item in groups:
+          items.append(match.group(item))
+        return items
+
+
+  def __jfx_regex_findall(self, value, pattern='', multiline=False, ignorecase=False):
+    return self.__jfx_regex(value, pattern, ignorecase, multiline, 'findall')
 
 
   def __jfx_match(self, value, pattern='', ignorecase=False, multiline=False):
