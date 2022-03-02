@@ -18,7 +18,7 @@
 import sys, os, io, argparse, re, copy, getpass, datetime, traceback
 import jinja2, yaml, pytz
 
-__version__ = '1.9.6'
+__version__ = '1.9.7'
 jinja2_filters = []
 
 def import_filters(errc = 0):
@@ -38,7 +38,10 @@ def import_filters(errc = 0):
       try:
         from ansible_collections.ansible.netcommon.plugins.filter import ipaddr
       except Exception:
-        raise Exception()
+        try:
+          from ansible_collections.ansible.utils.plugins.filter import ipaddr
+        except Exception:
+          raise Exception()
 
     filters = {}
     for k, v in ipaddr.FilterModule().filters().items():
