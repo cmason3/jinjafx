@@ -1,7 +1,7 @@
 # JinjaFx - Jinja2 Templating Tool
 # Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>
 #
-# Portions this file are part of Ansible
+# Portions of this file are part of Ansible
 # Copyright (c) 2014 Maciej Delmanowski <drybjed@gmail.com>
 #
 # Permission to use, copy, modify, and distribute this software for any
