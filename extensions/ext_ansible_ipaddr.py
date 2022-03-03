@@ -1,41 +1,46 @@
-# (c) 2014, Maciej Delmanowski <drybjed@gmail.com>
+# JinjaFx - Jinja2 Templating Tool
+# Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>
 #
-# This file is part of Ansible
+# Portions of this file are part of Ansible
+# Copyright (c) 2014 Maciej Delmanowski <drybjed@gmail.com>
 #
-# Ansible is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
 #
-# Ansible is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-# Make coding more python3-ish
-from __future__ import absolute_import, division, print_function
+from jinja2.ext import Extension
+import netaddr, types
+ 
+class plugin(Extension):
+  def __init__(self, environment):
+    Extension.__init__(self, environment)
 
-__metaclass__ = type
-
-from functools import partial
-import types
-
-try:
-    import netaddr
-except ImportError:
-    # in this case, we'll make the filters return error messages (see bottom)
-    netaddr = None
-else:
-
-    class mac_linux(netaddr.mac_unix):
-        pass
-
-    mac_linux.word_fmt = "%.2x"
-
-
+    for p in ('', 'ansible.netcommon.'):
+      environment.filters[p + 'cidr_merge'] = cidr_merge
+      environment.filters[p + 'ipaddr'] = ipaddr
+      environment.filters[p + 'ipmath'] = ipmath
+      environment.filters[p + 'ipwrap'] = ipwrap
+      environment.filters[p + 'ip4_hex'] = ip4_hex
+      environment.filters[p + 'ipv4'] = ipv4
+      environment.filters[p + 'ipv6'] = ipv6
+      environment.filters[p + 'ipsubnet'] = ipsubnet
+      environment.filters[p + 'next_nth_usable'] = next_nth_usable
+      environment.filters[p + 'network_in_network'] = network_in_network
+      environment.filters[p + 'network_in_usable'] = network_in_usable
+      environment.filters[p + 'reduce_on_network'] = reduce_on_network
+      environment.filters[p + 'nthhost'] = nthhost
+      environment.filters[p + 'previous_nth_usable'] = previous_nth_usable
+      environment.filters[p + 'slaac'] = slaac
+      environment.filters[p + 'hwaddr'] = hwaddr
+      environment.filters[p + 'macaddr'] = macaddr
 
 # ---- IP address and network query helpers ----
 def _empty_ipaddr_query(v, vtype):
@@ -909,11 +914,9 @@ def previous_nth_usable(value, offset):
 def _range_checker(ip_check, first, last):
     """
     Tests whether an ip address is within the bounds of the first and last address.
-
     :param ip_check: The ip to test if it is within first and last.
     :param first: The first IP in the range to test against.
     :param last: The last IP in the range to test against.
-
     :return: bool
     """
     if ip_check >= first and ip_check <= last:
@@ -926,9 +929,7 @@ def _address_normalizer(value):
     """
     Used to validate an address or network type and return it in a consistent format.
     This is being used for future use cases not currently available such as an address range.
-
     :param value: The string representation of an address or network.
-
     :return: The address or network in the normalized form.
     """
     try:
@@ -946,10 +947,8 @@ def _address_normalizer(value):
 def network_in_usable(value, test):
     """
     Checks whether 'test' is a useable address or addresses in 'value'
-
     :param: value: The string representation of an address or network to test against.
     :param test: The string representation of an address or network to validate if it is within the range of 'value'.
-
     :return: bool
     """
     # normalize value and test variables into an ipaddr
@@ -973,10 +972,8 @@ def network_in_usable(value, test):
 def network_in_network(value, test):
     """
     Checks whether the 'test' address or addresses are in 'value', including broadcast and network
-
     :param: value: The network address or range to test against.
     :param test: The address or network to validate if it is within the range of 'value'.
-
     :return: bool
     """
     # normalize value and test variables into an ipaddr
@@ -1000,10 +997,8 @@ def network_in_network(value, test):
 def reduce_on_network(value, network):
     """
     Reduces a list of addresses to only the addresses that match a given network.
-
     :param: value: The list of addresses to filter on.
     :param: network: The network to validate against.
-
     :return: The reduced list of addresses.
     """
     # normalize network variable into an ipaddr
@@ -1124,41 +1119,3 @@ def ip4_hex(arg, delimiter=""):
         *numbers, sep=delimiter
     )
 
-
-# ---- Ansible filters ----
-class FilterModule(object):
-    """IP address and network manipulation filters
-
-    Detailed documentation available at https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html
-    """
-
-    filter_map = {
-        # IP addresses and networks
-        "cidr_merge": cidr_merge,
-        "ipaddr": ipaddr,
-        "ipmath": ipmath,
-        "ipwrap": ipwrap,
-        "ip4_hex": ip4_hex,
-        "ipv4": ipv4,
-        "ipv6": ipv6,
-        "ipsubnet": ipsubnet,
-        "next_nth_usable": next_nth_usable,
-        "network_in_network": network_in_network,
-        "network_in_usable": network_in_usable,
-        "reduce_on_network": reduce_on_network,
-        "nthhost": nthhost,
-        "previous_nth_usable": previous_nth_usable,
-        "slaac": slaac,
-        # MAC / HW addresses
-        "hwaddr": hwaddr,
-        "macaddr": macaddr,
-    }
-
-    def filters(self):
-        if netaddr:
-            return self.filter_map
-        else:
-            # Need to install python's netaddr for these filters to work
-            return dict(
-                (f, partial(_need_netaddr, f)) for f in self.filter_map
-            )

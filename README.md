@@ -5,9 +5,9 @@
 
 <h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
 
-<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
+<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and strings or use custom Ansible filters.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files.
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in a dynamic "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
 
@@ -23,7 +23,6 @@ python3 -m pip install --upgrade --user jinjafx [ansible-core]
  jinjafx (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]
    -t <template.j2>              - specify a Jinja2 template
    -d <data.csv>                 - specify row/column based data (comma or tab separated)
-   -dt <dt.yml>                  - specify a JinjaFx DataTemplate (contains template and data)
    -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible vaulted files and strings)
    -ed <exts dir>[, -ed ...]     - specify where to look for extensions (default is "." and "~/.jinjafx")
    -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
@@ -221,15 +220,11 @@ keep_trailing_newline = True
 
 ### Ansible Filters
 
-Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx conains some of them that have been ported from Ansible.
+Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx conains some of them that have been ported from Ansible - please raise an Issue if there is one that is missing that people commonly use and I will get it added.
 
-- <b><code>core</code></b>
+This contains the following "Core" Ansible filters: `b64encode`, `b64decode`, `hash`, `regex_replace`, `regex_search` and `regex_findall`.
 
-This contains the following "Core" Ansible filters: `regex_replace`, `regex_search` and `regex_findall`.
-
-- <b><code>ansible.netcommon.ipaddr</code></b>
-
-This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module. These filters can be used using the shorter `|ipaddr` syntax as well as the longer `|ansible.netcommon.ipaddr` syntax. The full list of imported filters are `cidr_merge`, `ipaddr`, `ipmath`, `ipwrap`, `ip4_hex`, `ipv4`, `ipv6`, `ipsubnet`, `next_nth_usable`, `network_in_network`, `network_in_usable`, `reduce_on_network`, `nthhost`, `previous_nth_usable`, `slaac`, `hwaddr` and `macaddr`.
+This also contains the following "[ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html)" Ansible filters: `cidr_merge`, `ipaddr`, `ipmath`, `ipwrap`, `ip4_hex`, `ipv4`, `ipv6`, `ipsubnet`, `next_nth_usable`, `network_in_network`, `network_in_usable`, `reduce_on_network`, `nthhost`, `previous_nth_usable`, `slaac`, `hwaddr` and `macaddr`. 
 
 ### Ansible Tests
 
@@ -362,23 +357,6 @@ jinja2_extensions:
   - 'jinjafx_extensions.AddExtension'
 ```
 
-### JinjaFx DataTemplates
-
-JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
-
-```yaml
----
-dt:
-  data: |2
-    ... DATA.CSV ...
-
-  template: |2
-    ... TEMPLATE.J2 ...
-
-  vars: |2
-    ... VARS.YML ...
-```
-
 ### JinjaFx Built-Ins
 
 Templates should be written using Jinja2 template syntax to make them compatible with Ansible and other tools which use Jinja2. However, there are a few JinjaFx specific extensions that have been added to make JinjaFx much more powerful when dealing with rows of data, as well as providing some much needed functionality which isn't currently present in Jinja2 (e.g. being able to store persistent variables across templates). These are used within a template like any other variable or function (e.g. `{{ jinjafx.version }}`).
@@ -463,7 +441,7 @@ This function is used to get a global variable that has been set with `jinjafx.s
 
 ### JinjaFx Filters
 
-JinjaFx comes with a custom Jinja2 Extension (`extensions/ext.py`) that is enabled by default which provides the following custom filters:
+JinjaFx comes with a custom Jinja2 Extension (`extensions/ext_jinjafx.py`) that is enabled by default which provides the following custom filters:
 
 - <b><code>cisco_snmpv3_key("engineid", [algorithm="sha1"])</code></b>
 

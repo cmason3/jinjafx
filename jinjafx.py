@@ -15,18 +15,10 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, io, argparse, re, copy, getpass, datetime, traceback
+import sys, os, io, importlib, argparse, re, copy, getpass, datetime, traceback
 import jinja2, yaml, pytz
 
-__version__ = '1.9.11'
-
-def __format_bytes(b):
-  for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
-    if b >= 1000:
-      b /= 1000
-    else:
-      return '{:.2f}'.format(b).rstrip('0').rstrip('.') + u + 'B'
-
+__version__ = '1.10.0'
 
 def main():
   try:
@@ -34,12 +26,14 @@ def main():
       print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]'
+    jinjafx_usage = '-t <template.j2> [-d <data.csv>] [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]'
+    # jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]'
 
     parser = __ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
-    group_ex = parser.add_mutually_exclusive_group(required=True)
-    group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
-    group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
+    #group_ex = parser.add_mutually_exclusive_group(required=True)
+    #group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
+    #group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
+    parser.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'), required=True)
     parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-ed', metavar='<exts dir>', type=str, action='append', default=[])
@@ -49,8 +43,8 @@ def main():
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
 
-    if args.dt is not None and args.d is not None:
-      parser.error("argument -d: not allowed with argument -dt")
+    #if args.dt is not None and args.d is not None:
+    #  parser.error("argument -d: not allowed with argument -dt")
 
     if args.m is True and args.g is None:
       parser.error("argument -m: only allowed with argument -g")
@@ -61,7 +55,7 @@ def main():
     data = None
     vault = [ None ]
     gvars = {}
-    dt = {}
+    #dt = {}
 
     def decrypt_vault(string):
       if string.startswith('$ANSIBLE_VAULT;'):
@@ -90,6 +84,8 @@ def main():
     def yaml_vault_tag(loader, node):
       return decrypt_vault(node.value)
 
+    yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+
     def merge(dst, src):
       for key in src:
         if key in dst:
@@ -107,24 +103,22 @@ def main():
 
       return dst
 
-    yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+    #if args.dt is not None:
+    #  with open(args.dt.name) as f:
+    #    dt.update(yaml.load(f.read(), Loader=yaml.SafeLoader)['dt'])
+    #    args.t = dt['template']
 
-    if args.dt is not None:
-      with open(args.dt.name) as f:
-        dt.update(yaml.load(f.read(), Loader=yaml.SafeLoader)['dt'])
-        args.t = dt['template']
+    #    if 'datasets' in dt:
+    #      raise Exception('invalid datatemplate format')
 
-        if 'datasets' in dt:
-          raise Exception('datasets aren\'t supported at present')
+    #    else:
+    #      if 'data' in dt:
+    #        data = dt['data']
 
-        else:
-          if 'data' in dt:
-            data = dt['data']
-
-          if 'vars' in dt:
-            gyaml = decrypt_vault(dt['vars'])
-            if gyaml:
-              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+    #      if 'vars' in dt:
+    #        gyaml = decrypt_vault(dt['vars'])
+    #        if gyaml:
+    #          gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
     if args.d is not None:
       with open(args.d.name) as f:
@@ -230,13 +224,21 @@ def main():
 
   except Exception as e:
     tb = traceback.format_exc()
-    match = re.search(r'[\s\S]*File "(.+)", line ([0-9]+), in.*template', tb, re.IGNORECASE)
+    match = re.search(r'^[ \t]*File "(.+)", line ([0-9]+), in template$', tb, re.IGNORECASE | re.MULTILINE)
     if match:
       print('error[' + match.group(1) + ':' + match.group(2) + ']: ' + type(e).__name__ + ': ' + str(e), file=sys.stderr)
     else:
       print('error[' + str(sys.exc_info()[2].tb_lineno) + ']: ' + type(e).__name__ + ': ' + str(e), file=sys.stderr)
 
     sys.exit(-2)
+
+
+def __format_bytes(b):
+  for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
+    if b >= 1000:
+      b /= 1000
+    else:
+      return '{:.2f}'.format(b).rstrip('0').rstrip('.') + u + 'B'
 
 
 class __ArgumentParser(argparse.ArgumentParser):
@@ -424,6 +426,20 @@ class JinjaFx():
           r = True if field.startswith('-') else False
           self.__g_datarows[1:] = sorted(self.__g_datarows[1:], key=lambda n: n[self.__g_datarows[0].index(field.lstrip('+-')) + 1], reverse=r)
 
+    sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
+
+    if 'jinja2_extensions' not in gvars:
+      gvars.update({ 'jinja2_extensions': [] })
+
+    if importlib.util.find_spec('ext_jinjafx') is not None:
+      gvars['jinja2_extensions'].append('ext_jinjafx.plugin')
+
+    if importlib.util.find_spec('ext_ansible_core') is not None:
+      gvars['jinja2_extensions'].append('ext_ansible_core.plugin')
+
+    if importlib.util.find_spec('ext_ansible_ipaddr') is not None:
+      gvars['jinja2_extensions'].append('ext_ansible_ipaddr.plugin')
+
     jinja2_options = {
       'undefined': jinja2.StrictUndefined,
       'trim_blocks': True,
@@ -431,45 +447,11 @@ class JinjaFx():
       'keep_trailing_newline': True
     }
 
-    if 'jinja2_extensions' not in gvars:
-      gvars.update({ 'jinja2_extensions': [] })
-
-    gvars['jinja2_extensions'].insert(0, 'ext.jinjafx')
-    sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
-
-    jinja2_tests = {
-      'regex': self.__jfx_regex,
-      'match': self.__jfx_match,
-      'search': self.__jfx_search
-    }
-
-    jinja2_filters = {
-      'lookup': self.__jfx_lookup,
-      'regex_replace': self.__jfx_regex_replace,
-      'regex_search': self.__jfx_regex_search,
-      'regex_findall': self.__jfx_regex_findall
-    }
-
-    try:
-      import ansible_ipaddr
-
-      for k, v in ansible_ipaddr.FilterModule().filters().items():
-        jinja2_filters[k] = v
-        jinja2_filters['ansible.netcommon.' + k] = v
-        jinja2_filters['ansible.utils.' + k] = v
-
-    except:
-      pass
-
     if isinstance(template, str):
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
-      env.tests.update(jinja2_tests)
-      env.filters.update(jinja2_filters)
       template = env.from_string(template)
     else:
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
-      env.tests.update(jinja2_tests)
-      env.filters.update(jinja2_filters)
       template = env.get_template(os.path.basename(template.name))
 
     env.globals.update({ 'jinjafx': {
@@ -485,10 +467,11 @@ class JinjaFx():
       'setg': self.__jfx_setg,
       'getg': self.__jfx_getg,
       'now': self.__jfx_now,
-#      'nslookup': self.__jfx_nslookup,
       'rows': max([0, len(self.__g_datarows) - 1]),
       'data': [r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows]
-    }})
+    },
+      'lookup': self.__jfx_lookup
+    })
 
     if len(gvars) > 0:
       env.globals.update(gvars)
@@ -560,6 +543,14 @@ class JinjaFx():
       del outputs[o]
 
     return outputs
+
+
+  def __find_re_match(self, o, v, default=0):
+    for rx in o:
+      if rx[0].match(v):
+        return rx[1]
+
+    return default
 
 
   def __jfx_lookup(self, method, variable, default=None):
@@ -806,103 +797,6 @@ class JinjaFx():
 
     else:
       return str(datetime.datetime.utcnow().astimezone(tz))
-
-
-#  def __jfx_nslookup(self, v, family=46):
-#    try:
-#      if re.match(r'^(?:[0-9a-f:]+:+)+[0-9a-f]+$', v, re.I): # IPv6
-#        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
-#
-#      elif re.match(r'^(?:[0-9]+\.){3}[0-9]+$', v): # IPv4
-#        return [socket.getnameinfo((v, 0), socket.NI_NAMEREQD)[0]]
-#
-#      else:
-#        if int(family) == 46:
-#          s = socket.getaddrinfo(v, 0, 0, socket.SOCK_STREAM)
-#          return [e[4][0] for e in s]
-#        elif int(family) == 4:
-#          s = socket.getaddrinfo(v, 0, socket.AF_INET, socket.SOCK_STREAM)
-#          return [e[4][0] for e in s]
-#        elif int(family) == 6:
-#          s = socket.getaddrinfo(v, 0, socket.AF_INET6, socket.SOCK_STREAM)
-#          return [e[4][0] for e in s]
-#
-#    except:
-#      pass
-#
-#    return None
-
-
-  def __jfx_regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
-    if ignorecase:
-      flags |= re.I
-
-    if multiline:
-      flags |= re.M
-
-    _re = re.compile(pattern, flags=flags)
-    return bool(getattr(_re, match_type, 'search')(value))
-
-
-  def __jfx_regex_replace(self, value='', pattern='', replacement='', ignorecase=False, multiline=False, flags=0):
-    if ignorecase:
-      flags |= re.I
-
-    if multiline:
-      flags |= re.M
-
-    _re = re.compile(pattern, flags=flags)
-    return _re.sub(replacement, value)
-
-
-  def __jfx_regex_search(self, value, regex, *args, **kwargs):
-    groups = list()
-    flags = 0
-
-    for arg in args:
-      if arg.startswith('\\g'):
-        match = re.match(r'\\g<(\S+)>', arg).group(1)
-        groups.append(match)
-      elif arg.startswith('\\'):
-        match = int(re.match(r'\\(\d+)', arg).group(1))
-        groups.append(match)
-      else:
-        raise Exception('Unknown argument')
-
-    if kwargs.get('ignorecase'):
-      flags |= re.I
-    if kwargs.get('multiline'):
-      flags |= re.M
-
-    match = re.search(regex, value, flags)
-    if match:
-      if not groups:
-        return match.group()
-      else:
-        items = list()
-        for item in groups:
-          items.append(match.group(item))
-        return items
-
-
-  def __jfx_regex_findall(self, value, pattern='', multiline=False, ignorecase=False):
-    return self.__jfx_regex(value, pattern, ignorecase, multiline, 'findall')
-
-
-  def __jfx_match(self, value, pattern='', ignorecase=False, multiline=False):
-    return self.__jfx_regex(value, pattern, ignorecase, multiline, 'match')
-
-
-  def __jfx_search(self, value, pattern='', ignorecase=False, multiline=False):
-    return self.__jfx_regex(value, pattern, ignorecase, multiline, 'search')
-
-
-  def __find_re_match(self, o, v, default=0):
-    for rx in o:
-      if rx[0].match(v):
-        return rx[1]
-
-    return default
 
 
 if __name__ == '__main__':
