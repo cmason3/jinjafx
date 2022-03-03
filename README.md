@@ -7,7 +7,7 @@
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files and strings or use custom Ansible filters.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files.
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in a dynamic "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
 
@@ -23,7 +23,6 @@ python3 -m pip install --upgrade --user jinjafx [ansible-core]
  jinjafx (-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]
    -t <template.j2>              - specify a Jinja2 template
    -d <data.csv>                 - specify row/column based data (comma or tab separated)
-   -dt <dt.yml>                  - specify a JinjaFx DataTemplate (contains template and data)
    -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible vaulted files and strings)
    -ed <exts dir>[, -ed ...]     - specify where to look for extensions (default is "." and "~/.jinjafx")
    -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
@@ -362,23 +361,6 @@ jinja2_extensions:
   - 'jinjafx_extensions.AddExtension'
 ```
 
-### JinjaFx DataTemplates
-
-JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
-
-```yaml
----
-dt:
-  data: |2
-    ... DATA.CSV ...
-
-  template: |2
-    ... TEMPLATE.J2 ...
-
-  vars: |2
-    ... VARS.YML ...
-```
-
 ### JinjaFx Built-Ins
 
 Templates should be written using Jinja2 template syntax to make them compatible with Ansible and other tools which use Jinja2. However, there are a few JinjaFx specific extensions that have been added to make JinjaFx much more powerful when dealing with rows of data, as well as providing some much needed functionality which isn't currently present in Jinja2 (e.g. being able to store persistent variables across templates). These are used within a template like any other variable or function (e.g. `{{ jinjafx.version }}`).
@@ -463,7 +445,7 @@ This function is used to get a global variable that has been set with `jinjafx.s
 
 ### JinjaFx Filters
 
-JinjaFx comes with a custom Jinja2 Extension (`extensions/ext.py`) that is enabled by default which provides the following custom filters:
+JinjaFx comes with a custom Jinja2 Extension (`extensions/ext_jinjafx.py`) that is enabled by default which provides the following custom filters:
 
 - <b><code>cisco_snmpv3_key("engineid", [algorithm="sha1"])</code></b>
 
