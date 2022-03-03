@@ -220,15 +220,11 @@ keep_trailing_newline = True
 
 ### Ansible Filters
 
-Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx conains some of them that have been ported from Ansible.
-
-- <b><code>core</code></b>
+Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx conains some of them that have been ported from Ansible - please raise an Issue if there is one that is missing that people commonly use and I will get it added.
 
 This contains the following "Core" Ansible filters: `regex_replace`, `regex_search` and `regex_findall`.
 
-- <b><code>ansible.netcommon.ipaddr</code></b>
-
-This filter allows IP address manipulation and is documented in [playbooks_filters_ipaddr.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html). To enable this set of filters you will also need to install the [netaddr](https://pypi.org/project/netaddr/) Python module. These filters can be used using the shorter `|ipaddr` syntax as well as the longer `|ansible.netcommon.ipaddr` syntax. The full list of imported filters are `cidr_merge`, `ipaddr`, `ipmath`, `ipwrap`, `ip4_hex`, `ipv4`, `ipv6`, `ipsubnet`, `next_nth_usable`, `network_in_network`, `network_in_usable`, `reduce_on_network`, `nthhost`, `previous_nth_usable`, `slaac`, `hwaddr` and `macaddr`.
+This also contains the following "ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html)" Ansible filters: `cidr_merge`, `ipaddr`, `ipmath`, `ipwrap`, `ip4_hex`, `ipv4`, `ipv6`, `ipsubnet`, `next_nth_usable`, `network_in_network`, `network_in_usable`, `reduce_on_network`, `nthhost`, `previous_nth_usable`, `slaac`, `hwaddr` and `macaddr`. 
 
 ### Ansible Tests
 
