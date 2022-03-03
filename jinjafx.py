@@ -439,8 +439,6 @@ class JinjaFx():
 
     if importlib.util.find_spec('ext_ansible_ipaddr') is not None:
       gvars['jinja2_extensions'].append('ext_ansible_ipaddr.plugin')
-    else:
-      print("error importing")
 
     jinja2_options = {
       'undefined': jinja2.StrictUndefined,
