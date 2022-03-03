@@ -222,7 +222,7 @@ keep_trailing_newline = True
 
 Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx conains some of them that have been ported from Ansible - please raise an Issue if there is one that is missing that people commonly use and I will get it added.
 
-This contains the following "Core" Ansible filters: `regex_replace`, `regex_search` and `regex_findall`.
+This contains the following "Core" Ansible filters: `b64encode`, `b64decode`, `hash`, `regex_replace`, `regex_search` and `regex_findall`.
 
 This also contains the following "[ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html)" Ansible filters: `cidr_merge`, `ipaddr`, `ipmath`, `ipwrap`, `ip4_hex`, `ipv4`, `ipv6`, `ipsubnet`, `next_nth_usable`, `network_in_network`, `network_in_usable`, `reduce_on_network`, `nthhost`, `previous_nth_usable`, `slaac`, `hwaddr` and `macaddr`. 
 

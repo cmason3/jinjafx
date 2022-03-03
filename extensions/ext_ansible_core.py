@@ -14,7 +14,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from jinja2.ext import Extension
-import re
+import re, base64, hashlib
  
 class plugin(Extension):
   def __init__(self, environment):
@@ -22,9 +22,18 @@ class plugin(Extension):
     environment.tests['regex'] = self.__regex
     environment.tests['match'] = self.__match
     environment.tests['search'] = self.__search
+    environment.filters['b64decode'] = self.__b64decode
+    environment.filters['b64encode'] = self.__b64encode
     environment.filters['regex_replace'] = self.__regex_replace
     environment.filters['regex_search'] = self.__regex_search
     environment.filters['regex_findall'] = self.__regex_findall
+    environment.filters['hash'] = self.__hash
+
+  def __b64decode(self, string, encoding='utf-8'):
+    return base64.b64decode(string.encode(encoding)).decode(encoding)
+
+  def __b64encode(self, string, encoding='utf-8'):
+    return base64.b64encode(string.encode(encoding)).decode(encoding)
 
   def __regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
     if ignorecase:
@@ -84,3 +93,7 @@ class plugin(Extension):
   def __regex_findall(self, value, pattern='', multiline=False, ignorecase=False):
     return self.__regex(value, pattern, ignorecase, multiline, 'findall')
 
+  def __hash(self, data, hashtype='sha1'):
+    h = hashlib.new(hashtype)
+    h.update(data.encode('utf-8'))
+    return h.hexdigest()
