@@ -18,7 +18,7 @@
 import sys, os, io, importlib, argparse, re, copy, getpass, datetime, traceback
 import jinja2, yaml, pytz
 
-__version__ = '1.10.0'
+__version__ = '1.10.1'
 
 def main():
   try:
