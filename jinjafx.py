@@ -37,12 +37,8 @@ def main():
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
     jinjafx_usage = '-t <template.j2> [-d <data.csv>] [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]'
-    # jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml>) [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]'
 
     parser = __ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
-    #group_ex = parser.add_mutually_exclusive_group(required=True)
-    #group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
-    #group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
     parser.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'), required=True)
     parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
@@ -53,9 +49,6 @@ def main():
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
 
-    #if args.dt is not None and args.d is not None:
-    #  parser.error("argument -d: not allowed with argument -dt")
-
     if args.m is True and args.g is None:
       parser.error("argument -m: only allowed with argument -g")
 
@@ -64,9 +57,7 @@ def main():
 
     data = None
     vpw = [ None ]
-    #vault = [ None ]
     gvars = {}
-    #dt = {}
 
     def decrypt_vault(string):
       if string.startswith('$ANSIBLE_VAULT;'):
@@ -112,26 +103,6 @@ def main():
         else:
           raise Exception("unknown ansible vault version")
 
-        #if vault[0] is None:
-        #  from ansible.constants import DEFAULT_VAULT_ID_MATCH
-        #  from ansible.parsing.vault import VaultLib
-        #  from ansible.parsing.vault import VaultSecret
-
-        #  vpw = os.getenv('ANSIBLE_VAULT_PASSWORD')
-
-        #  if vpw == None:
-        #    vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
-        #    if vpwf != None:
-        #      with open(vpwf) as f:
-        #        vpw = f.read().strip()
-
-        #  if vpw == None:
-        #    vpw = getpass.getpass('Vault Password: ')
-        #    print()
-
-        #  vault[0] = VaultLib([(DEFAULT_VAULT_ID_MATCH, VaultSecret(vpw.encode('utf-8')))])
-
-        #return vault[0].decrypt(string.encode('utf-8')).decode('utf-8')
       return string
 
     def yaml_vault_tag(loader, node):
@@ -155,23 +126,6 @@ def main():
           dst[key] = src[key]
 
       return dst
-
-    #if args.dt is not None:
-    #  with open(args.dt.name) as f:
-    #    dt.update(yaml.load(f.read(), Loader=yaml.SafeLoader)['dt'])
-    #    args.t = dt['template']
-
-    #    if 'datasets' in dt:
-    #      raise Exception('invalid datatemplate format')
-
-    #    else:
-    #      if 'data' in dt:
-    #        data = dt['data']
-
-    #      if 'vars' in dt:
-    #        gyaml = decrypt_vault(dt['vars'])
-    #        if gyaml:
-    #          gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
     if args.d is not None:
       with open(args.d.name) as f:
