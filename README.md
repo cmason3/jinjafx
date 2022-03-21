@@ -7,14 +7,14 @@
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it doesn't require any Python modules that aren't in the base install, with the exception of [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons, and [ansible](https://pypi.org/project/ansible/) if you want to decrypt Ansible Vaulted files.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it only requires a couple of Python modules that aren't in the base install - [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [cryptography](https://pypi.org/project/cryptography/) if you want to decrypt Ansible Vaulted files.
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in a dynamic "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
 
 ### Installation
 
 ```
-python3 -m pip install --upgrade --user jinjafx [ansible-core]
+python3 -m pip install --upgrade --user jinjafx
 ```
 
 ### JinjaFx Usage
