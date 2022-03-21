@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.10.1'
+__version__ = '1.10.2'
 
 def main():
   try:
@@ -74,34 +74,7 @@ def main():
             vpw[0] = getpass.getpass('Vault Password: ')
             print()
 
-        slines = string.splitlines()
-        hdr = list(map(str.strip, slines[0].split(';')))
-
-        if hdr[1] == '1.1' or hdr[1] == '1.2':
-          if hdr[2] == 'AES256':
-            vaulttext = bytes.fromhex(''.join(slines[1:]))
-            b_salt, b_hmac, b_ciphertext = vaulttext.split(b"\n", 2)
-            b_salt = bytes.fromhex(b_salt.decode('utf-8'))
-            b_hmac = bytes.fromhex(b_hmac.decode('utf-8'))
-            b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
-
-            b_derivedkey = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(vpw[0].encode('utf-8'))
-
-            hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
-            hmac.update(b_ciphertext)
-            hmac.verify(b_hmac)
-
-            d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
-
-            u = PKCS7(128).unpadder()
-            b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
-            return b_plaintext.decode('utf-8')
-
-          else:
-            raise Exception("unknown ansible vault cipher")
-
-        else:
-          raise Exception("unknown ansible vault version")
+        return ansible_vault_decrypt(string, vpw[0])
 
       return string
 
@@ -254,6 +227,42 @@ class __ArgumentParser(argparse.ArgumentParser):
       print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
       print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
     raise Exception(message)
+
+
+def ansible_vault_decrypt(string, vpw):
+  slines = string.splitlines()
+  hdr = list(map(str.strip, slines[0].split(';')))
+
+  if hdr[1] == '1.1' or hdr[1] == '1.2':
+    if hdr[2] == 'AES256':
+      vaulttext = bytes.fromhex(''.join(slines[1:]))
+      b_salt, b_hmac, b_ciphertext = vaulttext.split(b"\n", 2)
+      b_salt = bytes.fromhex(b_salt.decode('utf-8'))
+      b_hmac = bytes.fromhex(b_hmac.decode('utf-8'))
+      b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
+
+      b_derivedkey = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(vpw.encode('utf-8'))
+
+      hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+      hmac.update(b_ciphertext)
+
+      try:
+        hmac.verify(b_hmac)
+
+      except InvalidSignature:
+        raise Exception("invalid ansible vault password")
+
+      d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
+
+      u = PKCS7(128).unpadder()
+      b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
+      return b_plaintext.decode('utf-8')
+
+    else:
+      raise Exception("unknown ansible vault cipher")
+
+  else:
+    raise Exception("unknown ansible vault version")
 
 
 class JinjaFx():
