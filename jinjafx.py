@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.10.3'
+__version__ = '1.10.4'
 
 def main():
   try:
@@ -142,7 +142,7 @@ def main():
                 else:
                   break
               else:
-                m = re.match(v['pattern'], jinjafx_input[k], re.I)
+                m = re.match(v['pattern'], jinjafx_input[k], re.IGNORECASE)
                 if not m or (m.span()[1] - m.span()[0]) != len(jinjafx_input[k]):
                   print('error: input doesn\'t match pattern "' + v['pattern'] + '"', file=sys.stderr)
                 else:
@@ -525,9 +525,26 @@ class JinjaFx():
         raise
 
       stack = ['0:' + env.from_string(output).render(rowdata)]
-      for l in iter(content.splitlines()):
-        block_begin = re.search(r'<output[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', l, re.IGNORECASE)
+      start_tag = re.compile(r'<output[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
+      end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
+      clines = content.splitlines()
+
+      i = 0
+      while i < len(clines):
+        l = clines[i]
+
+        block_begin = start_tag.search(l.strip())
         if block_begin:
+          if block_begin.start() != 0:
+            clines[i] = l[:block_begin.start()]
+            clines.insert(i + 1, l[block_begin.start():])
+            continue
+
+          if block_begin.end() != len(l.strip()):
+            clines[i] = l[:block_begin.end()]
+            clines.insert(i + 1, l[block_begin.end():])
+            continue
+
           if block_begin.group(2) != None:
             index = int(block_begin.group(2))
           else:
@@ -535,8 +552,18 @@ class JinjaFx():
 
           stack.append(str(index) + ':' + block_begin.group(1).strip())
         else:
-          block_end = re.search(r'</output[\t ]*>', l, re.IGNORECASE)
+          block_end = end_tag.search(l.strip())
           if block_end:
+            if block_end.start() != 0:
+              clines[i] = l[:block_end.start()]
+              clines.insert(i + 1, l[block_end.start():])
+              continue
+
+            if block_end.end() != len(l.strip()):
+              clines[i] = l[:block_end.end()]
+              clines.insert(i + 1, l[block_end.end():])
+              continue
+
             if len(stack) > 1:
               stack.pop()
             else:
@@ -545,6 +572,8 @@ class JinjaFx():
             if stack[-1] not in outputs:
               outputs[stack[-1]] = []
             outputs[stack[-1]].append(l)
+
+        i += 1
 
       if len(stack) != 1:
         raise Exception('unbalanced output tags')
