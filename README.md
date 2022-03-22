@@ -237,6 +237,9 @@ This contains the following Ansible filters:
 - `regex_replace`
 - `regex_search`
 - `regex_findall`
+- `log`
+- `pow`
+- `root`
 
 This also contains the following "[ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html)" Ansible filters:
 

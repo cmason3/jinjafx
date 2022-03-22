@@ -17,7 +17,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from jinja2.ext import Extension
-import re, base64, hashlib, yaml, json, datetime, time
+import re, base64, hashlib, yaml, json, datetime, time, math
  
 class plugin(Extension):
   def __init__(self, environment):
@@ -38,6 +38,9 @@ class plugin(Extension):
     environment.filters['regex_search'] = self.__regex_search
     environment.filters['regex_findall'] = self.__regex_findall
     environment.filters['hash'] = self.__hash
+    environment.filters['log'] = self.__log
+    environment.filters['pow'] = self.__pow
+    environment.filters['root'] = self.__root
 
   def __to_yaml(self, a, *args, **kw):
     default_flow_style = kw.pop('default_flow_style', None)
@@ -140,3 +143,13 @@ class plugin(Extension):
     h = hashlib.new(hashtype)
     h.update(data.encode('utf-8'))
     return h.hexdigest()
+
+  def __log(self, x, base=math.e):
+    return math.log10(x) if base == 10 else math.log(x, base)
+
+  def __pow(self, x, y):
+    return math.pow(x, y)
+
+  def __root(self, x, base=2):
+    return math.sqrt(x) if base == 2 else math.pow(x, 1.0 / float(base))
+
