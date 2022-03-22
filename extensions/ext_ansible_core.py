@@ -1,6 +1,9 @@
 # JinjaFx - Jinja2 Templating Tool
 # Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>
 #
+# Portions of this file are part of Ansible
+# Copyright (c) 2012 Jeroen Hoekx <jeroen@hoekx.be>
+#
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
 # copyright notice and this permission notice appear in all copies.
@@ -14,7 +17,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from jinja2.ext import Extension
-import re, base64, hashlib
+import re, base64, hashlib, yaml, json, datetime, time, math
  
 class plugin(Extension):
   def __init__(self, environment):
@@ -22,12 +25,55 @@ class plugin(Extension):
     environment.tests['regex'] = self.__regex
     environment.tests['match'] = self.__match
     environment.tests['search'] = self.__search
+    environment.filters['to_yaml'] = self.__to_yaml
+    environment.filters['to_nice_yaml'] = self.__to_nice_yaml
+    environment.filters['to_json'] = self.__to_json
+    environment.filters['to_nice_json'] = self.__to_nice_json
+    environment.filters['to_bool'] = self.__to_bool
+    environment.filters['to_datetime'] = self.__to_datetime
+    environment.filters['strftime'] = self.__strftime
     environment.filters['b64decode'] = self.__b64decode
     environment.filters['b64encode'] = self.__b64encode
     environment.filters['regex_replace'] = self.__regex_replace
     environment.filters['regex_search'] = self.__regex_search
     environment.filters['regex_findall'] = self.__regex_findall
     environment.filters['hash'] = self.__hash
+    environment.filters['log'] = self.__log
+    environment.filters['pow'] = self.__pow
+    environment.filters['root'] = self.__root
+
+  def __to_yaml(self, a, *args, **kw):
+    default_flow_style = kw.pop('default_flow_style', None)
+    return yaml.dump(a, allow_unicode=True, default_flow_style=default_flow_style, **kw)
+
+  def __to_nice_yaml(self, a, indent=4, *args, **kw):
+    return yaml.dump(a, indent=indent, allow_unicode=True, default_flow_style=False, **kw)
+
+  def __to_json(self, a, *args, **kw):
+    return json.dumps(a, *args, **kw)
+
+  def __to_nice_json(self, a, indent=4, sort_keys=True, *args, **kw):
+    return self.__to_json(a, indent=indent, sort_keys=sort_keys, separators=(',', ': '), *args, **kw)
+
+  def __to_bool(self, a):
+    if a is None or isinstance(a, bool):
+      return a
+
+    if isinstance(a, str):
+      a = a.lower()
+
+    if a in ('yes', 'on', '1', 'true', 1):
+      return True
+
+    return False
+
+  def __to_datetime(self, string, format="%Y-%m-%d %H:%M:%S"):
+    return datetime.datetime.strptime(string, format)
+
+  def __strftime(self, string_format, second=None):
+    if second is not None:
+      second = float(second)
+    return time.strftime(string_format, time.localtime(second))
 
   def __b64decode(self, string, encoding='utf-8'):
     return base64.b64decode(string.encode(encoding)).decode(encoding)
@@ -97,3 +143,13 @@ class plugin(Extension):
     h = hashlib.new(hashtype)
     h.update(data.encode('utf-8'))
     return h.hexdigest()
+
+  def __log(self, x, base=math.e):
+    return math.log10(x) if base == 10 else math.log(x, base)
+
+  def __pow(self, x, y):
+    return math.pow(x, y)
+
+  def __root(self, x, base=2):
+    return math.sqrt(x) if base == 2 else math.pow(x, 1.0 / float(base))
+

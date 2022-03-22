@@ -23,7 +23,7 @@ python3 -m pip install --upgrade --user jinjafx
  jinjafx -t <template.j2> [-d <data.csv>] [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]
    -t <template.j2>              - specify a Jinja2 template
    -d <data.csv>                 - specify row/column based data (comma or tab separated)
-   -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible vaulted files and strings)
+   -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible Vault)
    -ed <exts dir>[, -ed ...]     - specify where to look for extensions (default is "." and "~/.jinjafx")
    -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
    -od <output dir>              - change the output dir for output files with a relative path (default is ".")
@@ -222,13 +222,52 @@ keep_trailing_newline = True
 
 Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx conains some of them that have been ported from Ansible - please raise an Issue if there is one that is missing that people commonly use and I will get it added.
 
-This contains the following "Core" Ansible filters: `b64encode`, `b64decode`, `hash`, `regex_replace`, `regex_search` and `regex_findall`.
+This contains the following Ansible filters:
 
-This also contains the following "[ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html)" Ansible filters: `cidr_merge`, `ipaddr`, `ipmath`, `ipwrap`, `ip4_hex`, `ipv4`, `ipv6`, `ipsubnet`, `next_nth_usable`, `network_in_network`, `network_in_usable`, `reduce_on_network`, `nthhost`, `previous_nth_usable`, `slaac`, `hwaddr` and `macaddr`. 
+- `to_yaml`
+- `to_nice_yaml`
+- `to_json`
+- `to_nice_json`
+- `to_bool`
+- `to_datetime`
+- `strftime`
+- `b64encode`
+- `b64decode`
+- `hash`
+- `regex_replace`
+- `regex_search`
+- `regex_findall`
+- `log`
+- `pow`
+- `root`
+
+This also contains the following "[ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html)" Ansible filters:
+
+- `cidr_merge`
+- `ipaddr`
+- `ipmath`
+- `ipwrap`
+- `ip4_hex`
+- `ipv4`
+- `ipv6`
+- `ipsubnet`
+- `next_nth_usable`
+- `network_in_network`
+- `network_in_usable`
+- `reduce_on_network`
+- `nthhost`
+- `previous_nth_usable`
+- `slaac`
+- `hwaddr`
+- `macaddr` 
 
 ### Ansible Tests
 
-In additional to Ansible Filters, Ansible also introduces [tests](https://docs.ansible.com/ansible/latest/user_guide/playbooks_tests.html) that can be performed with various filters (e.g. `select` and `select_attr`) - the following "Core" Ansible tests have been included in JinjaFx: `regex`, `match` and `search`.
+In additional to Ansible Filters, Ansible also introduces [tests](https://docs.ansible.com/ansible/latest/user_guide/playbooks_tests.html) that can be performed with various filters (e.g. `select` and `select_attr`) - the following Ansible tests have been included in JinjaFx:
+
+- `regex`
+- `match`
+- `search`
 
 ### Ansible Lookups
 
@@ -279,7 +318,7 @@ jinjafx_sort:
   - "HOST": { "r740-036": -2, "r740-035": -1, "r740-039": 1 }
 ```
 
-The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if yo specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
+The above syntax allows you to specify an order key for individual field values - by default all fields have an order key of 0, which means the field name is used as the sort key. If you specify an order key < 0 then the field value will appear before the rest and if you specify an order key > 0 then the values will appear at the end. If multiple field values have the same order key then they are sorted based on actual field value. In the above example, "r740-036" will appear first, "r740-035" will appear second and everything else afterwards, with "r740-039" appearing last.
 
 ### JinjaFx Input
 
