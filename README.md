@@ -224,6 +224,13 @@ Jinja2 is commonly used with Ansible which has a wide variety of [custom filters
 
 This contains the following Ansible filters:
 
+- `to_yaml`
+- `to_nice_yaml`
+- `to_json`
+- `to_nice_json`
+- `to_bool`
+- `to_datetime`
+- `strftime`
 - `b64encode`
 - `b64decode`
 - `hash`
