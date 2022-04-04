@@ -5,7 +5,7 @@
 
 <h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
 
-<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
+<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 
 JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it only requires a couple of Python modules that aren't in the base install - [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [cryptography](https://pypi.org/project/cryptography/) if you want to decrypt Ansible Vaulted files.
 
@@ -354,6 +354,47 @@ Under the field the `text` key is always mandatory, but the following optional k
 - `pattern` - a regular expression that the input value must match
 
 - `type` - if set to "password" then echo is turned off - used for inputting sensitive values
+
+### JinjaFx DataTemplates ###
+
+JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
+
+```yaml
+---
+dt:
+  data: |2
+    ... DATA.CSV ...
+
+  template: |2
+    ... TEMPLATE.J2 ...
+
+  vars: |2
+    ... VARS.YML ...
+```
+
+You also have the option to specify different DataSets within a DataTemplate - this is where the template is common, but the data and vars can be specified multiple times for different scenarios (e.g. "Test" and "Live"). When you use the DataSet format you will also need to specify which DataSet to generate the outputs for with `-ds`, which takes a case insensitive regular expression to match against.
+
+```yaml
+---
+dt:
+  datasets:
+    "Test":
+      data: |2
+        ... DATA.CSV ...
+
+      vars: |2
+        ... VARS.YML ...
+
+    "Live":
+      data: |2
+        ... DATA.CSV ...
+
+      vars: |2
+        ... VARS.YML ...
+
+  template: |2
+    ... TEMPLATE.J2 ...
+```
 
 ### Jinja2 Extensions
 
