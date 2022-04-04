@@ -20,7 +20,9 @@ python3 -m pip install --upgrade --user jinjafx
 ### JinjaFx Usage
 
 ```
- jinjafx (-t <template.j2> [-d <data.csv>] | -dt <dt.yml> [-ds <dataset>]) [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]
+ jinjafx (-t <template.j2> [-d <data.csv>] | -dt <dt.yml> [-ds <dataset>]) [-g <vars.yml>]
+         [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]
+
    -t <template.j2>              - specify a Jinja2 template
    -d <data.csv>                 - specify row/column based data (comma or tab separated)
    -dt <dt.yml>                  - specify a JinjaFx DataTemplate (combines template, data and vars)
