@@ -36,9 +36,27 @@ def main():
       print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml> [-ds <dataset>]) [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]'
+    prog = os.path.basename(sys.argv[0])
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml> [-ds <dataset>]) [-g <vars.yml>]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '[-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]\n\n'
+    jinjafx_usage += '''
 
-    parser = __ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
+    -t <template.j2>           - specify a Jinja2 template
+    -d <data.csv>              - specify row/column based data (comma or tab separated)
+    -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
+    -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
+    -g <vars.yml>[, -g ...]    - specify global variables in yaml (supports Ansible Vault)
+    -ed <exts dir>[, -ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
+    -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
+    -od <output dir>           - set output dir for output files with a relative path (default is ".")
+    -m                         - merge duplicate global variables (dicts and lists) instead of replacing
+    -q                         - quiet mode - don't output version or usage information
+
+Environment Variables:
+  ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
+  ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file'''
+
+    parser = __ArgumentParser(add_help=False, usage=prog + ' ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
     group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
     group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
@@ -135,6 +153,9 @@ def main():
 
           else:
             parser.error("argument -ds: required with datatemplates that use datasets")
+
+        elif args.ds is not None:
+          parser.error("argument -ds: not required with datatemplates without datasets")
 
         if 'data' in dt:
           data = dt['data']

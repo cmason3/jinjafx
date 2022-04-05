@@ -30,13 +30,13 @@ python3 -m pip install --upgrade --user jinjafx
    -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible Vault)
    -ed <exts dir>[, -ed ...]     - specify where to look for extensions (default is "." and "~/.jinjafx")
    -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
-   -od <output dir>              - change the output dir for output files with a relative path (default is ".")
-   -m                            - merge duplicate global variables (dicts and lists) instead of overwriting keys
+   -od <output dir>              - set output dir for output files with a relative path (default is ".")
+   -m                            - merge duplicate global variables (dicts and lists) instead of replacing
    -q                            - quiet mode - don't output version or usage information
    
  Environment Variables:
-   ANSIBLE_VAULT_PASSWORD        - specify an ansible vault password
-   ANSIBLE_VAULT_PASSWORD_FILE   - specify an ansible vault password file
+   ANSIBLE_VAULT_PASSWORD        - specify an Ansible Vault password
+   ANSIBLE_VAULT_PASSWORD_FILE   - specify an Ansible Vault password file
 ```
 
 JinjaFx allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
