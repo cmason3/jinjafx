@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.10.4'
+__version__ = '1.11.0'
 
 def main():
   try:
@@ -36,11 +36,32 @@ def main():
       print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
-    jinjafx_usage = '-t <template.j2> [-d <data.csv>] [-g <vars.yml>] [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]'
+    prog = os.path.basename(sys.argv[0])
+    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml> [-ds <dataset>]) [-g <vars.yml>]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '[-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]\n\n'
+    jinjafx_usage += '''
 
-    parser = __ArgumentParser(add_help=False, usage='%(prog)s ' + jinjafx_usage)
-    parser.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'), required=True)
+    -t <template.j2>           - specify a Jinja2 template
+    -d <data.csv>              - specify row/column based data (comma or tab separated)
+    -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
+    -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
+    -g <vars.yml>[, -g ...]    - specify global variables in yaml (supports Ansible Vault)
+    -ed <exts dir>[, -ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
+    -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
+    -od <output dir>           - set output dir for output files with a relative path (default is ".")
+    -m                         - merge duplicate global variables (dicts and lists) instead of replacing
+    -q                         - quiet mode - don't output version or usage information
+
+Environment Variables:
+  ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
+  ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file'''
+
+    parser = __ArgumentParser(add_help=False, usage=prog + ' ' + jinjafx_usage)
+    group_ex = parser.add_mutually_exclusive_group(required=True)
+    group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
+    group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
     parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
+    parser.add_argument('-ds', metavar='<dataset>', type=str)
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
     parser.add_argument('-ed', metavar='<exts dir>', type=str, action='append', default=[])
     parser.add_argument('-o', metavar='<output file>', type=str)
@@ -48,6 +69,12 @@ def main():
     parser.add_argument('-m', action='store_true')
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
+
+    if args.dt is not None and args.d is not None:
+      parser.error("argument -d: not allowed with argument -dt")
+
+    if args.dt is None and args.ds is not None:
+      parser.error("argument -ds: only allowed with argument -dt")
 
     if args.m is True and args.g is None:
       parser.error("argument -m: only allowed with argument -g")
@@ -100,7 +127,45 @@ def main():
 
       return dst
 
-    if args.d is not None:
+    if args.dt is not None:
+      with open(args.dt.name) as f:
+        dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
+        args.t = dt['template']
+
+        if 'datasets' in dt:
+          if args.ds is not None:
+            try:
+              args.ds = re.compile(args.ds, re.IGNORECASE)
+
+            except:
+              parser.error("argument -ds: invalid regular expression")
+
+            matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
+            if len(matches) == 1:
+              if 'data' in dt['datasets'][matches[0]]:
+                dt['data'] = dt['datasets'][matches[0]]['data']
+
+              if 'vars' in dt['datasets'][matches[0]]:
+                dt['vars'] = dt['datasets'][matches[0]]['vars']
+
+            else:
+              parser.error("argument -ds: must only match a single dataset")
+
+          else:
+            parser.error("argument -ds: required with datatemplates that use datasets")
+
+        elif args.ds is not None:
+          parser.error("argument -ds: not required with datatemplates without datasets")
+
+        if 'data' in dt:
+          data = dt['data']
+
+        if 'vars' in dt:
+          gyaml = decrypt_vault(dt['vars'])
+          if gyaml:
+            gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
+    elif args.d is not None:
       with open(args.d.name) as f:
         data = f.read()
 
