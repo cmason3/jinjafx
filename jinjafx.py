@@ -58,17 +58,27 @@ Environment Variables:
   ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
   ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file'''
 
-    ## Add new type for a file which is a string but verified the file actually exists!!! (Read Capable File, ReadWrite Capable File)
+    def ro_file(string):
+      if string != '-' and (not os.path.isfile(string) or not os.access(string, os.R_OK)):
+        raise argparse.ArgumentTypeError('error reading from file \'' + string + '\'')
+      else:
+        return string
+
+    def rw_file(string):
+      if string != '-' and (not os.path.isfile(string) or not os.access(string, os.R_OK | os.W_OK)):
+        raise argparse.ArgumentTypeError('error with reading from or writing to file \'' + string + '\'')
+      else:
+        return string
 
     parser = __ArgumentParser(add_help=False, usage=prog + ' ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
-    group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
-    group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
-    group_ex.add_argument('-encrypt', metavar='[file]', type=argparse.FileType('r'), nargs='?', const='-')
-    group_ex.add_argument('-decrypt', metavar='[file]', type=argparse.FileType('r'), nargs='?', const='-')
-    parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
+    group_ex.add_argument('-t', metavar='<template.j2>', type=ro_file)
+    group_ex.add_argument('-dt', metavar='<dt.yml>', type=ro_file)
+    group_ex.add_argument('-encrypt', metavar='[file]', type=rw_file, nargs='?', const='-')
+    group_ex.add_argument('-decrypt', metavar='[file]', type=rw_file, nargs='?', const='-')
+    parser.add_argument('-d', metavar='<data.csv>', type=ro_file)
     parser.add_argument('-ds', metavar='<dataset>', type=str)
-    parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
+    parser.add_argument('-g', metavar='<vars.yml>', type=ro_file, action='append')
     parser.add_argument('-ed', metavar='<exts dir>', type=str, action='append', default=[])
     parser.add_argument('-o', metavar='<output file>', type=str)
     parser.add_argument('-od', metavar='<output dir>', type=str)
