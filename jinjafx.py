@@ -60,7 +60,7 @@ Environment Variables:
 
     def rw_file(string):
       if string != '-' and (not os.path.isfile(string) or not os.access(string, os.R_OK | os.W_OK)):
-        raise argparse.ArgumentTypeError('error with reading from or writing to file \'' + string + '\'')
+        raise argparse.ArgumentTypeError('error reading from or writing to file \'' + string + '\'')
       else:
         return string
 
@@ -120,13 +120,17 @@ Environment Variables:
       pass
 
     elif args.decrypt is not None:
-      plaintext = vault.decrypt(args.decrypt.read(), vpw[0])
+      if args.decrypt == '-':
+        vt = sys.stdin.buffer.read()
+
+      else:
+        with open(args.decrypt, 'rb') as fh:
+          vt = fh.read()
+
+      plaintext = decrypt_vault(vt.strip());
 
       if plaintext is not None:
-        with open(args.decrypt, 'wb') as fh:
-          fh.write(plaintext)
-
-      print("ok")
+        print("ok")
 
     else:
       def merge(dst, src):
