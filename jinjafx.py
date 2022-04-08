@@ -37,8 +37,9 @@ def main():
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml> [-ds <dataset>]) [-g <vars.yml>]\n'
-    jinjafx_usage += (' ' * (len(prog) + 3)) + '[-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]\n\n'
+    jinjafx_usage = '-t <template.j2> [-d <data.csv>] [-g <vars.yml>]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file]\n'
     jinjafx_usage += '''
 
     -t <template.j2>           - specify a Jinja2 template
@@ -46,6 +47,7 @@ def main():
     -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml>[, -g ...]    - specify global variables in yaml (supports Ansible Vault)
+    -encrypt/-decrypt [file]   - encrypt/decrypt a file or stdin using Ansible Vault
     -ed <exts dir>[, -ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>           - set output dir for output files with a relative path (default is ".")
@@ -56,10 +58,14 @@ Environment Variables:
   ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
   ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file'''
 
+    ## Add new type for a file which is a string but verified the file actually exists!!! (Read Capable File, ReadWrite Capable File)
+
     parser = __ArgumentParser(add_help=False, usage=prog + ' ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
     group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
     group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
+    group_ex.add_argument('-encrypt', metavar='[file]', type=argparse.FileType('r'), nargs='?', const='-')
+    group_ex.add_argument('-decrypt', metavar='[file]', type=argparse.FileType('r'), nargs='?', const='-')
     parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
     parser.add_argument('-ds', metavar='<dataset>', type=str)
     parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
@@ -87,23 +93,6 @@ Environment Variables:
     vpw = [ None ]
     vault = Vault()
 
-    def merge(dst, src):
-      for key in src:
-        if key in dst:
-          if isinstance(dst[key], dict) and isinstance(src[key], dict):
-            merge(dst[key], src[key])
-
-          elif isinstance(dst[key], list) and isinstance(src[key], list):
-            dst[key] += src[key]
-
-          else:
-            dst[key] = src[key]
-
-        else:
-          dst[key] = src[key]
-
-      return dst
-
     def decrypt_vault(string):
       if string.startswith('$ANSIBLE_VAULT;'):
         if vpw[0] is None:
@@ -123,147 +112,177 @@ Environment Variables:
 
       return string
 
-    def yaml_vault_tag(loader, node):
-      return decrypt_vault(node.value)
+    if args.encrypt is not None:
+      pass
 
-    yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+    elif args.decrypt is not None:
+      plaintext = vault.decrypt(args.decrypt.read(), vpw[0])
 
-    if args.dt is not None:
-      with open(args.dt.name) as f:
-        dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
-        args.t = dt['template']
+      if plaintext is not None:
+        with open(args.decrypt, 'wb') as fh:
+          fh.write(plaintext)
 
-        if 'datasets' in dt:
-          if args.ds is not None:
-            try:
-              args.ds = re.compile(args.ds, re.IGNORECASE)
-
-            except:
-              parser.error("argument -ds: invalid regular expression")
-
-            matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
-            if len(matches) == 1:
-              if 'data' in dt['datasets'][matches[0]]:
-                dt['data'] = dt['datasets'][matches[0]]['data']
-
-              if 'vars' in dt['datasets'][matches[0]]:
-                dt['vars'] = dt['datasets'][matches[0]]['vars']
-
-            else:
-              parser.error("argument -ds: must only match a single dataset")
-
-          else:
-            parser.error("argument -ds: required with datatemplates that use datasets")
-
-        elif args.ds is not None:
-          parser.error("argument -ds: not required with datatemplates without datasets")
-
-        if 'data' in dt:
-          data = dt['data']
-
-        if 'vars' in dt:
-          gyaml = decrypt_vault(dt['vars'])
-          if gyaml:
-            gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
-
-    elif args.d is not None:
-      with open(args.d.name) as f:
-        data = f.read()
-
-    if args.g is not None:
-      for g in args.g:
-        with open(g.name) as f:
-          gyaml = decrypt_vault(f.read())
-          if args.m == True:
-            merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
-          else:
-            gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
-
-    if args.o is None:
-      args.o = '_stdout_'
-
-    if 'jinjafx_input' in gvars:
-      jinjafx_input = {}
-
-      if 'prompt' in gvars['jinjafx_input'] and len(gvars['jinjafx_input']['prompt']) > 0:
-        for k in gvars['jinjafx_input']['prompt']:
-          v = gvars['jinjafx_input']['prompt'][k]
-
-          if isinstance(v, dict):
-            if 'pattern' not in v:
-              v['pattern'] = '.*'
-
-            if 'required' not in v:
-              v['required'] = False
-
-            while True:
-              if 'type' in v and v['type'].lower() == 'password':
-                jinjafx_input[k] = getpass.getpass(v['text'] + ': ').strip()
-              else:
-                jinjafx_input[k] = input(v['text'] + ': ').strip()
-
-              if len(jinjafx_input[k]) == 0:
-                if v['required']:
-                  print('error: input is required', file=sys.stderr)
-                else:
-                  break
-              else:
-                m = re.match(v['pattern'], jinjafx_input[k], re.IGNORECASE)
-                if not m or (m.span()[1] - m.span()[0]) != len(jinjafx_input[k]):
-                  print('error: input doesn\'t match pattern "' + v['pattern'] + '"', file=sys.stderr)
-                else:
-                  break
-
-          else:
-            jinjafx_input[k] = input(v + ': ').strip()
-
-        print()
-
-      gvars['jinjafx_input'] = jinjafx_input
-
-    args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
-    outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
-    ocount = 0
-
-    if args.od is not None:
-      os.chdir(args.od)
-
-    if len(outputs['_stderr_']) > 0:
-      print('Warnings:', file=sys.stderr)
-      for w in outputs['_stderr_']:
-        print(' - ' + w, file=sys.stderr)
-
-      print('', file=sys.stderr)
-
-    for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
-      if o[0] != '_stderr_':
-        output = '\n'.join(o[1]) + '\n'
-        if len(output.strip()) > 0:
-          if o[0] == '_stdout_':
-            if ocount > 0:
-              print('\n-\n')
-            print(output)
-  
-          else:
-            ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o[0])))
-  
-            if os.path.dirname(ofile) != '':
-              if not os.path.isdir(os.path.dirname(ofile)):
-                os.makedirs(os.path.dirname(ofile))
-  
-            with open(ofile, 'w') as f:
-              f.write(output)
-  
-            print(__format_bytes(len(output)) + ' > ' + ofile)
-  
-          ocount += 1
-
-    if ocount > 0:
-      if '_stdout_' not in outputs:
-        print()
+      print("ok")
 
     else:
-      raise Exception('nothing to output')
+      def merge(dst, src):
+        for key in src:
+          if key in dst:
+            if isinstance(dst[key], dict) and isinstance(src[key], dict):
+              merge(dst[key], src[key])
+  
+            elif isinstance(dst[key], list) and isinstance(src[key], list):
+              dst[key] += src[key]
+  
+            else:
+              dst[key] = src[key]
+  
+          else:
+            dst[key] = src[key]
+  
+        return dst
+
+      def yaml_vault_tag(loader, node):
+        return decrypt_vault(node.value)
+
+      yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+
+      if args.dt is not None:
+        with open(args.dt.name) as f:
+          dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
+          args.t = dt['template']
+  
+          if 'datasets' in dt:
+            if args.ds is not None:
+              try:
+                args.ds = re.compile(args.ds, re.IGNORECASE)
+  
+              except:
+                parser.error("argument -ds: invalid regular expression")
+  
+              matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
+              if len(matches) == 1:
+                if 'data' in dt['datasets'][matches[0]]:
+                  dt['data'] = dt['datasets'][matches[0]]['data']
+  
+                if 'vars' in dt['datasets'][matches[0]]:
+                  dt['vars'] = dt['datasets'][matches[0]]['vars']
+  
+              else:
+                parser.error("argument -ds: must only match a single dataset")
+  
+            else:
+              parser.error("argument -ds: required with datatemplates that use datasets")
+  
+          elif args.ds is not None:
+            parser.error("argument -ds: not required with datatemplates without datasets")
+  
+          if 'data' in dt:
+            data = dt['data']
+  
+          if 'vars' in dt:
+            gyaml = decrypt_vault(dt['vars'])
+            if gyaml:
+              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+  
+      elif args.d is not None:
+        with open(args.d.name) as f:
+          data = f.read()
+  
+      if args.g is not None:
+        for g in args.g:
+          with open(g.name) as f:
+            gyaml = decrypt_vault(f.read())
+            if args.m == True:
+              merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
+            else:
+              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+  
+      if args.o is None:
+        args.o = '_stdout_'
+  
+      if 'jinjafx_input' in gvars:
+        jinjafx_input = {}
+  
+        if 'prompt' in gvars['jinjafx_input'] and len(gvars['jinjafx_input']['prompt']) > 0:
+          for k in gvars['jinjafx_input']['prompt']:
+            v = gvars['jinjafx_input']['prompt'][k]
+  
+            if isinstance(v, dict):
+              if 'pattern' not in v:
+                v['pattern'] = '.*'
+  
+              if 'required' not in v:
+                v['required'] = False
+  
+              while True:
+                if 'type' in v and v['type'].lower() == 'password':
+                  jinjafx_input[k] = getpass.getpass(v['text'] + ': ').strip()
+                else:
+                  jinjafx_input[k] = input(v['text'] + ': ').strip()
+  
+                if len(jinjafx_input[k]) == 0:
+                  if v['required']:
+                    print('error: input is required', file=sys.stderr)
+                  else:
+                    break
+                else:
+                  m = re.match(v['pattern'], jinjafx_input[k], re.IGNORECASE)
+                  if not m or (m.span()[1] - m.span()[0]) != len(jinjafx_input[k]):
+                    print('error: input doesn\'t match pattern "' + v['pattern'] + '"', file=sys.stderr)
+                  else:
+                    break
+  
+            else:
+              jinjafx_input[k] = input(v + ': ').strip()
+  
+          print()
+  
+        gvars['jinjafx_input'] = jinjafx_input
+  
+      args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
+      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
+      ocount = 0
+  
+      if args.od is not None:
+        os.chdir(args.od)
+  
+      if len(outputs['_stderr_']) > 0:
+        print('Warnings:', file=sys.stderr)
+        for w in outputs['_stderr_']:
+          print(' - ' + w, file=sys.stderr)
+  
+        print('', file=sys.stderr)
+  
+      for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
+        if o[0] != '_stderr_':
+          output = '\n'.join(o[1]) + '\n'
+          if len(output.strip()) > 0:
+            if o[0] == '_stdout_':
+              if ocount > 0:
+                print('\n-\n')
+              print(output)
+    
+            else:
+              ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o[0])))
+    
+              if os.path.dirname(ofile) != '':
+                if not os.path.isdir(os.path.dirname(ofile)):
+                  os.makedirs(os.path.dirname(ofile))
+    
+              with open(ofile, 'w') as f:
+                f.write(output)
+    
+              print(__format_bytes(len(output)) + ' > ' + ofile)
+    
+            ocount += 1
+  
+      if ocount > 0:
+        if '_stdout_' not in outputs:
+          print()
+  
+      else:
+        raise Exception('nothing to output')
 
   except KeyboardInterrupt:
     sys.exit(-1)
