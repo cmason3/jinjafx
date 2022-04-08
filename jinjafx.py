@@ -82,33 +82,10 @@ Environment Variables:
     if args.od is not None and not os.access(args.od, os.W_OK):
       parser.error("argument -od: unable to write to output directory")
 
+    gvars = {}
     data = None
     vpw = [ None ]
-    gvars = {}
-
-    def decrypt_vault(string):
-      if string.startswith('$ANSIBLE_VAULT;'):
-        if vpw[0] is None:
-          vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
-
-          if vpw[0] == None:
-            vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
-            if vpwf != None:
-              with open(vpwf) as f:
-                vpw[0] = f.read().strip()
-
-          if vpw[0] == None:
-            vpw[0] = getpass.getpass('Vault Password: ')
-            print()
-
-        return ansible_vault_decrypt(string, vpw[0])
-
-      return string
-
-    def yaml_vault_tag(loader, node):
-      return decrypt_vault(node.value)
-
-    yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+    vault = Vault()
 
     def merge(dst, src):
       for key in src:
@@ -126,6 +103,30 @@ Environment Variables:
           dst[key] = src[key]
 
       return dst
+
+    def decrypt_vault(string):
+      if string.startswith('$ANSIBLE_VAULT;'):
+        if vpw[0] is None:
+          vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
+
+          if vpw[0] == None:
+            vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
+            if vpwf != None:
+              with open(vpwf) as f:
+                vpw[0] = f.read().strip()
+
+          if vpw[0] == None:
+            vpw[0] = getpass.getpass('Vault Password: ')
+            print()
+
+        return vault.decrypt(string, vpw[0])
+
+      return string
+
+    def yaml_vault_tag(loader, node):
+      return decrypt_vault(node.value)
+
+    yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
 
     if args.dt is not None:
       with open(args.dt.name) as f:
@@ -292,42 +293,6 @@ class __ArgumentParser(argparse.ArgumentParser):
       print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
       print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
     raise Exception(message)
-
-
-def ansible_vault_decrypt(string, vpw):
-  slines = string.splitlines()
-  hdr = list(map(str.strip, slines[0].split(';')))
-
-  if hdr[1] == '1.1' or hdr[1] == '1.2':
-    if hdr[2] == 'AES256':
-      vaulttext = bytes.fromhex(''.join(slines[1:]))
-      b_salt, b_hmac, b_ciphertext = vaulttext.split(b"\n", 2)
-      b_salt = bytes.fromhex(b_salt.decode('utf-8'))
-      b_hmac = bytes.fromhex(b_hmac.decode('utf-8'))
-      b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
-
-      b_derivedkey = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(vpw.encode('utf-8'))
-
-      hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
-      hmac.update(b_ciphertext)
-
-      try:
-        hmac.verify(b_hmac)
-
-      except InvalidSignature:
-        raise Exception("invalid ansible vault password")
-
-      d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
-
-      u = PKCS7(128).unpadder()
-      b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
-      return b_plaintext.decode('utf-8')
-
-    else:
-      raise Exception("unknown ansible vault cipher")
-
-  else:
-    raise Exception("unknown ansible vault version")
 
 
 class JinjaFx():
@@ -907,6 +872,51 @@ class JinjaFx():
 
     else:
       return str(datetime.datetime.utcnow().astimezone(tz))
+
+
+class Vault():
+  def __init__(self):
+    self.__kcache = {}
+
+  def decrypt(self, string, vpw):
+    slines = string.splitlines()
+    hdr = list(map(str.strip, slines[0].split(';')))
+  
+    if hdr[1] == '1.1' or hdr[1] == '1.2':
+      if hdr[2] == 'AES256':
+        vaulttext = bytes.fromhex(''.join(slines[1:]))
+        b_salt, b_hmac, b_ciphertext = vaulttext.split(b"\n", 2)
+        b_salt = bytes.fromhex(b_salt.decode('utf-8'))
+        b_hmac = bytes.fromhex(b_hmac.decode('utf-8'))
+        b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
+
+        if (vpw, b_salt) in self.__kcache:
+          b_derivedkey = self.__kcache[(vpw, b_salt)]
+
+        else:
+          b_derivedkey = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(vpw.encode('utf-8'))
+          self.__kcache[(vpw, b_salt)] = b_derivedkey
+  
+        hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+        hmac.update(b_ciphertext)
+  
+        try:
+          hmac.verify(b_hmac)
+  
+        except InvalidSignature:
+          raise Exception("invalid ansible vault password")
+  
+        d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
+  
+        u = PKCS7(128).unpadder()
+        b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
+        return b_plaintext.decode('utf-8')
+  
+      else:
+        raise Exception("unknown ansible vault cipher")
+  
+    else:
+      raise Exception("unknown ansible vault version")
 
 
 if __name__ == '__main__':
