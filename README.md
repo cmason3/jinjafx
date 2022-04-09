@@ -20,23 +20,25 @@ python3 -m pip install --upgrade --user jinjafx
 ### JinjaFx Usage
 
 ```
- jinjafx (-t <template.j2> [-d <data.csv>] | -dt <dt.yml> [-ds <dataset>]) [-g <vars.yml>]
-         [-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]
+ jinjafx -t <template.j2> [-d <data.csv>] [-g <vars.yml>]
+         -dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]
+         -encrypt/-decrypt [file]
 
-   -t <template.j2>              - specify a Jinja2 template
-   -d <data.csv>                 - specify row/column based data (comma or tab separated)
-   -dt <dt.yml>                  - specify a JinjaFx DataTemplate (combines template, data and vars)
-   -ds <dataset>                 - specify a regex to match a DataSet within a JinjaFx DataTemplate
-   -g <vars.yml>[, -g ...]       - specify global variables in yaml (supports Ansible Vault)
-   -ed <exts dir>[, -ed ...]     - specify where to look for extensions (default is "." and "~/.jinjafx")
-   -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
-   -od <output dir>              - set output dir for output files with a relative path (default is ".")
-   -m                            - merge duplicate global variables (dicts and lists) instead of replacing
-   -q                            - quiet mode - don't output version or usage information
+   -t <template.j2>           - specify a Jinja2 template
+   -d <data.csv>              - specify row/column based data (comma or tab separated)
+   -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
+   -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
+   -g <vars.yml>[, -g ...]    - specify global variables in yaml (supports Ansible Vault)
+   -encrypt/-decrypt [file]   - encrypt/decrypt a file or stdin using Ansible Vault
+   -ed <exts dir>[, -ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
+   -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
+   -od <output dir>           - set output dir for output files with a relative path (default is ".")
+   -m                         - merge duplicate global variables (dicts and lists) instead of replacing
+   -q                         - quiet mode - don't output version or usage information
    
  Environment Variables:
-   ANSIBLE_VAULT_PASSWORD        - specify an Ansible Vault password
-   ANSIBLE_VAULT_PASSWORD_FILE   - specify an Ansible Vault password file
+   ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
+   ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file
 ```
 
 JinjaFx allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
