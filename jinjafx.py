@@ -122,10 +122,26 @@ Environment Variables:
 
       if args.encrypt == '-':
         string = sys.stdin.buffer.read()
-        print(vault.encrypt(string.decode('utf-8'), vpw[0]))
+        vtext = vault.encrypt(string.decode('utf-8'), vpw[0])
+        print('!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
 
-      # TODO
+      else:
+        if os.path.getsize(args.encrypt) < 2**31:
+          try:
+            print('Encrypting ' + args.encrypt + '... ', flush=True, end='')
 
+            with open(args.encrypt, 'rb') as fh:
+              vtext = vault.encrypt(fh.read().decode('utf-8'), vpw[0])
+
+            with open(args.encrypt, 'wb') as fh:
+              fh.write(vtext.encode('utf-8'))
+              print('ok')
+
+          except Exception as e:
+            print('failed\n\nerror: ' + str(e), file=sys.stderr)
+
+        else:
+          raise Exception('input file too large to encrypt')
 
     elif args.decrypt is not None:
       get_vault_credentials()
