@@ -97,40 +97,56 @@ Environment Variables:
     vpw = [ None ]
     vault = Vault()
 
-    def decrypt_vault(string):
-      if string.startswith('$ANSIBLE_VAULT;'):
-        if vpw[0] is None:
-          vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
+    def get_vault_credentials(verify=False):
+      if vpw[0] is None:
+        vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
 
-          if vpw[0] == None:
-            vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
-            if vpwf != None:
-              with open(vpwf) as f:
-                vpw[0] = f.read().strip()
+        if vpw[0] == None:
+          vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
+          if vpwf != None:
+            with open(vpwf) as f:
+              vpw[0] = f.read().strip()
 
-          if vpw[0] == None:
-            vpw[0] = getpass.getpass('Vault Password: ')
-            print()
+        if vpw[0] == None:
+          vpw[0] = getpass.getpass('Vault Password: ')
 
-        return vault.decrypt(string, vpw[0])
+          if verify:
+            if vpw[0] != getpass.getpass('Password Verification: '):
+              print()
+              raise Exception('password verification failed')
 
-      return string
+          print()
 
     if args.encrypt is not None:
-      pass
+      get_vault_credentials(True)
+
+      if args.encrypt == '-':
+        string = sys.stdin.buffer.read()
+        print(vault.encrypt(string.decode('utf-8'), vpw[0]))
+
+      # TODO
+
 
     elif args.decrypt is not None:
+      get_vault_credentials()
+
       if args.decrypt == '-':
-        vt = sys.stdin.buffer.read()
+        vtext = sys.stdin.buffer.read()
+        print(vault.decrypt(vtext.decode('utf-8').strip(), vpw[0]), flush=True, end='')
 
       else:
-        with open(args.decrypt, 'rb') as fh:
-          vt = fh.read()
+        try:
+          print('Decrypting ' + args.decrypt + '... ', flush=True, end='')
 
-      plaintext = decrypt_vault(vt.strip());
+          with open(args.decrypt, 'rb') as fh:
+            plaintext = vault.decrypt(fh.read().decode('utf-8').strip(), vpw[0])
 
-      if plaintext is not None:
-        print("ok")
+          with open(args.decrypt, 'wb') as fh:
+            fh.write(plaintext.encode('utf-8'))
+            print('ok')
+
+        except Exception as e:
+          print('failed\n\nerror: ' + str(e), file=sys.stderr)
 
     else:
       def merge(dst, src):
@@ -149,6 +165,14 @@ Environment Variables:
             dst[key] = src[key]
   
         return dst
+
+      def decrypt_vault(string):
+        if string.lstrip().startswith('$ANSIBLE_VAULT;'):
+          get_vault_credentials()
+
+          return vault.decrypt(string, vpw[0])
+
+        return string
 
       def yaml_vault_tag(loader, node):
         return decrypt_vault(node.value)
@@ -905,45 +929,71 @@ class Vault():
   def __init__(self):
     self.__kcache = {}
 
+  def __derive_key(self, b_password, b_salt=None):
+    ckey = (b_password, b_salt)
+
+    if ckey in self.__kcache:
+      return self.__kcache[ckey]
+
+    if b_salt is None:
+      b_salt = os.urandom(32)
+
+    b_key = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(b_password)
+    self.__kcache[ckey] = [b_salt, b_key]
+    return b_salt, b_key
+
+  def encrypt(self, string, vpw):
+    if string.lstrip().startswith('$ANSIBLE_VAULT;'):
+      raise Exception('string is already encrypted with ansible vault')
+
+    b_salt, b_derivedkey = self.__derive_key(vpw.encode('utf-8'))
+
+    p = PKCS7(128).padder()
+    e = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).encryptor()
+    b_ciphertext = e.update(p.update(string.encode('utf-8')) + p.finalize()) + e.finalize()
+
+    hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+    hmac.update(b_ciphertext)
+    b_hmac = hmac.finalize()
+
+    vtext = '\n'.join([b_salt.hex(), b_hmac.hex(), b_ciphertext.hex()]).encode('utf-8').hex()
+    return '$ANSIBLE_VAULT;1.1;AES256\n'  + '\n'.join([vtext[i:i + 80] for i in range(0, len(vtext), 80)]) + '\n'
+
   def decrypt(self, string, vpw):
     slines = string.splitlines()
     hdr = list(map(str.strip, slines[0].split(';')))
+
+    if hdr[0] == '$ANSIBLE_VAULT':
+      if hdr[1] == '1.1' or hdr[1] == '1.2':
+        if hdr[2] == 'AES256':
+          vaulttext = bytes.fromhex(''.join(slines[1:]))
+          b_salt, b_hmac, b_ciphertext = vaulttext.split(b"\n", 2)
+          b_hmac = bytes.fromhex(b_hmac.decode('utf-8'))
+          b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
+          b_derivedkey = self.__derive_key(vpw.encode('utf-8'), bytes.fromhex(b_salt.decode('utf-8')))[1]
   
-    if hdr[1] == '1.1' or hdr[1] == '1.2':
-      if hdr[2] == 'AES256':
-        vaulttext = bytes.fromhex(''.join(slines[1:]))
-        b_salt, b_hmac, b_ciphertext = vaulttext.split(b"\n", 2)
-        b_salt = bytes.fromhex(b_salt.decode('utf-8'))
-        b_hmac = bytes.fromhex(b_hmac.decode('utf-8'))
-        b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
-
-        if (vpw, b_salt) in self.__kcache:
-          b_derivedkey = self.__kcache[(vpw, b_salt)]
-
+          hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+          hmac.update(b_ciphertext)
+    
+          try:
+            hmac.verify(b_hmac)
+    
+          except InvalidSignature:
+            raise Exception("invalid ansible vault password")
+    
+          u = PKCS7(128).unpadder()
+          d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
+          b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
+          return b_plaintext.decode('utf-8')
+    
         else:
-          b_derivedkey = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(vpw.encode('utf-8'))
-          self.__kcache[(vpw, b_salt)] = b_derivedkey
-  
-        hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
-        hmac.update(b_ciphertext)
-  
-        try:
-          hmac.verify(b_hmac)
-  
-        except InvalidSignature:
-          raise Exception("invalid ansible vault password")
-  
-        d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
-  
-        u = PKCS7(128).unpadder()
-        b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
-        return b_plaintext.decode('utf-8')
-  
+          raise Exception("unknown ansible vault cipher")
+    
       else:
-        raise Exception("unknown ansible vault cipher")
-  
+        raise Exception("unknown ansible vault version")
+
     else:
-      raise Exception("unknown ansible vault version")
+      raise Exception("string isn't ansible vault encrypted")
 
 
 if __name__ == '__main__':
