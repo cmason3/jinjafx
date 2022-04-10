@@ -942,20 +942,11 @@ class JinjaFx():
 
 
 class Vault():
-  def __init__(self):
-    self.__kcache = {}
-
   def __derive_key(self, b_password, b_salt=None):
-    ckey = (b_password, b_salt)
-
-    if ckey in self.__kcache:
-      return self.__kcache[ckey]
-
     if b_salt is None:
       b_salt = os.urandom(32)
 
     b_key = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(b_password)
-    self.__kcache[ckey] = [b_salt, b_key]
     return b_salt, b_key
 
   def encrypt(self, string, vpw):
