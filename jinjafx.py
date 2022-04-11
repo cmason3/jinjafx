@@ -32,23 +32,26 @@ __version__ = '1.11.1'
 
 def main():
   try:
-    if '-q' not in sys.argv:
+    if not any(x in ['-q', '-encrypt', '-decrypt'] for x in sys.argv):
       print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
     jinjafx_usage = '-t <template.j2> [-d <data.csv>] [-g <vars.yml>]\n'
     jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]\n'
-    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt [file1[ file2[ ...]]] | [-name [var]]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-decrypt [file1[ file2[ ...]]]\n'
     jinjafx_usage += '''
 
     -t <template.j2>           - specify a Jinja2 template
     -d <data.csv>              - specify row/column based data (comma or tab separated)
     -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
-    -g <vars.yml>[, -g ...]    - specify global variables in yaml (supports Ansible Vault)
-    -encrypt/-decrypt [file]   - encrypt/decrypt a file or stdin using Ansible Vault
-    -ed <exts dir>[, -ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
+    -g <vars.yml> [-g ...]     - specify global variables in yaml (supports Ansible Vault)
+    -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
+    -name [var]                - specify a variable to output with Ansible Vault encryption
+    -ed <exts dir> [-ed ...]   - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>           - set output dir for output files with a relative path (default is ".")
     -m                         - merge duplicate global variables (dicts and lists) instead of replacing
@@ -58,24 +61,19 @@ Environment Variables:
   ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
   ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file'''
 
-    def rw_file(string):
-      if string != '-' and (not os.path.isfile(string) or not os.access(string, os.R_OK | os.W_OK)):
-        raise argparse.ArgumentTypeError('error reading from or writing to file \'' + string + '\'')
-      else:
-        return string
-
     parser = __ArgumentParser(add_help=False, usage=prog + ' ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
-    group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
-    group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
-    group_ex.add_argument('-encrypt', metavar='[file]', type=rw_file, nargs='?', const='-')
-    group_ex.add_argument('-decrypt', metavar='[file]', type=rw_file, nargs='?', const='-')
-    parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
-    parser.add_argument('-ds', metavar='<dataset>', type=str)
-    parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
-    parser.add_argument('-ed', metavar='<exts dir>', type=str, action='append', default=[])
-    parser.add_argument('-o', metavar='<output file>', type=str)
-    parser.add_argument('-od', metavar='<output dir>', type=str)
+    group_ex.add_argument('-t', type=argparse.FileType('r'))
+    group_ex.add_argument('-dt', type=argparse.FileType('r'))
+    group_ex.add_argument('-encrypt', type=str, nargs='*')
+    group_ex.add_argument('-decrypt', type=str, nargs='*')
+    parser.add_argument('-name', type=str, nargs='?', const='')
+    parser.add_argument('-d', type=argparse.FileType('r'))
+    parser.add_argument('-ds', type=str)
+    parser.add_argument('-g', type=argparse.FileType('r'), action='append')
+    parser.add_argument('-ed', type=str, action='append', default=[])
+    parser.add_argument('-o', type=str)
+    parser.add_argument('-od', type=str)
     parser.add_argument('-m', action='store_true')
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
@@ -95,7 +93,6 @@ Environment Variables:
     gvars = {}
     data = None
     vpw = [ None ]
-    vault = Vault()
 
     def get_vault_credentials(verify=False):
       if vpw[0] is None:
@@ -118,51 +115,71 @@ Environment Variables:
           print()
 
     if args.encrypt is not None:
-      get_vault_credentials(True)
+      if not args.encrypt:
+        b_string = sys.stdin.buffer.read()
+        get_vault_credentials(True)
+        vtext = Vault().encrypt(b_string, vpw[0])
 
-      if args.encrypt == '-':
-        string = sys.stdin.buffer.read()
-        vtext = vault.encrypt(string.decode('utf-8'), vpw[0])
-        print('!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
+        if args.name is not None:
+          print((args.name + ': ' if len(args.name) else '') + '!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
+        else:
+          print(vtext)
 
       else:
-        if os.path.getsize(args.encrypt) < 2**31:
-          try:
-            print('Encrypting ' + args.encrypt + '... ', flush=True, end='')
+        get_vault_credentials(True)
 
-            with open(args.encrypt, 'rb') as fh:
-              vtext = vault.encrypt(fh.read().decode('utf-8'), vpw[0])
+        for f in args.encrypt:
+          if os.path.isfile(f):
+            print('Encrypting ' + f + '... ', flush=True, end='')
 
-            with open(args.encrypt, 'wb') as fh:
-              fh.write(vtext.encode('utf-8'))
-              print('ok')
+            try:
+              with open(f, 'rb') as fh:
+                vtext = Vault().encrypt(fh.read(), vpw[0])
 
-          except Exception as e:
-            print('failed\n\nerror: ' + str(e), file=sys.stderr)
+              with open(f, 'wb') as fh:
+                fh.write(vtext.encode('utf-8'))
+                print('ok')
 
-        else:
-          raise Exception('input file too large to encrypt')
+            except Exception as e:
+              print('failed')
+              print('error: ' + str(e), file=sys.stderr)
+
+          elif not os.path.exists(f):
+            print('Encrypting ' + f + '... not found')
+
+          else:
+            print('Encrypting ' + f + '... unsupported')
 
     elif args.decrypt is not None:
-      get_vault_credentials()
-
-      if args.decrypt == '-':
-        vtext = sys.stdin.buffer.read()
-        print(vault.decrypt(vtext.decode('utf-8').strip(), vpw[0]), flush=True, end='')
+      if not args.decrypt:
+        b_vtext = sys.stdin.buffer.read()
+        get_vault_credentials()
+        print(Vault().decrypt(b_vtext, vpw[0]).decode('utf-8'), flush=True, end='')
 
       else:
-        try:
-          print('Decrypting ' + args.decrypt + '... ', flush=True, end='')
+        get_vault_credentials()
 
-          with open(args.decrypt, 'rb') as fh:
-            plaintext = vault.decrypt(fh.read().decode('utf-8').strip(), vpw[0])
+        for f in args.decrypt:
+          if os.path.isfile(f):
+            print('Decrypting ' + f + '... ', flush=True, end='')
 
-          with open(args.decrypt, 'wb') as fh:
-            fh.write(plaintext.encode('utf-8'))
-            print('ok')
+            try:
+              with open(f, 'rb') as fh:
+                plaintext = Vault().decrypt(fh.read(), vpw[0])
 
-        except Exception as e:
-          print('failed\n\nerror: ' + str(e), file=sys.stderr)
+              with open(f, 'wb') as fh:
+                fh.write(plaintext)
+                print('ok')
+
+            except Exception as e:
+              print('failed')
+              print('error: ' + str(e), file=sys.stderr)
+
+          elif not os.path.exists(f):
+            print('Decrypting ' + f + '... not found')
+
+          else:
+            print('Decrypting ' + f + '... unsupported')
 
     else:
       def merge(dst, src):
@@ -186,7 +203,7 @@ Environment Variables:
         if string.lstrip().startswith('$ANSIBLE_VAULT;'):
           get_vault_credentials()
 
-          return vault.decrypt(string, vpw[0])
+          return Vault().decrypt(string.encode('utf-8'), vpw[0])
 
         return string
 
@@ -949,15 +966,15 @@ class Vault():
     b_key = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(b_password)
     return b_salt, b_key
 
-  def encrypt(self, string, vpw):
-    if string.lstrip().startswith('$ANSIBLE_VAULT;'):
-      raise Exception('string is already encrypted with ansible vault')
+  def encrypt(self, b_string, password):
+    if b_string.lstrip().startswith(b'$ANSIBLE_VAULT;'):
+      raise Exception('data is already encrypted with ansible vault')
 
-    b_salt, b_derivedkey = self.__derive_key(vpw.encode('utf-8'))
+    b_salt, b_derivedkey = self.__derive_key(password.encode('utf-8'))
 
     p = PKCS7(128).padder()
     e = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).encryptor()
-    b_ciphertext = e.update(p.update(string.encode('utf-8')) + p.finalize()) + e.finalize()
+    b_ciphertext = e.update(p.update(b_string) + p.finalize()) + e.finalize()
 
     hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
     hmac.update(b_ciphertext)
@@ -966,18 +983,18 @@ class Vault():
     vtext = '\n'.join([b_salt.hex(), b_hmac.hex(), b_ciphertext.hex()]).encode('utf-8').hex()
     return '$ANSIBLE_VAULT;1.1;AES256\n'  + '\n'.join([vtext[i:i + 80] for i in range(0, len(vtext), 80)]) + '\n'
 
-  def decrypt(self, string, vpw):
-    slines = string.splitlines()
-    hdr = list(map(str.strip, slines[0].split(';')))
+  def decrypt(self, b_string, password):
+    slines = b_string.strip().splitlines()
+    hdr = list(map(bytes.strip, slines[0].split(b';')))
 
-    if hdr[0] == '$ANSIBLE_VAULT':
-      if hdr[1] == '1.1' or hdr[1] == '1.2':
-        if hdr[2] == 'AES256':
-          vaulttext = bytes.fromhex(''.join(slines[1:]))
-          b_salt, b_hmac, b_ciphertext = vaulttext.split(b"\n", 2)
+    if hdr[0] == b'$ANSIBLE_VAULT' and len(slines) > 1:
+      if hdr[1] == b'1.1' or hdr[1] == b'1.2':
+        if hdr[2] == b'AES256':
+          vaulttext = bytes.fromhex(b''.join(slines[1:]).decode('utf-8'))
+          b_salt, b_hmac, b_ciphertext = vaulttext.split(b'\n', 2)
           b_hmac = bytes.fromhex(b_hmac.decode('utf-8'))
           b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
-          b_derivedkey = self.__derive_key(vpw.encode('utf-8'), bytes.fromhex(b_salt.decode('utf-8')))[1]
+          b_derivedkey = self.__derive_key(password.encode('utf-8'), bytes.fromhex(b_salt.decode('utf-8')))[1]
   
           hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
           hmac.update(b_ciphertext)
@@ -991,7 +1008,7 @@ class Vault():
           u = PKCS7(128).unpadder()
           d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
           b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
-          return b_plaintext.decode('utf-8')
+          return b_plaintext
     
         else:
           raise Exception("unknown ansible vault cipher")
@@ -1000,7 +1017,7 @@ class Vault():
         raise Exception("unknown ansible vault version")
 
     else:
-      raise Exception("string isn't ansible vault encrypted")
+      raise Exception("data isn't ansible vault encrypted")
 
 
 if __name__ == '__main__':
