@@ -31,7 +31,6 @@ python3 -m pip install --upgrade --user jinjafx
    -g <vars.yml>[, -g ...]    - specify global variables in yaml (supports Ansible Vault)
    -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
    -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
-   -encrypt/-decrypt [file]   - encrypt/decrypt a file or stdin using Ansible Vault
    -ed <exts dir>[, -ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
    -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
    -od <output dir>           - set output dir for output files with a relative path (default is ".")
