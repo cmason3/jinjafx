@@ -150,7 +150,7 @@ Environment Variables:
       if not args.decrypt:
         b_vtext = sys.stdin.buffer.read()
         get_vault_credentials()
-        print(Vault().decrypt(b_vtext, vpw[0]).decode('utf-8'), flush=True, end='')
+        print(Vault().decrypt(b_vtext, vpw[0]).decode('utf-8'))
 
       else:
         get_vault_credentials()
