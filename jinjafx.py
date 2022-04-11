@@ -28,25 +28,28 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.11.0'
+__version__ = '1.11.1'
 
 def main():
   try:
-    if '-q' not in sys.argv:
+    if not any(x in ['-q', '-encrypt', '-decrypt'] for x in sys.argv):
       print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
-    jinjafx_usage = '(-t <template.j2> [-d <data.csv>] | -dt <dt.yml> [-ds <dataset>]) [-g <vars.yml>]\n'
-    jinjafx_usage += (' ' * (len(prog) + 3)) + '[-ed <exts dir>] [-o <output file>] [-od <output dir>] [-m] [-q]\n\n'
+    jinjafx_usage = '-t <template.j2> [-d <data.csv>] [-g <vars.yml>]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file1[ file2[ ...]]]\n'
     jinjafx_usage += '''
 
     -t <template.j2>           - specify a Jinja2 template
     -d <data.csv>              - specify row/column based data (comma or tab separated)
     -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
-    -g <vars.yml>[, -g ...]    - specify global variables in yaml (supports Ansible Vault)
-    -ed <exts dir>[, -ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
+    -g <vars.yml> [-g ...]     - specify global variables in yaml (supports Ansible Vault)
+    -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
+    -ed <exts dir> [-ed ...]   - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>           - set output dir for output files with a relative path (default is ".")
     -m                         - merge duplicate global variables (dicts and lists) instead of replacing
@@ -58,14 +61,16 @@ Environment Variables:
 
     parser = __ArgumentParser(add_help=False, usage=prog + ' ' + jinjafx_usage)
     group_ex = parser.add_mutually_exclusive_group(required=True)
-    group_ex.add_argument('-t', metavar='<template.j2>', type=argparse.FileType('r'))
-    group_ex.add_argument('-dt', metavar='<dt.yml>', type=argparse.FileType('r'))
-    parser.add_argument('-d', metavar='<data.csv>', type=argparse.FileType('r'))
-    parser.add_argument('-ds', metavar='<dataset>', type=str)
-    parser.add_argument('-g', metavar='<vars.yml>', type=argparse.FileType('r'), action='append')
-    parser.add_argument('-ed', metavar='<exts dir>', type=str, action='append', default=[])
-    parser.add_argument('-o', metavar='<output file>', type=str)
-    parser.add_argument('-od', metavar='<output dir>', type=str)
+    group_ex.add_argument('-t', type=argparse.FileType('r'))
+    group_ex.add_argument('-dt', type=argparse.FileType('r'))
+    group_ex.add_argument('-encrypt', type=str, nargs='*')
+    group_ex.add_argument('-decrypt', type=str, nargs='*')
+    parser.add_argument('-d', type=argparse.FileType('r'))
+    parser.add_argument('-ds', type=str)
+    parser.add_argument('-g', type=argparse.FileType('r'), action='append')
+    parser.add_argument('-ed', type=str, action='append', default=[])
+    parser.add_argument('-o', type=str)
+    parser.add_argument('-od', type=str)
     parser.add_argument('-m', action='store_true')
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
@@ -82,187 +87,263 @@ Environment Variables:
     if args.od is not None and not os.access(args.od, os.W_OK):
       parser.error("argument -od: unable to write to output directory")
 
+    gvars = {}
     data = None
     vpw = [ None ]
-    gvars = {}
 
-    def decrypt_vault(string):
-      if string.startswith('$ANSIBLE_VAULT;'):
-        if vpw[0] is None:
-          vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
+    def get_vault_credentials(verify=False):
+      if vpw[0] is None:
+        vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
 
-          if vpw[0] == None:
-            vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
-            if vpwf != None:
-              with open(vpwf) as f:
-                vpw[0] = f.read().strip()
+        if vpw[0] == None:
+          vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
+          if vpwf != None:
+            with open(vpwf) as f:
+              vpw[0] = f.read().strip()
 
-          if vpw[0] == None:
-            vpw[0] = getpass.getpass('Vault Password: ')
-            print()
+        if vpw[0] == None:
+          vpw[0] = getpass.getpass('Vault Password: ')
 
-        return ansible_vault_decrypt(string, vpw[0])
+          if verify:
+            if vpw[0] != getpass.getpass('Password Verification: '):
+              print()
+              raise Exception('password verification failed')
 
-      return string
+          print()
 
-    def yaml_vault_tag(loader, node):
-      return decrypt_vault(node.value)
+    if args.encrypt is not None:
+      if not args.encrypt:
+        b_string = sys.stdin.buffer.read().strip()
+        if len(b_string.splitlines()) > 1:
+          raise Exception('multiline stings not permitted')
 
-    yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+        get_vault_credentials(True)
+        vtext = Vault().encrypt(b_string, vpw[0])
+        print('!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
 
-    def merge(dst, src):
-      for key in src:
-        if key in dst:
-          if isinstance(dst[key], dict) and isinstance(src[key], dict):
-            merge(dst[key], src[key])
+      else:
+        get_vault_credentials(True)
 
-          elif isinstance(dst[key], list) and isinstance(src[key], list):
-            dst[key] += src[key]
+        for f in args.encrypt:
+          if os.path.isfile(f):
+            print('Encrypting ' + f + '... ', flush=True, end='')
 
-          else:
-            dst[key] = src[key]
-
-        else:
-          dst[key] = src[key]
-
-      return dst
-
-    if args.dt is not None:
-      with open(args.dt.name) as f:
-        dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
-        args.t = dt['template']
-
-        if 'datasets' in dt:
-          if args.ds is not None:
             try:
-              args.ds = re.compile(args.ds, re.IGNORECASE)
+              with open(f, 'rb') as fh:
+                vtext = Vault().encrypt(fh.read(), vpw[0])
 
-            except:
-              parser.error("argument -ds: invalid regular expression")
+              with open(f, 'wb') as fh:
+                fh.write(vtext.encode('utf-8'))
+                print('ok')
 
-            matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
-            if len(matches) == 1:
-              if 'data' in dt['datasets'][matches[0]]:
-                dt['data'] = dt['datasets'][matches[0]]['data']
+            except Exception as e:
+              print('failed')
+              print('error: ' + str(e), file=sys.stderr)
 
-              if 'vars' in dt['datasets'][matches[0]]:
-                dt['vars'] = dt['datasets'][matches[0]]['vars']
-
-            else:
-              parser.error("argument -ds: must only match a single dataset")
+          elif not os.path.exists(f):
+            print('Encrypting ' + f + '... not found')
 
           else:
-            parser.error("argument -ds: required with datatemplates that use datasets")
+            print('Encrypting ' + f + '... unsupported')
 
-        elif args.ds is not None:
-          parser.error("argument -ds: not required with datatemplates without datasets")
+    elif args.decrypt is not None:
+      if not args.decrypt:
+        b_vtext = sys.stdin.buffer.read()
+        get_vault_credentials()
+        print(Vault().decrypt(b_vtext, vpw[0]).decode('utf-8'))
 
-        if 'data' in dt:
-          data = dt['data']
+      else:
+        get_vault_credentials()
 
-        if 'vars' in dt:
-          gyaml = decrypt_vault(dt['vars'])
-          if gyaml:
-            gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+        for f in args.decrypt:
+          if os.path.isfile(f):
+            print('Decrypting ' + f + '... ', flush=True, end='')
 
-    elif args.d is not None:
-      with open(args.d.name) as f:
-        data = f.read()
+            try:
+              with open(f, 'rb') as fh:
+                plaintext = Vault().decrypt(fh.read(), vpw[0])
 
-    if args.g is not None:
-      for g in args.g:
-        with open(g.name) as f:
-          gyaml = decrypt_vault(f.read())
-          if args.m == True:
-            merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
-          else:
-            gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+              with open(f, 'wb') as fh:
+                fh.write(plaintext)
+                print('ok')
 
-    if args.o is None:
-      args.o = '_stdout_'
+            except Exception as e:
+              print('failed')
+              print('error: ' + str(e), file=sys.stderr)
 
-    if 'jinjafx_input' in gvars:
-      jinjafx_input = {}
-
-      if 'prompt' in gvars['jinjafx_input'] and len(gvars['jinjafx_input']['prompt']) > 0:
-        for k in gvars['jinjafx_input']['prompt']:
-          v = gvars['jinjafx_input']['prompt'][k]
-
-          if isinstance(v, dict):
-            if 'pattern' not in v:
-              v['pattern'] = '.*'
-
-            if 'required' not in v:
-              v['required'] = False
-
-            while True:
-              if 'type' in v and v['type'].lower() == 'password':
-                jinjafx_input[k] = getpass.getpass(v['text'] + ': ').strip()
-              else:
-                jinjafx_input[k] = input(v['text'] + ': ').strip()
-
-              if len(jinjafx_input[k]) == 0:
-                if v['required']:
-                  print('error: input is required', file=sys.stderr)
-                else:
-                  break
-              else:
-                m = re.match(v['pattern'], jinjafx_input[k], re.IGNORECASE)
-                if not m or (m.span()[1] - m.span()[0]) != len(jinjafx_input[k]):
-                  print('error: input doesn\'t match pattern "' + v['pattern'] + '"', file=sys.stderr)
-                else:
-                  break
+          elif not os.path.exists(f):
+            print('Decrypting ' + f + '... not found')
 
           else:
-            jinjafx_input[k] = input(v + ': ').strip()
-
-        print()
-
-      gvars['jinjafx_input'] = jinjafx_input
-
-    args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
-    outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
-    ocount = 0
-
-    if args.od is not None:
-      os.chdir(args.od)
-
-    if len(outputs['_stderr_']) > 0:
-      print('Warnings:', file=sys.stderr)
-      for w in outputs['_stderr_']:
-        print(' - ' + w, file=sys.stderr)
-
-      print('', file=sys.stderr)
-
-    for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
-      if o[0] != '_stderr_':
-        output = '\n'.join(o[1]) + '\n'
-        if len(output.strip()) > 0:
-          if o[0] == '_stdout_':
-            if ocount > 0:
-              print('\n-\n')
-            print(output)
-  
-          else:
-            ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o[0])))
-  
-            if os.path.dirname(ofile) != '':
-              if not os.path.isdir(os.path.dirname(ofile)):
-                os.makedirs(os.path.dirname(ofile))
-  
-            with open(ofile, 'w') as f:
-              f.write(output)
-  
-            print(__format_bytes(len(output)) + ' > ' + ofile)
-  
-          ocount += 1
-
-    if ocount > 0:
-      if '_stdout_' not in outputs:
-        print()
+            print('Decrypting ' + f + '... unsupported')
 
     else:
-      raise Exception('nothing to output')
+      def merge(dst, src):
+        for key in src:
+          if key in dst:
+            if isinstance(dst[key], dict) and isinstance(src[key], dict):
+              merge(dst[key], src[key])
+  
+            elif isinstance(dst[key], list) and isinstance(src[key], list):
+              dst[key] += src[key]
+  
+            else:
+              dst[key] = src[key]
+  
+          else:
+            dst[key] = src[key]
+  
+        return dst
+
+      def decrypt_vault(string):
+        if string.lstrip().startswith('$ANSIBLE_VAULT;'):
+          get_vault_credentials()
+
+          return Vault().decrypt(string.encode('utf-8'), vpw[0])
+
+        return string
+
+      def yaml_vault_tag(loader, node):
+        return decrypt_vault(node.value)
+
+      yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+
+      if args.dt is not None:
+        with open(args.dt.name) as f:
+          dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
+          args.t = dt['template']
+  
+          if 'datasets' in dt:
+            if args.ds is not None:
+              try:
+                args.ds = re.compile(args.ds, re.IGNORECASE)
+  
+              except:
+                parser.error("argument -ds: invalid regular expression")
+  
+              matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
+              if len(matches) == 1:
+                if 'data' in dt['datasets'][matches[0]]:
+                  dt['data'] = dt['datasets'][matches[0]]['data']
+  
+                if 'vars' in dt['datasets'][matches[0]]:
+                  dt['vars'] = dt['datasets'][matches[0]]['vars']
+  
+              else:
+                parser.error("argument -ds: must only match a single dataset")
+  
+            else:
+              parser.error("argument -ds: required with datatemplates that use datasets")
+  
+          elif args.ds is not None:
+            parser.error("argument -ds: not required with datatemplates without datasets")
+  
+          if 'data' in dt:
+            data = dt['data']
+  
+          if 'vars' in dt:
+            gyaml = decrypt_vault(dt['vars'])
+            if gyaml:
+              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+  
+      elif args.d is not None:
+        with open(args.d.name) as f:
+          data = f.read()
+  
+      if args.g is not None:
+        for g in args.g:
+          with open(g.name) as f:
+            gyaml = decrypt_vault(f.read())
+            if args.m == True:
+              merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
+            else:
+              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+  
+      if args.o is None:
+        args.o = '_stdout_'
+  
+      if 'jinjafx_input' in gvars:
+        jinjafx_input = {}
+  
+        if 'prompt' in gvars['jinjafx_input'] and len(gvars['jinjafx_input']['prompt']) > 0:
+          for k in gvars['jinjafx_input']['prompt']:
+            v = gvars['jinjafx_input']['prompt'][k]
+  
+            if isinstance(v, dict):
+              if 'pattern' not in v:
+                v['pattern'] = '.*'
+  
+              if 'required' not in v:
+                v['required'] = False
+  
+              while True:
+                if 'type' in v and v['type'].lower() == 'password':
+                  jinjafx_input[k] = getpass.getpass(v['text'] + ': ').strip()
+                else:
+                  jinjafx_input[k] = input(v['text'] + ': ').strip()
+  
+                if len(jinjafx_input[k]) == 0:
+                  if v['required']:
+                    print('error: input is required', file=sys.stderr)
+                  else:
+                    break
+                else:
+                  m = re.match(v['pattern'], jinjafx_input[k], re.IGNORECASE)
+                  if not m or (m.span()[1] - m.span()[0]) != len(jinjafx_input[k]):
+                    print('error: input doesn\'t match pattern "' + v['pattern'] + '"', file=sys.stderr)
+                  else:
+                    break
+  
+            else:
+              jinjafx_input[k] = input(v + ': ').strip()
+  
+          print()
+  
+        gvars['jinjafx_input'] = jinjafx_input
+  
+      args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
+      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
+      ocount = 0
+  
+      if args.od is not None:
+        os.chdir(args.od)
+  
+      if len(outputs['_stderr_']) > 0:
+        print('Warnings:', file=sys.stderr)
+        for w in outputs['_stderr_']:
+          print(' - ' + w, file=sys.stderr)
+  
+        print('', file=sys.stderr)
+  
+      for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
+        if o[0] != '_stderr_':
+          output = '\n'.join(o[1]) + '\n'
+          if len(output.strip()) > 0:
+            if o[0] == '_stdout_':
+              if ocount > 0:
+                print('\n-\n')
+              print(output)
+    
+            else:
+              ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o[0])))
+    
+              if os.path.dirname(ofile) != '':
+                if not os.path.isdir(os.path.dirname(ofile)):
+                  os.makedirs(os.path.dirname(ofile))
+    
+              with open(ofile, 'w') as f:
+                f.write(output)
+    
+              print(__format_bytes(len(output)) + ' > ' + ofile)
+    
+            ocount += 1
+  
+      if ocount > 0:
+        if '_stdout_' not in outputs:
+          print()
+  
+      else:
+        raise Exception('nothing to output')
 
   except KeyboardInterrupt:
     sys.exit(-1)
@@ -292,42 +373,6 @@ class __ArgumentParser(argparse.ArgumentParser):
       print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
       print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
     raise Exception(message)
-
-
-def ansible_vault_decrypt(string, vpw):
-  slines = string.splitlines()
-  hdr = list(map(str.strip, slines[0].split(';')))
-
-  if hdr[1] == '1.1' or hdr[1] == '1.2':
-    if hdr[2] == 'AES256':
-      vaulttext = bytes.fromhex(''.join(slines[1:]))
-      b_salt, b_hmac, b_ciphertext = vaulttext.split(b"\n", 2)
-      b_salt = bytes.fromhex(b_salt.decode('utf-8'))
-      b_hmac = bytes.fromhex(b_hmac.decode('utf-8'))
-      b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
-
-      b_derivedkey = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(vpw.encode('utf-8'))
-
-      hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
-      hmac.update(b_ciphertext)
-
-      try:
-        hmac.verify(b_hmac)
-
-      except InvalidSignature:
-        raise Exception("invalid ansible vault password")
-
-      d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
-
-      u = PKCS7(128).unpadder()
-      b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
-      return b_plaintext.decode('utf-8')
-
-    else:
-      raise Exception("unknown ansible vault cipher")
-
-  else:
-    raise Exception("unknown ansible vault version")
 
 
 class JinjaFx():
@@ -907,6 +952,68 @@ class JinjaFx():
 
     else:
       return str(datetime.datetime.utcnow().astimezone(tz))
+
+
+class Vault():
+  def __derive_key(self, b_password, b_salt=None):
+    if b_salt is None:
+      b_salt = os.urandom(32)
+
+    b_key = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(b_password)
+    return b_salt, b_key
+
+  def encrypt(self, b_string, password):
+    if b_string.lstrip().startswith(b'$ANSIBLE_VAULT;'):
+      raise Exception('data is already encrypted with ansible vault')
+
+    b_salt, b_derivedkey = self.__derive_key(password.encode('utf-8'))
+
+    p = PKCS7(128).padder()
+    e = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).encryptor()
+    b_ciphertext = e.update(p.update(b_string) + p.finalize()) + e.finalize()
+
+    hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+    hmac.update(b_ciphertext)
+    b_hmac = hmac.finalize()
+
+    vtext = '\n'.join([b_salt.hex(), b_hmac.hex(), b_ciphertext.hex()]).encode('utf-8').hex()
+    return '$ANSIBLE_VAULT;1.1;AES256\n'  + '\n'.join([vtext[i:i + 80] for i in range(0, len(vtext), 80)]) + '\n'
+
+  def decrypt(self, b_string, password):
+    slines = b_string.strip().splitlines()
+    hdr = list(map(bytes.strip, slines[0].split(b';')))
+
+    if hdr[0] == b'$ANSIBLE_VAULT' and len(slines) > 1:
+      if hdr[1] == b'1.1' or hdr[1] == b'1.2':
+        if hdr[2] == b'AES256':
+          vaulttext = bytes.fromhex(b''.join(slines[1:]).decode('utf-8'))
+          b_salt, b_hmac, b_ciphertext = vaulttext.split(b'\n', 2)
+          b_hmac = bytes.fromhex(b_hmac.decode('utf-8'))
+          b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
+          b_derivedkey = self.__derive_key(password.encode('utf-8'), bytes.fromhex(b_salt.decode('utf-8')))[1]
+  
+          hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+          hmac.update(b_ciphertext)
+    
+          try:
+            hmac.verify(b_hmac)
+    
+          except InvalidSignature:
+            raise Exception("invalid ansible vault password")
+    
+          u = PKCS7(128).unpadder()
+          d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
+          b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
+          return b_plaintext
+    
+        else:
+          raise Exception("unknown ansible vault cipher")
+    
+      else:
+        raise Exception("unknown ansible vault version")
+
+    else:
+      raise Exception("data isn't ansible vault encrypted")
 
 
 if __name__ == '__main__':
