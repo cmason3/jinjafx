@@ -39,7 +39,7 @@ def main():
     prog = os.path.basename(sys.argv[0])
     jinjafx_usage = '-t <template.j2> [-d <data.csv>] [-g <vars.yml>]\n'
     jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]\n'
-    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file1[ file2[ ...]]]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file1] [file2] [...]]]\n'
     jinjafx_usage += '''
 
     -t <template.j2>           - specify a Jinja2 template
