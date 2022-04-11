@@ -39,8 +39,7 @@ def main():
     prog = os.path.basename(sys.argv[0])
     jinjafx_usage = '-t <template.j2> [-d <data.csv>] [-g <vars.yml>]\n'
     jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]\n'
-    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt [file1[ file2[ ...]]] | [-name [var]]\n'
-    jinjafx_usage += (' ' * (len(prog) + 3)) + '-decrypt [file1[ file2[ ...]]]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file1[ file2[ ...]]]\n'
     jinjafx_usage += '''
 
     -t <template.j2>           - specify a Jinja2 template
@@ -50,7 +49,6 @@ def main():
     -g <vars.yml> [-g ...]     - specify global variables in yaml (supports Ansible Vault)
     -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
     -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
-    -name [var]                - specify a variable to output with Ansible Vault encryption
     -ed <exts dir> [-ed ...]   - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>           - set output dir for output files with a relative path (default is ".")
@@ -67,7 +65,6 @@ Environment Variables:
     group_ex.add_argument('-dt', type=argparse.FileType('r'))
     group_ex.add_argument('-encrypt', type=str, nargs='*')
     group_ex.add_argument('-decrypt', type=str, nargs='*')
-    parser.add_argument('-name', type=str, nargs='?', const='')
     parser.add_argument('-d', type=argparse.FileType('r'))
     parser.add_argument('-ds', type=str)
     parser.add_argument('-g', type=argparse.FileType('r'), action='append')
@@ -116,14 +113,13 @@ Environment Variables:
 
     if args.encrypt is not None:
       if not args.encrypt:
-        b_string = sys.stdin.buffer.read()
+        b_string = sys.stdin.buffer.read().strip()
+        if len(b_string.splitlines()) > 1:
+          raise Exception('multiline stings not permitted')
+
         get_vault_credentials(True)
         vtext = Vault().encrypt(b_string, vpw[0])
-
-        if args.name is not None:
-          print((args.name + ': ' if len(args.name) else '') + '!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
-        else:
-          print(vtext)
+        print('!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
 
       else:
         get_vault_credentials(True)

@@ -22,8 +22,7 @@ python3 -m pip install --upgrade --user jinjafx
 ```
  jinjafx -t <template.j2> [-d <data.csv>] [-g <vars.yml>]
          -dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]
-         -encrypt [file1[ file2[ ...]]] | [-name [var]]
-         -decrypt [file1[ file2[ ...]]]
+         -encrypt/-decrypt [file1[ file2[ ...]]]
 
    -t <template.j2>           - specify a Jinja2 template
    -d <data.csv>              - specify row/column based data (comma or tab separated)
@@ -32,7 +31,6 @@ python3 -m pip install --upgrade --user jinjafx
    -g <vars.yml>[, -g ...]    - specify global variables in yaml (supports Ansible Vault)
    -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
    -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
-   -name [var]                - specify a variable to output with Ansible Vault encryption
    -encrypt/-decrypt [file]   - encrypt/decrypt a file or stdin using Ansible Vault
    -ed <exts dir>[, -ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
    -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
