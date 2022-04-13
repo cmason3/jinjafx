@@ -227,7 +227,7 @@ keep_trailing_newline = True
 
 ### Ansible Filters
 
-Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx conains some of them that have been ported from Ansible - please raise an Issue if there is one that is missing that people commonly use and I will get it added.
+Jinja2 is commonly used with Ansible which has a wide variety of [custom filters](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html) that can be used in your Jinja2 templates. However, these filters aren't included in Jinja2 as they are part of Ansible. JinjaFx contains some of them that have been ported from Ansible - please raise an Issue if there is one that is missing that people commonly use and I will get it added.
 
 This contains the following Ansible filters:
 
