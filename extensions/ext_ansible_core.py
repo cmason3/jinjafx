@@ -25,6 +25,9 @@ class plugin(Extension):
     environment.tests['regex'] = self.__regex
     environment.tests['match'] = self.__match
     environment.tests['search'] = self.__search
+    environment.tests['contains'] = self.__contains
+    environment.tests['any'] = any
+    environment.tests['all'] = all
     environment.filters['to_yaml'] = self.__to_yaml
     environment.filters['to_nice_yaml'] = self.__to_nice_yaml
     environment.filters['to_json'] = self.__to_json
@@ -96,6 +99,9 @@ class plugin(Extension):
 
   def __search(self, value, pattern='', ignorecase=False, multiline=False):
     return self.__regex(value, pattern, ignorecase, multiline, 'search')
+
+  def __contains(self, seq, value):
+    return value in seq
 
   def __regex_replace(self, value='', pattern='', replacement='', ignorecase=False, multiline=False, flags=0):
     if ignorecase:

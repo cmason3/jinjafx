@@ -275,6 +275,9 @@ In additional to Ansible Filters, Ansible also introduces [tests](https://docs.a
 - `regex`
 - `match`
 - `search`
+- `contains`
+- `any`
+- `all`
 
 ### Ansible Lookups
 

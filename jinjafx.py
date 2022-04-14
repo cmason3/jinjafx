@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.11.1'
+__version__ = '1.11.2'
 
 def main():
   try:
@@ -709,7 +709,7 @@ class JinjaFx():
 
 
   def __jfx_lookup(self, method, variable, default=None):
-    if method == 'vars':
+    if method == 'vars' or method == 'ansible.builtin.vars':
       if variable in self.__g_vars:
         return self.__g_vars[variable]
 
