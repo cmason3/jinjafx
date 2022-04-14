@@ -30,8 +30,10 @@ class plugin(Extension):
     environment.tests['all'] = all
     environment.filters['to_yaml'] = self.__to_yaml
     environment.filters['to_nice_yaml'] = self.__to_nice_yaml
+    environment.filters['from_yaml'] = self.__from_yaml
     environment.filters['to_json'] = self.__to_json
     environment.filters['to_nice_json'] = self.__to_nice_json
+    environment.filters['from_json'] = json.loads
     environment.filters['to_bool'] = self.__to_bool
     environment.filters['to_datetime'] = self.__to_datetime
     environment.filters['strftime'] = self.__strftime
@@ -47,10 +49,15 @@ class plugin(Extension):
 
   def __to_yaml(self, a, *args, **kw):
     default_flow_style = kw.pop('default_flow_style', None)
-    return yaml.dump(a, allow_unicode=True, default_flow_style=default_flow_style, **kw)
+    return yaml.dump(a, Dumper=yaml.SafeDumper, allow_unicode=True, default_flow_style=default_flow_style, **kw)
 
   def __to_nice_yaml(self, a, indent=4, *args, **kw):
-    return yaml.dump(a, indent=indent, allow_unicode=True, default_flow_style=False, **kw)
+    return yaml.dump(a, Dumper=yaml.SafeDumper, indent=indent, allow_unicode=True, default_flow_style=False, **kw)
+
+  def __from_yaml(self, data):
+    if isinstance(data, str):
+      return yaml.load(data, Loader=yaml.SafeLoader)
+    return data
 
   def __to_json(self, a, *args, **kw):
     return json.dumps(a, *args, **kw)
