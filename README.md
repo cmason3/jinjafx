@@ -233,8 +233,10 @@ This contains the following Ansible filters:
 
 - `to_yaml`
 - `to_nice_yaml`
+- `from_yaml`
 - `to_json`
 - `to_nice_json`
+- `from_json`
 - `to_bool`
 - `to_datetime`
 - `strftime`
@@ -275,6 +277,9 @@ In additional to Ansible Filters, Ansible also introduces [tests](https://docs.a
 - `regex`
 - `match`
 - `search`
+- `contains`
+- `any`
+- `all`
 
 ### Ansible Lookups
 
