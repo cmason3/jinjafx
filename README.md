@@ -574,3 +574,14 @@ This filter will hash a string using Cisco's Type 9 hashing scheme (SCrypt). An 
 
 This filter will hash a string using Juniper's Type 6 hashing scheme (Unix Crypt based SHA512). An optional "salt" (length must be 8 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
+- <b><code>vaulty_encrypt("string", "password")</code></b>
+
+This filter will encrypt a string using [Vaulty](https://github.com/cmason3/vaulty) which is an alternative to Ansible Vault. Vaulty provides 256-bit authenticated symmetric encryption (AEAD) using ChaCha20-Poly1305 and Scrypt as the password based key derivation function. Ansible Vault is very inefficient when it comes to output size - for example, a 256 byte string encrypted using Ansible Vault will take up 1,390 bytes (a 443% increase) compared to Vaulty where the same string will only take up 412 bytes (a 61% increase).
+
+- <b><code>vaulty_decrypt("string", "password")</code></b>
+
+This filter will perform the opposite of `vaulty_encrypt` and takes a Vaulty encrypted string and the password, e.g:
+
+```jinja2
+{{ "$VAULTY;..."|vaulty_decrypt("password") }}
+```

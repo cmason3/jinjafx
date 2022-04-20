@@ -17,11 +17,18 @@ from jinja2.ext import Extension
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.backends import default_backend
-import base64, random, re, crypt
+from cryptography.exceptions import InvalidTag
+import os, base64, random, re, crypt
 
 class plugin(Extension):
   def __init__(self, environment):
+    self.__vaulty = Vaulty()
+    self.__std_b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    self.__mod_b64chars = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    self.__mod_b64table = str.maketrans(self.__std_b64chars, self.__mod_b64chars)
+
     Extension.__init__(self, environment)
     environment.filters['cisco_snmpv3_key'] = self.__cisco_snmpv3_key
     environment.filters['junos_snmpv3_key'] = self.__junos_snmpv3_key
@@ -30,10 +37,8 @@ class plugin(Extension):
     environment.filters['cisco8hash'] = self.__cisco8hash
     environment.filters['cisco9hash'] = self.__cisco9hash
     environment.filters['junos6hash'] = self.__junos6hash
-
-    self.__std_b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    self.__mod_b64chars = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-    self.__mod_b64table = str.maketrans(self.__std_b64chars, self.__mod_b64chars)
+    environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
+    environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
 
   def __expand_snmpv3_key(self, password, algorithm):
     h = hashes.Hash(getattr(hashes, algorithm.upper())())
@@ -155,3 +160,45 @@ class plugin(Extension):
       raise Exception('invalid salt provided to junos6hash')
 
     return crypt.crypt(string, '$6$' + salt)
+
+class Vaulty():
+  def __init__(self):
+    self.__prefix = '$VAULTY;'
+    self.__kcache = {}
+
+  def __derive_key(self, password, salt=None):
+    ckey = (password, salt)
+
+    if ckey in self.__kcache:
+      return self.__kcache[ckey]
+
+    if salt is None:
+      salt = os.urandom(16)
+  
+    key = Scrypt(salt, 32, 2**16, 8, 1, default_backend()).derive(password.encode('utf-8'))
+    self.__kcache[ckey] = [salt, key]
+    return salt, key
+
+  def encrypt(self, plaintext, password):
+    version = b'\x01'
+    salt, key = self.__derive_key(password)
+    nonce = os.urandom(12)
+    ciphertext = ChaCha20Poly1305(key).encrypt(nonce, plaintext.encode('utf-8'), None)
+
+    r = self.__prefix + base64.b64encode(version + salt + nonce + ciphertext).decode('utf-8')
+    return r
+  
+  def decrypt(self, ciphertext, password):
+    if ciphertext.lstrip().startswith(self.__prefix):
+      try:
+        ciphertext = base64.b64decode(ciphertext.strip()[len(self.__prefix):])
+
+        if ciphertext.startswith(b'\x01') and len(ciphertext) > 29:
+          key = self.__derive_key(password, ciphertext[1:17])[1]
+          return ChaCha20Poly1305(key).decrypt(ciphertext[17:29], ciphertext[29:], None).decode('utf-8')
+
+      except: # and else
+        raise Exception('invalid vaulty password or ciphertext malformed')
+
+    raise Exception('data not encrypted with vaulty')
+
