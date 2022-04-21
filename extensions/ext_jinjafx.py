@@ -24,12 +24,13 @@ import os, base64, random, re, crypt
 
 class plugin(Extension):
   def __init__(self, environment):
+    Extension.__init__(self, environment)
+    
     self.__vaulty = Vaulty()
     self.__std_b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     self.__mod_b64chars = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     self.__mod_b64table = str.maketrans(self.__std_b64chars, self.__mod_b64chars)
-
-    Extension.__init__(self, environment)
+    
     environment.filters['cisco_snmpv3_key'] = self.__cisco_snmpv3_key
     environment.filters['junos_snmpv3_key'] = self.__junos_snmpv3_key
     environment.filters['cisco7encode'] = self.__cisco7encode
