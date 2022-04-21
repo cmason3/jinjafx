@@ -28,7 +28,7 @@ setup(
   packages=["jinjafx"],
   include_package_data=True,
   package_data={'': ['extensions/*.py']},
-  install_requires=["jinja2", "pytz", "pyyaml", "cryptography", "netaddr"],
+  install_requires=["jinja2", "pytz", "pyyaml", "cryptography>=2.7", "netaddr"],
   entry_points={
     "console_scripts": [
       "jinjafx=jinjafx:main",
