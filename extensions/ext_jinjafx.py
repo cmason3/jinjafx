@@ -179,13 +179,17 @@ class Vaulty():
     self.__kcache[ckey] = [salt, key]
     return salt, key
 
-  def encrypt(self, plaintext, password):
+  def encrypt(self, plaintext, password, cols=None):
     version = b'\x01'
     salt, key = self.__derive_key(password)
     nonce = os.urandom(12)
     ciphertext = ChaCha20Poly1305(key).encrypt(nonce, plaintext.encode('utf-8'), None)
 
     r = self.__prefix + base64.b64encode(version + salt + nonce + ciphertext).decode('utf-8')
+   
+    if cols is not None:
+      r = '\n'.join([r[i:i + cols] for i in range(0, len(r), cols)])
+
     return r
   
   def decrypt(self, ciphertext, password):
@@ -197,8 +201,10 @@ class Vaulty():
           key = self.__derive_key(password, ciphertext[1:17])[1]
           return ChaCha20Poly1305(key).decrypt(ciphertext[17:29], ciphertext[29:], None).decode('utf-8')
 
-      except: # and else
-        raise Exception('invalid vaulty password or ciphertext malformed')
+      except:
+        pass
+
+      raise Exception('invalid vaulty password or ciphertext malformed')
 
     raise Exception('data not encrypted with vaulty')
 
