@@ -2,7 +2,7 @@
 ![Python](https://img.shields.io/badge/python-≥&nbsp;3.7-orange)
 ![Size](https://img.shields.io/github/languages/code-size/cmason3/jinjafx?label=size)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
-
+&nbsp;
 <h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
@@ -11,7 +11,7 @@ JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.co
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in a dynamic "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
 
-![GIF](contrib/jinjafx.gif)
+![GIF](https://github.com/cmason3/jinjafx/raw/main/contrib/jinjafx.gif)
 
 ### Installation
 
@@ -412,7 +412,7 @@ dt:
 
 ### Jinja2 Extensions
 
-Jinja2 supports the ability to provide extended functionality through [extensions](https://jinja.palletsprojects.com/en/2.11.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja2_extensions` global variable, which you can set within one of your `vars.yml` files (it expects a list):
+Jinja2 supports the ability to provide extended functionality through [extensions](https://jinja.palletsprojects.com/en/3.0.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja2_extensions` global variable, which you can set within one of your `vars.yml` files (it expects a list):
 
 ```yaml
 ---
