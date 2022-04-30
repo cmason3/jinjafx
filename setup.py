@@ -12,8 +12,10 @@ README = re.sub(r'^.*\[<img', '[<img', README, flags=re.DOTALL)
 README = re.sub(r'<p.+?</p>', '', README, flags=re.DOTALL)
 
 if sys.version_info == (3, 6):
+  print("IN HERE--------------------")
   install_requires=["jinja2<=3.0", "pytz", "pyyaml", "cryptography>=2.7,<=36.0", "netaddr"]
 else:
+  print("NOT HERE-------------------")
   install_requires=["jinja2", "pytz", "pyyaml", "cryptography>=2.7", "netaddr"]
 
 setup(
