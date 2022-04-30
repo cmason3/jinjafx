@@ -1,4 +1,4 @@
-import pathlib, re
+import sys, pathlib, re
 from setuptools import setup
 
 for line in open('jinjafx.py'):
@@ -10,6 +10,11 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 README = re.sub(r'^.*\[<img', '[<img', README, flags=re.DOTALL)
 README = re.sub(r'<p.+?</p>', '', README, flags=re.DOTALL)
+
+if sys.version_info <= (3, 6):
+  install_requires=["jinja2<=3.0", "pytz", "pyyaml", "cryptography>=2.7,<=36.0", "netaddr"]
+else:
+  install_requires=["jinja2", "pytz", "pyyaml", "cryptography>=2.7", "netaddr"]
 
 setup(
   name="jinjafx",
@@ -29,7 +34,7 @@ setup(
   packages=["jinjafx"],
   include_package_data=True,
   package_data={'': ['extensions/*.py']},
-  install_requires=["jinja2", "pytz", "pyyaml", "cryptography>=2.7", "netaddr"],
+  install_requires=install_requires,
   entry_points={
     "console_scripts": [
       "jinjafx=jinjafx:main",
