@@ -11,8 +11,8 @@ README = (HERE / "README.md").read_text()
 README = re.sub(r'^.*\[<img', '[<img', README, flags=re.DOTALL)
 README = re.sub(r'<p.+?</p>', '', README, flags=re.DOTALL)
 
-if sys.version_info <= (3, 6):
-  install_requires=["jinja2<=3.0", "pytz", "pyyaml", "cryptography>=2.7,<=36.0", "netaddr"]
+if sys.version_info[0] == 3 and sys.version_info[1] == 6:
+  install_requires=["jinja2<3.1", "pytz", "pyyaml", "cryptography>=2.7,<37.0", "netaddr"]
 else:
   install_requires=["jinja2", "pytz", "pyyaml", "cryptography>=2.7", "netaddr"]
 
@@ -28,6 +28,7 @@ setup(
   author_email="chris@netnix.org",
   license="MIT",
   classifiers=[
+    "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3"
   ],
