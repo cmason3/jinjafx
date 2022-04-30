@@ -19,7 +19,7 @@ else:
 setup(
   name="jinjafx",
   version=__version__,
-  python_requires=">=3.8",
+  python_requires=">=3.6",
   description="JinjaFx - Jinja2 Templating Tool",
   long_description=README,
   long_description_content_type="text/markdown",
