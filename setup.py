@@ -14,7 +14,7 @@ README = re.sub(r'<p.+?</p>', '', README, flags=re.DOTALL)
 install_requires = ["jinja2", "pytz", "pyyaml", "cryptography>=2.7", "netaddr"]
 
 if sys.version_info[0] == 3 and sys.version_info[1] == 6:
-  install_requires[3] = "cryptography>=2.7,<37.0"
+  install_requires = ["jinja2<3.1", "pytz", "pyyaml", "cryptography>=2.7,<37.0", "netaddr"]
 
 setup(
   name="jinjafx",
