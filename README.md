@@ -244,9 +244,13 @@ This contains the following Ansible filters:
 - `b64encode`
 - `b64decode`
 - `hash`
+- `regex_escape`
 - `regex_replace`
 - `regex_search`
 - `regex_findall`
+- `random`
+- `shuffle`
+- `ternary`
 - `log`
 - `pow`
 - `root`
