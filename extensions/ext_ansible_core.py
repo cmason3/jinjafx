@@ -40,6 +40,7 @@ class plugin(Extension):
     environment.filters['b64decode'] = self.__b64decode
     environment.filters['b64encode'] = self.__b64encode
     environment.filters['regex_replace'] = self.__regex_replace
+    environment.filters['regex_escape'] = self.__regex_escape
     environment.filters['regex_search'] = self.__regex_search
     environment.filters['regex_findall'] = self.__regex_findall
     environment.filters['hash'] = self.__hash
@@ -109,6 +110,16 @@ class plugin(Extension):
 
   def __contains(self, seq, value):
     return value in seq
+
+  def __regex_escape(self, string, re_type='python'):
+    if re_type == 'python':
+      return re.escape(string)
+
+    elif re_type == 'posix_basic':
+      return self.__regex_replace(string, r'([].[^$*\\])', r'\\\1')
+
+    else:
+      raise Exception('Unknown regex type - ' + re_type)
 
   def __regex_replace(self, value='', pattern='', replacement='', ignorecase=False, multiline=False, flags=0):
     if ignorecase:
