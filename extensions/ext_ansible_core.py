@@ -17,7 +17,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from jinja2.ext import Extension
-import re, base64, hashlib, yaml, json, datetime, time, math
+import re, base64, hashlib, yaml, json, datetime, time, math, random
  
 class plugin(Extension):
   def __init__(self, environment):
@@ -39,6 +39,8 @@ class plugin(Extension):
     environment.filters['strftime'] = self.__strftime
     environment.filters['b64decode'] = self.__b64decode
     environment.filters['b64encode'] = self.__b64encode
+    environment.filters['random'] = self.__random
+    environment.filters['shuffle'] = self.__shuffle
     environment.filters['regex_replace'] = self.__regex_replace
     environment.filters['regex_escape'] = self.__regex_escape
     environment.filters['regex_search'] = self.__regex_search
@@ -91,6 +93,41 @@ class plugin(Extension):
 
   def __b64encode(self, string, encoding='utf-8'):
     return base64.b64encode(string.encode(encoding)).decode(encoding)
+
+  def __random(self, end, start=None, step=None, seed=None):
+    if seed is None:
+      r = random.SystemRandom()
+    else:
+      r = random.Random(seed)
+
+    if isinstance(end, int):
+      if not start:
+        start = 0
+      if not step:
+        step = 1
+
+      return r.randrange(start, end, step)
+
+    elif hasattr(end, '__iter__'):
+      if start or step:
+        raise Exception('start and step can only be used with integer values')
+
+      return r.choice(end)
+
+    raise Exception('random can only be used on sequences and integers')
+
+  def __shuffle(self, mylist, seed=None):
+    try:
+      mylist = list(mylist)
+      if seed is None:
+        random.shuffle(mylist)
+      else:
+        random.Random(seed).shuffle(mylist)
+
+    except Exception:
+      pass
+
+    return mylist
 
   def __regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
     if ignorecase:
