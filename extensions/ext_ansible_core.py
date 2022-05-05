@@ -41,6 +41,7 @@ class plugin(Extension):
     environment.filters['b64encode'] = self.__b64encode
     environment.filters['random'] = self.__random
     environment.filters['shuffle'] = self.__shuffle
+    environment.filters['ternary'] = self.__ternary
     environment.filters['regex_replace'] = self.__regex_replace
     environment.filters['regex_escape'] = self.__regex_escape
     environment.filters['regex_search'] = self.__regex_search
@@ -128,6 +129,14 @@ class plugin(Extension):
       pass
 
     return mylist
+
+  def __ternary(self, value, true_val, false_val, none_val=None):
+    if value is None:
+      return none_val
+    elif bool(value):
+      return true_val
+    else:
+      return false_val
 
   def __regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
     if ignorecase:
