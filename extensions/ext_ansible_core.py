@@ -42,6 +42,8 @@ class plugin(Extension):
     environment.filters['random'] = self.__random
     environment.filters['shuffle'] = self.__shuffle
     environment.filters['ternary'] = self.__ternary
+    environment.filters['dict2items'] = self.__dict2items
+    environment.filters['items2dict'] = self.__items2dict
     environment.filters['regex_replace'] = self.__regex_replace
     environment.filters['regex_escape'] = self.__regex_escape
     environment.filters['regex_search'] = self.__regex_search
@@ -137,6 +139,20 @@ class plugin(Extension):
       return true_val
     else:
       return false_val
+
+  def __dict2items(self, mydict, key_name='key', value_name='value', ret=[]):
+    if not isinstance(mydict, dict):
+      raise Exception('dict2items requires a dictionary, got ' + str(type(mydict)) + ' instead')
+
+    for key in mydict:
+      ret.append({key_name: key, value_name: mydict[key]})
+    return ret
+
+  def __items2dict(self, mylist, key_name='key', value_name='value'):
+    if not isinstance(mylist, list):
+      raise Exception('items2dict requires a list, got ' + str(type(mylist)) + ' instead')
+
+    return dict((item[key_name], item[value_name]) for item in mylist)
 
   def __regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
     if ignorecase:

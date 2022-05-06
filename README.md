@@ -248,6 +248,8 @@ This contains the following Ansible filters:
 - `regex_replace`
 - `regex_search`
 - `regex_findall`
+- `dict2items`
+- `items2dict`
 - `random`
 - `shuffle`
 - `ternary`
