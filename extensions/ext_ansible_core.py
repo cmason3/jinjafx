@@ -26,14 +26,14 @@ import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
 class plugin(Extension):
   def __init__(self, environment):
     Extension.__init__(self, environment)
-    environment.tests['regex'] = self.__regex
-    environment.tests['match'] = self.__match
-    environment.tests['search'] = self.__search
-    environment.tests['contains'] = self.__contains
-    environment.tests['any'] = any
-    environment.tests['all'] = all
 
     for p in ('', 'ansible.builtin.'):
+      environment.tests[p + 'regex'] = self.__regex
+      environment.tests[p + 'match'] = self.__match
+      environment.tests[p + 'search'] = self.__search
+      environment.tests[p + 'contains'] = self.__contains
+      environment.tests[p + 'any'] = any
+      environment.tests[p + 'all'] = all
       environment.filters[p + 'to_yaml'] = self.__to_yaml
       environment.filters[p + 'to_nice_yaml'] = self.__to_nice_yaml
       environment.filters[p + 'from_yaml'] = self.__from_yaml
