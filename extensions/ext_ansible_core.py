@@ -57,6 +57,8 @@ class plugin(Extension):
     environment.filters['product'] = itertools.product
     environment.filters['permutations'] = itertools.permutations
     environment.filters['combinations'] = itertools.combinations
+    environment.filters['zip'] = zip
+    environment.filters['zip_longest'] = itertools.zip_longest
     environment.filters['log'] = self.__log
     environment.filters['pow'] = self.__pow
     environment.filters['root'] = self.__root
