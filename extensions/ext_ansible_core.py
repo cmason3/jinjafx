@@ -17,7 +17,11 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from jinja2.ext import Extension
-import re, base64, hashlib, yaml, json, datetime, time, math, random
+from jinja2.filters import pass_environment
+from jinja2.filters import do_unique
+from collections.abc import Sequence, Hashable
+
+import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
  
 class plugin(Extension):
   def __init__(self, environment):
@@ -28,30 +32,44 @@ class plugin(Extension):
     environment.tests['contains'] = self.__contains
     environment.tests['any'] = any
     environment.tests['all'] = all
-    environment.filters['to_yaml'] = self.__to_yaml
-    environment.filters['to_nice_yaml'] = self.__to_nice_yaml
-    environment.filters['from_yaml'] = self.__from_yaml
-    environment.filters['to_json'] = self.__to_json
-    environment.filters['to_nice_json'] = self.__to_nice_json
-    environment.filters['from_json'] = json.loads
-    environment.filters['to_bool'] = self.__to_bool
-    environment.filters['to_datetime'] = self.__to_datetime
-    environment.filters['strftime'] = self.__strftime
-    environment.filters['b64decode'] = self.__b64decode
-    environment.filters['b64encode'] = self.__b64encode
-    environment.filters['random'] = self.__random
-    environment.filters['shuffle'] = self.__shuffle
-    environment.filters['ternary'] = self.__ternary
-    environment.filters['dict2items'] = self.__dict2items
-    environment.filters['items2dict'] = self.__items2dict
-    environment.filters['regex_replace'] = self.__regex_replace
-    environment.filters['regex_escape'] = self.__regex_escape
-    environment.filters['regex_search'] = self.__regex_search
-    environment.filters['regex_findall'] = self.__regex_findall
-    environment.filters['hash'] = self.__hash
-    environment.filters['log'] = self.__log
-    environment.filters['pow'] = self.__pow
-    environment.filters['root'] = self.__root
+
+    for p in ('', 'ansible.builtin.'):
+      environment.filters[p + 'to_yaml'] = self.__to_yaml
+      environment.filters[p + 'to_nice_yaml'] = self.__to_nice_yaml
+      environment.filters[p + 'from_yaml'] = self.__from_yaml
+      environment.filters[p + 'to_json'] = self.__to_json
+      environment.filters[p + 'to_nice_json'] = self.__to_nice_json
+      environment.filters[p + 'from_json'] = json.loads
+      environment.filters[p + 'to_bool'] = self.__to_bool
+      environment.filters[p + 'to_datetime'] = self.__to_datetime
+      environment.filters[p + 'strftime'] = self.__strftime
+      environment.filters[p + 'b64decode'] = self.__b64decode
+      environment.filters[p + 'b64encode'] = self.__b64encode
+      environment.filters[p + 'random'] = self.__random
+      environment.filters[p + 'shuffle'] = self.__shuffle
+      environment.filters[p + 'ternary'] = self.__ternary
+      environment.filters[p + 'dict2items'] = self.__dict2items
+      environment.filters[p + 'items2dict'] = self.__items2dict
+      environment.filters[p + 'extract'] = self.__extract
+      environment.filters[p + 'flatten'] = self.__flatten
+      environment.filters[p + 'regex_replace'] = self.__regex_replace
+      environment.filters[p + 'regex_escape'] = self.__regex_escape
+      environment.filters[p + 'regex_search'] = self.__regex_search
+      environment.filters[p + 'regex_findall'] = self.__regex_findall
+      environment.filters[p + 'hash'] = self.__hash
+      environment.filters[p + 'product'] = itertools.product
+      environment.filters[p + 'permutations'] = itertools.permutations
+      environment.filters[p + 'combinations'] = itertools.combinations
+      environment.filters[p + 'zip'] = zip
+      environment.filters[p + 'zip_longest'] = itertools.zip_longest
+      environment.filters[p + 'log'] = self.__log
+      environment.filters[p + 'pow'] = self.__pow
+      environment.filters[p + 'root'] = self.__root
+      environment.filters[p + 'unique'] = self.__unique
+      environment.filters[p + 'intersect'] = self.__intersect
+      environment.filters[p + 'difference'] = self.__difference
+      environment.filters[p + 'symmetric_difference'] = self.__symmetric_difference
+      environment.filters[p + 'union'] = self.__union
 
   def __to_yaml(self, a, *args, **kw):
     default_flow_style = kw.pop('default_flow_style', None)
@@ -154,6 +172,36 @@ class plugin(Extension):
 
     return dict((item[key_name], item[value_name]) for item in mylist)
 
+  @pass_environment
+  def __extract(self, environment, item, container, morekeys=None):
+    if morekeys is None:
+        keys = [item]
+    elif isinstance(morekeys, list):
+        keys = [item] + morekeys
+    else:
+        keys = [item, morekeys]
+
+    value = container
+    for key in keys:
+        value = environment.getitem(value, key)
+    return value
+
+  def __flatten(self, mylist, levels=None, skip_nulls=True):
+    ret = []
+    for element in mylist:
+      if skip_nulls and element in (None, 'None', 'null'):
+        continue
+      elif not isinstance(element, (str, bytes)) and isinstance(element, Sequence):
+        if levels is None:
+          ret.extend(self.__flatten(element, skip_nulls=skip_nulls))
+        elif levels >= 1:
+          ret.extend(self.__flatten(element, levels=(int(levels) - 1), skip_nulls=skip_nulls))
+        else:
+          ret.append(element)
+      else:
+        ret.append(element)
+    return ret
+
   def __regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
     if ignorecase:
       flags |= re.I
@@ -238,4 +286,41 @@ class plugin(Extension):
 
   def __root(self, x, base=2):
     return math.sqrt(x) if base == 2 else math.pow(x, 1.0 / float(base))
+
+  @pass_environment
+  def __unique(self, environment, a, case_sensitive=None, attribute=None):
+    return list(do_unique(environment, a, case_sensitive=bool(case_sensitive), attribute=attribute))
+
+  @pass_environment
+  def __intersect(self, environment, a, b):
+    if isinstance(a, Hashable) and isinstance(b, Hashable):
+      c = set(a) & set(b)
+    else:
+      c = self.__unique(environment, [x for x in a if x in b], True)
+    return c
+
+  @pass_environment
+  def __difference(self, environment, a, b):
+    if isinstance(a, Hashable) and isinstance(b, Hashable):
+      c = set(a) - set(b)
+    else:
+      c = self.__unique(environment, [x for x in a if x not in b], True)
+    return c
+
+  @pass_environment
+  def __symmetric_difference(self, environment, a, b):
+    if isinstance(a, Hashable) and isinstance(b, Hashable):
+      c = set(a) ^ set(b)
+    else:
+      isect = self.__intersect(environment, a, b)
+      c = [x for x in self.__union(environment, a, b) if x not in isect]
+    return c
+
+  @pass_environment
+  def __union(self, environment, a, b):
+    if isinstance(a, Hashable) and isinstance(b, Hashable):
+      c = set(a) | set(b)
+    else:
+      c = self.__unique(environment, a + b, True)
+    return c
 
