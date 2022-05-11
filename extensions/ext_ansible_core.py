@@ -20,7 +20,7 @@ from jinja2.ext import Extension
 from jinja2.filters import pass_environment
 from collections.abc import Sequence
 
-import re, base64, hashlib, yaml, json, datetime, time, math, random
+import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
  
 class plugin(Extension):
   def __init__(self, environment):
@@ -54,6 +54,9 @@ class plugin(Extension):
     environment.filters['regex_search'] = self.__regex_search
     environment.filters['regex_findall'] = self.__regex_findall
     environment.filters['hash'] = self.__hash
+    environment.filters['product'] = itertools.product
+    environment.filters['permutations'] = itertools.permutations
+    environment.filters['combinations'] = itertools.combinations
     environment.filters['log'] = self.__log
     environment.filters['pow'] = self.__pow
     environment.filters['root'] = self.__root
@@ -173,15 +176,16 @@ class plugin(Extension):
         value = environment.getitem(value, key)
     return value
 
-  def __flatten(self, mylist, levels=None, skip_nulls=True, ret=[]):
+  def __flatten(self, mylist, levels=None, skip_nulls=True):
+    ret = []
     for element in mylist:
       if skip_nulls and element in (None, 'None', 'null'):
         continue
       elif not isinstance(element, (str, bytes)) and isinstance(element, Sequence):
         if levels is None:
-          ret.extend(flatten(element, skip_nulls=skip_nulls))
+          ret.extend(self.__flatten(element, skip_nulls=skip_nulls))
         elif levels >= 1:
-          ret.extend(flatten(element, levels=(int(levels) - 1), skip_nulls=skip_nulls))
+          ret.extend(self.__flatten(element, levels=(int(levels) - 1), skip_nulls=skip_nulls))
         else:
           ret.append(element)
       else:

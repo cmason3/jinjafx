@@ -253,6 +253,8 @@ This contains the following Ansible filters:
 - `random`
 - `shuffle`
 - `ternary`
+- `extract`
+- `flatten`
 - `log`
 - `pow`
 - `root`
