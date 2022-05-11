@@ -17,6 +17,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from jinja2.ext import Extension
+from jinja2.filters import pass_environment
 import re, base64, hashlib, yaml, json, datetime, time, math, random
  
 class plugin(Extension):
@@ -44,6 +45,7 @@ class plugin(Extension):
     environment.filters['ternary'] = self.__ternary
     environment.filters['dict2items'] = self.__dict2items
     environment.filters['items2dict'] = self.__items2dict
+    environment.filters['extract'] = self.__extract
     environment.filters['regex_replace'] = self.__regex_replace
     environment.filters['regex_escape'] = self.__regex_escape
     environment.filters['regex_search'] = self.__regex_search
@@ -153,6 +155,20 @@ class plugin(Extension):
       raise Exception('items2dict requires a list, got ' + str(type(mylist)) + ' instead')
 
     return dict((item[key_name], item[value_name]) for item in mylist)
+
+  @pass_environment
+  def __extract(self, environment, item, container, morekeys=None):
+    if morekeys is None:
+        keys = [item]
+    elif isinstance(morekeys, list):
+        keys = [item] + morekeys
+    else:
+        keys = [item, morekeys]
+
+    value = container
+    for key in keys:
+        value = environment.getitem(value, key)
+    return value
 
   def __regex(self, value='', pattern='', ignorecase=False, multiline=False, match_type='search', flags=0):
     if ignorecase:
