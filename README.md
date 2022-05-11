@@ -255,6 +255,13 @@ This contains the following Ansible filters:
 - `ternary`
 - `extract`
 - `flatten`
+- `unique`
+- `intersect`
+- `difference`
+- `symmetric_difference`
+- `union`
+- `zip`
+- `zip_longest`
 - `log`
 - `pow`
 - `root`
