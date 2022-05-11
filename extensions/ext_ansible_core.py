@@ -18,7 +18,8 @@
 
 from jinja2.ext import Extension
 from jinja2.filters import pass_environment
-from collections.abc import Sequence
+from jinja2.filters import do_unique
+from collections.abc import Sequence, Hashable
 
 import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
  
@@ -62,6 +63,11 @@ class plugin(Extension):
     environment.filters['log'] = self.__log
     environment.filters['pow'] = self.__pow
     environment.filters['root'] = self.__root
+    environment.filters['unique'] = self.__unique
+    environment.filters['intersect'] = self.__intersect
+    environment.filters['difference'] = self.__difference
+    environment.filters['symmetric_difference'] = self.__symmetric_difference
+    environment.filters['union'] = self.__union
 
   def __to_yaml(self, a, *args, **kw):
     default_flow_style = kw.pop('default_flow_style', None)
@@ -278,4 +284,41 @@ class plugin(Extension):
 
   def __root(self, x, base=2):
     return math.sqrt(x) if base == 2 else math.pow(x, 1.0 / float(base))
+
+  @pass_environment
+  def __unique(self, environment, a, case_sensitive=None, attribute=None):
+    return list(do_unique(environment, a, case_sensitive=bool(case_sensitive), attribute=attribute))
+
+  @pass_environment
+  def __intersect(self, environment, a, b):
+    if isinstance(a, Hashable) and isinstance(b, Hashable):
+      c = set(a) & set(b)
+    else:
+      c = self.__unique(environment, [x for x in a if x in b], True)
+    return c
+
+  @pass_environment
+  def __difference(self, environment, a, b):
+    if isinstance(a, Hashable) and isinstance(b, Hashable):
+      c = set(a) - set(b)
+    else:
+      c = self.__unique(environment, [x for x in a if x not in b], True)
+    return c
+
+  @pass_environment
+  def __symmetric_difference(self, environment, a, b):
+    if isinstance(a, Hashable) and isinstance(b, Hashable):
+      c = set(a) ^ set(b)
+    else:
+      isect = self.__intersect(environment, a, b)
+      c = [x for x in self.__union(environment, a, b) if x not in isect]
+    return c
+
+  @pass_environment
+  def __union(self, environment, a, b):
+    if isinstance(a, Hashable) and isinstance(b, Hashable):
+      c = set(a) | set(b)
+    else:
+      c = self.__unique(environment, a + b, True)
+    return c
 
