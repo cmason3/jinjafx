@@ -255,6 +255,9 @@ This contains the following Ansible filters:
 - `ternary`
 - `extract`
 - `flatten`
+- `product`
+- `permutations`
+- `combinations`
 - `unique`
 - `intersect`
 - `difference`
