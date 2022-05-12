@@ -316,16 +316,18 @@ Environment Variables:
         print('', file=sys.stderr)
   
       for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
-        if o[0] != '_stderr_':
+        oname = o[0].rsplit(':', 1)[0]
+
+        if oname != '_stderr_':
           output = '\n'.join(o[1]) + '\n'
           if len(output.strip()) > 0:
-            if o[0] == '_stdout_':
+            if oname == '_stdout_':
               if ocount > 0:
                 print('\n-\n')
               print(output)
     
             else:
-              ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o[0])))
+              ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(oname)))
     
               if os.path.dirname(ofile) != '':
                 if not os.path.isdir(os.path.dirname(ofile)):
@@ -635,7 +637,7 @@ class JinjaFx():
         raise
 
       stack = ['0:' + env.from_string(output).render(rowdata)]
-      start_tag = re.compile(r'<output(?::\S+)?[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
+      start_tag = re.compile(r'<output(:\S+)?[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
       end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
       clines = content.splitlines()
 
@@ -655,12 +657,13 @@ class JinjaFx():
             clines.insert(i + 1, l[block_begin.end():])
             continue
 
-          if block_begin.group(2) != None:
-            index = int(block_begin.group(2))
+          if block_begin.group(3) != None:
+            index = int(block_begin.group(3))
           else:
             index = 0
 
-          stack.append(str(index) + ':' + block_begin.group(1).strip())
+          oformat = block_begin.group(1) if block_begin.group(1) != None else ':text'
+          stack.append(str(index) + ':' + block_begin.group(2).strip() + oformat.lower())
         else:
           block_end = end_tag.search(l.strip())
           if block_end:
