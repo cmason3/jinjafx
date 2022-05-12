@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.11.9'
+__version__ = '1.11.10'
 
 def main():
   try:
@@ -635,7 +635,7 @@ class JinjaFx():
         raise
 
       stack = ['0:' + env.from_string(output).render(rowdata)]
-      start_tag = re.compile(r'<output[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
+      start_tag = re.compile(r'<output(?::\S+)?[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
       end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
       clines = content.splitlines()
 
