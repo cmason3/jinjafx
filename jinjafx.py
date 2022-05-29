@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.12.0'
+__version__ = '1.12.1'
 
 def main():
   try:
@@ -560,13 +560,13 @@ class JinjaFx():
       gvars.update({ 'jinja2_extensions': [] })
 
     if importlib.util.find_spec('ext_jinjafx') is not None:
-      gvars['jinja2_extensions'].append('ext_jinjafx.plugin')
-
-    if importlib.util.find_spec('ext_ansible_core') is not None:
-      gvars['jinja2_extensions'].append('ext_ansible_core.plugin')
+      gvars['jinja2_extensions'].insert(0, 'ext_jinjafx.plugin')
 
     if importlib.util.find_spec('ext_ansible_ipaddr') is not None:
-      gvars['jinja2_extensions'].append('ext_ansible_ipaddr.plugin')
+      gvars['jinja2_extensions'].insert(0, 'ext_ansible_ipaddr.plugin')
+
+    if importlib.util.find_spec('ext_ansible_core') is not None:
+      gvars['jinja2_extensions'].insert(0, 'ext_ansible_core.plugin')
 
     jinja2_options = {
       'undefined': jinja2.StrictUndefined,
