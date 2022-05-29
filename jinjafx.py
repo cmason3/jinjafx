@@ -562,6 +562,9 @@ class JinjaFx():
     if importlib.util.find_spec('ext_jinjafx') is not None:
       gvars['jinja2_extensions'].insert(0, 'ext_jinjafx.plugin')
 
+    if importlib.util.find_spec('ext_netutils') is not None:
+      gvars['jinja2_extensions'].insert(0, 'ext_netutils.plugin')
+
     if importlib.util.find_spec('ext_ansible_ipaddr') is not None:
       gvars['jinja2_extensions'].insert(0, 'ext_ansible_ipaddr.plugin')
 

@@ -289,6 +289,23 @@ This also contains the following "[ipaddr](https://docs.ansible.com/ansible/late
 - `hwaddr`
 - `macaddr` 
 
+In addition to the above Ansible filters, we also suport the following "[netutils](https://pypi.org/project/netutils/)" filters:
+
+- `name_to_bits`
+- `name_to_bytes`
+- `bits_to_name`
+- `bytes_to_name`
+- `name_to_name`
+
+- `interface_range_expansion`
+- `interface_range_compress`
+- `split_interface`
+- `canonical_interface_name`
+- `canonical_interface_name_list`
+- `abbreviated_interface_name`
+- `abbreviated_interface_name_list`
+- `sort_interface_list`
+
 ### Ansible Tests
 
 In additional to Ansible Filters, Ansible also introduces [tests](https://docs.ansible.com/ansible/latest/user_guide/playbooks_tests.html) that can be performed with various filters (e.g. `select` and `select_attr`) - the following Ansible tests have been included in JinjaFx:
