@@ -20,6 +20,8 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidTag
+from lxml import etree
+
 import os, base64, random, re, crypt
 
 class plugin(Extension):
@@ -40,6 +42,7 @@ class plugin(Extension):
     environment.filters['junos6hash'] = self.__junos6hash
     environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
+    environment.filters['xpath'] = self.__xpath
 
   def __expand_snmpv3_key(self, password, algorithm):
     h = hashes.Hash(getattr(hashes, algorithm.upper())())
@@ -161,6 +164,15 @@ class plugin(Extension):
       raise Exception('invalid salt provided to junos6hash')
 
     return crypt.crypt(string, '$6$' + salt)
+
+  def __xpath(self, s_xml, s_path):
+    xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_blank_text=True)).xpath(s_path)
+
+    r = []
+    for x in xml:
+      r.append(etree.tostring(x, pretty_print=True).decode('utf-8'))
+
+    return r
 
 class Vaulty():
   def __init__(self):
