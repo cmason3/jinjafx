@@ -40,9 +40,9 @@ class plugin(Extension):
     environment.filters['cisco8hash'] = self.__cisco8hash
     environment.filters['cisco9hash'] = self.__cisco9hash
     environment.filters['junos6hash'] = self.__junos6hash
+    environment.filters['xpath'] = self.__xpath
     environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
-    environment.filters['xpath'] = self.__xpath
 
   def __expand_snmpv3_key(self, password, algorithm):
     h = hashes.Hash(getattr(hashes, algorithm.upper())())
@@ -166,12 +166,16 @@ class plugin(Extension):
     return crypt.crypt(string, '$6$' + salt)
 
   def __xpath(self, s_xml, s_path):
-    xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_blank_text=True)).xpath(s_path)
+    s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
+    xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
+    xml = xml.xpath(s_path, namespaces=xml.nsmap)
 
     r = []
     for x in xml:
-      r.append(etree.tostring(x, pretty_print=True).decode('utf-8'))
-
+      if isinstance(x, str):
+        r.append(x.strip())
+      else:
+        r.append(etree.tostring(x, pretty_print=True).decode('utf-8').strip())
     return r
 
 class Vaulty():

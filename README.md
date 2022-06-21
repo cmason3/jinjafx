@@ -595,6 +595,37 @@ This filter will hash a string using Cisco's Type 9 hashing scheme (SCrypt). An 
 
 This filter will hash a string using Juniper's Type 6 hashing scheme (Unix Crypt based SHA512). An optional "salt" (length must be 8 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
+- <b><code>xpath("query")</code></b>
+
+This filter is used to perform an xpath query on an XML based output and return the matching sections as a list (if you use namespaces you need to ensure you define them using the `xmlns:` syntax), e.g:
+
+```yaml
+---
+xml: |2
+  <interfaces xmlns:junos="http://xml.juniper.net/junos/*/junos">
+      <interface>
+          <name>et-0/1/0</name>
+          <description junos:changed='changed'>## [DCI] 100GE Circuit to ROUTER-01 (et-0/1/0) ##</description>
+      </interface>
+      <interface>
+          <name>et-0/1/1</name>
+          <description>## 100GE Link to SPINE-01 (et-0/0/0) ##</description>
+      </interface>
+      <interface>
+          <name>et-0/1/2</name>
+          <description>## 100GE Link to SPINE-02 (et-0/0/0) ##</description>
+      </interface>
+  </interfaces>
+```
+
+The following xpath query can be used to find all the "et" interfaces which have the attribute "junos:changed" applied to them and then output the interface's description:
+
+```jinja2
+{% for description in xml|xpath("//interfaces/interface[starts-with(name, 'et')]/description[@junos:changed]/text()") %}
+{{ description }}
+{% endfor %}
+```
+
 - <b><code>vaulty_encrypt("string", "password", [cols])</code></b>
 
 This filter will encrypt a string using [Vaulty](https://github.com/cmason3/vaulty) which is an alternative to Ansible Vault. Vaulty provides 256-bit authenticated symmetric encryption (AEAD) using ChaCha20-Poly1305 and Scrypt as the password based key derivation function. Ansible Vault is very inefficient when it comes to output size - for example, a 256 byte string encrypted using Ansible Vault will take up 1,390 bytes (a 443% increase) compared to Vaulty where the same string will only take up 412 bytes (a 61% increase). The optional "cols" argument will split the output into rows of "cols" width similar to Ansible Vault output.
