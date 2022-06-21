@@ -20,6 +20,8 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidTag
+from lxml import etree
+
 import os, base64, random, re, crypt
 
 class plugin(Extension):
@@ -38,6 +40,7 @@ class plugin(Extension):
     environment.filters['cisco8hash'] = self.__cisco8hash
     environment.filters['cisco9hash'] = self.__cisco9hash
     environment.filters['junos6hash'] = self.__junos6hash
+    environment.filters['xpath'] = self.__xpath
     environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
 
@@ -161,6 +164,19 @@ class plugin(Extension):
       raise Exception('invalid salt provided to junos6hash')
 
     return crypt.crypt(string, '$6$' + salt)
+
+  def __xpath(self, s_xml, s_path):
+    s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
+    xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
+    xml = xml.xpath(s_path, namespaces=xml.nsmap)
+
+    r = []
+    for x in xml:
+      if isinstance(x, str):
+        r.append(x.strip())
+      else:
+        r.append(etree.tostring(x, pretty_print=True).decode('utf-8').strip())
+    return r
 
 class Vaulty():
   def __init__(self):
