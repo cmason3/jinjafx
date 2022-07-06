@@ -218,7 +218,7 @@ class Vaulty():
           key = self.__derive_key(password, ciphertext[1:17])[1]
           return ChaCha20Poly1305(key).decrypt(ciphertext[17:29], ciphertext[29:], None).decode('utf-8')
 
-      except:
+      except Exception:
         pass
 
       raise Exception('invalid vaulty password or ciphertext malformed')

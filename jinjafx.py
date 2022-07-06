@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.12.2'
+__version__ = '1.12.3'
 
 def main():
   try:
@@ -218,7 +218,7 @@ Environment Variables:
               try:
                 args.ds = re.compile(args.ds, re.IGNORECASE)
   
-              except:
+              except Exception:
                 parser.error("argument -ds: invalid regular expression")
   
               matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
