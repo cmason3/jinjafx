@@ -170,7 +170,12 @@ class plugin(Extension):
     if not isinstance(mylist, list):
       raise Exception('items2dict requires a list, got ' + str(type(mylist)) + ' instead')
 
-    return dict((item[key_name], item[value_name]) for item in mylist)
+    try:
+      return dict((item[key_name], item[value_name]) for item in mylist)
+    except KeyError:
+      raise Exception('items2dict requires each dictionary in the list to contain the keys "' + str(key_name) + '" and "' + str(value_name) + '", got ' + str(mylist) + ' instead')
+    except TypeError:
+      raise Exception('items2dict requires a list of dictionaries, got ' + str(mylist) + ' instead')
 
   @pass_environment
   def __extract(self, environment, item, container, morekeys=None):
