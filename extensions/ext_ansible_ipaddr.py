@@ -23,7 +23,7 @@ class plugin(Extension):
   def __init__(self, environment):
     Extension.__init__(self, environment)
 
-    for p in ('', 'ansible.netcommon.'):
+    for p in ('', 'ansible.netcommon.', 'ansible.utils.'):
       environment.filters[p + 'cidr_merge'] = cidr_merge
       environment.filters[p + 'ipaddr'] = ipaddr
       environment.filters[p + 'ipmath'] = ipmath
