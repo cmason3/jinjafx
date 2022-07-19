@@ -602,6 +602,8 @@ class JinjaFx():
       'lookup': self.__jfx_lookup
     })
 
+    env.globals['jinjafx']['df'].index += 1
+
     if len(gvars) > 0:
       env.globals.update(gvars)
 
