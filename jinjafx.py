@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import sys, os, io, importlib, argparse, re, copy, getpass, datetime, traceback
-import jinja2, yaml, pytz
+import jinja2, yaml, pytz, pandas
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.12.3'
+__version__ = '1.12.4'
 
 def main():
   try:
@@ -596,10 +596,13 @@ class JinjaFx():
       'getg': self.__jfx_getg,
       'now': self.__jfx_now,
       'rows': max([0, len(self.__g_datarows) - 1]),
-      'data': [r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows]
+      'data': [r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows], # TODO: DEPRECATED
+      'df': pandas.DataFrame([r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows[1:]], columns=self.__g_datarows[0])
     },
       'lookup': self.__jfx_lookup
     })
+
+    env.globals['jinjafx']['df'].index += 1
 
     if len(gvars) > 0:
       env.globals.update(gvars)
