@@ -492,7 +492,7 @@ This variable will contain the total number of rows within the data as an intege
 
 - <b><code>jinjafx.data[][]</code></b>
 
-This list of lists will contain all the row and column data that JinjaFx is currently traversing through. The first row will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data[row][col]`.
+This list of lists will contain all the row and column data that JinjaFx is currently traversing through. The first row will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data[row][col]`. If you wish to access the columns via their name then you can use `jinjafx.data[row][jinjafx.data[0].index('FIELD')]`.
 
 - <b><code>jinjafx.expand("string")</code></b>
 
