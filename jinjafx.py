@@ -27,6 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
+from collections import defaultdict
 
 __version__ = '1.12.4'
 
@@ -582,6 +583,14 @@ class JinjaFx():
       env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       template = env.get_template(os.path.basename(template.name))
 
+    class datadict(dict):
+      def __init__(self, fields, *args, **kwargs):
+        self.fields = fields
+        self.update(*args, **kwargs)
+
+      def __missing__(self, key):
+        return self[self.fields.index(key)]
+
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
@@ -596,7 +605,8 @@ class JinjaFx():
       'getg': self.__jfx_getg,
       'now': self.__jfx_now,
       'rows': max([0, len(self.__g_datarows) - 1]),
-      'data': [r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows]
+      # 'data': [r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows]
+      'data': [datadict(self.__g_datarows[0], enumerate(r[1:] if isinstance(r[0], int) else r)) for r in self.__g_datarows]
     },
       'lookup': self.__jfx_lookup
     })
