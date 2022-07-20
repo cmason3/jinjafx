@@ -490,9 +490,9 @@ This variable will contain the current row number being processed as an integer.
 
 This variable will contain the total number of rows within the data as an integer.
 
-- <b><code>jinjafx.data[][]</code></b>
+- <b><code>jinjafx.data[row][col]</code></b>
 
-This list of lists will contain all the row and column data that JinjaFx is currently traversing through. The first row will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data[row][col]`. If you wish to access the columns via their name then you can use `jinjafx.data[row][jinjafx.data[0].index('FIELD')]`.
+This list of dicts will contain all the row and column data that JinjaFx is currently traversing through. The first row will contain the header row (a list) with subsequent rows containing the row data (a dict) - it is accessed using `jinjafx.data[row][col]`. If you wish to access the columns via their name then you can also use `jinjafx.data[row]['FIELD']` on rows > 0.
 
 - <b><code>jinjafx.expand("string")</code></b>
 
