@@ -390,6 +390,7 @@ class JinjaFx():
     delim = None
     rowkey = 1
     int_indices = []
+    float_indices = []
 
     if not isinstance(template, str) and not isinstance(template, io.IOBase):
       raise TypeError('template must be of type str or type FileType')
@@ -418,6 +419,9 @@ class JinjaFx():
                 if fields[i].lower().endswith(':int'):
                   int_indices.append(i + 1)
                   fields[i] = fields[i][:-4]
+                elif fields[i].lower().endswith(':float'):
+                  float_indices.append(i + 1)
+                  fields[i] = fields[i][:-6]
   
                 if 'jinjafx_adjust_headers' in gvars:
                   jinjafx_adjust_headers = str(gvars['jinjafx_adjust_headers']).strip().lower()
@@ -524,6 +528,9 @@ class JinjaFx():
                     if col in int_indices:
                       fields[row][col] = int(fields[row][col])
   
+                    if col in float_indices:
+                      fields[row][col] = float(fields[row][col])
+
                   include_row = True
                   if len(jinjafx_filter) > 0:
                     for index in jinjafx_filter:

@@ -148,6 +148,9 @@ NUMBER:int, NAME
 20, twenty
 ```
 
+Similar to `:int` you can also use `:float` to treat all values as a float.
+
+
 #### Pad Operator
 
 JinjaFx supports the ability to add or remove leading zeros from numbers using the `%` pad operator. The pad operator is used by suffixing a `%` to a number followed by the number of zeros to pad the number to (e.g. `100%4` would result in `0100` and `003%0` would result in `3`). Using the following example, we might want to have no padding on the `INTERFACE` field but leave the leading zero on the `HOST` field, e.g:
