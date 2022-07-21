@@ -612,8 +612,7 @@ class JinjaFx():
       'getg': self.__jfx_getg,
       'now': self.__jfx_now,
       'rows': max([0, len(self.__g_datarows) - 1]),
-      # 'data': [r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows]
-      'data': [self.__g_datarows[0]] + [datadict(self.__g_datarows[0], enumerate(r[1:] if isinstance(r[0], int) else r)) for r in self.__g_datarows[1:]]
+      'data': [self.__g_datarows[0]] + [datadict(self.__g_datarows[0], enumerate(r[1:] if isinstance(r[0], int) else r)) for r in self.__g_datarows[1:]] if len(self.__g_datarows) > 1 else []
     },
       'lookup': self.__jfx_lookup
     })
