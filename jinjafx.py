@@ -923,11 +923,11 @@ class JinjaFx():
       fmatch = True
       field_value = self.__g_datarows[r][fpos]
 
-      if field_value not in field_values and len(field_value.strip()) > 0:
+      if field_value not in field_values and len(str(field_value).strip()) > 0:
         for f in ffilter:
           if f in self.__g_datarows[0]:
             try:
-              if not re.match(ffilter[f], self.__g_datarows[r][self.__g_datarows[0].index(f) + 1]):
+              if not re.match(ffilter[f], str(self.__g_datarows[r][self.__g_datarows[0].index(f) + 1])):
                 fmatch = False
                 break
             except Exception:
