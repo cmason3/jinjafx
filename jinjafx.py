@@ -526,8 +526,7 @@ class JinjaFx():
   
                     if col in int_indices:
                       fields[row][col] = int(fields[row][col])
-  
-                    if col in float_indices:
+                    elif col in float_indices:
                       fields[row][col] = float(fields[row][col])
 
                   include_row = True
