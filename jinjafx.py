@@ -862,7 +862,7 @@ class JinjaFx():
     else:
       return True if self.__g_row == (len(self.__g_datarows) - 1) else False
 
-    tv = ':'.join([self.__g_datarows[self.__g_row][i] for i in fpos])
+    tv = ':'.join([str(self.__g_datarows[self.__g_row][i]) for i in fpos])
 
     if forl == 'first':
       rows = range(1, len(self.__g_datarows))
@@ -875,7 +875,7 @@ class JinjaFx():
       for f in ffilter:
         if f in self.__g_datarows[0]:
           try:
-            if not re.match(ffilter[f], self.__g_datarows[r][self.__g_datarows[0].index(f) + 1]):
+            if not re.match(ffilter[f], str(self.__g_datarows[r][self.__g_datarows[0].index(f) + 1])):
               fmatch = False
               break
           except Exception:
@@ -884,7 +884,7 @@ class JinjaFx():
           raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.' + forl + '()')
 
       if fmatch:
-        if tv == ':'.join([self.__g_datarows[r][i] for i in fpos]):
+        if tv == ':'.join([str(self.__g_datarows[r][i]) for i in fpos]):
           return True if self.__g_row == r else False
 
     return False
