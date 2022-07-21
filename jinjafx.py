@@ -27,7 +27,6 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
-from collections import defaultdict
 
 __version__ = '1.12.4'
 
