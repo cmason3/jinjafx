@@ -302,7 +302,7 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
   
       args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
-      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed, sandbox=True)
+      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
       ocount = 0
   
       if args.od is not None:
@@ -378,7 +378,7 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template, data, gvars, output, exts_dirs=[], sandbox=False, timelimit=2):
+  def jinjafx(self, template, data, gvars, output, exts_dirs=[], sandbox=False, timelimit=0):
     self.__g_datarows = []
     self.__g_dict = {}
     self.__g_row = 0 
