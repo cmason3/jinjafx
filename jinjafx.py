@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import sys, os, io, importlib, argparse, re, copy, getpass, datetime, traceback, time
-import jinja2, jinja2.sandbox, yaml, pytz
+import jinja2, jinja2.sandbox, yaml, pytz, func_timeout
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -302,7 +302,7 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
   
       args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
-      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
+      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed, sandbox=True)
       ocount = 0
   
       if args.od is not None:
@@ -378,7 +378,7 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template, data, gvars, output, exts_dirs=[], sandbox=False, timelimit=0):
+  def jinjafx(self, template, data, gvars, output, exts_dirs=[], sandbox=False, timelimit=2):
     self.__g_datarows = []
     self.__g_dict = {}
     self.__g_row = 0 
@@ -644,11 +644,18 @@ class JinjaFx():
       self.__g_vars.update(rowdata)
 
       try:
-        content = template.render(rowdata)
+        if self.__g_timelimit > 0:
+          content = func_timeout.func_timeout(self.__g_timelimit - (time.time() - self.__g_stime), template.render, args=(rowdata))
+        
+        else:
+          content = template.render(rowdata)
 
         outputs['0:_stderr_'] = []
         if len(self.__g_warnings) > 0:
           outputs['0:_stderr_'] = self.__g_warnings
+
+      except func_timeout.FunctionTimedOut:
+        raise Exception("execution time limit of " + str(self.__g_timelimit) + "s exceeded")
 
       except Exception as e:
         if e.args[0].startswith('[jfx_exception] '):
@@ -909,8 +916,6 @@ class JinjaFx():
         if tv == ':'.join([str(self.__g_datarows[r][i]) for i in fpos]):
           return True if self.__g_row == r else False
 
-      self.__check_timelimit()
-
     return False
 
 
@@ -962,8 +967,6 @@ class JinjaFx():
         if fmatch:
           field_values.append(field_value)
 
-      self.__check_timelimit()
-    
     return field_values
 
  
