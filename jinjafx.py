@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.12.4'
+__version__ = '1.13.0'
 
 def main():
   try:
