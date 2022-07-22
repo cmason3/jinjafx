@@ -709,12 +709,13 @@ class JinjaFx():
               outputs[stack[-1]] = []
             outputs[stack[-1]].append(l)
 
+        if i % 5000 == 0:
+          self.__check_timelimit()
+
         i += 1
 
       if len(stack) != 1:
         raise Exception('unbalanced output tags')
-
-      self.__check_timelimit()
 
     for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
       nkey = o.split(':', 1)[1]
@@ -730,7 +731,7 @@ class JinjaFx():
 
   def __check_timelimit(self):
     if self.__g_timelimit and (int(time.time()) - self.__g_stime) > self.__g_timelimit:
-      raise Exception("execution time exceeded")
+      raise Exception("execution timelimit exceeded")
 
 
   def __find_re_match(self, o, v, default=0):
@@ -908,6 +909,8 @@ class JinjaFx():
         if tv == ':'.join([str(self.__g_datarows[r][i]) for i in fpos]):
           return True if self.__g_row == r else False
 
+      self.__check_timelimit()
+
     return False
 
 
@@ -958,6 +961,8 @@ class JinjaFx():
 
         if fmatch:
           field_values.append(field_value)
+
+      self.__check_timelimit()
     
     return field_values
 
