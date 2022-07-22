@@ -385,7 +385,7 @@ class JinjaFx():
     self.__g_vars = {}
     self.__g_warnings = []
     self.__g_timelimit = timelimit
-    self.__g_stime = int(time.time())
+    self.__g_stime = time.time()
 
     outputs = {}
     delim = None
@@ -730,8 +730,8 @@ class JinjaFx():
 
 
   def __check_timelimit(self):
-    if self.__g_timelimit and (int(time.time()) - self.__g_stime) > self.__g_timelimit:
-      raise Exception("execution timelimit exceeded")
+    if self.__g_timelimit and int(time.time() - self.__g_stime) > self.__g_timelimit:
+      raise Exception("execution time limit of " + str(self.__g_timelimit) + "s exceeded")
 
 
   def __find_re_match(self, o, v, default=0):
