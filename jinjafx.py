@@ -15,8 +15,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, io, importlib, argparse, re, copy, getpass, datetime, traceback
-import jinja2, yaml, pytz
+import sys, os, io, importlib, argparse, re, copy, getpass, datetime, traceback, time
+import jinja2, jinja2.sandbox, yaml, pytz
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -378,12 +378,14 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template, data, gvars, output, exts_dirs=[]):
+  def jinjafx(self, template, data, gvars, output, exts_dirs=[], sandbox=False, timelimit=0):
     self.__g_datarows = []
     self.__g_dict = {}
     self.__g_row = 0 
     self.__g_vars = {}
     self.__g_warnings = []
+    self.__g_timelimit = timelimit
+    self.__g_stime = int(time.time())
 
     outputs = {}
     delim = None
@@ -540,9 +542,11 @@ class JinjaFx():
                     self.__g_datarows.append(fields[row])
   
                   row += 1
-  
+
         if len(self.__g_datarows) <= 1:
           raise Exception('not enough data rows - need at least two')
+
+    self.__check_timelimit()
 
     if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
       for field in reversed(gvars['jinjafx_sort']):
@@ -559,6 +563,8 @@ class JinjaFx():
         else:
           r = True if field.startswith('-') else False
           self.__g_datarows[1:] = sorted(self.__g_datarows[1:], key=lambda n: n[self.__g_datarows[0].index(field.lstrip('+-')) + 1], reverse=r)
+
+        self.__check_timelimit()
 
     sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
 
@@ -581,11 +587,13 @@ class JinjaFx():
       'keep_trailing_newline': True
     }
 
+    jinja2env = jinja2.sandbox.SandboxedEnvironment if sandbox else jinja2.Environment
+
     if isinstance(template, str):
-      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
+      env = jinja2env(extensions=gvars['jinja2_extensions'], **jinja2_options)
       template = env.from_string(template)
     else:
-      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
+      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       template = env.get_template(os.path.basename(template.name))
 
     class datadict(dict):
@@ -678,6 +686,7 @@ class JinjaFx():
 
           oformat = block_begin.group(1) if block_begin.group(1) != None else ':text'
           stack.append(str(index) + ':' + block_begin.group(2).strip() + oformat.lower())
+
         else:
           block_end = end_tag.search(l.strip())
           if block_end:
@@ -705,6 +714,8 @@ class JinjaFx():
       if len(stack) != 1:
         raise Exception('unbalanced output tags')
 
+      self.__check_timelimit()
+
     for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
       nkey = o.split(':', 1)[1]
 
@@ -715,6 +726,11 @@ class JinjaFx():
       del outputs[o]
 
     return outputs
+
+
+  def __check_timelimit(self):
+    if self.__g_timelimit and (int(time.time()) - self.__g_stime) > self.__g_timelimit:
+      raise Exception("execution time exceeded")
 
 
   def __find_re_match(self, o, v, default=0):
@@ -798,6 +814,7 @@ class JinjaFx():
 
           pofa.pop(i)
           groups.pop(i)
+          self.__check_timelimit()
 
         else:
           m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
@@ -820,8 +837,11 @@ class JinjaFx():
 
                 for c in range(start, end, step):
                   clist.append(chr(c))
+
               else:
                 clist.append(x[0])
+
+              self.__check_timelimit()
   
             for c in clist:
               pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
@@ -834,6 +854,7 @@ class JinjaFx():
   
             pofa.pop(i)
             groups.pop(i)
+            self.__check_timelimit()
 
           else:
             i += 1
