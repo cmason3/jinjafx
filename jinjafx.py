@@ -592,8 +592,8 @@ class JinjaFx():
 
     class datadict(dict):
       def __init__(self, fields, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.fields = fields
-        self.update(*args, **kwargs)
 
       def __missing__(self, key):
         return self[self.fields.index(key)]
