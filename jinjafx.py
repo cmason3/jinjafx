@@ -391,7 +391,7 @@ class JinjaFx():
     int_indices = []
     float_indices = []
 
-    if not isinstance(template, str) and not isinstance(template, io.IOBase):
+    if not isinstance(template, (str, io.IOBase)):
       raise TypeError('template must be of type str or type FileType')
 
     if data is not None:
