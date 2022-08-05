@@ -404,7 +404,7 @@ class JinjaFx():
   
         for l in data.splitlines():
           if l.strip() and not re.match(r'^[ \t]*#', l):
-            if self.__g_datarows:
+            if not self.__g_datarows:
               if l.count(',') > l.count('\t'):
                 delim = r'[ \t]*,[ \t]*'
                 schars = ' \t'
