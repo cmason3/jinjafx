@@ -478,15 +478,16 @@ class JinjaFx():
                   fields[row].insert(0, rowkey)
                   rowkey += 1
   
-                for col in range(1, len(fields[row])):
-                  if isinstance(fields[row][col][0], list):
-                    for v in range(len(fields[row][col][0])):
-                      nrow = copy.deepcopy(fields[row])
-                      nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
-                      fields.append(nrow)
+                if any(isinstance(col[0], list) for col in fields[row][1:]):
+                  for col in range(1, len(fields[row])):
+                    if isinstance(fields[row][col][0], list):
+                      for v in range(len(fields[row][col][0])):
+                        nrow = copy.deepcopy(fields[row])
+                        nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
+                        fields.append(nrow)
   
-                    fields.pop(row)
-                    break
+                      fields.pop(row)
+                      break
   
                 else:
                   groups = []
