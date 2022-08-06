@@ -81,7 +81,7 @@ Environment Variables:
     if args.dt is None and args.ds is not None:
       parser.error("argument -ds: only allowed with argument -dt")
 
-    if args.m is True and args.g is None:
+    if args.m and args.g is None:
       parser.error("argument -m: only allowed with argument -g")
 
     if args.od is not None and not os.access(args.od, os.W_OK):
