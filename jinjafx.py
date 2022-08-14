@@ -83,7 +83,7 @@ Environment Variables:
     if args.dt is None and args.ds is not None:
       parser.error("argument -ds: only allowed with argument -dt")
 
-    if args.m is True and args.g is None:
+    if args.m and args.g is None:
       parser.error("argument -m: only allowed with argument -g")
 
     if args.od is not None and not os.access(args.od, os.W_OK):
@@ -403,19 +403,20 @@ class JinjaFx():
     int_indices = []
     float_indices = []
 
-    if not isinstance(template, str) and not isinstance(template, io.IOBase):
+    if not isinstance(template, (str, io.IOBase)):
       raise TypeError('template must be of type str or type FileType')
 
     if data is not None:
       if not isinstance(data, str):
         raise TypeError('data must be of type str')
 
-      if len(data.strip()) > 0:
+      if data.strip():
         jinjafx_filter = {}
+        jinjafx_adjust_headers = str(gvars.get('jinjafx_adjust_headers', 'no')).strip().lower()
   
         for l in data.splitlines():
-          if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
-            if len(self.__g_datarows) == 0:
+          if l.strip() and not re.match(r'^[ \t]*#', l):
+            if not self.__g_datarows:
               if l.count(',') > l.count('\t'):
                 delim = r'[ \t]*,[ \t]*'
                 schars = ' \t'
@@ -425,43 +426,35 @@ class JinjaFx():
   
               fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l.strip(schars)))
               fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
-  
-              for i in range(len(fields)):
-                if fields[i].lower().endswith(':int'):
+
+              for i, v in enumerate(fields):
+                if v.lower().endswith(':int'):
                   int_indices.append(i + 1)
-                  fields[i] = fields[i][:-4]
-                elif fields[i].lower().endswith(':float'):
+                  fields[i] = v[:-4]
+                elif v.lower().endswith(':float'):
                   float_indices.append(i + 1)
-                  fields[i] = fields[i][:-6]
+                  fields[i] = v[:-6]
   
-                if 'jinjafx_adjust_headers' in gvars:
-                  jinjafx_adjust_headers = str(gvars['jinjafx_adjust_headers']).strip().lower()
-  
-                  if jinjafx_adjust_headers == 'yes':
-                    fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i], flags=re.UNICODE | re.IGNORECASE)
-  
-                  elif jinjafx_adjust_headers == 'upper':
-                    fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].upper(), flags=re.UNICODE | re.IGNORECASE)
-  
-                  elif jinjafx_adjust_headers == 'lower':
-                    fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].lower(), flags=re.UNICODE | re.IGNORECASE)
-  
-                  elif jinjafx_adjust_headers != 'no':
-                    raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
+                if jinjafx_adjust_headers == 'yes':
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', v, flags=re.UNICODE | re.IGNORECASE)
+                elif jinjafx_adjust_headers == 'upper':
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', v.upper(), flags=re.UNICODE | re.IGNORECASE)
+                elif jinjafx_adjust_headers == 'lower':
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', v.lower(), flags=re.UNICODE | re.IGNORECASE)
+                elif jinjafx_adjust_headers != 'no':
+                  raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
                 
-                if fields[i] == '':
-                  raise Exception('empty header field detected at column position ' + str(i + 1))
-  
-                elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
-                  raise Exception('header field at column position ' + str(i + 1) + ' contains invalid characters')
+                if v == '':
+                  raise Exception(f'empty header field detected at column position {i + 1}')
+                elif not re.match(r'^[A-Z_][A-Z0-9_]*$', v, re.IGNORECASE):
+                  raise Exception(f'header field at column position {i + 1} contains invalid characters')
   
               if len(set(fields)) != len(fields):
                 raise Exception('duplicate header field detected in data')
-  
               else:
                 self.__g_datarows.append(fields)
   
-              if 'jinjafx_filter' in gvars and len(gvars['jinjafx_filter']) > 0:
+              if 'jinjafx_filter' in gvars and gvars['jinjafx_filter']:
                 for field in gvars['jinjafx_filter']:
                   jinjafx_filter[self.__g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
   
@@ -476,7 +469,7 @@ class JinjaFx():
                   if not re.search(r'(?<!\\)\|', m.group(1)):
                     if not re.search(r'\\' + str(gcount), l):
                       if re.search(r'\\[0-9]+', l):
-                        raise Exception('parenthesis in row ' + str(rowkey) + ' at \'' + str(m.group(0)) + '\' should be escaped or removed')
+                        raise Exception(f'parenthesis in row {rowkey} at "{m.group(0)}" should be escaped or removed')
   
                       else:
                         f = f[:m.start() + delta] + '\\(' + m.group(1) + '\\)' + f[m.end() + delta:]
@@ -604,8 +597,8 @@ class JinjaFx():
 
     class datadict(dict):
       def __init__(self, fields, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.fields = fields
-        self.update(*args, **kwargs)
 
       def __missing__(self, key):
         return self[self.fields.index(key)]
