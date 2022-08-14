@@ -35,7 +35,7 @@ __version__ = '1.13.0'
 def main():
   try:
     if not any(x in ['-q', '-encrypt', '-decrypt'] for x in sys.argv):
-      print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
+      print(f'JinjaFx v{__version__} - Jinja2 Templating Tool')
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
@@ -78,40 +78,20 @@ Environment Variables:
     args = parser.parse_args()
 
     if args.dt is not None and args.d is not None:
-      parser.error("argument -d: not allowed with argument -dt")
+      parser.error('argument -d: not allowed with argument -dt')
 
     if args.dt is None and args.ds is not None:
-      parser.error("argument -ds: only allowed with argument -dt")
+      parser.error('argument -ds: only allowed with argument -dt')
 
     if args.m and args.g is None:
-      parser.error("argument -m: only allowed with argument -g")
+      parser.error('argument -m: only allowed with argument -g')
 
     if args.od is not None and not os.access(args.od, os.W_OK):
-      parser.error("argument -od: unable to write to output directory")
+      parser.error('argument -od: unable to write to output directory')
 
     gvars = {}
     data = None
     vpw = [ None ]
-
-    def get_vault_credentials(verify=False):
-      if vpw[0] is None:
-        vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
-
-        if vpw[0] == None:
-          vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
-          if vpwf != None:
-            with open(vpwf) as f:
-              vpw[0] = f.read().strip()
-
-        if vpw[0] == None:
-          vpw[0] = getpass.getpass('Vault Password: ')
-
-          if verify:
-            if vpw[0] != getpass.getpass('Password Verification: '):
-              print()
-              raise Exception('password verification failed')
-
-          print()
 
     if args.encrypt is not None:
       if not args.encrypt:
@@ -119,16 +99,16 @@ Environment Variables:
         if len(b_string.splitlines()) > 1:
           raise Exception('multiline stings not permitted')
 
-        get_vault_credentials(True)
+        __get_vault_credentials(vpw, True)
         vtext = Vault().encrypt(b_string, vpw[0])
         print('!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
 
       else:
-        get_vault_credentials(True)
+        __get_vault_credentials(vpw, True)
 
         for f in args.encrypt:
           if os.path.isfile(f):
-            print('Encrypting ' + f + '... ', flush=True, end='')
+            print(f'Encrypting {f}... ', flush=True, end='')
 
             try:
               with open(f, 'rb') as fh:
@@ -140,26 +120,26 @@ Environment Variables:
 
             except Exception as e:
               print('failed')
-              print('error: ' + str(e), file=sys.stderr)
+              print(f'error: {e}', file=sys.stderr)
 
           elif not os.path.exists(f):
-            print('Encrypting ' + f + '... not found')
+            print(f'Encrypting {f}... not found')
 
           else:
-            print('Encrypting ' + f + '... unsupported')
+            print(f'Encrypting {f}... unsupported')
 
     elif args.decrypt is not None:
       if not args.decrypt:
         b_vtext = sys.stdin.buffer.read()
-        get_vault_credentials()
+        __get_vault_credentials(vpw)
         print(Vault().decrypt(b_vtext, vpw[0]).decode('utf-8'))
 
       else:
-        get_vault_credentials()
+        __get_vault_credentials(vpw)
 
         for f in args.decrypt:
           if os.path.isfile(f):
-            print('Decrypting ' + f + '... ', flush=True, end='')
+            print(f'Decrypting {f}... ', flush=True, end='')
 
             try:
               with open(f, 'rb') as fh:
@@ -171,44 +151,16 @@ Environment Variables:
 
             except Exception as e:
               print('failed')
-              print('error: ' + str(e), file=sys.stderr)
+              print(f'error: {e}', file=sys.stderr)
 
           elif not os.path.exists(f):
-            print('Decrypting ' + f + '... not found')
+            print(f'Decrypting {f}... not found')
 
           else:
-            print('Decrypting ' + f + '... unsupported')
+            print(f'Decrypting {f}... unsupported')
 
     else:
-      def merge(dst, src):
-        for key in src:
-          if key in dst:
-            if isinstance(dst[key], dict) and isinstance(src[key], dict):
-              merge(dst[key], src[key])
-  
-            elif isinstance(dst[key], list) and isinstance(src[key], list):
-              dst[key] += src[key]
-  
-            else:
-              dst[key] = src[key]
-  
-          else:
-            dst[key] = src[key]
-  
-        return dst
-
-      def decrypt_vault(string):
-        if string.lstrip().startswith('$ANSIBLE_VAULT;'):
-          get_vault_credentials()
-
-          return Vault().decrypt(string.encode('utf-8'), vpw[0])
-
-        return string
-
-      def yaml_vault_tag(loader, node):
-        return decrypt_vault(node.value)
-
-      yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+      yaml.add_constructor('!vault', __yaml_vault_tag, yaml.SafeLoader)
 
       if args.dt is not None:
         with open(args.dt.name) as f:
@@ -221,7 +173,7 @@ Environment Variables:
                 args.ds = re.compile(args.ds, re.IGNORECASE)
   
               except Exception:
-                parser.error("argument -ds: invalid regular expression")
+                parser.error('argument -ds: invalid regular expression')
   
               matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
               if len(matches) == 1:
@@ -232,19 +184,19 @@ Environment Variables:
                   dt['vars'] = dt['datasets'][matches[0]]['vars']
   
               else:
-                parser.error("argument -ds: must only match a single dataset")
+                parser.error('argument -ds: must only match a single dataset')
   
             else:
-              parser.error("argument -ds: required with datatemplates that use datasets")
+              parser.error('argument -ds: required with datatemplates that use datasets')
   
           elif args.ds is not None:
-            parser.error("argument -ds: not required with datatemplates without datasets")
+            parser.error('argument -ds: not required with datatemplates without datasets')
   
           if 'data' in dt:
             data = dt['data']
   
           if 'vars' in dt:
-            gyaml = decrypt_vault(dt['vars'])
+            gyaml = __decrypt_vault(dt['vars'])
             if gyaml:
               gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
   
@@ -255,9 +207,9 @@ Environment Variables:
       if args.g is not None:
         for g in args.g:
           with open(g.name) as f:
-            gyaml = decrypt_vault(f.read())
+            gyaml = __decrypt_vault(f.read())
             if args.m == True:
-              merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
+              __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
             else:
               gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
   
@@ -320,7 +272,7 @@ Environment Variables:
       if args.od is not None:
         os.chdir(args.od)
   
-      if len(outputs['_stderr_']) > 0:
+      if outputs['_stderr_']:
         print('Warnings:', file=sys.stderr)
         for w in outputs['_stderr_']:
           print(' - ' + w, file=sys.stderr)
@@ -373,12 +325,62 @@ Environment Variables:
     sys.exit(-2)
 
 
+def __decrypt_vault(string):
+  if string.lstrip().startswith('$ANSIBLE_VAULT;'):
+    __get_vault_credentials(vpw)
+    return Vault().decrypt(string.encode('utf-8'), vpw[0])
+  return string
+
+
+def __yaml_vault_tag(loader, node):
+  return __decrypt_vault(node.value)
+
+
+def __get_vault_credentials(vpw, verify=False):
+  if vpw[0] is None:
+    vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
+
+    if vpw[0] == None:
+      vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
+      if vpwf != None:
+        with open(vpwf) as f:
+          vpw[0] = f.read().strip()
+
+    if vpw[0] == None:
+      vpw[0] = getpass.getpass('Vault Password: ')
+
+      if verify:
+        if vpw[0] != getpass.getpass('Password Verification: '):
+          print()
+          raise Exception('password verification failed')
+
+      print()
+
+
 def __format_bytes(b):
   for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
     if b >= 1000:
       b /= 1000
     else:
       return '{:.2f}'.format(b).rstrip('0').rstrip('.') + u + 'B'
+
+
+def __merge(dst, src):
+  for key in src:
+    if key in dst:
+      if isinstance(dst[key], dict) and isinstance(src[key], dict):
+        __merge(dst[key], src[key])
+  
+      elif isinstance(dst[key], list) and isinstance(src[key], list):
+        dst[key] += src[key]
+  
+      else:
+        dst[key] = src[key]
+  
+    else:
+      dst[key] = src[key]
+  
+  return dst
 
 
 class __ArgumentParser(argparse.ArgumentParser):
@@ -742,10 +744,10 @@ class JinjaFx():
         return default
   
       else:
-        raise jinja2.exceptions.UndefinedError('\'lookup\' variable \'' + variable + '\' is undefined')
+        raise jinja2.exceptions.UndefinedError(f'\'lookup\' variable \'{variable}\' is undefined')
 
     else:
-      raise jinja2.exceptions.UndefinedError('\'lookup\' with method \'' + method + '\' is undefined')
+      raise jinja2.exceptions.UndefinedError(f'\'lookup\' with method \'{method}\' is undefined')
 
 
   def __jfx_data_counter(self, m, orow, col, row):
@@ -1025,7 +1027,7 @@ class Vault():
             hmac.verify(b_hmac)
     
           except InvalidSignature:
-            raise Exception("invalid ansible vault password")
+            raise Exception('invalid ansible vault password')
     
           u = PKCS7(128).unpadder()
           d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
@@ -1033,13 +1035,13 @@ class Vault():
           return b_plaintext
     
         else:
-          raise Exception("unknown ansible vault cipher")
+          raise Exception('unknown ansible vault cipher')
     
       else:
-        raise Exception("unknown ansible vault version")
+        raise Exception('unknown ansible vault version')
 
     else:
-      raise Exception("data isn't ansible vault encrypted")
+      raise Exception('data isn\'t ansible vault encrypted')
 
 
 if __name__ == '__main__':
