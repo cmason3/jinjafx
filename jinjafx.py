@@ -18,6 +18,8 @@
 import sys, os, io, importlib, argparse, re, copy, getpass, datetime, traceback
 import jinja2, jinja2.sandbox, yaml, pytz
 
+import cProfile, tracemalloc, timeit
+
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.hmac import HMAC
@@ -302,7 +304,17 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
   
       args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
+
+      # tracemalloc.start()
+      start = timeit.default_timer()
+
+      # cProfile.runctx('JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)', {'args': args, 'data': data, 'gvars': gvars, 'JinjaFx': JinjaFx}, {}, sort='cumtime')
       outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
+
+      print(f"Total Duration: {timeit.default_timer() - start:.2f} seconds")
+      # print(f'Peak Memory Utilisation: {tracemalloc.get_traced_memory()[1]:,} bytes')
+      # tracemalloc.stop()
+
       ocount = 0
   
       if args.od is not None:
