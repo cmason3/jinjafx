@@ -28,6 +28,8 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
+import tracemalloc
+
 __version__ = '1.13.0'
 
 def main():
@@ -254,7 +256,16 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
   
       args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
+      tracemalloc.start()
       outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
+
+      snapshot = tracemalloc.take_snapshot()
+      top_stats = snapshot.statistics('lineno')
+
+      print("[ Top 10 ]")
+      for stat in top_stats[:10]:
+        print(stat)
+
       ocount = 0
   
       if args.od is not None:
@@ -476,66 +487,67 @@ class JinjaFx():
               recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
   
               row = 0
-              while row < len(fields):
-                if not isinstance(fields[row][0], int):
-                  fields[row].insert(0, rowkey)
+              while fields:
+                if not isinstance(fields[0][0], int):
+                  fields[0].insert(0, rowkey)
                   rowkey += 1
   
-                if any(isinstance(col[0], list) for col in fields[row][1:]):
-                  for col in range(1, len(fields[row])):
-                    if isinstance(fields[row][col][0], list):
-                      for i, v in enumerate(fields[row][col][0]):
-                        nrow = [e[:] if isinstance(e, list) else e for e in fields[row]]
-                        nrow[col] = [v, fields[row][col][1][i]]
+                if any(isinstance(col[0], list) for col in fields[0][1:]):
+                  for col in range(1, len(fields[0])):
+                    if isinstance(fields[0][col][0], list):
+                      for i, v in enumerate(fields[0][col][0]):
+                        nrow = [e[:] if isinstance(e, list) else e for e in fields[0]]
+                        nrow[col] = [v, fields[0][col][1][i]]
                         fields.append(nrow)
   
-                      fields.pop(row)
+                      fields.pop(0)
                       break
   
                 else:
                   groups = []
   
-                  for col in range(1, len(fields[row])):
-                    fields[row][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
+                  for col in range(1, len(fields[0])):
+                    fields[0][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][0])
   
-                    for g in range(len(fields[row][col][1])):
-                      fields[row][col][1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
+                    for g in range(len(fields[0][col][1])):
+                      fields[0][col][1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][1][g])
   
-                    groups.append(fields[row][col][1])
+                    groups.append(fields[0][col][1])
  
                   groups = dict(enumerate(sum(groups, ['\\0'])))
   
-                  for col in range(1, len(fields[row])):
-                    fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
+                  for col in range(1, len(fields[0])):
+                    fields[0][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[0][col][0])
   
                     delta = 0
-                    for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', fields[row][col]):
+                    for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', fields[0][col]):
                       pvalue = str(int(m.group(1))).zfill(int(m.group(2)))
-                      fields[row][col] = fields[row][col][:m.start() + delta] + pvalue + fields[row][col][m.end() + delta:]
+                      fields[0][col] = fields[0][col][:m.start() + delta] + pvalue + fields[0][col][m.end() + delta:]
   
                       if len(m.group(0)) > len(pvalue):
                         delta -= len(m.group(0)) - len(pvalue)
                       else:
                         delta += len(pvalue) - len(m.group(0))
   
-                    fields[row][col] = re.sub(r'\\([}{%])', r'\1', fields[row][col])
+                    fields[0][col] = re.sub(r'\\([}{%])', r'\1', fields[0][col])
   
                     if col in int_indices:
-                      fields[row][col] = int(fields[row][col])
+                      fields[0][col] = int(fields[0][col])
 
                     elif col in float_indices:
-                      fields[row][col] = float(fields[row][col])
+                      fields[0][col] = float(fields[0][col])
 
                   include_row = True
                   if jinjafx_filter:
                     for index in jinjafx_filter:
-                      if not re.search(jinjafx_filter[index], fields[row][index]):
+                      if not re.search(jinjafx_filter[index], fields[0][index]):
                         include_row = False
                         break
   
                   if include_row:
-                    self.__g_datarows.append(fields[row])
+                    self.__g_datarows.append(fields[0])
   
+                  fields.pop(0)
                   row += 1
              
         if len(self.__g_datarows) <= 1:
