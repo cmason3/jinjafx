@@ -163,7 +163,7 @@ Environment Variables:
       yaml.add_constructor('!vault', __yaml_vault_tag, yaml.SafeLoader)
 
       if args.dt is not None:
-        with open(args.dt.name) as f:
+        with open(args.dt.name, 'rt') as f:
           dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
           args.t = dt['template']
   
@@ -201,12 +201,12 @@ Environment Variables:
               gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
   
       elif args.d is not None:
-        with open(args.d.name) as f:
+        with open(args.d.name, 'rt') as f:
           data = f.read()
   
       if args.g is not None:
         for g in args.g:
-          with open(g.name) as f:
+          with open(g.name, 'rt') as f:
             gyaml = __decrypt_vault(f.read())
             if args.m == True:
               __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
@@ -219,7 +219,7 @@ Environment Variables:
       if 'jinjafx_input' in gvars:
         jinjafx_input = {}
   
-        if 'prompt' in gvars['jinjafx_input'] and len(gvars['jinjafx_input']['prompt']) > 0:
+        if 'prompt' in gvars['jinjafx_input'] and gvars['jinjafx_input']['prompt']:
           for k in gvars['jinjafx_input']['prompt']:
             v = gvars['jinjafx_input']['prompt'][k]
   
@@ -236,7 +236,7 @@ Environment Variables:
                 else:
                   jinjafx_input[k] = input(v['text'] + ': ').strip()
   
-                if len(jinjafx_input[k]) == 0:
+                if not jinjafx_input[k]:
                   if v['required']:
                     print('error: input is required', file=sys.stderr)
                   else:
@@ -275,7 +275,7 @@ Environment Variables:
       if outputs['_stderr_']:
         print('Warnings:', file=sys.stderr)
         for w in outputs['_stderr_']:
-          print(' - ' + w, file=sys.stderr)
+          print(f' - {w}', file=sys.stderr)
   
         print('', file=sys.stderr)
   
@@ -284,9 +284,9 @@ Environment Variables:
 
         if oname != '_stderr_':
           output = '\n'.join(o[1]) + '\n'
-          if len(output.strip()) > 0:
+          if output.strip():
             if oname == '_stdout_':
-              if ocount > 0:
+              if ocount:
                 print('\n-\n')
               print(output)
     
@@ -297,14 +297,14 @@ Environment Variables:
                 if not os.path.isdir(os.path.dirname(ofile)):
                   os.makedirs(os.path.dirname(ofile))
     
-              with open(ofile, 'w') as f:
+              with open(ofile, 'wt') as f:
                 f.write(output)
     
               print(__format_bytes(len(output)) + ' > ' + ofile)
     
             ocount += 1
   
-      if ocount > 0:
+      if ocount:
         if '_stdout_' not in outputs:
           print()
   
@@ -318,9 +318,9 @@ Environment Variables:
     tb = traceback.format_exc()
     match = re.search(r'^[ \t]*File "(.+)", line ([0-9]+), in template$', tb, re.IGNORECASE | re.MULTILINE)
     if match:
-      print('error[' + match.group(1) + ':' + match.group(2) + ']: ' + type(e).__name__ + ': ' + str(e), file=sys.stderr)
+      print(f'error[{match.group(1)}:{match.group(2)}]: {type(e).__name__}:{e}', file=sys.stderr)
     else:
-      print('error[' + str(sys.exc_info()[2].tb_lineno) + ']: ' + type(e).__name__ + ': ' + str(e), file=sys.stderr)
+      print(f'error[{sys.exc_info()[2].tb_lineno}]: {type(e).__name__}:{e}', file=sys.stderr)
 
     sys.exit(-2)
 
@@ -340,13 +340,13 @@ def __get_vault_credentials(vpw, verify=False):
   if vpw[0] is None:
     vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
 
-    if vpw[0] == None:
+    if vpw[0] is None:
       vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
-      if vpwf != None:
-        with open(vpwf) as f:
+      if vpwf is not None:
+        with open(vpwf, 'rt') as f:
           vpw[0] = f.read().strip()
 
-    if vpw[0] == None:
+    if vpw[0] is None:
       vpw[0] = getpass.getpass('Vault Password: ')
 
       if verify:
@@ -362,7 +362,7 @@ def __format_bytes(b):
     if b >= 1000:
       b /= 1000
     else:
-      return '{:.2f}'.format(b).rstrip('0').rstrip('.') + u + 'B'
+      return f'{b:.2f}'.rstrip('0').rstrip('.') + u + 'B'
 
 
 def __merge(dst, src):
@@ -387,7 +387,7 @@ class __ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
     if '-q' not in sys.argv:
       print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
-      print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
+      print(f'Usage:\n  {self.format_usage()[7:]}', file=sys.stderr)
     raise Exception(message)
 
 
