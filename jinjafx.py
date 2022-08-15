@@ -15,10 +15,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, io, importlib, argparse, re, copy, getpass, datetime, traceback
+import sys, os, io, importlib, argparse, re, getpass, datetime, traceback
 import jinja2, jinja2.sandbox, yaml, pytz
-
-import cProfile, tracemalloc, timeit
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -256,17 +254,7 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
   
       args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
-
-      # tracemalloc.start()
-      start = timeit.default_timer()
-
-      # cProfile.runctx('JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)', {'args': args, 'data': data, 'gvars': gvars, 'JinjaFx': JinjaFx}, {}, sort='cumtime')
       outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
-
-      print(f"Total Duration: {timeit.default_timer() - start:.2f} seconds")
-      # print(f'Peak Memory Utilisation: {tracemalloc.get_traced_memory()[1]:,} bytes')
-      # tracemalloc.stop()
-
       ocount = 0
   
       if args.od is not None:
@@ -448,11 +436,13 @@ class JinjaFx():
                 
                 if v == '':
                   raise Exception(f'empty header field detected at column position {i + 1}')
+
                 elif not re.match(r'^[A-Z_][A-Z0-9_]*$', v, re.IGNORECASE):
                   raise Exception(f'header field at column position {i + 1} contains invalid characters')
   
               if len(set(fields)) != len(fields):
                 raise Exception('duplicate header field detected in data')
+
               else:
                 self.__g_datarows.append(fields)
   
@@ -463,7 +453,7 @@ class JinjaFx():
             else:
               gcount = 1
               fields = []
-  
+
               for f in re.split(delim, l.strip(schars)):
                 delta = 0
   
@@ -483,8 +473,7 @@ class JinjaFx():
   
               n = len(self.__g_datarows[0])
               fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
-  
-              recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}'
+              recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
   
               row = 0
               while row < len(fields):
@@ -495,9 +484,9 @@ class JinjaFx():
                 if any(isinstance(col[0], list) for col in fields[row][1:]):
                   for col in range(1, len(fields[row])):
                     if isinstance(fields[row][col][0], list):
-                      for v in range(len(fields[row][col][0])):
-                        nrow = copy.deepcopy(fields[row])
-                        nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
+                      for i, v in enumerate(fields[row][col][0]):
+                        nrow = [e[:] if isinstance(e, list) else e for e in fields[row]]
+                        nrow[col] = [v, fields[row][col][1][i]]
                         fields.append(nrow)
   
                       fields.pop(row)
@@ -507,13 +496,13 @@ class JinjaFx():
                   groups = []
   
                   for col in range(1, len(fields[row])):
-                    fields[row][col][0] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
+                    fields[row][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
   
                     for g in range(len(fields[row][col][1])):
-                      fields[row][col][1][g] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
+                      fields[row][col][1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
   
                     groups.append(fields[row][col][1])
-  
+ 
                   groups = dict(enumerate(sum(groups, ['\\0'])))
   
                   for col in range(1, len(fields[row])):
@@ -533,11 +522,12 @@ class JinjaFx():
   
                     if col in int_indices:
                       fields[row][col] = int(fields[row][col])
+
                     elif col in float_indices:
                       fields[row][col] = float(fields[row][col])
 
                   include_row = True
-                  if len(jinjafx_filter) > 0:
+                  if jinjafx_filter:
                     for index in jinjafx_filter:
                       if not re.search(jinjafx_filter[index], fields[row][index]):
                         include_row = False
@@ -547,11 +537,11 @@ class JinjaFx():
                     self.__g_datarows.append(fields[row])
   
                   row += 1
-
+             
         if len(self.__g_datarows) <= 1:
           raise Exception('not enough data rows - need at least two')
 
-    if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
+    if 'jinjafx_sort' in gvars and gvars['jinjafx_sort']:
       for field in reversed(gvars['jinjafx_sort']):
         if isinstance(field, dict):
           fn = next(iter(field))
@@ -616,13 +606,15 @@ class JinjaFx():
       'lookup': self.__jfx_lookup
     })
 
-    if len(gvars) > 0:
+    if gvars:
       env.globals.update(gvars)
+
+    output = env.from_string(output)
 
     for row in range(1, max(2, len(self.__g_datarows))):
       rowdata = {}
 
-      if len(self.__g_datarows) > 0:
+      if self.__g_datarows:
         for col in range(len(self.__g_datarows[0])):
           rowdata.update({ self.__g_datarows[0][col]: self.__g_datarows[row][col + 1] })
 
@@ -640,18 +632,18 @@ class JinjaFx():
         content = template.render(rowdata)
 
         outputs['0:_stderr_'] = []
-        if len(self.__g_warnings) > 0:
+        if self.__g_warnings:
           outputs['0:_stderr_'] = self.__g_warnings
 
       except Exception as e:
         if e.args[0].startswith('[jfx_exception] '):
           e.args = (e.args[0][16:],)
         else:
-          if len(e.args) >= 1 and self.__g_row != 0:
+          if len(e.args) >= 1 and self.__g_row:
             e.args = (e.args[0] + ' at data row ' + str(self.__g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
-      stack = ['0:' + env.from_string(output).render(rowdata)]
+      stack = ['0:' + output.render(rowdata)]
       start_tag = re.compile(r'<output(:\S+)?[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
       end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
       clines = content.splitlines()
@@ -672,12 +664,12 @@ class JinjaFx():
             clines.insert(i + 1, l[block_begin.end():])
             continue
 
-          if block_begin.group(3) != None:
+          if block_begin.group(3) is not None:
             index = int(block_begin.group(3))
           else:
             index = 0
 
-          oformat = block_begin.group(1) if block_begin.group(1) != None else ':text'
+          oformat = block_begin.group(1) if block_begin.group(1) is not None else ':text'
           stack.append(str(index) + ':' + block_begin.group(2).strip() + oformat.lower())
 
         else:
@@ -851,7 +843,7 @@ class JinjaFx():
   def __jfx_fandl(self, forl, fields, ffilter):
     fpos = []
 
-    if self.__g_row == 0:
+    if not self.__g_row:
       return True
 
     if fields is not None:
