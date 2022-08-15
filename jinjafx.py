@@ -28,8 +28,6 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-import tracemalloc
-
 __version__ = '1.13.0'
 
 def main():
@@ -256,16 +254,7 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
   
       args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
-      tracemalloc.start()
       outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
-
-      snapshot = tracemalloc.take_snapshot()
-      top_stats = snapshot.statistics('lineno')
-
-      print("[ Top 10 ]")
-      for stat in top_stats[:10]:
-        print(stat)
-
       ocount = 0
   
       if args.od is not None:
