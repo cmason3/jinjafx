@@ -61,7 +61,7 @@ Environment Variables:
   ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
   ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file'''
 
-    parser = __ArgumentParser(add_help=False, usage=prog + ' ' + jinjafx_usage)
+    parser = __ArgumentParser(add_help=False, usage=f'{prog} {jinjafx_usage}')
     group_ex = parser.add_mutually_exclusive_group(required=True)
     group_ex.add_argument('-t', type=argparse.FileType('r'))
     group_ex.add_argument('-dt', type=argparse.FileType('r'))
@@ -597,14 +597,6 @@ class JinjaFx():
       env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       template = env.get_template(os.path.basename(template.name))
 
-    class datadict(dict):
-      def __init__(self, fields, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields = fields
-
-      def __missing__(self, key):
-        return self[self.fields.index(key)]
-
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
@@ -619,7 +611,7 @@ class JinjaFx():
       'getg': self.__jfx_getg,
       'now': self.__jfx_now,
       'rows': max([0, len(self.__g_datarows) - 1]),
-      'data': [self.__g_datarows[0]] + [datadict(self.__g_datarows[0], enumerate(r[1:] if isinstance(r[0], int) else r)) for r in self.__g_datarows[1:]] if len(self.__g_datarows) > 1 else []
+      'data': [self.__g_datarows[0]] + [self.__datadict(self.__g_datarows[0], enumerate(r[1:] if isinstance(r[0], int) else r)) for r in self.__g_datarows[1:]] if len(self.__g_datarows) > 1 else []
     },
       'lookup': self.__jfx_lookup
     })
@@ -980,6 +972,15 @@ class JinjaFx():
 
     else:
       return str(datetime.datetime.utcnow().astimezone(tz))
+
+
+  class __datadict(dict):
+    def __init__(self, fields, *args, **kwargs):
+      super().__init__(*args, **kwargs)
+      self.fields = fields
+
+    def __missing__(self, key):
+      return self[self.fields.index(key)]
 
 
 class Vault():
