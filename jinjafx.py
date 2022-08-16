@@ -160,7 +160,7 @@ Environment Variables:
             print(f'Decrypting {f}... unsupported')
 
     else:
-      yaml.add_constructor('!vault', __yaml_vault_tag, yaml.SafeLoader)
+      yaml.add_constructor('!vault', lambda x, y: __decrypt_vault(vpw, y.value).decode('utf-8'), yaml.SafeLoader)
 
       if args.dt is not None:
         with open(args.dt.name, 'rt') as f:
@@ -196,7 +196,7 @@ Environment Variables:
             data = dt['data']
   
           if 'vars' in dt:
-            gyaml = __decrypt_vault(dt['vars'])
+            gyaml = __decrypt_vault(vpw, dt['vars'])
             if gyaml:
               gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
   
@@ -207,7 +207,7 @@ Environment Variables:
       if args.g is not None:
         for g in args.g:
           with open(g.name, 'rt') as f:
-            gyaml = __decrypt_vault(f.read())
+            gyaml = __decrypt_vault(vpw, f.read())
             if args.m == True:
               __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
             else:
@@ -320,15 +320,11 @@ Environment Variables:
     sys.exit(-2)
 
 
-def __decrypt_vault(string):
+def __decrypt_vault(vpw, string):
   if string.lstrip().startswith('$ANSIBLE_VAULT;'):
     __get_vault_credentials(vpw)
     return Vault().decrypt(string.encode('utf-8'), vpw[0])
   return string
-
-
-def __yaml_vault_tag(loader, node):
-  return __decrypt_vault(node.value)
 
 
 def __get_vault_credentials(vpw, verify=False):
