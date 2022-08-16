@@ -47,11 +47,12 @@ def main():
     -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml> [-g ...]     - specify global variables in yaml (supports Ansible Vault)
-    -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
-    -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
+    -var <x=value> [-var ...]  - specify global variables on the command line (overrides existing)
     -ed <exts dir> [-ed ...]   - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>           - set output dir for output files with a relative path (default is ".")
+    -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                         - merge duplicate global variables (dicts and lists) instead of replacing
     -q                         - quiet mode - don't output version or usage information
 
@@ -68,6 +69,7 @@ Environment Variables:
     parser.add_argument('-d', type=argparse.FileType('r'))
     parser.add_argument('-ds', type=str)
     parser.add_argument('-g', type=argparse.FileType('r'), action='append')
+    parser.add_argument('-var', type=str, action='append')
     parser.add_argument('-ed', type=str, action='append', default=[])
     parser.add_argument('-o', type=str)
     parser.add_argument('-od', type=str)
@@ -210,6 +212,11 @@ Environment Variables:
               __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
             else:
               gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
+      if args.var is not None:
+        for v in args.var:
+          x, value = list(map(str.strip, v.split('=')))
+          gvars[x] = value
   
       if args.o is None:
         args.o = '_stdout_'
@@ -602,7 +609,7 @@ class JinjaFx():
       'getg': self.__jfx_getg,
       'now': self.__jfx_now,
       'rows': max([0, len(self.__g_datarows) - 1]),
-      'data': [self.__g_datarows[0]] + [self.__datadict(self.__g_datarows[0], enumerate(r[1:] if isinstance(r[0], int) else r)) for r in self.__g_datarows[1:]] if len(self.__g_datarows) > 1 else []
+      # 'data': [self.__g_datarows[0]] + [self.__datadict(self.__g_datarows[0], enumerate(r[1:] if isinstance(r[0], int) else r)) for r in self.__g_datarows[1:]] if len(self.__g_datarows) > 1 else []
     },
       'lookup': self.__jfx_lookup
     })
