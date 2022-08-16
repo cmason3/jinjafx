@@ -601,11 +601,11 @@ class JinjaFx():
       'first': self.__jfx_first,
       'last': self.__jfx_last,
       'fields': self.__jfx_fields,
+      'data': self.__jfx_data,
       'setg': self.__jfx_setg,
       'getg': self.__jfx_getg,
       'now': self.__jfx_now,
       'rows': max([0, len(self.__g_datarows) - 1]),
-      # 'data': [self.__g_datarows[0]] + [self.__datadict(self.__g_datarows[0], enumerate(r[1:] if isinstance(r[0], int) else r)) for r in self.__g_datarows[1:]] if len(self.__g_datarows) > 1 else []
     },
       'lookup': self.__jfx_lookup
     })
@@ -855,7 +855,7 @@ class JinjaFx():
         if f in self.__g_datarows[0]:
           fpos.append(self.__g_datarows[0].index(f) + 1)
         else:
-          raise Exception('invalid field \'' + f + '\' passed to jinjafx.' + forl + '()')
+          raise Exception(f'invalid field "{f}" passed to jinjafx.{forl}()')
     elif forl == 'first':
       return True if self.__g_row == 1 else False
     else:
@@ -878,9 +878,9 @@ class JinjaFx():
               fmatch = False
               break
           except Exception:
-            raise Exception('invalid filter regex \'' + ffilter[f] + '\' for field \'' + f + '\' passed to jinjafx.' + forl + '()')
+            raise Exception(f'invalid filter regex "{ffilter[f]}" for field "{f}" passed to jinjafx.{forl}()')
         else:
-          raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.' + forl + '()')
+          raise Exception(f'invalid filter field "{f}" passed to jinjafx.{forl}()')
 
       if fmatch:
         if tv == ':'.join([str(self.__g_datarows[r][i]) for i in fpos]):
@@ -912,7 +912,7 @@ class JinjaFx():
       if field in self.__g_datarows[0]:
         fpos = self.__g_datarows[0].index(field) + 1
       else:
-        raise Exception('invalid field \'' + field + '\' passed to jinjafx.fields()')
+        raise Exception(f'invalid field "{field}" passed to jinjafx.fields()')
     else:
       return None
     
@@ -922,7 +922,7 @@ class JinjaFx():
       fmatch = True
       field_value = self.__g_datarows[r][fpos]
 
-      if field_value not in field_values and len(str(field_value).strip()) > 0:
+      if field_value not in field_values and str(field_value).strip():
         for f in ffilter:
           if f in self.__g_datarows[0]:
             try:
@@ -930,9 +930,9 @@ class JinjaFx():
                 fmatch = False
                 break
             except Exception:
-              raise Exception('invalid filter regex \'' + ffilter[f] + '\' for field \'' + f + '\' passed to jinjafx.fields()')
+              raise Exception(f'invalid filter regex "{ffilter[f]}" for field "{f}" passed to jinjafx.fields()')
           else:
-            raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.fields()')
+            raise Exception(f'invalid filter field "{f}" passed to jinjafx.fields()')
 
         if fmatch:
           field_values.append(field_value)
@@ -940,6 +940,24 @@ class JinjaFx():
     return field_values
 
  
+  def __jfx_data(self, row, col=None):
+    if self.__g_datarows:
+      if isinstance(col, str):
+        if col in self.__g_datarows[0]:
+          col = self.__g_datarows[0].index(col) 
+        else:
+          raise Exception(f'invalid column "{col}" passed to jinjafx.data()')
+
+      if row and isinstance(col, int):
+        col += 1
+
+      if row is not None and col is not None:
+        return self.__g_datarows[row][col]
+
+      elif row is not None:
+        return self.__g_datarows[row][1 if row else 0:]
+
+
   def __jfx_counter(self, key=None, increment=1, start=1):
     if key is None:
       key = '_cnt_r_' + str(self.__g_row)
@@ -968,15 +986,6 @@ class JinjaFx():
 
     else:
       return str(datetime.datetime.utcnow().astimezone(tz))
-
-
-  class __datadict(dict):
-    def __init__(self, fields, *args, **kwargs):
-      super().__init__(*args, **kwargs)
-      self.fields = fields
-
-    def __missing__(self, key):
-      return self[self.fields.index(key)]
 
 
 class Vault():
