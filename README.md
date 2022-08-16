@@ -30,14 +30,15 @@ python3 -m pip install --upgrade --user jinjafx
     -dt <dt.yml>              - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>             - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml> [-g ...]    - specify global variables in yaml (supports Ansible Vault)
-    -encrypt [file] [...]     - encrypt files or stdin (if file omitted) using Ansible Vault
-    -decrypt [file] [...]     - decrypt files or stdin (if file omitted) using Ansible Vault
+    -var <x=value> [-var ...] - specify global variables on the command line (overrides existing)
     -ed <exts dir> [-ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>          - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>          - set output dir for output files with a relative path (default is ".")
+    -encrypt [file] [...]     - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [file] [...]     - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                        - merge duplicate global variables (dicts and lists) instead of replacing
     -q                        - quiet mode - don't output version or usage information
-   
+
  Environment Variables:
    ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
    ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file
