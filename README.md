@@ -496,7 +496,7 @@ This variable will contain the total number of rows within the data as an intege
 
 - <b><code>jinjafx.data(row, [col])</code></b>
 
-This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')` on rows > 0. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
+This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')`. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
 
 - <b><code>jinjafx.expand("string")</code></b>
 
