@@ -15,8 +15,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, io, importlib, argparse, re, copy, getpass, datetime, traceback
-import jinja2, yaml, pytz
+import sys, os, io, importlib, argparse, re, getpass, datetime, traceback
+import jinja2, jinja2.sandbox, yaml, pytz
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -28,12 +28,12 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.12.3'
+__version__ = '1.13.0'
 
 def main():
   try:
     if not any(x in ['-q', '-encrypt', '-decrypt'] for x in sys.argv):
-      print('JinjaFx v' + __version__ + ' - Jinja2 Templating Tool')
+      print(f'JinjaFx v{__version__} - Jinja2 Templating Tool')
       print('Copyright (c) 2020-2022 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
@@ -47,11 +47,12 @@ def main():
     -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml> [-g ...]     - specify global variables in yaml (supports Ansible Vault)
-    -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
-    -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
+    -var <x=value> [-var ...]  - specify global variables on the command line (overrides existing)
     -ed <exts dir> [-ed ...]   - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>           - set output dir for output files with a relative path (default is ".")
+    -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                         - merge duplicate global variables (dicts and lists) instead of replacing
     -q                         - quiet mode - don't output version or usage information
 
@@ -59,7 +60,7 @@ Environment Variables:
   ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
   ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file'''
 
-    parser = __ArgumentParser(add_help=False, usage=prog + ' ' + jinjafx_usage)
+    parser = __ArgumentParser(add_help=False, usage=f'{prog} {jinjafx_usage}')
     group_ex = parser.add_mutually_exclusive_group(required=True)
     group_ex.add_argument('-t', type=argparse.FileType('r'))
     group_ex.add_argument('-dt', type=argparse.FileType('r'))
@@ -68,6 +69,7 @@ Environment Variables:
     parser.add_argument('-d', type=argparse.FileType('r'))
     parser.add_argument('-ds', type=str)
     parser.add_argument('-g', type=argparse.FileType('r'), action='append')
+    parser.add_argument('-var', type=str, action='append')
     parser.add_argument('-ed', type=str, action='append', default=[])
     parser.add_argument('-o', type=str)
     parser.add_argument('-od', type=str)
@@ -76,40 +78,20 @@ Environment Variables:
     args = parser.parse_args()
 
     if args.dt is not None and args.d is not None:
-      parser.error("argument -d: not allowed with argument -dt")
+      parser.error('argument -d: not allowed with argument -dt')
 
     if args.dt is None and args.ds is not None:
-      parser.error("argument -ds: only allowed with argument -dt")
+      parser.error('argument -ds: only allowed with argument -dt')
 
-    if args.m is True and args.g is None:
-      parser.error("argument -m: only allowed with argument -g")
+    if args.m and args.g is None:
+      parser.error('argument -m: only allowed with argument -g')
 
     if args.od is not None and not os.access(args.od, os.W_OK):
-      parser.error("argument -od: unable to write to output directory")
+      parser.error('argument -od: unable to write to output directory')
 
     gvars = {}
     data = None
     vpw = [ None ]
-
-    def get_vault_credentials(verify=False):
-      if vpw[0] is None:
-        vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
-
-        if vpw[0] == None:
-          vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
-          if vpwf != None:
-            with open(vpwf) as f:
-              vpw[0] = f.read().strip()
-
-        if vpw[0] == None:
-          vpw[0] = getpass.getpass('Vault Password: ')
-
-          if verify:
-            if vpw[0] != getpass.getpass('Password Verification: '):
-              print()
-              raise Exception('password verification failed')
-
-          print()
 
     if args.encrypt is not None:
       if not args.encrypt:
@@ -117,16 +99,16 @@ Environment Variables:
         if len(b_string.splitlines()) > 1:
           raise Exception('multiline stings not permitted')
 
-        get_vault_credentials(True)
+        __get_vault_credentials(vpw, True)
         vtext = Vault().encrypt(b_string, vpw[0])
         print('!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
 
       else:
-        get_vault_credentials(True)
+        __get_vault_credentials(vpw, True)
 
         for f in args.encrypt:
           if os.path.isfile(f):
-            print('Encrypting ' + f + '... ', flush=True, end='')
+            print(f'Encrypting {f}... ', flush=True, end='')
 
             try:
               with open(f, 'rb') as fh:
@@ -138,26 +120,26 @@ Environment Variables:
 
             except Exception as e:
               print('failed')
-              print('error: ' + str(e), file=sys.stderr)
+              print(f'error: {e}', file=sys.stderr)
 
           elif not os.path.exists(f):
-            print('Encrypting ' + f + '... not found')
+            print(f'Encrypting {f}... not found')
 
           else:
-            print('Encrypting ' + f + '... unsupported')
+            print(f'Encrypting {f}... unsupported')
 
     elif args.decrypt is not None:
       if not args.decrypt:
         b_vtext = sys.stdin.buffer.read()
-        get_vault_credentials()
+        __get_vault_credentials(vpw)
         print(Vault().decrypt(b_vtext, vpw[0]).decode('utf-8'))
 
       else:
-        get_vault_credentials()
+        __get_vault_credentials(vpw)
 
         for f in args.decrypt:
           if os.path.isfile(f):
-            print('Decrypting ' + f + '... ', flush=True, end='')
+            print(f'Decrypting {f}... ', flush=True, end='')
 
             try:
               with open(f, 'rb') as fh:
@@ -169,47 +151,19 @@ Environment Variables:
 
             except Exception as e:
               print('failed')
-              print('error: ' + str(e), file=sys.stderr)
+              print(f'error: {e}', file=sys.stderr)
 
           elif not os.path.exists(f):
-            print('Decrypting ' + f + '... not found')
+            print(f'Decrypting {f}... not found')
 
           else:
-            print('Decrypting ' + f + '... unsupported')
+            print(f'Decrypting {f}... unsupported')
 
     else:
-      def merge(dst, src):
-        for key in src:
-          if key in dst:
-            if isinstance(dst[key], dict) and isinstance(src[key], dict):
-              merge(dst[key], src[key])
-  
-            elif isinstance(dst[key], list) and isinstance(src[key], list):
-              dst[key] += src[key]
-  
-            else:
-              dst[key] = src[key]
-  
-          else:
-            dst[key] = src[key]
-  
-        return dst
-
-      def decrypt_vault(string):
-        if string.lstrip().startswith('$ANSIBLE_VAULT;'):
-          get_vault_credentials()
-
-          return Vault().decrypt(string.encode('utf-8'), vpw[0])
-
-        return string
-
-      def yaml_vault_tag(loader, node):
-        return decrypt_vault(node.value)
-
-      yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+      yaml.add_constructor('!vault', lambda x, y: __decrypt_vault(vpw, y.value).decode('utf-8'), yaml.SafeLoader)
 
       if args.dt is not None:
-        with open(args.dt.name) as f:
+        with open(args.dt.name, 'rt') as f:
           dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
           args.t = dt['template']
   
@@ -219,7 +173,7 @@ Environment Variables:
                 args.ds = re.compile(args.ds, re.IGNORECASE)
   
               except Exception:
-                parser.error("argument -ds: invalid regular expression")
+                parser.error('argument -ds: invalid regular expression')
   
               matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
               if len(matches) == 1:
@@ -230,34 +184,39 @@ Environment Variables:
                   dt['vars'] = dt['datasets'][matches[0]]['vars']
   
               else:
-                parser.error("argument -ds: must only match a single dataset")
+                parser.error('argument -ds: must only match a single dataset')
   
             else:
-              parser.error("argument -ds: required with datatemplates that use datasets")
+              parser.error('argument -ds: required with datatemplates that use datasets')
   
           elif args.ds is not None:
-            parser.error("argument -ds: not required with datatemplates without datasets")
+            parser.error('argument -ds: not required with datatemplates without datasets')
   
           if 'data' in dt:
             data = dt['data']
   
           if 'vars' in dt:
-            gyaml = decrypt_vault(dt['vars'])
+            gyaml = __decrypt_vault(vpw, dt['vars'])
             if gyaml:
               gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
   
       elif args.d is not None:
-        with open(args.d.name) as f:
+        with open(args.d.name, 'rt') as f:
           data = f.read()
   
       if args.g is not None:
         for g in args.g:
-          with open(g.name) as f:
-            gyaml = decrypt_vault(f.read())
+          with open(g.name, 'rt') as f:
+            gyaml = __decrypt_vault(vpw, f.read())
             if args.m == True:
-              merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
+              __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
             else:
               gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
+      if args.var is not None:
+        for v in args.var:
+          x, value = list(map(str.strip, v.split('=')))
+          gvars[x] = value
   
       if args.o is None:
         args.o = '_stdout_'
@@ -265,7 +224,7 @@ Environment Variables:
       if 'jinjafx_input' in gvars:
         jinjafx_input = {}
   
-        if 'prompt' in gvars['jinjafx_input'] and len(gvars['jinjafx_input']['prompt']) > 0:
+        if 'prompt' in gvars['jinjafx_input'] and gvars['jinjafx_input']['prompt']:
           for k in gvars['jinjafx_input']['prompt']:
             v = gvars['jinjafx_input']['prompt'][k]
   
@@ -282,7 +241,7 @@ Environment Variables:
                 else:
                   jinjafx_input[k] = input(v['text'] + ': ').strip()
   
-                if len(jinjafx_input[k]) == 0:
+                if not jinjafx_input[k]:
                   if v['required']:
                     print('error: input is required', file=sys.stderr)
                   else:
@@ -308,10 +267,10 @@ Environment Variables:
       if args.od is not None:
         os.chdir(args.od)
   
-      if len(outputs['_stderr_']) > 0:
+      if outputs['_stderr_']:
         print('Warnings:', file=sys.stderr)
         for w in outputs['_stderr_']:
-          print(' - ' + w, file=sys.stderr)
+          print(f' - {w}', file=sys.stderr)
   
         print('', file=sys.stderr)
   
@@ -320,9 +279,9 @@ Environment Variables:
 
         if oname != '_stderr_':
           output = '\n'.join(o[1]) + '\n'
-          if len(output.strip()) > 0:
+          if output.strip():
             if oname == '_stdout_':
-              if ocount > 0:
+              if ocount:
                 print('\n-\n')
               print(output)
     
@@ -333,14 +292,14 @@ Environment Variables:
                 if not os.path.isdir(os.path.dirname(ofile)):
                   os.makedirs(os.path.dirname(ofile))
     
-              with open(ofile, 'w') as f:
+              with open(ofile, 'wt') as f:
                 f.write(output)
     
               print(__format_bytes(len(output)) + ' > ' + ofile)
     
             ocount += 1
   
-      if ocount > 0:
+      if ocount:
         if '_stdout_' not in outputs:
           print()
   
@@ -354,11 +313,39 @@ Environment Variables:
     tb = traceback.format_exc()
     match = re.search(r'^[ \t]*File "(.+)", line ([0-9]+), in template$', tb, re.IGNORECASE | re.MULTILINE)
     if match:
-      print('error[' + match.group(1) + ':' + match.group(2) + ']: ' + type(e).__name__ + ': ' + str(e), file=sys.stderr)
+      print(f'error[{match.group(1)}:{match.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
     else:
-      print('error[' + str(sys.exc_info()[2].tb_lineno) + ']: ' + type(e).__name__ + ': ' + str(e), file=sys.stderr)
+      print(f'error[{sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     sys.exit(-2)
+
+
+def __decrypt_vault(vpw, string):
+  if string.lstrip().startswith('$ANSIBLE_VAULT;'):
+    __get_vault_credentials(vpw)
+    return Vault().decrypt(string.encode('utf-8'), vpw[0])
+  return string
+
+
+def __get_vault_credentials(vpw, verify=False):
+  if vpw[0] is None:
+    vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
+
+    if vpw[0] is None:
+      vpwf = os.getenv('ANSIBLE_VAULT_PASSWORD_FILE')
+      if vpwf is not None:
+        with open(vpwf, 'rt') as f:
+          vpw[0] = f.read().strip()
+
+    if vpw[0] is None:
+      vpw[0] = getpass.getpass('Vault Password: ')
+
+      if verify:
+        if vpw[0] != getpass.getpass('Password Verification: '):
+          print()
+          raise Exception('password verification failed')
+
+      print()
 
 
 def __format_bytes(b):
@@ -366,43 +353,65 @@ def __format_bytes(b):
     if b >= 1000:
       b /= 1000
     else:
-      return '{:.2f}'.format(b).rstrip('0').rstrip('.') + u + 'B'
+      return f'{b:.2f}'.rstrip('0').rstrip('.') + u + 'B'
+
+
+def __merge(dst, src):
+  for key in src:
+    if key in dst:
+      if isinstance(dst[key], dict) and isinstance(src[key], dict):
+        __merge(dst[key], src[key])
+  
+      elif isinstance(dst[key], list) and isinstance(src[key], list):
+        dst[key] += src[key]
+  
+      else:
+        dst[key] = src[key]
+  
+    else:
+      dst[key] = src[key]
+  
+  return dst
 
 
 class __ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
     if '-q' not in sys.argv:
       print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
-      print('Usage:\n  ' + self.format_usage()[7:], file=sys.stderr)
+      print(f'Usage:\n  {self.format_usage()[7:]}', file=sys.stderr)
     raise Exception(message)
 
 
 class JinjaFx():
-  def jinjafx(self, template, data, gvars, output, exts_dirs=[]):
+  def jinjafx(self, template, data, gvars, output, exts_dirs=[], sandbox=False):
     self.__g_datarows = []
     self.__g_dict = {}
     self.__g_row = 0 
     self.__g_vars = {}
     self.__g_warnings = []
+    self.__g_xlimit = 5000 if sandbox else 0
 
     outputs = {}
     delim = None
     rowkey = 1
     int_indices = []
+    float_indices = []
 
-    if not isinstance(template, str) and not isinstance(template, io.IOBase):
+    if not isinstance(template, (str, io.IOBase)):
       raise TypeError('template must be of type str or type FileType')
 
     if data is not None:
       if not isinstance(data, str):
         raise TypeError('data must be of type str')
 
-      if len(data.strip()) > 0:
+      if data.strip():
         jinjafx_filter = {}
+        jinjafx_adjust_headers = str(gvars.get('jinjafx_adjust_headers', 'no')).strip().lower()
+        recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
   
         for l in data.splitlines():
-          if len(l.strip()) > 0 and not re.match(r'^[ \t]*#', l):
-            if len(self.__g_datarows) == 0:
+          if l.strip() and not re.match(r'^[ \t]*#', l):
+            if not self.__g_datarows:
               if l.count(',') > l.count('\t'):
                 delim = r'[ \t]*,[ \t]*'
                 schars = ' \t'
@@ -412,47 +421,44 @@ class JinjaFx():
   
               fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l.strip(schars)))
               fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
-  
-              for i in range(len(fields)):
-                if fields[i].lower().endswith(':int'):
+
+              for i, v in enumerate(fields):
+                if v.lower().endswith(':int'):
                   int_indices.append(i + 1)
-                  fields[i] = fields[i][:-4]
+                  fields[i] = v[:-4]
+                elif v.lower().endswith(':float'):
+                  float_indices.append(i + 1)
+                  fields[i] = v[:-6]
   
-                if 'jinjafx_adjust_headers' in gvars:
-                  jinjafx_adjust_headers = str(gvars['jinjafx_adjust_headers']).strip().lower()
-  
-                  if jinjafx_adjust_headers == 'yes':
-                    fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i], flags=re.UNICODE | re.IGNORECASE)
-  
-                  elif jinjafx_adjust_headers == 'upper':
-                    fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].upper(), flags=re.UNICODE | re.IGNORECASE)
-  
-                  elif jinjafx_adjust_headers == 'lower':
-                    fields[i] = re.sub(r'[^A-Z0-9_]', '', fields[i].lower(), flags=re.UNICODE | re.IGNORECASE)
-  
-                  elif jinjafx_adjust_headers != 'no':
-                    raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
+                if jinjafx_adjust_headers == 'yes':
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', v, flags=re.UNICODE | re.IGNORECASE)
+                elif jinjafx_adjust_headers == 'upper':
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', v.upper(), flags=re.UNICODE | re.IGNORECASE)
+                elif jinjafx_adjust_headers == 'lower':
+                  fields[i] = re.sub(r'[^A-Z0-9_]', '', v.lower(), flags=re.UNICODE | re.IGNORECASE)
+                elif jinjafx_adjust_headers != 'no':
+                  raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
                 
-                if fields[i] == '':
-                  raise Exception('empty header field detected at column position ' + str(i + 1))
-  
-                elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
-                  raise Exception('header field at column position ' + str(i + 1) + ' contains invalid characters')
+                if v == '':
+                  raise Exception(f'empty header field detected at column position {i + 1}')
+
+                elif not re.match(r'^[A-Z_][A-Z0-9_]*$', v, re.IGNORECASE):
+                  raise Exception(f'header field at column position {i + 1} contains invalid characters')
   
               if len(set(fields)) != len(fields):
                 raise Exception('duplicate header field detected in data')
-  
+
               else:
                 self.__g_datarows.append(fields)
   
-              if 'jinjafx_filter' in gvars and len(gvars['jinjafx_filter']) > 0:
+              if 'jinjafx_filter' in gvars and gvars['jinjafx_filter']:
                 for field in gvars['jinjafx_filter']:
                   jinjafx_filter[self.__g_datarows[0].index(field) + 1] = gvars['jinjafx_filter'][field]
   
             else:
               gcount = 1
               fields = []
-  
+
               for f in re.split(delim, l.strip(schars)):
                 delta = 0
   
@@ -460,7 +466,7 @@ class JinjaFx():
                   if not re.search(r'(?<!\\)\|', m.group(1)):
                     if not re.search(r'\\' + str(gcount), l):
                       if re.search(r'\\[0-9]+', l):
-                        raise Exception('parenthesis in row ' + str(rowkey) + ' at \'' + str(m.group(0)) + '\' should be escaped or removed')
+                        raise Exception(f'parenthesis in row {rowkey} at "{m.group(0)}" should be escaped or removed')
   
                       else:
                         f = f[:m.start() + delta] + '\\(' + m.group(1) + '\\)' + f[m.end() + delta:]
@@ -472,73 +478,75 @@ class JinjaFx():
   
               n = len(self.__g_datarows[0])
               fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
-  
-              recm = r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}'
-  
+
               row = 0
-              while row < len(fields):
-                if not isinstance(fields[row][0], int):
-                  fields[row].insert(0, rowkey)
+              while fields:
+                if not isinstance(fields[0][0], int):
+                  fields[0].insert(0, rowkey)
                   rowkey += 1
   
-                if any(isinstance(col[0], list) for col in fields[row][1:]):
-                  for col in range(1, len(fields[row])):
-                    if isinstance(fields[row][col][0], list):
-                      for v in range(len(fields[row][col][0])):
-                        nrow = copy.deepcopy(fields[row])
-                        nrow[col] = [fields[row][col][0][v], fields[row][col][1][v]]
+                if any(isinstance(col[0], list) for col in fields[0][1:]):
+                  for col in range(1, len(fields[0])):
+                    if isinstance(fields[0][col][0], list):
+                      for i, v in enumerate(fields[0][col][0]):
+                        nrow = [e[:] if isinstance(e, list) else e for e in fields[0]]
+                        nrow[col] = [v, fields[0][col][1][i]]
                         fields.append(nrow)
   
-                      fields.pop(row)
+                      fields.pop(0)
                       break
   
                 else:
                   groups = []
   
-                  for col in range(1, len(fields[row])):
-                    fields[row][col][0] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][0])
+                  for col in range(1, len(fields[0])):
+                    fields[0][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][0])
   
-                    for g in range(len(fields[row][col][1])):
-                      fields[row][col][1][g] = re.sub(recm, lambda m: self.__jfx_data_counter(m, fields[row][0], col, row), fields[row][col][1][g])
+                    for g in range(len(fields[0][col][1])):
+                      fields[0][col][1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][1][g])
   
-                    groups.append(fields[row][col][1])
-  
+                    groups.append(fields[0][col][1])
+ 
                   groups = dict(enumerate(sum(groups, ['\\0'])))
   
-                  for col in range(1, len(fields[row])):
-                    fields[row][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[row][col][0])
+                  for col in range(1, len(fields[0])):
+                    fields[0][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[0][col][0])
   
                     delta = 0
-                    for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', fields[row][col]):
+                    for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', fields[0][col]):
                       pvalue = str(int(m.group(1))).zfill(int(m.group(2)))
-                      fields[row][col] = fields[row][col][:m.start() + delta] + pvalue + fields[row][col][m.end() + delta:]
+                      fields[0][col] = fields[0][col][:m.start() + delta] + pvalue + fields[0][col][m.end() + delta:]
   
                       if len(m.group(0)) > len(pvalue):
                         delta -= len(m.group(0)) - len(pvalue)
                       else:
                         delta += len(pvalue) - len(m.group(0))
   
-                    fields[row][col] = re.sub(r'\\([}{%])', r'\1', fields[row][col])
+                    fields[0][col] = re.sub(r'\\([}{%])', r'\1', fields[0][col])
   
                     if col in int_indices:
-                      fields[row][col] = int(fields[row][col])
-  
+                      fields[0][col] = int(fields[0][col])
+
+                    elif col in float_indices:
+                      fields[0][col] = float(fields[0][col])
+
                   include_row = True
-                  if len(jinjafx_filter) > 0:
+                  if jinjafx_filter:
                     for index in jinjafx_filter:
-                      if not re.search(jinjafx_filter[index], fields[row][index]):
+                      if not re.search(jinjafx_filter[index], fields[0][index]):
                         include_row = False
                         break
   
                   if include_row:
-                    self.__g_datarows.append(fields[row])
+                    self.__g_datarows.append(fields[0])
   
+                  fields.pop(0)
                   row += 1
-  
+             
         if len(self.__g_datarows) <= 1:
           raise Exception('not enough data rows - need at least two')
 
-    if 'jinjafx_sort' in gvars and len(gvars['jinjafx_sort']) > 0:
+    if 'jinjafx_sort' in gvars and gvars['jinjafx_sort']:
       for field in reversed(gvars['jinjafx_sort']):
         if isinstance(field, dict):
           fn = next(iter(field))
@@ -575,11 +583,13 @@ class JinjaFx():
       'keep_trailing_newline': True
     }
 
+    jinja2env = jinja2.sandbox.SandboxedEnvironment if sandbox else jinja2.Environment
+
     if isinstance(template, str):
-      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], **jinja2_options)
+      env = jinja2env(extensions=gvars['jinja2_extensions'], **jinja2_options)
       template = env.from_string(template)
     else:
-      env = jinja2.Environment(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
+      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       template = env.get_template(os.path.basename(template.name))
 
     env.globals.update({ 'jinjafx': {
@@ -592,22 +602,24 @@ class JinjaFx():
       'first': self.__jfx_first,
       'last': self.__jfx_last,
       'fields': self.__jfx_fields,
+      'data': self.__jfx_data,
       'setg': self.__jfx_setg,
       'getg': self.__jfx_getg,
       'now': self.__jfx_now,
       'rows': max([0, len(self.__g_datarows) - 1]),
-      'data': [r[1:] if isinstance(r[0], int) else r for r in self.__g_datarows]
     },
       'lookup': self.__jfx_lookup
     })
 
-    if len(gvars) > 0:
+    if gvars:
       env.globals.update(gvars)
+
+    output = env.from_string(output)
 
     for row in range(1, max(2, len(self.__g_datarows))):
       rowdata = {}
 
-      if len(self.__g_datarows) > 0:
+      if self.__g_datarows:
         for col in range(len(self.__g_datarows[0])):
           rowdata.update({ self.__g_datarows[0][col]: self.__g_datarows[row][col + 1] })
 
@@ -625,18 +637,18 @@ class JinjaFx():
         content = template.render(rowdata)
 
         outputs['0:_stderr_'] = []
-        if len(self.__g_warnings) > 0:
+        if self.__g_warnings:
           outputs['0:_stderr_'] = self.__g_warnings
 
       except Exception as e:
         if e.args[0].startswith('[jfx_exception] '):
           e.args = (e.args[0][16:],)
         else:
-          if len(e.args) >= 1 and self.__g_row != 0:
+          if len(e.args) >= 1 and self.__g_row:
             e.args = (e.args[0] + ' at data row ' + str(self.__g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
-      stack = ['0:' + env.from_string(output).render(rowdata)]
+      stack = ['0:' + output.render(rowdata)]
       start_tag = re.compile(r'<output(:\S+)?[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
       end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
       clines = content.splitlines()
@@ -657,13 +669,14 @@ class JinjaFx():
             clines.insert(i + 1, l[block_begin.end():])
             continue
 
-          if block_begin.group(3) != None:
+          if block_begin.group(3) is not None:
             index = int(block_begin.group(3))
           else:
             index = 0
 
-          oformat = block_begin.group(1) if block_begin.group(1) != None else ':text'
+          oformat = block_begin.group(1) if block_begin.group(1) is not None else ':text'
           stack.append(str(index) + ':' + block_begin.group(2).strip() + oformat.lower())
+
         else:
           block_end = end_tag.search(l.strip())
           if block_end:
@@ -720,10 +733,10 @@ class JinjaFx():
         return default
   
       else:
-        raise jinja2.exceptions.UndefinedError('\'lookup\' variable \'' + variable + '\' is undefined')
+        raise jinja2.exceptions.UndefinedError(f'\'lookup\' variable \'{variable}\' is undefined')
 
     else:
-      raise jinja2.exceptions.UndefinedError('\'lookup\' with method \'' + method + '\' is undefined')
+      raise jinja2.exceptions.UndefinedError(f'\'lookup\' with method \'{method}\' is undefined')
 
 
   def __jfx_data_counter(self, m, orow, col, row):
@@ -750,6 +763,10 @@ class JinjaFx():
           for g in re.split(r'(?<!\\)\|', m.group(1)):
             pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
             groups.append(groups[i] + [re.sub(r'\\([\|\(\[\)\]])', r'\1', g)])
+            self.__g_xlimit -= 1
+
+            if not self.__g_xlimit:
+              raise OverflowError("jinjafx.expand() - expansion limit reached")
 
           pofa.pop(i)
           groups.pop(i)
@@ -775,6 +792,10 @@ class JinjaFx():
 
           for n in range(start, end, step):
             pofa.append(pofa[i][:m.start(1) - 1] + str(n) + pofa[i][m.end(m.lastindex) + 1:])
+            self.__g_xlimit -= 1
+
+            if not self.__g_xlimit:
+              raise OverflowError("jinjafx.expand() - expansion limit reached")
 
             ngroups = list(groups[i])
             if group > 0 and group < len(ngroups):
@@ -806,12 +827,17 @@ class JinjaFx():
 
                 for c in range(start, end, step):
                   clist.append(chr(c))
+
               else:
                 clist.append(x[0])
-  
+
             for c in clist:
               pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
               ngroups = list(groups[i])
+              self.__g_xlimit -= 1
+
+              if not self.__g_xlimit:
+                raise OverflowError("jinjafx.expand() - expansion limit reached")
   
               if group > 0 and group < len(ngroups):
                 ngroups[group] = ngroups[group].replace(m.group(), c, 1)
@@ -834,7 +860,7 @@ class JinjaFx():
   def __jfx_fandl(self, forl, fields, ffilter):
     fpos = []
 
-    if self.__g_row == 0:
+    if not self.__g_row:
       return True
 
     if fields is not None:
@@ -842,13 +868,13 @@ class JinjaFx():
         if f in self.__g_datarows[0]:
           fpos.append(self.__g_datarows[0].index(f) + 1)
         else:
-          raise Exception('invalid field \'' + f + '\' passed to jinjafx.' + forl + '()')
+          raise Exception(f'invalid field "{f}" passed to jinjafx.{forl}()')
     elif forl == 'first':
       return True if self.__g_row == 1 else False
     else:
       return True if self.__g_row == (len(self.__g_datarows) - 1) else False
 
-    tv = ':'.join([self.__g_datarows[self.__g_row][i] for i in fpos])
+    tv = ':'.join([str(self.__g_datarows[self.__g_row][i]) for i in fpos])
 
     if forl == 'first':
       rows = range(1, len(self.__g_datarows))
@@ -861,16 +887,16 @@ class JinjaFx():
       for f in ffilter:
         if f in self.__g_datarows[0]:
           try:
-            if not re.match(ffilter[f], self.__g_datarows[r][self.__g_datarows[0].index(f) + 1]):
+            if not re.match(ffilter[f], str(self.__g_datarows[r][self.__g_datarows[0].index(f) + 1])):
               fmatch = False
               break
           except Exception:
-            raise Exception('invalid filter regex \'' + ffilter[f] + '\' for field \'' + f + '\' passed to jinjafx.' + forl + '()')
+            raise Exception(f'invalid filter regex "{ffilter[f]}" for field "{f}" passed to jinjafx.{forl}()')
         else:
-          raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.' + forl + '()')
+          raise Exception(f'invalid filter field "{f}" passed to jinjafx.{forl}()')
 
       if fmatch:
-        if tv == ':'.join([self.__g_datarows[r][i] for i in fpos]):
+        if tv == ':'.join([str(self.__g_datarows[r][i]) for i in fpos]):
           return True if self.__g_row == r else False
 
     return False
@@ -899,7 +925,7 @@ class JinjaFx():
       if field in self.__g_datarows[0]:
         fpos = self.__g_datarows[0].index(field) + 1
       else:
-        raise Exception('invalid field \'' + field + '\' passed to jinjafx.fields()')
+        raise Exception(f'invalid field "{field}" passed to jinjafx.fields()')
     else:
       return None
     
@@ -909,24 +935,42 @@ class JinjaFx():
       fmatch = True
       field_value = self.__g_datarows[r][fpos]
 
-      if field_value not in field_values and len(field_value.strip()) > 0:
+      if field_value not in field_values and str(field_value).strip():
         for f in ffilter:
           if f in self.__g_datarows[0]:
             try:
-              if not re.match(ffilter[f], self.__g_datarows[r][self.__g_datarows[0].index(f) + 1]):
+              if not re.match(ffilter[f], str(self.__g_datarows[r][self.__g_datarows[0].index(f) + 1])):
                 fmatch = False
                 break
             except Exception:
-              raise Exception('invalid filter regex \'' + ffilter[f] + '\' for field \'' + f + '\' passed to jinjafx.fields()')
+              raise Exception(f'invalid filter regex "{ffilter[f]}" for field "{f}" passed to jinjafx.fields()')
           else:
-            raise Exception('invalid filter field \'' + f + '\' passed to jinjafx.fields()')
+            raise Exception(f'invalid filter field "{f}" passed to jinjafx.fields()')
 
         if fmatch:
           field_values.append(field_value)
-    
+
     return field_values
 
  
+  def __jfx_data(self, row, col=None):
+    if self.__g_datarows:
+      if isinstance(col, str):
+        if col in self.__g_datarows[0]:
+          col = self.__g_datarows[0].index(col) 
+        else:
+          raise Exception(f'invalid column "{col}" passed to jinjafx.data()')
+
+      if row and isinstance(col, int):
+        col += 1
+
+      if row is not None and col is not None:
+        return self.__g_datarows[row][col]
+
+      elif row is not None:
+        return self.__g_datarows[row][1 if row else 0:]
+
+
   def __jfx_counter(self, key=None, increment=1, start=1):
     if key is None:
       key = '_cnt_r_' + str(self.__g_row)
@@ -1002,7 +1046,7 @@ class Vault():
             hmac.verify(b_hmac)
     
           except InvalidSignature:
-            raise Exception("invalid ansible vault password")
+            raise Exception('invalid ansible vault password')
     
           u = PKCS7(128).unpadder()
           d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
@@ -1010,13 +1054,13 @@ class Vault():
           return b_plaintext
     
         else:
-          raise Exception("unknown ansible vault cipher")
+          raise Exception('unknown ansible vault cipher')
     
       else:
-        raise Exception("unknown ansible vault version")
+        raise Exception('unknown ansible vault version')
 
     else:
-      raise Exception("data isn't ansible vault encrypted")
+      raise Exception('data isn\'t ansible vault encrypted')
 
 
 if __name__ == '__main__':

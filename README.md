@@ -30,14 +30,15 @@ python3 -m pip install --upgrade --user jinjafx
     -dt <dt.yml>              - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>             - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml> [-g ...]    - specify global variables in yaml (supports Ansible Vault)
-    -encrypt [file] [...]     - encrypt files or stdin (if file omitted) using Ansible Vault
-    -decrypt [file] [...]     - decrypt files or stdin (if file omitted) using Ansible Vault
+    -var <x=value> [-var ...] - specify global variables on the command line (overrides existing)
     -ed <exts dir> [-ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>          - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>          - set output dir for output files with a relative path (default is ".")
+    -encrypt [file] [...]     - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [file] [...]     - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                        - merge duplicate global variables (dicts and lists) instead of replacing
     -q                        - quiet mode - don't output version or usage information
-   
+
  Environment Variables:
    ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
    ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file
@@ -147,6 +148,9 @@ NUMBER:int, NAME
 2, two
 20, twenty
 ```
+
+Similar to `:int` you can also use `:float` to treat all values as a float.
+
 
 #### Pad Operator
 
@@ -490,9 +494,9 @@ This variable will contain the current row number being processed as an integer.
 
 This variable will contain the total number of rows within the data as an integer.
 
-- <b><code>jinjafx.data[][]</code></b>
+- <b><code>jinjafx.data(row, [col])</code></b>
 
-This list of lists will contain all the row and column data that JinjaFx is currently traversing through. The first row will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data[row][col]`.
+This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')`. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
 
 - <b><code>jinjafx.expand("string")</code></b>
 
