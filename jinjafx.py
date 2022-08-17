@@ -766,7 +766,7 @@ class JinjaFx():
             self.__g_xlimit -= 1
 
             if not self.__g_xlimit:
-              raise Exception("jinjafx.expand() - expansion limit reached")
+              raise OverflowError("jinjafx.expand() - expansion limit reached")
 
           pofa.pop(i)
           groups.pop(i)
@@ -795,7 +795,7 @@ class JinjaFx():
             self.__g_xlimit -= 1
 
             if not self.__g_xlimit:
-              raise Exception("jinjafx.expand() - expansion limit reached")
+              raise OverflowError("jinjafx.expand() - expansion limit reached")
 
             ngroups = list(groups[i])
             if group > 0 and group < len(ngroups):
@@ -837,7 +837,7 @@ class JinjaFx():
               self.__g_xlimit -= 1
 
               if not self.__g_xlimit:
-                raise Exception("jinjafx.expand() - expansion limit reached")
+                raise OverflowError("jinjafx.expand() - expansion limit reached")
   
               if group > 0 and group < len(ngroups):
                 ngroups[group] = ngroups[group].replace(m.group(), c, 1)
