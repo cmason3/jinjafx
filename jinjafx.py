@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.13.0'
+__version__ = '1.13.1'
 
 def main():
   try:
@@ -408,7 +408,7 @@ class JinjaFx():
         jinjafx_filter = {}
         jinjafx_adjust_headers = str(gvars.get('jinjafx_adjust_headers', 'no')).strip().lower()
         recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
-  
+
         for l in data.splitlines():
           if l.strip() and not re.match(r'^[ \t]*#', l):
             if not self.__g_datarows:
@@ -438,11 +438,11 @@ class JinjaFx():
                   fields[i] = re.sub(r'[^A-Z0-9_]', '', v.lower(), flags=re.UNICODE | re.IGNORECASE)
                 elif jinjafx_adjust_headers != 'no':
                   raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
-                
-                if v == '':
+
+                if fields[i] == '':
                   raise Exception(f'empty header field detected at column position {i + 1}')
 
-                elif not re.match(r'^[A-Z_][A-Z0-9_]*$', v, re.IGNORECASE):
+                elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
                   raise Exception(f'header field at column position {i + 1} contains invalid characters')
   
               if len(set(fields)) != len(fields):
