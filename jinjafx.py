@@ -313,9 +313,9 @@ Environment Variables:
     tb = traceback.format_exc()
     match = re.search(r'^[ \t]*File "(.+)", line ([0-9]+), in template$', tb, re.IGNORECASE | re.MULTILINE)
     if match:
-      print(f'error[{match.group(1)}:{match.group(2)}]: {type(e).__name__}:{e}', file=sys.stderr)
+      print(f'error[{match.group(1)}:{match.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
     else:
-      print(f'error[{sys.exc_info()[2].tb_lineno}]: {type(e).__name__}:{e}', file=sys.stderr)
+      print(f'error[{sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     sys.exit(-2)
 
@@ -389,6 +389,7 @@ class JinjaFx():
     self.__g_row = 0 
     self.__g_vars = {}
     self.__g_warnings = []
+    self.__g_xlimit = 5000 if sandbox else 0
 
     outputs = {}
     delim = None
@@ -477,7 +478,7 @@ class JinjaFx():
               n = len(self.__g_datarows[0])
               fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
               recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
-  
+
               row = 0
               while fields:
                 if not isinstance(fields[0][0], int):
@@ -762,6 +763,10 @@ class JinjaFx():
           for g in re.split(r'(?<!\\)\|', m.group(1)):
             pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
             groups.append(groups[i] + [re.sub(r'\\([\|\(\[\)\]])', r'\1', g)])
+            self.__g_xlimit -= 1
+
+            if not self.__g_xlimit:
+              raise Exception("jinjafx.expand() - expansion limit reached")
 
           pofa.pop(i)
           groups.pop(i)
@@ -787,6 +792,10 @@ class JinjaFx():
 
           for n in range(start, end, step):
             pofa.append(pofa[i][:m.start(1) - 1] + str(n) + pofa[i][m.end(m.lastindex) + 1:])
+            self.__g_xlimit -= 1
+
+            if not self.__g_xlimit:
+              raise Exception("jinjafx.expand() - expansion limit reached")
 
             ngroups = list(groups[i])
             if group > 0 and group < len(ngroups):
@@ -825,6 +834,10 @@ class JinjaFx():
             for c in clist:
               pofa.append(pofa[i][:m.start(1) - 1] + c + pofa[i][m.end(1) + 1:])
               ngroups = list(groups[i])
+              self.__g_xlimit -= 1
+
+              if not self.__g_xlimit:
+                raise Exception("jinjafx.expand() - expansion limit reached")
   
               if group > 0 and group < len(ngroups):
                 ngroups[group] = ngroups[group].replace(m.group(), c, 1)
