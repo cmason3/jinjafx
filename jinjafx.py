@@ -407,6 +407,7 @@ class JinjaFx():
       if data.strip():
         jinjafx_filter = {}
         jinjafx_adjust_headers = str(gvars.get('jinjafx_adjust_headers', 'no')).strip().lower()
+        recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
   
         for l in data.splitlines():
           if l.strip() and not re.match(r'^[ \t]*#', l):
@@ -477,7 +478,6 @@ class JinjaFx():
   
               n = len(self.__g_datarows[0])
               fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
-              recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
 
               row = 0
               while fields:
