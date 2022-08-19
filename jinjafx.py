@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.13.1'
+__version__ = '1.13.2'
 
 def main():
   try:
@@ -639,6 +639,9 @@ class JinjaFx():
         outputs['0:_stderr_'] = []
         if self.__g_warnings:
           outputs['0:_stderr_'] = self.__g_warnings
+
+      except MemoryError:
+        raise MemoryError('not enough memory to process template')
 
       except Exception as e:
         if e.args[0].startswith('[jfx_exception] '):
