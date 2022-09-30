@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.13.2'
+__version__ = '1.13.3'
 
 def main():
   try:
@@ -998,10 +998,10 @@ class JinjaFx():
     tz = pytz.timezone(tz)
 
     if fmt is not None:
-      return datetime.datetime.utcnow().astimezone(tz).strftime(fmt)
+      return datetime.datetime.now(tz=tz).strftime(fmt)
 
     else:
-      return str(datetime.datetime.utcnow().astimezone(tz))
+      return str(datetime.datetime.now(tz=tz))
 
 
 class Vault():
