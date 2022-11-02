@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.13.3'
+__version__ = '1.14.0'
 
 def main():
   try:
@@ -592,6 +592,10 @@ class JinjaFx():
       env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       template = env.get_template(os.path.basename(template.name))
 
+    if gvars:
+      gyaml = env.from_string(yaml.dump(gvars)).render(gvars)
+      env.globals.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
@@ -610,9 +614,6 @@ class JinjaFx():
     },
       'lookup': self.__jfx_lookup
     })
-
-    if gvars:
-      env.globals.update(gvars)
 
     output = env.from_string(output)
 
