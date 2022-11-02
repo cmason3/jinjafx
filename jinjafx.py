@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.14.0'
+__version__ = '1.14.1'
 
 def main():
   try:
@@ -54,6 +54,7 @@ def main():
     -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
     -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                         - merge duplicate global variables (dicts and lists) instead of replacing
+    -x                         - disable Jinja2 recursive rendering of global variables
     -q                         - quiet mode - don't output version or usage information
 
 Environment Variables:
@@ -74,6 +75,7 @@ Environment Variables:
     parser.add_argument('-o', type=str)
     parser.add_argument('-od', type=str)
     parser.add_argument('-m', action='store_true')
+    parser.add_argument('-x', action='store_true')
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
 
@@ -261,7 +263,7 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
   
       args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
-      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
+      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed, render_vars=not args.x)
       ocount = 0
   
       if args.od is not None:
@@ -383,7 +385,7 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template, data, gvars, output, exts_dirs=[], sandbox=False):
+  def jinjafx(self, template, data, gvars, output, exts_dirs=[], sandbox=False, render_gvars=True):
     self.__g_datarows = []
     self.__g_dict = {}
     self.__g_row = 0 
@@ -593,8 +595,11 @@ class JinjaFx():
       template = env.get_template(os.path.basename(template.name))
 
     if gvars:
-      gyaml = env.from_string(yaml.dump(gvars)).render(gvars)
-      env.globals.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+      if render_gvars:
+        gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
+        env.globals.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+      else:
+        env.globals.update(gvars)
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
