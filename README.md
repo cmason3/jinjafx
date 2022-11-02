@@ -37,6 +37,7 @@ python3 -m pip install --upgrade --user jinjafx
     -encrypt [file] [...]     - encrypt files or stdin (if file omitted) using Ansible Vault
     -decrypt [file] [...]     - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                        - merge duplicate global variables (dicts and lists) instead of replacing
+    -xg                       - disable Jinja2 recursive rendering of global variables
     -q                        - quiet mode - don't output version or usage information
 
  Environment Variables:

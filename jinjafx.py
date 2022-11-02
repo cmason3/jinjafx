@@ -54,7 +54,7 @@ def main():
     -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
     -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                         - merge duplicate global variables (dicts and lists) instead of replacing
-    -x                         - disable Jinja2 recursive rendering of global variables
+    -xg                        - disable Jinja2 recursive rendering of global variables
     -q                         - quiet mode - don't output version or usage information
 
 Environment Variables:
@@ -75,7 +75,7 @@ Environment Variables:
     parser.add_argument('-o', type=str)
     parser.add_argument('-od', type=str)
     parser.add_argument('-m', action='store_true')
-    parser.add_argument('-x', action='store_true')
+    parser.add_argument('-xg', action='store_false')
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
 
@@ -263,7 +263,7 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
   
       args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
-      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed, render_vars=not args.x)
+      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed, render_gvars=args.xg)
       ocount = 0
   
       if args.od is not None:
