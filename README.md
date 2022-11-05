@@ -37,7 +37,6 @@ python3 -m pip install --upgrade --user jinjafx
     -encrypt [file] [...]     - encrypt files or stdin (if file omitted) using Ansible Vault
     -decrypt [file] [...]     - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                        - merge duplicate global variables (dicts and lists) instead of replacing
-    -xg                       - disable Jinja2 recursive rendering of global variables
     -q                        - quiet mode - don't output version or usage information
 
  Environment Variables:
@@ -320,6 +319,34 @@ There might be some situations where you can't control the format of the header 
 ```yaml
 ---
 jinjafx_adjust_headers: "yes" | "no" | "upper" | "lower"
+```
+
+- <b><code>jinjafx_render_vars</code></b>
+
+JinjaFx by default will attempt to render your `vars.yml` using Jinja2, which means the following syntax is valid:
+
+```yaml
+---
+fullname: "Firstname Surname"
+firstname: "{{ fullname.split()[0] }}"
+surname: "{{ fullname.split()[1] }}"
+```
+
+However, the rendering will happen after `vars.yml` has been processed by YAML, which means it must be valid YAML to start with - the following isn't valid YAML:
+
+
+```yaml
+---
+{% if x != y %}
+x: "{{ y }}"
+{% endif %}
+```
+
+If you wish to use literal braces within your YAML (i.e. '{{') then you need to ensure they are escaped or you can disable this functionaility by specifying the following variable in `vars.yml`:
+
+```yaml
+---
+jinjafx_render_vars: "no"
 ```
 
 - <b><code>jinjafx_filter</code></b> and <b><code>jinjafx_sort</code></b>
