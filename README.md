@@ -342,7 +342,7 @@ x: "{{ y }}"
 {% endif %}
 ```
 
-If you wish to use literal braces within your YAML (i.e. `{{`) then you need to ensure they are escaped or you can disable this functionaility by specifying the following variable in `vars.yml`:
+If you wish to use literal braces within your YAML (i.e. `{{`) then you need to ensure they are escaped, or you can disable this functionality by specifying the following variable in `vars.yml`:
 
 ```yaml
 ---
