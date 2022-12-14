@@ -588,6 +588,7 @@ class JinjaFx():
     if isinstance(template, str):
       env = jinja2env(extensions=gvars['jinja2_extensions'], **jinja2_options)
       template = env.from_string(template)
+
     else:
       env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       template = env.get_template(os.path.basename(template.name))
@@ -597,9 +598,9 @@ class JinjaFx():
 
       if jinjafx_render_vars != 'no':
         gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
-        env.globals.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
-      else:
-        env.globals.update(gvars)
+        gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
+
+      env.globals.update(gvars)
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
