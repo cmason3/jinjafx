@@ -20,7 +20,13 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidTag
-from lxml import etree
+
+try:
+  from lxml import etree
+  lxml = True
+
+except:
+  lxml = False
 
 import os, base64, random, re, crypt
 
@@ -166,17 +172,21 @@ class plugin(Extension):
     return crypt.crypt(string, '$6$' + salt)
 
   def __xpath(self, s_xml, s_path):
-    s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
-    xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
-    xml = xml.xpath(s_path, namespaces=xml.nsmap)
+    if lxml:
+      s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
+      xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
+      xml = xml.xpath(s_path, namespaces=xml.nsmap)
 
-    r = []
-    for x in xml:
-      if isinstance(x, str):
-        r.append(x.strip())
-      else:
-        r.append(etree.tostring(x, pretty_print=True).decode('utf-8').strip())
-    return r
+      r = []
+      for x in xml:
+        if isinstance(x, str):
+          r.append(x.strip())
+        else:
+          r.append(etree.tostring(x, pretty_print=True).decode('utf-8').strip())
+      return r
+
+    else:
+      raise Exception("'xpath' filter requires the 'lxml' python module")
 
 class Vaulty():
   def __init__(self):
