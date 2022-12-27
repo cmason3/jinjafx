@@ -166,6 +166,7 @@ Environment Variables:
         with open(args.dt.name, 'rt') as f:
           dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
           args.t = dt['template']
+          gv = ''
   
           if 'datasets' in dt:
             if args.ds is not None:
@@ -179,7 +180,10 @@ Environment Variables:
               if len(matches) == 1:
                 if 'data' in dt['datasets'][matches[0]]:
                   dt['data'] = dt['datasets'][matches[0]]['data']
-  
+
+                if 'global' in dt:
+                  gv = dt['global']
+
                 if 'vars' in dt['datasets'][matches[0]]:
                   dt['vars'] = dt['datasets'][matches[0]]['vars']
   
@@ -195,6 +199,11 @@ Environment Variables:
           if 'data' in dt:
             data = dt['data']
   
+          if gv:
+            gyaml = __decrypt_vault(vpw, gv)
+            if gyaml:
+              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
           if 'vars' in dt:
             gyaml = __decrypt_vault(vpw, dt['vars'])
             if gyaml:

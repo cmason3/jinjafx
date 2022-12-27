@@ -440,6 +440,9 @@ You also have the option to specify different DataSets within a DataTemplate - t
 ```yaml
 ---
 dt:
+  global: |2
+    ... GLOBAL.YML ...
+
   datasets:
     "Test":
       data: |2
