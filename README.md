@@ -630,7 +630,7 @@ This filter will hash a string using Cisco's Type 9 hashing scheme (SCrypt). An 
 
 This filter will hash a string using Juniper's Type 6 hashing scheme (Unix Crypt based SHA512). An optional "salt" (length must be 8 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
-- <b><code>xpath("query")</code></b>
+- <b><code>xpath("query")</code></b> (requires `lxml` python module)
 
 This filter is used to perform an xpath query on an XML based output and return the matching sections as a list (if you use namespaces you need to ensure you define them using the `xmlns:` syntax), e.g:
 
