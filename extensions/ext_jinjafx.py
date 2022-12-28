@@ -27,7 +27,7 @@ try:
 except:
   lxml = False
 
-import os, base64, random, re
+import os, base64, random, re, hashlib
 
 class plugin(Extension):
   def __init__(self, environment):
@@ -175,11 +175,11 @@ class plugin(Extension):
     key = key.encode('utf-8')
     klen = len(key)
 
-    h = hashes.Hash(getattr(hashes, 'SHA512')())
-    alt_h = hashes.Hash(getattr(hashes, 'SHA512')())
+    h = hashlib.sha512()
+    alt_h = hashlib.sha512()
 
     alt_h.update(key + salt.encode('utf-8') + key)
-    alt_r = alt_h.finalize()
+    alt_r = alt_h.digest()
 
     h.update(key + salt.encode('utf-8'))
 
@@ -196,27 +196,27 @@ class plugin(Extension):
 
       klen >>= 1
 
-    alt_r = h.finalize()
+    alt_r = h.digest()
 
-    h = hashes.Hash(getattr(hashes, 'SHA512')())
-    alt_h = hashes.Hash(getattr(hashes, 'SHA512')())
+    h = hashlib.sha512()
+    alt_h = hashlib.sha512()
 
     for i in range(len(key)):
       h.update(key)
 
-    t = h.finalize()
+    t = h.digest()
     p_bytes = t * (len(key) // 64)
     p_bytes += t[:(len(key) % 64)]
 
     for i in range(16 + alt_r[0]):
       alt_h.update(salt.encode('utf-8'))
 
-    t = alt_h.finalize()
+    t = alt_h.digest()
     s_bytes = t * (len(salt) // 64)
     s_bytes += t[:(len(salt) % 64)]
 
     for i in range(5000):
-      h = hashes.Hash(getattr(hashes, 'SHA512')())
+      h = hashlib.sha512()
 
       h.update(p_bytes if i & 1 else alt_r)
 
@@ -228,7 +228,7 @@ class plugin(Extension):
 
       h.update(alt_r if i & 1 else p_bytes)
 
-      alt_r = h.finalize()
+      alt_r = h.digest()
 
     ret= []
     ret.append(b64_from_24bit(alt_r[0], alt_r[21], alt_r[42], 4))
