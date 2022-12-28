@@ -18,7 +18,6 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidTag
 
 try:
@@ -28,7 +27,7 @@ try:
 except:
   lxml = False
 
-import os, base64, random, re, crypt
+import os, base64, random, re
 
 class plugin(Extension):
   def __init__(self, environment):
@@ -159,8 +158,102 @@ class plugin(Extension):
     elif len(salt) != 14 or any(c not in self.__mod_b64chars for c in salt):
       raise Exception('invalid salt provided to cisco9hash')
 
-    h = Scrypt(salt.encode('utf-8'), 32, 16384, 1, 1, default_backend()).derive(string.encode('utf-8'))
+    h = Scrypt(salt.encode('utf-8'), 32, 16384, 1, 1).derive(string.encode('utf-8'))
     return '$9$' + salt + '$' + base64.b64encode(h).decode('utf-8').translate(self.__mod_b64table)[:-1]
+
+  def __sha512_crypt(self, key, salt):
+    def b64_from_24bit(b2, b1, b0, n):
+      index = b2 << 16 | b1 << 8 | b0
+
+      ret = []
+      for i in range(n):
+        ret.append(self.__mod_b64chars[index & 0x3f])
+        index >>= 6
+      
+      return ''.join(ret)
+
+    key = key.encode('utf-8')
+    klen = len(key)
+
+    h = hashes.Hash(getattr(hashes, 'SHA512')())
+    alt_h = hashes.Hash(getattr(hashes, 'SHA512')())
+
+    alt_h.update(key + salt.encode('utf-8') + key)
+    alt_r = alt_h.finalize()
+
+    h.update(key + salt.encode('utf-8'))
+
+    for i in range(klen // 64):
+      h.update(alt_r)
+
+    h.update(alt_r[:(klen % 64)])
+
+    while klen > 0:
+      if klen & 1 == 0:
+        h.update(key)
+      else:
+        h.update(alt_r)
+
+      klen >>= 1
+
+    alt_r = h.finalize()
+
+    h = hashes.Hash(getattr(hashes, 'SHA512')())
+    alt_h = hashes.Hash(getattr(hashes, 'SHA512')())
+
+    for i in range(len(key)):
+      h.update(key)
+
+    t = h.finalize()
+    p_bytes = t * (len(key) // 64)
+    p_bytes += t[:(len(key) % 64)]
+
+    for i in range(16 + alt_r[0]):
+      alt_h.update(salt.encode('utf-8'))
+
+    t = alt_h.finalize()
+    s_bytes = t * (len(salt) // 64)
+    s_bytes += t[:(len(salt) % 64)]
+
+    for i in range(5000):
+      h = hashes.Hash(getattr(hashes, 'SHA512')())
+
+      h.update(p_bytes if i & 1 else alt_r)
+
+      if i % 3:
+        h.update(s_bytes)
+
+      if i % 7:
+        h.update(p_bytes)
+
+      h.update(alt_r if i & 1 else p_bytes)
+
+      alt_r = h.finalize()
+
+    ret= []
+    ret.append(b64_from_24bit(alt_r[0], alt_r[21], alt_r[42], 4))
+    ret.append(b64_from_24bit(alt_r[22], alt_r[43], alt_r[1], 4))
+    ret.append(b64_from_24bit(alt_r[44], alt_r[2], alt_r[23], 4))
+    ret.append(b64_from_24bit(alt_r[3], alt_r[24], alt_r[45], 4))
+    ret.append(b64_from_24bit(alt_r[25], alt_r[46], alt_r[4], 4))
+    ret.append(b64_from_24bit(alt_r[47], alt_r[5], alt_r[26], 4))
+    ret.append(b64_from_24bit(alt_r[6], alt_r[27], alt_r[48], 4))
+    ret.append(b64_from_24bit(alt_r[28], alt_r[49], alt_r[7], 4))
+    ret.append(b64_from_24bit(alt_r[50], alt_r[8], alt_r[29], 4))
+    ret.append(b64_from_24bit(alt_r[9], alt_r[30], alt_r[51], 4))
+    ret.append(b64_from_24bit(alt_r[31], alt_r[52], alt_r[10], 4))
+    ret.append(b64_from_24bit(alt_r[53], alt_r[11], alt_r[32], 4))
+    ret.append(b64_from_24bit(alt_r[12], alt_r[33], alt_r[54], 4))
+    ret.append(b64_from_24bit(alt_r[34], alt_r[55], alt_r[13], 4))
+    ret.append(b64_from_24bit(alt_r[56], alt_r[14], alt_r[35], 4))
+    ret.append(b64_from_24bit(alt_r[15], alt_r[36], alt_r[57], 4))
+    ret.append(b64_from_24bit(alt_r[37], alt_r[58], alt_r[16], 4))
+    ret.append(b64_from_24bit(alt_r[59], alt_r[17], alt_r[38], 4))
+    ret.append(b64_from_24bit(alt_r[18], alt_r[39], alt_r[60], 4))
+    ret.append(b64_from_24bit(alt_r[40], alt_r[61], alt_r[19], 4))
+    ret.append(b64_from_24bit(alt_r[62], alt_r[20], alt_r[41], 4))
+    ret.append(b64_from_24bit(0, 0, alt_r[63], 2))
+    return '$6$' + salt + '$' + ''.join(ret)
 
   def __junos6hash(self, string, salt=None):
     if salt is None:
@@ -169,7 +262,7 @@ class plugin(Extension):
     elif len(salt) != 8 or any(c not in self.__mod_b64chars for c in salt):
       raise Exception('invalid salt provided to junos6hash')
 
-    return crypt.crypt(string, '$6$' + salt)
+    return self.__sha512_crypt(string, salt)
 
   def __xpath(self, s_xml, s_path):
     if lxml:
@@ -202,7 +295,7 @@ class Vaulty():
     if salt is None:
       salt = os.urandom(16)
   
-    key = Scrypt(salt, 32, 2**16, 8, 1, default_backend()).derive(password.encode('utf-8'))
+    key = Scrypt(salt, 32, 2**16, 8, 1).derive(password.encode('utf-8'))
     self.__kcache[ckey] = [salt, key]
     return salt, key
 
