@@ -50,16 +50,16 @@ class plugin(Extension):
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
 
   def __expand_snmpv3_key(self, password, algorithm):
-    h = hashes.Hash(getattr(hashes, algorithm.upper())())
+    h = hashlib.new(algorithm)
     h.update(((password * (1048576 // len(password))) + password[:1048576 % len(password)]).encode('utf-8'))
-    return h.finalize()
+    return h.digest()
 
   def __cisco_snmpv3_key(self, password, engineid, algorithm='sha1'):
     ekey = self.__expand_snmpv3_key(password, algorithm)
 
-    h = hashes.Hash(getattr(hashes, algorithm.upper())())
+    h = hashlib.new(algorithm)
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
-    hexdigest = h.finalize().hex()
+    hexdigest = h.hexdigest()
     return ':'.join([hexdigest[i:i + 2] for i in range(0, len(hexdigest), 2)])
 
   def __junos_snmpv3_key(self, password, engineid, algorithm='sha1', prefix='80000a4c'):
@@ -74,9 +74,9 @@ class plugin(Extension):
     else:
       engineid = prefix + '04' + ''.join("{:02x}".format(ord(c)) for c in engineid)
 
-    h = hashes.Hash(getattr(hashes, algorithm.upper())())
+    h = hashlib.new(algorithm)
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
-    return h.finalize().hex()
+    return h.hexdigest()
 
   def __cisco7encode(self, string, seed=False):
     KEY = 'dsfd;kfoA,.iyewrkldJKDHSUBsgvca69834ncxv9873254k;fg87'
