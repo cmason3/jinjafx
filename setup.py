@@ -13,13 +13,13 @@ README = re.sub(r'<p.+?</p>', '', README, flags=re.DOTALL)
 
 install_requires = ["jinja2>=3.0", "pytz", "pyyaml", "cryptography>=3.1", "netaddr"]
 
-if sys.version_info.major == 3 and sys.version_info.minor == 6:
-  install_requires = ["jinja2>=3.0,<3.1", "pytz", "pyyaml", "cryptography>=3.1,<37.0", "netaddr"]
+# if sys.version_info.major == 3 and sys.version_info.minor == 6:
+#   install_requires = ["jinja2>=3.0,<3.1", "pytz", "pyyaml", "cryptography>=3.1,<37.0", "netaddr"]
 
 setup(
   name="jinjafx",
   version=__version__,
-  python_requires=">=3.6",
+  python_requires=">=3.7",
   description="JinjaFx - Jinja2 Templating Tool",
   long_description=README,
   long_description_content_type="text/markdown",
