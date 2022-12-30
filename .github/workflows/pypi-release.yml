@@ -29,26 +29,26 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-  build-n-publish-py36:
-    name: "build-n-publish-py36"
-    runs-on: ubuntu-20.04
-
-    steps:
-      - name: "checkout repository"
-        uses: actions/checkout@v3
-
-      - name: "setup python"
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.6
-
-      - name: "install wheel"
-        run: "python -m pip install --user wheel"
-
-      - name: "build distribution"
-        run: "python setup.py bdist_wheel --python-tag py36"
-
-      - name: "publish to pypi"
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+#  build-n-publish-py36:
+#    name: "build-n-publish-py36"
+#    runs-on: ubuntu-20.04
+#
+#    steps:
+#      - name: "checkout repository"
+#        uses: actions/checkout@v3
+#
+#      - name: "setup python"
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: 3.6
+#
+#      - name: "install wheel"
+#        run: "python -m pip install --user wheel"
+#
+#      - name: "build distribution"
+#        run: "python setup.py bdist_wheel --python-tag py36"
+#
+#      - name: "publish to pypi"
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          password: ${{ secrets.PYPI_API_TOKEN }}
