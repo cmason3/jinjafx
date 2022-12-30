@@ -30,6 +30,8 @@ from cryptography.exceptions import InvalidSignature
 __version__ = '1.15.0'
 
 def main():
+  exc_source = None
+
   try:
     if not any(x in ['-q', '-encrypt', '-decrypt'] for x in sys.argv):
       print(f'JinjaFx v{__version__} - Jinja2 Templating Tool')
@@ -91,7 +93,6 @@ Environment Variables:
     gvars = {}
     data = None
     vpw = [ None ]
-    exc_source = None
 
     if args.encrypt is not None:
       if not args.encrypt:
