@@ -25,7 +25,6 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.primitives.ciphers import Cipher
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
-from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
 __version__ = '1.15.0'
@@ -341,13 +340,12 @@ Environment Variables:
     sys.exit(-1)
 
   except jinja2.TemplateError as e:
-    t = traceback.format_exc(-1)
-    m = re.search(r'File "(.+)", line ([0-9]+),', t, re.IGNORECASE | re.MULTILINE)
+    m = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-1), re.IGNORECASE | re.MULTILINE)
     print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
     sys.exit(-2)
 
   except Exception as e:
-    print(f'error[{exc_source if exc_source else sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+    print(f'error[{exc_source or sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
     sys.exit(-2)
 
 
@@ -1047,7 +1045,7 @@ class Vault():
     if b_salt is None:
       b_salt = os.urandom(32)
 
-    b_key = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(b_password)
+    b_key = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000).derive(b_password)
     return b_salt, b_key
 
   def encrypt(self, b_string, password):
@@ -1057,10 +1055,10 @@ class Vault():
     b_salt, b_derivedkey = self.__derive_key(password.encode('utf-8'))
 
     p = PKCS7(128).padder()
-    e = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).encryptor()
+    e = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80])).encryptor()
     b_ciphertext = e.update(p.update(b_string) + p.finalize()) + e.finalize()
 
-    hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+    hmac = HMAC(b_derivedkey[32:64], hashes.SHA256())
     hmac.update(b_ciphertext)
     b_hmac = hmac.finalize()
 
@@ -1080,7 +1078,7 @@ class Vault():
           b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
           b_derivedkey = self.__derive_key(password.encode('utf-8'), bytes.fromhex(b_salt.decode('utf-8')))[1]
   
-          hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+          hmac = HMAC(b_derivedkey[32:64], hashes.SHA256())
           hmac.update(b_ciphertext)
     
           try:
@@ -1090,7 +1088,7 @@ class Vault():
             raise Exception('invalid ansible vault password')
     
           u = PKCS7(128).unpadder()
-          d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
+          d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80])).decryptor()
           b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
           return b_plaintext
     
