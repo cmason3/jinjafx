@@ -15,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, io, importlib, argparse, re, getpass, datetime, traceback
+import sys, os, io, importlib.util, argparse, re, getpass, datetime, traceback
 import jinja2, jinja2.sandbox, yaml, pytz
 
 from cryptography.hazmat.primitives import hashes
@@ -25,12 +25,13 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.primitives.ciphers import Cipher
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
-from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.14.3'
+__version__ = '1.15.0'
 
 def main():
+  exc_source = None
+
   try:
     if not any(x in ['-q', '-encrypt', '-decrypt'] for x in sys.argv):
       print(f'JinjaFx v{__version__} - Jinja2 Templating Tool')
@@ -164,8 +165,15 @@ Environment Variables:
 
       if args.dt is not None:
         with open(args.dt.name, 'rt') as f:
-          dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
+          try:
+            dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
+
+          except Exception as e:
+            exc_source = args.dt.name
+            raise
+         
           args.t = dt['template']
+          gv = ''
   
           if 'datasets' in dt:
             if args.ds is not None:
@@ -179,7 +187,10 @@ Environment Variables:
               if len(matches) == 1:
                 if 'data' in dt['datasets'][matches[0]]:
                   dt['data'] = dt['datasets'][matches[0]]['data']
-  
+
+                if 'global' in dt:
+                  gv = dt['global']
+
                 if 'vars' in dt['datasets'][matches[0]]:
                   dt['vars'] = dt['datasets'][matches[0]]['vars']
   
@@ -195,10 +206,25 @@ Environment Variables:
           if 'data' in dt:
             data = dt['data']
   
+          if gv:
+            gyaml = __decrypt_vault(vpw, gv)
+            if gyaml:
+              try:
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
+              except Exception as e:
+                exc_source = 'dt:global'
+                raise
+
           if 'vars' in dt:
             gyaml = __decrypt_vault(vpw, dt['vars'])
             if gyaml:
-              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+              try:
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
+              except Exception as e:
+                exc_source = 'dt:vars'
+                raise
   
       elif args.d is not None:
         with open(args.d.name, 'rt') as f:
@@ -208,10 +234,15 @@ Environment Variables:
         for g in args.g:
           with open(g.name, 'rt') as f:
             gyaml = __decrypt_vault(vpw, f.read())
-            if args.m == True:
-              __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
-            else:
-              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+            try:
+              if args.m == True:
+                __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
+              else:
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
+            except Exception as e:
+              exc_source = g.name
+              raise
 
       if args.var is not None:
         for v in args.var:
@@ -309,14 +340,13 @@ Environment Variables:
   except KeyboardInterrupt:
     sys.exit(-1)
 
-  except Exception as e:
-    tb = traceback.format_exc()
-    match = re.search(r'^[ \t]*File "(.+)", line ([0-9]+), in template$', tb, re.IGNORECASE | re.MULTILINE)
-    if match:
-      print(f'error[{match.group(1)}:{match.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
-    else:
-      print(f'error[{sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+  except jinja2.TemplateError as e:
+    m = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-1), re.IGNORECASE | re.MULTILINE)
+    print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+    sys.exit(-2)
 
+  except Exception as e:
+    print(f'error[{exc_source or sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
     sys.exit(-2)
 
 
@@ -1016,7 +1046,7 @@ class Vault():
     if b_salt is None:
       b_salt = os.urandom(32)
 
-    b_key = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000, default_backend()).derive(b_password)
+    b_key = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000).derive(b_password)
     return b_salt, b_key
 
   def encrypt(self, b_string, password):
@@ -1026,10 +1056,10 @@ class Vault():
     b_salt, b_derivedkey = self.__derive_key(password.encode('utf-8'))
 
     p = PKCS7(128).padder()
-    e = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).encryptor()
+    e = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80])).encryptor()
     b_ciphertext = e.update(p.update(b_string) + p.finalize()) + e.finalize()
 
-    hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+    hmac = HMAC(b_derivedkey[32:64], hashes.SHA256())
     hmac.update(b_ciphertext)
     b_hmac = hmac.finalize()
 
@@ -1049,7 +1079,7 @@ class Vault():
           b_ciphertext = bytes.fromhex(b_ciphertext.decode('utf-8'))
           b_derivedkey = self.__derive_key(password.encode('utf-8'), bytes.fromhex(b_salt.decode('utf-8')))[1]
   
-          hmac = HMAC(b_derivedkey[32:64], hashes.SHA256(), default_backend())
+          hmac = HMAC(b_derivedkey[32:64], hashes.SHA256())
           hmac.update(b_ciphertext)
     
           try:
@@ -1059,7 +1089,7 @@ class Vault():
             raise Exception('invalid ansible vault password')
     
           u = PKCS7(128).unpadder()
-          d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80]), default_backend()).decryptor()
+          d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80])).decryptor()
           b_plaintext = u.update(d.update(b_ciphertext) + d.finalize()) + u.finalize()
           return b_plaintext
     

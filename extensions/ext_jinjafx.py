@@ -18,11 +18,16 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidTag
-from lxml import etree
 
-import os, base64, random, re, crypt
+try:
+  from lxml import etree
+  lxml = True
+
+except:
+  lxml = False
+
+import os, base64, random, re, hashlib
 
 class plugin(Extension):
   def __init__(self, environment):
@@ -45,16 +50,16 @@ class plugin(Extension):
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
 
   def __expand_snmpv3_key(self, password, algorithm):
-    h = hashes.Hash(getattr(hashes, algorithm.upper())())
+    h = hashlib.new(algorithm)
     h.update(((password * (1048576 // len(password))) + password[:1048576 % len(password)]).encode('utf-8'))
-    return h.finalize()
+    return h.digest()
 
   def __cisco_snmpv3_key(self, password, engineid, algorithm='sha1'):
     ekey = self.__expand_snmpv3_key(password, algorithm)
 
-    h = hashes.Hash(getattr(hashes, algorithm.upper())())
+    h = hashlib.new(algorithm)
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
-    hexdigest = h.finalize().hex()
+    hexdigest = h.hexdigest()
     return ':'.join([hexdigest[i:i + 2] for i in range(0, len(hexdigest), 2)])
 
   def __junos_snmpv3_key(self, password, engineid, algorithm='sha1', prefix='80000a4c'):
@@ -69,9 +74,9 @@ class plugin(Extension):
     else:
       engineid = prefix + '04' + ''.join("{:02x}".format(ord(c)) for c in engineid)
 
-    h = hashes.Hash(getattr(hashes, algorithm.upper())())
+    h = hashlib.new(algorithm)
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
-    return h.finalize().hex()
+    return h.hexdigest()
 
   def __cisco7encode(self, string, seed=False):
     KEY = 'dsfd;kfoA,.iyewrkldJKDHSUBsgvca69834ncxv9873254k;fg87'
@@ -153,8 +158,102 @@ class plugin(Extension):
     elif len(salt) != 14 or any(c not in self.__mod_b64chars for c in salt):
       raise Exception('invalid salt provided to cisco9hash')
 
-    h = Scrypt(salt.encode('utf-8'), 32, 16384, 1, 1, default_backend()).derive(string.encode('utf-8'))
+    h = Scrypt(salt.encode('utf-8'), 32, 16384, 1, 1).derive(string.encode('utf-8'))
     return '$9$' + salt + '$' + base64.b64encode(h).decode('utf-8').translate(self.__mod_b64table)[:-1]
+
+  def __sha512_crypt(self, key, salt):
+    def b64_from_24bit(b2, b1, b0, n):
+      index = b2 << 16 | b1 << 8 | b0
+
+      ret = []
+      for i in range(n):
+        ret.append(self.__mod_b64chars[index & 0x3f])
+        index >>= 6
+      
+      return ''.join(ret)
+
+    key = key.encode('utf-8')
+    klen = len(key)
+
+    h = hashlib.sha512()
+    alt_h = hashlib.sha512()
+
+    alt_h.update(key + salt.encode('utf-8') + key)
+    alt_r = alt_h.digest()
+
+    h.update(key + salt.encode('utf-8'))
+
+    for i in range(klen // 64):
+      h.update(alt_r)
+
+    h.update(alt_r[:(klen % 64)])
+
+    while klen > 0:
+      if klen & 1 == 0:
+        h.update(key)
+      else:
+        h.update(alt_r)
+
+      klen >>= 1
+
+    alt_r = h.digest()
+
+    h = hashlib.sha512()
+    alt_h = hashlib.sha512()
+
+    for i in range(len(key)):
+      h.update(key)
+
+    t = h.digest()
+    p_bytes = t * (len(key) // 64)
+    p_bytes += t[:(len(key) % 64)]
+
+    for i in range(16 + alt_r[0]):
+      alt_h.update(salt.encode('utf-8'))
+
+    t = alt_h.digest()
+    s_bytes = t * (len(salt) // 64)
+    s_bytes += t[:(len(salt) % 64)]
+
+    for i in range(5000):
+      h = hashlib.sha512()
+
+      h.update(p_bytes if i & 1 else alt_r)
+
+      if i % 3:
+        h.update(s_bytes)
+
+      if i % 7:
+        h.update(p_bytes)
+
+      h.update(alt_r if i & 1 else p_bytes)
+
+      alt_r = h.digest()
+
+    ret= []
+    ret.append(b64_from_24bit(alt_r[0], alt_r[21], alt_r[42], 4))
+    ret.append(b64_from_24bit(alt_r[22], alt_r[43], alt_r[1], 4))
+    ret.append(b64_from_24bit(alt_r[44], alt_r[2], alt_r[23], 4))
+    ret.append(b64_from_24bit(alt_r[3], alt_r[24], alt_r[45], 4))
+    ret.append(b64_from_24bit(alt_r[25], alt_r[46], alt_r[4], 4))
+    ret.append(b64_from_24bit(alt_r[47], alt_r[5], alt_r[26], 4))
+    ret.append(b64_from_24bit(alt_r[6], alt_r[27], alt_r[48], 4))
+    ret.append(b64_from_24bit(alt_r[28], alt_r[49], alt_r[7], 4))
+    ret.append(b64_from_24bit(alt_r[50], alt_r[8], alt_r[29], 4))
+    ret.append(b64_from_24bit(alt_r[9], alt_r[30], alt_r[51], 4))
+    ret.append(b64_from_24bit(alt_r[31], alt_r[52], alt_r[10], 4))
+    ret.append(b64_from_24bit(alt_r[53], alt_r[11], alt_r[32], 4))
+    ret.append(b64_from_24bit(alt_r[12], alt_r[33], alt_r[54], 4))
+    ret.append(b64_from_24bit(alt_r[34], alt_r[55], alt_r[13], 4))
+    ret.append(b64_from_24bit(alt_r[56], alt_r[14], alt_r[35], 4))
+    ret.append(b64_from_24bit(alt_r[15], alt_r[36], alt_r[57], 4))
+    ret.append(b64_from_24bit(alt_r[37], alt_r[58], alt_r[16], 4))
+    ret.append(b64_from_24bit(alt_r[59], alt_r[17], alt_r[38], 4))
+    ret.append(b64_from_24bit(alt_r[18], alt_r[39], alt_r[60], 4))
+    ret.append(b64_from_24bit(alt_r[40], alt_r[61], alt_r[19], 4))
+    ret.append(b64_from_24bit(alt_r[62], alt_r[20], alt_r[41], 4))
+    ret.append(b64_from_24bit(0, 0, alt_r[63], 2))
+    return '$6$' + salt + '$' + ''.join(ret)
 
   def __junos6hash(self, string, salt=None):
     if salt is None:
@@ -163,20 +262,24 @@ class plugin(Extension):
     elif len(salt) != 8 or any(c not in self.__mod_b64chars for c in salt):
       raise Exception('invalid salt provided to junos6hash')
 
-    return crypt.crypt(string, '$6$' + salt)
+    return self.__sha512_crypt(string, salt)
 
   def __xpath(self, s_xml, s_path):
-    s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
-    xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
-    xml = xml.xpath(s_path, namespaces=xml.nsmap)
+    if lxml:
+      s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
+      xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
+      xml = xml.xpath(s_path, namespaces=xml.nsmap)
 
-    r = []
-    for x in xml:
-      if isinstance(x, str):
-        r.append(x.strip())
-      else:
-        r.append(etree.tostring(x, pretty_print=True).decode('utf-8').strip())
-    return r
+      r = []
+      for x in xml:
+        if isinstance(x, str):
+          r.append(x.strip())
+        else:
+          r.append(etree.tostring(x, pretty_print=True).decode('utf-8').strip())
+      return r
+
+    else:
+      raise Exception("'xpath' filter requires the 'lxml' python module")
 
 class Vaulty():
   def __init__(self):
@@ -192,7 +295,7 @@ class Vaulty():
     if salt is None:
       salt = os.urandom(16)
   
-    key = Scrypt(salt, 32, 2**16, 8, 1, default_backend()).derive(password.encode('utf-8'))
+    key = Scrypt(salt, 32, 2**16, 8, 1).derive(password.encode('utf-8'))
     self.__kcache[ckey] = [salt, key]
     return salt, key
 

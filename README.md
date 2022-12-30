@@ -1,5 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
-![Python](https://img.shields.io/badge/python-≥&nbsp;3.6-brightgreen)
+![Python](https://img.shields.io/badge/python-≥&nbsp;3.7-brightgreen)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
 &nbsp;
 <h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
@@ -440,6 +440,9 @@ You also have the option to specify different DataSets within a DataTemplate - t
 ```yaml
 ---
 dt:
+  global: |2
+    ... GLOBAL.YML ...
+
   datasets:
     "Test":
       data: |2
@@ -627,7 +630,7 @@ This filter will hash a string using Cisco's Type 9 hashing scheme (SCrypt). An 
 
 This filter will hash a string using Juniper's Type 6 hashing scheme (Unix Crypt based SHA512). An optional "salt" (length must be 8 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
-- <b><code>xpath("query")</code></b>
+- <b><code>xpath("query")</code></b> (requires `lxml` python module)
 
 This filter is used to perform an xpath query on an XML based output and return the matching sections as a list (if you use namespaces you need to ensure you define them using the `xmlns:` syntax), e.g:
 
