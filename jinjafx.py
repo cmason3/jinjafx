@@ -92,6 +92,7 @@ Environment Variables:
     gvars = {}
     data = None
     vpw = [ None ]
+    exc_source = None
 
     if args.encrypt is not None:
       if not args.encrypt:
@@ -164,7 +165,13 @@ Environment Variables:
 
       if args.dt is not None:
         with open(args.dt.name, 'rt') as f:
-          dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
+          try:
+            dt = yaml.load(f.read(), Loader=yaml.SafeLoader)['dt']
+
+          except Exception as e:
+            exc_source = args.dt.name
+            raise
+         
           args.t = dt['template']
           gv = ''
   
@@ -202,12 +209,22 @@ Environment Variables:
           if gv:
             gyaml = __decrypt_vault(vpw, gv)
             if gyaml:
-              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+              try:
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
+              except Exception as e:
+                exc_source = 'global'
+                raise
 
           if 'vars' in dt:
             gyaml = __decrypt_vault(vpw, dt['vars'])
             if gyaml:
-              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+              try:
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
+              except Exception as e:
+                exc_source = 'vars'
+                raise
   
       elif args.d is not None:
         with open(args.d.name, 'rt') as f:
@@ -217,10 +234,15 @@ Environment Variables:
         for g in args.g:
           with open(g.name, 'rt') as f:
             gyaml = __decrypt_vault(vpw, f.read())
-            if args.m == True:
-              __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
-            else:
-              gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+            try:
+              if args.m == True:
+                __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
+              else:
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+
+            except Exception as e:
+              exc_source = g.name
+              raise
 
       if args.var is not None:
         for v in args.var:
@@ -318,14 +340,14 @@ Environment Variables:
   except KeyboardInterrupt:
     sys.exit(-1)
 
-  except Exception as e:
-    tb = traceback.format_exc()
-    match = re.search(r'^[ \t]*File "(.+)", line ([0-9]+), in template$', tb, re.IGNORECASE | re.MULTILINE)
-    if match:
-      print(f'error[{match.group(1)}:{match.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
-    else:
-      print(f'error[{sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+  except jinja2.TemplateError as e:
+    t = traceback.format_exc(-1)
+    m = re.search(r'File "(.+)", line ([0-9]+),', t, re.IGNORECASE | re.MULTILINE)
+    print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+    sys.exit(-2)
 
+  except Exception as e:
+    print(f'error[{exc_source if exc_source else sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
     sys.exit(-2)
 
 
