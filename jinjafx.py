@@ -15,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, io, importlib, argparse, re, getpass, datetime, traceback
+import sys, os, io, importlib.util, argparse, re, getpass, datetime, traceback
 import jinja2, jinja2.sandbox, yaml, pytz
 
 from cryptography.hazmat.primitives import hashes
@@ -213,7 +213,7 @@ Environment Variables:
                 gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
               except Exception as e:
-                exc_source = 'global'
+                exc_source = 'dt:global'
                 raise
 
           if 'vars' in dt:
@@ -223,7 +223,7 @@ Environment Variables:
                 gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
               except Exception as e:
-                exc_source = 'vars'
+                exc_source = 'dt:vars'
                 raise
   
       elif args.d is not None:
