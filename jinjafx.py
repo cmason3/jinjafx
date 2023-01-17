@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.15.1'
+__version__ = '1.15.2'
 
 def main():
   exc_source = None
@@ -342,6 +342,11 @@ Environment Variables:
 
   except jinja2.TemplateError as e:
     m = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-1), re.IGNORECASE | re.MULTILINE)
+    print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+    sys.exit(-2)
+
+  except (JinjaFx.TemplateError, JinjaFx.TemplateException) as e:
+    m = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-2), re.IGNORECASE | re.MULTILINE)
     print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
     sys.exit(-2)
 
@@ -680,12 +685,12 @@ class JinjaFx():
       except MemoryError:
         raise MemoryError('not enough memory to process template')
 
+      except JinjaFx.TemplateException:
+        raise
+
       except Exception as e:
-        if e.args[0].startswith('[jfx_exception] '):
-          e.args = (e.args[0][16:],)
-        else:
-          if len(e.args) >= 1 and self.__g_row:
-            e.args = (e.args[0] + ' at data row ' + str(self.__g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
+        if len(e.args) >= 1 and self.__g_row:
+          e.args = (e.args[0] + ' at data row ' + str(self.__g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
       stack = ['0:' + output.render(rowdata)]
@@ -756,6 +761,14 @@ class JinjaFx():
     return outputs
 
 
+  class TemplateError(Exception):
+    pass
+
+
+  class TemplateException(Exception):
+    pass
+
+
   def __find_re_match(self, o, v, default=0):
     for rx in o:
       if rx[0].match(v):
@@ -764,19 +777,48 @@ class JinjaFx():
     return default
 
 
-  def __jfx_lookup(self, method, variable, default=None):
+  def __jfx_lookup(self, method, *args):
     if method == 'vars' or method == 'ansible.builtin.vars':
-      if variable in self.__g_vars:
-        return self.__g_vars[variable]
+      if args:
+        default = args[1] if len(args) > 1 else None
 
-      elif default is not None:
-        return default
+        if args[0] in self.__g_vars:
+          return self.__g_vars[args[0]]
+
+        elif default is not None:
+          return default
   
+        else:
+          raise JinjaFx.TemplateError(f'\'lookup\' variable \'{args[0]}\' is undefined')
+
       else:
-        raise jinja2.exceptions.UndefinedError(f'\'lookup\' variable \'{variable}\' is undefined')
+        raise JinjaFx.TemplateError(f'\'lookup\' method doesn\'t have enough arguments')
+
+    elif method == 'varnames' or method == 'ansible.builtin.varnames':
+      if args:
+        ret = []
+
+        for term in args:
+          try:
+            tre = re.compile(term)
+        
+          except Exception:
+            tre = None
+
+          if tre is None:
+            raise JinjaFx.TemplateError(f'\'lookup\' method doesn\'t have a valid search regex')
+
+          for varname in self.__g_vars:
+            if tre.search(varname):
+              ret.append(varname)
+
+        return ret
+
+      else:
+        raise JinjaFx.TemplateError(f'\'lookup\' method doesn\'t have enough arguments')
 
     else:
-      raise jinja2.exceptions.UndefinedError(f'\'lookup\' with method \'{method}\' is undefined')
+      raise JinjaFx.TemplateError(f'\'lookup\' method \'{method}\' is undefined')
 
 
   def __jfx_data_counter(self, m, orow, col, row):
@@ -908,7 +950,7 @@ class JinjaFx():
         if f in self.__g_datarows[0]:
           fpos.append(self.__g_datarows[0].index(f) + 1)
         else:
-          raise Exception(f'invalid field "{f}" passed to jinjafx.{forl}()')
+          raise JinjaFx.TemplateError(f'invalid field "{f}" passed to jinjafx.{forl}()')
     elif forl == 'first':
       return True if self.__g_row == 1 else False
     else:
@@ -931,9 +973,9 @@ class JinjaFx():
               fmatch = False
               break
           except Exception:
-            raise Exception(f'invalid filter regex "{ffilter[f]}" for field "{f}" passed to jinjafx.{forl}()')
+            raise JinjaFx.TemplateError(f'invalid filter regex "{ffilter[f]}" for field "{f}" passed to jinjafx.{forl}()')
         else:
-          raise Exception(f'invalid filter field "{f}" passed to jinjafx.{forl}()')
+          raise JinjaFx.TemplateError(f'invalid filter field "{f}" passed to jinjafx.{forl}()')
 
       if fmatch:
         if tv == ':'.join([str(self.__g_datarows[r][i]) for i in fpos]):
@@ -943,7 +985,7 @@ class JinjaFx():
 
 
   def __jfx_exception(self, message):
-    raise Exception('[jfx_exception] ' + message)
+    raise JinjaFx.TemplateException(message)
 
 
   def __jfx_warning(self, message, repeat=False):
@@ -965,7 +1007,7 @@ class JinjaFx():
       if field in self.__g_datarows[0]:
         fpos = self.__g_datarows[0].index(field) + 1
       else:
-        raise Exception(f'invalid field "{field}" passed to jinjafx.fields()')
+        raise JinjaFx.TemplateError(f'invalid field "{field}" passed to jinjafx.fields()')
     else:
       return None
     
@@ -983,9 +1025,9 @@ class JinjaFx():
                 fmatch = False
                 break
             except Exception:
-              raise Exception(f'invalid filter regex "{ffilter[f]}" for field "{f}" passed to jinjafx.fields()')
+              raise JinjaFx.TemplateError(f'invalid filter regex "{ffilter[f]}" for field "{f}" passed to jinjafx.fields()')
           else:
-            raise Exception(f'invalid filter field "{f}" passed to jinjafx.fields()')
+            raise JinjaFx.TemplateError(f'invalid filter field "{f}" passed to jinjafx.fields()')
 
         if fmatch:
           field_values.append(field_value)
@@ -999,16 +1041,28 @@ class JinjaFx():
         if col in self.__g_datarows[0]:
           col = self.__g_datarows[0].index(col) 
         else:
-          raise Exception(f'invalid column "{col}" passed to jinjafx.data()')
+          raise JinjaFx.TemplateError(f'invalid column "{col}" passed to jinjafx.data()')
 
       if row and isinstance(col, int):
         col += 1
 
       if row is not None and col is not None:
-        return self.__g_datarows[row][col]
+        if len(self.__g_datarows) > row:
+          if len(self.__g_datarows[row]) > col:
+            return self.__g_datarows[row][col]
+
+          else:
+            raise JinjaFx.TemplateError(f'invalid column "{col}" passed to jinjafx.data()')
+
+        else:
+          raise JinjaFx.TemplateError(f'invalid row "{row}" passed to jinjafx.data()')
 
       elif row is not None:
-        return self.__g_datarows[row][1 if row else 0:]
+        if len(self.__g_datarows) > row:
+          return self.__g_datarows[row][1 if row else 0:]
+
+        else:
+          raise JinjaFx.TemplateError(f'invalid row "{row}" passed to jinjafx.data()')
 
 
   def __jfx_counter(self, key=None, increment=1, start=1):
