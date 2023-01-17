@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidTag
+from jinjafx import JinjaFx
 
 try:
   from lxml import etree
@@ -146,7 +147,7 @@ class plugin(Extension):
       salt = self.__generate_salt(14)
 
     elif len(salt) != 14 or any(c not in self.__mod_b64chars for c in salt):
-      raise Exception('invalid salt provided to cisco8hash')
+      raise JinjaFx.TemplateError('invalid salt provided to cisco8hash')
 
     h = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt.encode('utf-8'), iterations=20000).derive(string.encode('utf-8'))
     return '$8$' + salt + '$' + base64.b64encode(h).decode('utf-8').translate(self.__mod_b64table)[:-1]
@@ -156,7 +157,7 @@ class plugin(Extension):
       salt = self.__generate_salt(14)
 
     elif len(salt) != 14 or any(c not in self.__mod_b64chars for c in salt):
-      raise Exception('invalid salt provided to cisco9hash')
+      raise JinjaFx.TemplateError('invalid salt provided to cisco9hash')
 
     h = Scrypt(salt.encode('utf-8'), 32, 16384, 1, 1).derive(string.encode('utf-8'))
     return '$9$' + salt + '$' + base64.b64encode(h).decode('utf-8').translate(self.__mod_b64table)[:-1]
@@ -260,7 +261,7 @@ class plugin(Extension):
       salt = self.__generate_salt(8)
 
     elif len(salt) != 8 or any(c not in self.__mod_b64chars for c in salt):
-      raise Exception('invalid salt provided to junos6hash')
+      raise JinjaFx.TemplateError('invalid salt provided to junos6hash')
 
     return self.__sha512_crypt(string, salt)
 
@@ -279,7 +280,7 @@ class plugin(Extension):
       return r
 
     else:
-      raise Exception("'xpath' filter requires the 'lxml' python module")
+      raise JinjaFx.TemplateError("'xpath' filter requires the 'lxml' python module")
 
 class Vaulty():
   def __init__(self):
@@ -324,7 +325,7 @@ class Vaulty():
       except Exception:
         pass
 
-      raise Exception('invalid vaulty password or ciphertext malformed')
+      raise JinjaFx.TemplateError('invalid vaulty password or ciphertext malformed')
 
-    raise Exception('data not encrypted with vaulty')
+    raise JinjaFx.TemplateError('data not encrypted with vaulty')
 

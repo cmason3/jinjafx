@@ -345,13 +345,14 @@ Environment Variables:
     print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
     sys.exit(-2)
 
-  except (JinjaFx.TemplateError, JinjaFx.TemplateException) as e:
-    m = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-2), re.IGNORECASE | re.MULTILINE)
-    print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
-    sys.exit(-2)
-
   except Exception as e:
-    print(f'error[{exc_source or sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+    if 'JinjaFx.Template' in str(type(e)):
+      m = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-2), re.IGNORECASE | re.MULTILINE)
+      print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+
+    else:
+      print(f'error[{exc_source or sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+
     sys.exit(-2)
 
 
