@@ -321,9 +321,9 @@ The [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/bu
 The [varnames lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/varnames_lookup.html) builtin is used to list variables that are accessible within the scope of the Jinja2 template, e.g:
 
 ```jinja2
-{{ lookup("varnames", ".+") }} {# All variables #}
+{{ lookup("varnames", ".+") }} {# Return all variables #}
 
-{{ lookup("varnames", "^a", "^b") }} {# Variables which begin With "a" or "b" #}
+{{ lookup("varnames", "^a", "^b") }} {# Return all variables which begin with "a" or "b" #}
 ```
 
 ### JinjaFx Variables
