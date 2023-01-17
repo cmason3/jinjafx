@@ -20,6 +20,7 @@ from jinja2.ext import Extension
 from jinja2.filters import pass_environment
 from jinja2.filters import do_unique
 from collections.abc import Sequence, Hashable
+from jinjafx import JinjaFx
 
 import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
  
@@ -131,11 +132,11 @@ class plugin(Extension):
 
     elif hasattr(end, '__iter__'):
       if start or step:
-        raise Exception('start and step can only be used with integer values')
+        raise JinjaFx.TemplateError('start and step can only be used with integer values')
 
       return r.choice(end)
 
-    raise Exception('random can only be used on sequences and integers')
+    raise JinjaFx.TemplateError('random can only be used on sequences and integers')
 
   def __shuffle(self, mylist, seed=None):
     try:
@@ -160,7 +161,7 @@ class plugin(Extension):
 
   def __dict2items(self, mydict, key_name='key', value_name='value', ret=[]):
     if not isinstance(mydict, dict):
-      raise Exception('dict2items requires a dictionary, got ' + str(type(mydict)) + ' instead')
+      raise JinjaFx.TemplateError('dict2items requires a dictionary, got ' + str(type(mydict)) + ' instead')
 
     for key in mydict:
       ret.append({key_name: key, value_name: mydict[key]})
@@ -168,14 +169,14 @@ class plugin(Extension):
 
   def __items2dict(self, mylist, key_name='key', value_name='value'):
     if not isinstance(mylist, list):
-      raise Exception('items2dict requires a list, got ' + str(type(mylist)) + ' instead')
+      raise JinjaFx.TemplateError('items2dict requires a list, got ' + str(type(mylist)) + ' instead')
 
     try:
       return dict((item[key_name], item[value_name]) for item in mylist)
     except KeyError:
-      raise Exception('items2dict requires each dictionary in the list to contain the keys "' + str(key_name) + '" and "' + str(value_name) + '", got ' + str(mylist) + ' instead')
+      raise JinjaFx.TemplateError('items2dict requires each dictionary in the list to contain the keys "' + str(key_name) + '" and "' + str(value_name) + '", got ' + str(mylist) + ' instead') from None
     except TypeError:
-      raise Exception('items2dict requires a list of dictionaries, got ' + str(mylist) + ' instead')
+      raise JinjaFx.TemplateError('items2dict requires a list of dictionaries, got ' + str(mylist) + ' instead') from None
 
   @pass_environment
   def __extract(self, environment, item, container, morekeys=None):
@@ -234,7 +235,7 @@ class plugin(Extension):
       return self.__regex_replace(string, r'([].[^$*\\])', r'\\\1')
 
     else:
-      raise Exception('Unknown regex type - ' + re_type)
+      raise JinjaFx.TemplateError('Unknown regex type - ' + re_type)
 
   def __regex_replace(self, value='', pattern='', replacement='', ignorecase=False, multiline=False, flags=0):
     if ignorecase:
@@ -258,7 +259,7 @@ class plugin(Extension):
         match = int(re.match(r'\\(\d+)', arg).group(1))
         groups.append(match)
       else:
-        raise Exception('Unknown argument')
+        raise JinjaFx.TemplateError('Unknown argument')
 
     if kwargs.get('ignorecase'):
       flags |= re.I
