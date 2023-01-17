@@ -306,7 +306,7 @@ In additional to Ansible Filters, Ansible also introduces [tests](https://docs.a
 
 ### Ansible Lookups
 
-JinjaFx also support the ability to use the [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/vars_lookup.html) builtin to lookup a dynamic variable name (e.g. `{{ lookup('vars', 'my' ~ 'variable', default=None) }}`).
+JinjaFx also support the ability to use the [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/vars_lookup.html) builtin to lookup a dynamic variable name (e.g. `{{ lookup('vars', 'my' ~ 'variable', default=None) }}`). It also supports the [varnames lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/varnames_lookup.html) builtin to list the variables which match a regular expression (e.g. `{{ lookup('varnames', '.+') }}`).
 
 ### JinjaFx Variables
 

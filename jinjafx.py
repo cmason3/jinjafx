@@ -803,7 +803,10 @@ class JinjaFx():
             tre = re.compile(term)
         
           except Exception:
-            raise JinjaFx.TemplateError(f'\'lookup\' method doesn\'t have a valid search parameter')
+            tre = None
+
+          if tre is None:
+            raise JinjaFx.TemplateError(f'\'lookup\' method doesn\'t have a valid search regex')
 
           for varname in self.__g_vars:
             if tre.search(varname):
