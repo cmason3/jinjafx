@@ -20,6 +20,7 @@ from jinja2.ext import Extension
 from jinja2.filters import pass_environment
 from jinja2.filters import do_unique
 from collections.abc import Sequence, Hashable
+from urllib.parse import urlsplit
 from jinjafx import JinjaFx
 
 import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
@@ -71,6 +72,7 @@ class plugin(Extension):
       environment.filters[p + 'difference'] = self.__difference
       environment.filters[p + 'symmetric_difference'] = self.__symmetric_difference
       environment.filters[p + 'union'] = self.__union
+      environment.filters[p + 'urlsplit'] = self.__urlsplit
 
   def __to_yaml(self, a, *args, **kw):
     default_flow_style = kw.pop('default_flow_style', None)
@@ -158,6 +160,17 @@ class plugin(Extension):
       return true_val
     else:
       return false_val
+
+  def __urlsplit(self, value, query=None):
+    obj = urlsplit(value)
+    results = dict((k, getattr(obj, k)) for k in dir(obj) if not k.startswith('_') and not callable(getattr(obj, k)))
+
+    if query is not None:
+      if query not in results:
+        raise JinjaFx.TemplateError('urlsplit: unknown URL component: ' + query)
+      return results[query]
+    else:
+      return results
 
   def __dict2items(self, mydict, key_name='key', value_name='value', ret=[]):
     if not isinstance(mydict, dict):
