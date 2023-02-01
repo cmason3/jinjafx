@@ -272,6 +272,7 @@ This contains the following Ansible filters:
 - `log`
 - `pow`
 - `root`
+- `urlsplit`
 
 This also contains the following "[ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html)" Ansible filters:
 
