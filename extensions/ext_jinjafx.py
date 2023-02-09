@@ -66,14 +66,16 @@ class plugin(Extension):
   def __junos_snmpv3_key(self, password, engineid, algorithm='sha1', prefix='80000a4c'):
     ekey = self.__expand_snmpv3_key(password, algorithm)
 
-    if re.match(r'^(?:[a-f0-9]{2}:){5}[a-f0-9]{2}$', engineid):
-      engineid = prefix + '03' + ''.join(engineid.split(':'))
+    if re.match(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', engineid):
+      data = ''.join(f"{o:02x}" for o in map(int, engineid.split('.')))
+      engineid = prefix + '01' + data
 
-    elif re.match(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', engineid):
-      engineid = prefix + '01' + ''.join("{:02x}".format(int(o), 2) for o in engineid.split('.'))
+    elif re.match(r'^(?:[a-f0-9]{2}:){5}[a-f0-9]{2}$', engineid):
+      engineid = prefix + '03' + engineid.replace(':', '')
 
     else:
-      engineid = prefix + '04' + ''.join("{:02x}".format(ord(c)) for c in engineid)
+      data = ''.join(f"{c:02x}" for c in map(ord, engineid))
+      engineid = prefix + '04' + data
 
     h = hashlib.new(algorithm)
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
