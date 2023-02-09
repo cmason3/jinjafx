@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.15.4'
+__version__ = '1.16.0'
 
 def main():
   exc_source = None
@@ -419,7 +419,7 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template, data, gvars, output, exts_dirs=[], sandbox=False):
+  def jinjafx(self, template, data, gvars, output, exts_dirs=None, sandbox=False):
     self.__g_datarows = []
     self.__g_dict = {}
     self.__g_row = 0 
@@ -427,7 +427,7 @@ class JinjaFx():
     self.__g_warnings = []
     self.__g_xlimit = 5000 if sandbox else 0
 
-    outputs = {}
+    outputs: dict[str, str] = {}
     delim = None
     rowkey = 1
     int_indices = []
@@ -598,7 +598,10 @@ class JinjaFx():
           r = True if field.startswith('-') else False
           self.__g_datarows[1:] = sorted(self.__g_datarows[1:], key=lambda n: n[self.__g_datarows[0].index(field.lstrip('+-')) + 1], reverse=r)
 
-    sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
+    if exts_dirs is not None:
+      sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
+    else:
+      sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions']
 
     if 'jinja2_extensions' not in gvars:
       gvars.update({ 'jinja2_extensions': [] })
