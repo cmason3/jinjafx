@@ -16,6 +16,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from typing import Union, Optional, Match, Any
 from jinja2.ext import Extension
 from jinja2.filters import pass_environment
 from jinja2.filters import do_unique
@@ -261,16 +262,18 @@ class plugin(Extension):
     return _re.sub(replacement, value)
 
   def __regex_search(self, value, regex, *args, **kwargs):
-    groups = list()
+    groups: list[Union[str, int]] = []
     flags = 0
 
     for arg in args:
       if arg.startswith('\\g'):
-        match = re.match(r'\\g<(\S+)>', arg).group(1)
-        groups.append(match)
+        match1: Optional[Match[Any]] = re.match(r'\\g<(\S+)>', arg)
+        assert match1 is not None
+        groups.append(match1.group(1))
       elif arg.startswith('\\'):
-        match = int(re.match(r'\\(\d+)', arg).group(1))
-        groups.append(match)
+        match2: Optional[Match[Any]] = re.match(r'\\(\d+)', arg)
+        assert match2 is not None
+        groups.append(int(match2.group(1)))
       else:
         raise JinjaFx.TemplateError('Unknown argument')
 

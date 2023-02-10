@@ -101,15 +101,15 @@ class plugin(Extension):
     NUM_ALPHA = [char for char in ''.join(FAMILY)]
     ALPHA_NUM = { NUM_ALPHA[i]: i for i, c in enumerate(NUM_ALPHA) }
   
-    def random_salt(length: int) -> str:
-      salt: str = ''
+    def random_salt(length):
+      salt = ''
 
       for i in range(length):
         salt += NUM_ALPHA[random.randrange(len(NUM_ALPHA))]
 
       return salt
   
-    def gap_encode(char: str, prev: str, encode: list[int]) -> str:
+    def gap_encode(char, prev, encode):
       gaps: list[int] = []
       val = ord(char)
 
@@ -268,7 +268,7 @@ class plugin(Extension):
 
     return self.__sha512_crypt(string, salt)
 
-  def __xpath(self, s_xml: str, s_path: str) -> list[str]:
+  def __xpath(self, s_xml, s_path):
     if lxml:
       s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
       xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))

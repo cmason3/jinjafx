@@ -183,7 +183,7 @@ Environment Variables:
               except Exception:
                 parser.error('argument -ds: invalid regular expression')
   
-              matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
+              matches: list[str] = list(filter(args.ds.search, list(dt['datasets'].keys())))
               if len(matches) == 1:
                 if 'data' in dt['datasets'][matches[0]]:
                   dt['data'] = dt['datasets'][matches[0]]['data']
