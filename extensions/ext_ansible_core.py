@@ -120,10 +120,10 @@ class plugin(Extension):
     return base64.b64encode(string.encode(encoding)).decode(encoding)
 
   def __random(self, end, start=None, step=None, seed=None):
-    if seed is None:
-      r = random.SystemRandom()
-    else:
-      r = random.Random(seed)
+    #if seed is None:
+    #  r = random.SystemRandom()
+    #else:
+    r = random.Random(seed)
 
     if isinstance(end, int):
       if not start:
@@ -230,13 +230,24 @@ class plugin(Extension):
       flags |= re.M
 
     _re = re.compile(pattern, flags=flags)
-    return bool(getattr(_re, match_type, 'search')(value))
+
+    if match_type == 'match':
+      return bool(_re.match(value))
+    elif match_type == 'findall':
+      return bool(_re.findall(value))
+    else:
+      return bool(_re.search(value))
+
+    #return bool(getattr(_re, match_type, 'search')(value))
 
   def __match(self, value, pattern='', ignorecase=False, multiline=False):
     return self.__regex(value, pattern, ignorecase, multiline, 'match')
 
   def __search(self, value, pattern='', ignorecase=False, multiline=False):
     return self.__regex(value, pattern, ignorecase, multiline, 'search')
+
+  def __regex_findall(self, value, pattern='', multiline=False, ignorecase=False):
+    return self.__regex(value, pattern, ignorecase, multiline, 'findall')
 
   def __contains(self, seq, value):
     return value in seq
@@ -291,9 +302,6 @@ class plugin(Extension):
         for item in groups:
           items.append(match.group(item))
         return items
-
-  def __regex_findall(self, value, pattern='', multiline=False, ignorecase=False):
-    return self.__regex(value, pattern, ignorecase, multiline, 'findall')
 
   def __hash(self, data, hashtype='sha1'):
     h = hashlib.new(hashtype)
