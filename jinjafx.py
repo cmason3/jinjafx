@@ -27,6 +27,8 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
+from typing import Optional, Match, Any
+
 __version__ = '1.16.0'
 
 def main():
@@ -341,14 +343,16 @@ Environment Variables:
     sys.exit(-1)
 
   except jinja2.TemplateError as e:
-    m = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-1), re.IGNORECASE | re.MULTILINE)
-    print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+    m1: Optional[Match[Any]] = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-1), re.IGNORECASE | re.MULTILINE)
+    assert m1 is not None
+    print(f'error[{m1.group(1)}:{m1.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
     sys.exit(-2)
 
   except Exception as e:
     if 'JinjaFx.Template' in str(type(e)):
-      m = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-2), re.IGNORECASE | re.MULTILINE)
-      print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+      m2: Optional[Match[Any]] = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-2), re.IGNORECASE | re.MULTILINE)
+      assert m2 is not None
+      print(f'error[{m2.group(1)}:{m2.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     else:
       print(f'error[{exc_source or sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
