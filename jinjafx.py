@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-from typing import Optional, Match, Any
+from typing import Optional, Union, Match, Any
 
 __version__ = '1.16.0'
 
@@ -293,7 +293,7 @@ Environment Variables:
   
         gvars['jinjafx_input'] = jinjafx_input
   
-      args.ed = [os.getcwd(), os.getenv('HOME') + '/.jinjafx'] + args.ed
+      args.ed = [os.getcwd(), os.getenv('HOME', '') + '/.jinjafx'] + args.ed
       outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
       ocount = 0
   
@@ -355,7 +355,9 @@ Environment Variables:
       print(f'error[{m2.group(1)}:{m2.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     else:
-      print(f'error[{exc_source or sys.exc_info()[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+      xyz = sys.exc_info()
+      assert xyz[2] is not None
+      print(f'error[{exc_source or xyz[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     sys.exit(-2)
 
@@ -423,21 +425,21 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template, data, gvars, output, exts_dirs=None, sandbox=False):
-    self.__g_datarows = []
-    self.__g_dict = {}
+  def jinjafx(self, template: Union[str, io.TextIOWrapper], data, gvars, output, exts_dirs=None, sandbox=False):
+    self.__g_datarows: list[list[str]] = []
+    self.__g_dict: dict[str, int] = {}
     self.__g_row = 0 
     self.__g_vars = {}
-    self.__g_warnings = []
+    self.__g_warnings: list[str] = []
     self.__g_xlimit = 5000 if sandbox else 0
 
-    outputs: dict[str, str] = {}
+    outputs: dict[str, list[str]] = {}
     delim = None
     rowkey = 1
     int_indices = []
     float_indices = []
 
-    if not isinstance(template, (str, io.IOBase)):
+    if not isinstance(template, (str, io.TextIOWrapper)):
       raise TypeError('template must be of type str or type FileType')
 
     if data is not None:
@@ -459,37 +461,37 @@ class JinjaFx():
                 delim = r' *\t *'
                 schars = ' '
   
-              fields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l.strip(schars)))
-              fields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in fields]
+              hfields = re.split(delim, re.sub('(?:' + delim + ')+$', '', l.strip(schars)))
+              hfields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in hfields]
 
-              for i, v in enumerate(fields):
+              for i, v in enumerate(hfields):
                 if v.lower().endswith(':int'):
                   int_indices.append(i + 1)
-                  fields[i] = v[:-4]
+                  hfields[i] = v[:-4]
                 elif v.lower().endswith(':float'):
                   float_indices.append(i + 1)
-                  fields[i] = v[:-6]
+                  hfields[i] = v[:-6]
   
                 if jinjafx_adjust_headers == 'yes':
-                  fields[i] = re.sub(r'[^A-Z0-9_]', '', v, flags=re.UNICODE | re.IGNORECASE)
+                  hfields[i] = re.sub(r'[^A-Z0-9_]', '', v, flags=re.UNICODE | re.IGNORECASE)
                 elif jinjafx_adjust_headers == 'upper':
-                  fields[i] = re.sub(r'[^A-Z0-9_]', '', v.upper(), flags=re.UNICODE | re.IGNORECASE)
+                  hfields[i] = re.sub(r'[^A-Z0-9_]', '', v.upper(), flags=re.UNICODE | re.IGNORECASE)
                 elif jinjafx_adjust_headers == 'lower':
-                  fields[i] = re.sub(r'[^A-Z0-9_]', '', v.lower(), flags=re.UNICODE | re.IGNORECASE)
+                  hfields[i] = re.sub(r'[^A-Z0-9_]', '', v.lower(), flags=re.UNICODE | re.IGNORECASE)
                 elif jinjafx_adjust_headers != 'no':
                   raise Exception('invalid value specified for \'jinjafx_adjust_headers\' - must be \'yes\', \'no\', \'upper\' or \'lower\'')
 
-                if fields[i] == '':
+                if hfields[i] == '':
                   raise Exception(f'empty header field detected at column position {i + 1}')
 
-                elif not re.match(r'^[A-Z_][A-Z0-9_]*$', fields[i], re.IGNORECASE):
+                elif not re.match(r'^[A-Z_][A-Z0-9_]*$', hfields[i], re.IGNORECASE):
                   raise Exception(f'header field at column position {i + 1} contains invalid characters')
   
-              if len(set(fields)) != len(fields):
+              if len(set(hfields)) != len(hfields):
                 raise Exception('duplicate header field detected in data')
 
               else:
-                self.__g_datarows.append(fields)
+                self.__g_datarows.append(hfields)
   
               if 'jinjafx_filter' in gvars and gvars['jinjafx_filter']:
                 for field in gvars['jinjafx_filter']:
@@ -497,8 +499,9 @@ class JinjaFx():
   
             else:
               gcount = 1
-              fields = []
+              ufields: list[str] = []
 
+              assert delim is not None
               for f in re.split(delim, l.strip(schars)):
                 delta = 0
   
@@ -514,10 +517,10 @@ class JinjaFx():
   
                   gcount += 1
   
-                fields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
+                ufields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
   
               n = len(self.__g_datarows[0])
-              fields = [list(map(self.__jfx_expand, fields[:n] + [''] * (n - len(fields)), [True] * n))]
+              fields = [list(map(self.__jfx_expand, ufields[:n] + [''] * (n - len(ufields)), [True] * n))]
 
               row = 0
               while fields:
@@ -537,7 +540,7 @@ class JinjaFx():
                       break
   
                 else:
-                  groups = []
+                  xgroups = []
   
                   for col in range(1, len(fields[0])):
                     fields[0][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][0])
@@ -545,12 +548,12 @@ class JinjaFx():
                     for g in range(len(fields[0][col][1])):
                       fields[0][col][1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][1][g])
   
-                    groups.append(fields[0][col][1])
+                    xgroups.append(fields[0][col][1])
  
-                  groups = dict(enumerate(sum(groups, ['\\0'])))
+                  groups = dict(enumerate(sum(xgroups, ['\\0'])))
   
                   for col in range(1, len(fields[0])):
-                    fields[0][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + m.group(1)), fields[0][col][0])
+                    fields[0][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + str(m.group(1))), fields[0][col][0])
   
                     delta = 0
                     for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', fields[0][col]):
@@ -630,11 +633,12 @@ class JinjaFx():
 
     if isinstance(template, str):
       env = jinja2env(extensions=gvars['jinja2_extensions'], **jinja2_options)
-      template = env.from_string(template)
+      rtemplate = env.from_string(template)
 
     else:
-      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
-      template = env.get_template(os.path.basename(template.name))
+      fn = template.name
+      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(fn)), **jinja2_options)
+      rtemplate = env.get_template(os.path.basename(fn))
 
     if gvars:
       jinjafx_render_vars = str(gvars.get('jinjafx_render_vars', 'yes')).strip().lower()
@@ -684,7 +688,7 @@ class JinjaFx():
       self.__g_vars.update(rowdata)
 
       try:
-        content = template.render(rowdata)
+        content = rtemplate.render(rowdata)
 
         outputs['0:_stderr_'] = []
         if self.__g_warnings:
@@ -868,6 +872,7 @@ class JinjaFx():
       while i < len(pofa):
         m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)[ \t]*(?<!\\)\}', pofa[i])
         if m:
+          assert m.lastindex is not None
           mpos = groups[i][0].index(m.group())
           nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
           ncb = len(re.findall(r'(?<!\\)\)', groups[i][0][:mpos]))
@@ -899,7 +904,7 @@ class JinjaFx():
         else:
           m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
           if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
-            clist = []
+            clist: list[str] = []
   
             mpos = groups[i][0].index(m.group())
             nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
@@ -909,14 +914,14 @@ class JinjaFx():
   
             for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
               if x[1] != '':
-                e = x[0].split('-')
+                ee: list[str] = x[0].split('-')
 
-                start = ord(e[0])
-                end = ord(e[1]) + 1 if ord(e[1]) >= ord(e[0]) else ord(e[1]) - 1
+                start = ord(ee[0])
+                end = ord(ee[1]) + 1 if ord(ee[1]) >= ord(ee[0]) else ord(ee[1]) - 1
                 step = 1 if end > start else -1
 
-                for c in range(start, end, step):
-                  clist.append(chr(c))
+                for i in range(start, end, step):
+                  clist.append(chr(i))
 
               else:
                 clist.append(x[0])
