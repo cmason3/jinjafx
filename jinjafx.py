@@ -94,7 +94,7 @@ Environment Variables:
 
     gvars = {}
     data = None
-    vpw = [ None ]
+    vpw: list[Optional[str]] = [ None ]
 
     if args.encrypt is not None:
       if not args.encrypt:
@@ -362,14 +362,14 @@ Environment Variables:
     sys.exit(-2)
 
 
-def __decrypt_vault(vpw, string):
+def __decrypt_vault(vpw: list[Optional[str]], string: str) -> bytes:
   if string.lstrip().startswith('$ANSIBLE_VAULT;'):
     __get_vault_credentials(vpw)
     return Vault().decrypt(string.encode('utf-8'), vpw[0])
-  return string
+  return string.encode('utf-8')
 
 
-def __get_vault_credentials(vpw, verify=False):
+def __get_vault_credentials(vpw: list[Optional[str]], verify=False):
   if vpw[0] is None:
     vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
 
@@ -390,15 +390,17 @@ def __get_vault_credentials(vpw, verify=False):
       print()
 
 
-def __format_bytes(b):
+def __format_bytes(b: Union[int, float]) -> str:
   for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
     if b >= 1000:
       b /= 1000
     else:
-      return f'{b:.2f}'.rstrip('0').rstrip('.') + u + 'B'
+      break
+
+  return f'{b:.2f}'.rstrip('0').rstrip('.') + u + 'B'
 
 
-def __merge(dst, src):
+def __merge(dst: dict[str, Any], src: dict[str, Any]) -> dict[str, Any]:
   for key in src:
     if key in dst:
       if isinstance(dst[key], dict) and isinstance(src[key], dict):
@@ -788,7 +790,7 @@ class JinjaFx():
     return default
 
 
-  def __jfx_lookup(self, method, *args):
+  def __jfx_lookup(self, method: str, *args) -> Union[str, list[str]]:
     if method == 'vars' or method == 'ansible.builtin.vars':
       if args:
         default = args[1] if len(args) > 1 else None
@@ -807,7 +809,7 @@ class JinjaFx():
 
     elif method == 'varnames' or method == 'ansible.builtin.varnames':
       if args:
-        ret = []
+        ret: list[str] = []
 
         for term in args:
           try:
@@ -832,7 +834,7 @@ class JinjaFx():
       raise JinjaFx.TemplateError(f'\'lookup\' method \'{method}\' is undefined')
 
 
-  def __jfx_data_counter(self, m, orow, col, row):
+  def __jfx_data_counter(self, m: Match[str], orow: int, col: int, row: int) -> str:
     start = m.group(1)
     increment = m.group(2)
     key = '_datacnt_r_' + str(orow) + '_' + str(col) + '_' + m.group()
