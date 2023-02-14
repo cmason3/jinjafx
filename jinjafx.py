@@ -920,8 +920,8 @@ class JinjaFx():
                 end = ord(ee[1]) + 1 if ord(ee[1]) >= ord(ee[0]) else ord(ee[1]) - 1
                 step = 1 if end > start else -1
 
-                for i in range(start, end, step):
-                  clist.append(chr(i))
+                for j in range(start, end, step):
+                  clist.append(chr(j))
 
               else:
                 clist.append(x[0])
