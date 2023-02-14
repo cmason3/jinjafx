@@ -94,7 +94,7 @@ Environment Variables:
 
     gvars = {}
     data = None
-    vpw: list[Optional[str]] = [ None ]
+    vpw = [ None ]
 
     if args.encrypt is not None:
       if not args.encrypt:
@@ -362,14 +362,14 @@ Environment Variables:
     sys.exit(-2)
 
 
-def __decrypt_vault(vpw: list[Optional[str]], string: str) -> bytes:
+def __decrypt_vault(vpw, string):
   if string.lstrip().startswith('$ANSIBLE_VAULT;'):
     __get_vault_credentials(vpw)
     return Vault().decrypt(string.encode('utf-8'), vpw[0])
   return string.encode('utf-8')
 
 
-def __get_vault_credentials(vpw: list[Optional[str]], verify=False):
+def __get_vault_credentials(vpw, verify=False):
   if vpw[0] is None:
     vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
 
@@ -390,7 +390,7 @@ def __get_vault_credentials(vpw: list[Optional[str]], verify=False):
       print()
 
 
-def __format_bytes(b: Union[int, float]) -> str:
+def __format_bytes(b):
   for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
     if b >= 1000:
       b /= 1000
@@ -400,7 +400,7 @@ def __format_bytes(b: Union[int, float]) -> str:
   return f'{b:.2f}'.rstrip('0').rstrip('.') + u + 'B'
 
 
-def __merge(dst: dict[str, Any], src: dict[str, Any]) -> dict[str, Any]:
+def __merge(dst, src):
   for key in src:
     if key in dst:
       if isinstance(dst[key], dict) and isinstance(src[key], dict):
