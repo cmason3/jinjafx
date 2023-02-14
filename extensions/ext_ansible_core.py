@@ -16,7 +16,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from typing import Union, Optional, Match, Any
 from jinja2.ext import Extension
 from jinja2.filters import pass_environment
 from jinja2.filters import do_unique
@@ -25,6 +24,8 @@ from urllib.parse import urlsplit
 from jinjafx import JinjaFx
 
 import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
+
+from typing import Union, Optional, Match, Any
  
 class plugin(Extension):
   def __init__(self, environment):
@@ -323,34 +324,34 @@ class plugin(Extension):
 
   @pass_environment
   def __intersect(self, environment, a, b):
-    if isinstance(a, Hashable) and isinstance(b, Hashable):
-      c = set(a) & set(b)
-    else:
-      c = self.__unique(environment, [x for x in a if x in b], True)
-    return c
+    #if isinstance(a, Hashable) and isinstance(b, Hashable):
+    #  c = set(a) & set(b)
+    #else:
+    return self.__unique(environment, [x for x in a if x in b], True)
+    #return c
 
   @pass_environment
   def __difference(self, environment, a, b):
-    if isinstance(a, Hashable) and isinstance(b, Hashable):
-      c = set(a) - set(b)
-    else:
-      c = self.__unique(environment, [x for x in a if x not in b], True)
-    return c
+    #if isinstance(a, Hashable) and isinstance(b, Hashable):
+    #  c = set(a) - set(b)
+    #else:
+    return self.__unique(environment, [x for x in a if x not in b], True)
+    #return c
 
   @pass_environment
   def __symmetric_difference(self, environment, a, b):
-    if isinstance(a, Hashable) and isinstance(b, Hashable):
-      c = set(a) ^ set(b)
-    else:
-      isect = self.__intersect(environment, a, b)
-      c = [x for x in self.__union(environment, a, b) if x not in isect]
-    return c
+    #if isinstance(a, Hashable) and isinstance(b, Hashable):
+    #  c = set(a) ^ set(b)
+    #else:
+    isect = self.__intersect(environment, a, b)
+    return [x for x in self.__union(environment, a, b) if x not in isect]
+    #return c
 
   @pass_environment
   def __union(self, environment, a, b):
-    if isinstance(a, Hashable) and isinstance(b, Hashable):
-      c = set(a) | set(b)
-    else:
-      c = self.__unique(environment, a + b, True)
-    return c
+    #if isinstance(a, Hashable) and isinstance(b, Hashable):
+    #  c = set(a) | set(b)
+    #else:
+    return self.__unique(environment, a + b, True)
+    #return c
 

@@ -1,7 +1,7 @@
 import sys, pathlib, re
 from setuptools import setup
 
-__version__ = None
+__version__ = 'null'
 for line in open('jinjafx.py'):
   if line.startswith('__version__'):
     exec(line)

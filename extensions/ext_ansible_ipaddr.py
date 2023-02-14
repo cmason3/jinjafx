@@ -16,11 +16,12 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from typing import Callable
 from jinja2.ext import Extension
 from jinjafx import JinjaFx
 
 import netaddr, types
+
+from typing import Callable
  
 class plugin(Extension):
   def __init__(self, environment):

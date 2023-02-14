@@ -21,6 +21,8 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidTag
 from jinjafx import JinjaFx
 
+from typing import Mapping, Optional
+
 try:
   from lxml import etree
   lxml = True
@@ -271,8 +273,8 @@ class plugin(Extension):
   def __xpath(self, s_xml, s_path):
     if lxml:
       s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
-      xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
-      xml = xml.xpath(s_path, namespaces=xml.nsmap)
+      p_xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
+      xml = p_xml.xpath(s_path, namespaces=p_xml.nsmap)
 
       r = []
       for x in xml:
