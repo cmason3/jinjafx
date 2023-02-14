@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-from typing import Optional, Union, Match, Any
+from typing import Optional, Union, Match, Any, Pattern
 
 __version__ = '1.16.0'
 
@@ -425,19 +425,19 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template: Union[str, io.TextIOWrapper], data, gvars, output, exts_dirs=None, sandbox=False):
+  def jinjafx(self, template: Union[str, io.TextIOWrapper], data: Optional[str], gvars: dict[str, Any], output: str, exts_dirs: Optional[list[str]]=None, sandbox=False) -> dict[str, list[str]]:
     self.__g_datarows: list[list[str]] = []
     self.__g_dict: dict[str, int] = {}
     self.__g_row = 0 
-    self.__g_vars = {}
+    self.__g_vars: dict[str, Any] = {}
     self.__g_warnings: list[str] = []
     self.__g_xlimit = 5000 if sandbox else 0
 
     outputs: dict[str, list[str]] = {}
-    delim = None
+    delim: Optional[str] = None
     rowkey = 1
-    int_indices = []
-    float_indices = []
+    int_indices: list[int] = []
+    float_indices: list[int] = []
 
     if not isinstance(template, (str, io.TextIOWrapper)):
       raise TypeError('template must be of type str or type FileType')
@@ -447,7 +447,7 @@ class JinjaFx():
         raise TypeError('data must be of type str')
 
       if data.strip():
-        jinjafx_filter = {}
+        jinjafx_filter: dict[int, str] = {}
         jinjafx_adjust_headers = str(gvars.get('jinjafx_adjust_headers', 'no')).strip().lower()
         recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
 
@@ -540,7 +540,7 @@ class JinjaFx():
                       break
   
                 else:
-                  xgroups = []
+                  xgroups: list[list[str]] = []
   
                   for col in range(1, len(fields[0])):
                     fields[0][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][0])
@@ -594,7 +594,7 @@ class JinjaFx():
         if isinstance(field, dict):
           fn = next(iter(field))
           r = True if fn.startswith('-') else False
-          mv = []
+          mv: list[list[Pattern[Any]]] = []
 
           for rx, v in field[fn].items():
             mv.append([re.compile(rx + '$'), v])
@@ -636,9 +636,8 @@ class JinjaFx():
       rtemplate = env.from_string(template)
 
     else:
-      fn = template.name
-      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(fn)), **jinja2_options)
-      rtemplate = env.get_template(os.path.basename(fn))
+      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
+      rtemplate = env.get_template(os.path.basename(template.name))
 
     if gvars:
       jinjafx_render_vars = str(gvars.get('jinjafx_render_vars', 'yes')).strip().lower()
@@ -668,10 +667,10 @@ class JinjaFx():
       'lookup': self.__jfx_lookup
     })
 
-    output = env.from_string(output)
+    routput = env.from_string(output)
 
     for row in range(1, max(2, len(self.__g_datarows))):
-      rowdata = {}
+      rowdata: dict[str, str] = {}
 
       if self.__g_datarows:
         for col in range(len(self.__g_datarows[0])):
@@ -705,7 +704,7 @@ class JinjaFx():
           e.args = (e.args[0] + ' at data row ' + str(self.__g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
         raise
 
-      stack = ['0:' + output.render(rowdata)]
+      stack = ['0:' + routput.render(rowdata)]
       start_tag = re.compile(r'<output(:\S+)?[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
       end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
       clines = content.splitlines()
