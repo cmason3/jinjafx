@@ -780,7 +780,7 @@ class JinjaFx():
     pass
 
 
-  def __find_re_match(self, o, v, default=0):
+  def __find_re_match(self, o: list[list[Pattern[Any]]], v: str, default=0):
     for rx in o:
       if rx[0].match(v):
         return rx[1]
