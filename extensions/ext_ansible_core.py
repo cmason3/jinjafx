@@ -16,6 +16,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from jinja2 import Environment
 from jinja2.ext import Extension
 from jinja2.filters import pass_environment
 from jinja2.filters import do_unique
@@ -28,7 +29,7 @@ import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
 from typing import Union, Optional, Match, Any
  
 class plugin(Extension):
-  def __init__(self, environment):
+  def __init__(self, environment: Environment) -> None:
     Extension.__init__(self, environment)
 
     for p in ('', 'ansible.builtin.'):
@@ -76,25 +77,25 @@ class plugin(Extension):
       environment.filters[p + 'union'] = self.__union
       environment.filters[p + 'urlsplit'] = self.__urlsplit
 
-  def __to_yaml(self, a, *args, **kw):
+  def __to_yaml(self, a: dict[str, Any], *args, **kw) -> str:
     default_flow_style = kw.pop('default_flow_style', None)
     return yaml.dump(a, Dumper=yaml.SafeDumper, allow_unicode=True, default_flow_style=default_flow_style, **kw)
 
-  def __to_nice_yaml(self, a, indent=4, *args, **kw):
+  def __to_nice_yaml(self, a: dict[str, Any], indent: int=4, *args, **kw) -> str:
     return yaml.dump(a, Dumper=yaml.SafeDumper, indent=indent, allow_unicode=True, default_flow_style=False, **kw)
 
-  def __from_yaml(self, data):
+  def __from_yaml(self, data: str) -> dict[str, Any]:
     if isinstance(data, str):
       return yaml.load(data, Loader=yaml.SafeLoader)
     return data
 
-  def __to_json(self, a, *args, **kw):
+  def __to_json(self, a: dict[str, Any], *args, **kw) -> str:
     return json.dumps(a, *args, **kw)
 
-  def __to_nice_json(self, a, indent=4, sort_keys=True, *args, **kw):
+  def __to_nice_json(self, a: dict[str, Any], indent: int=4, sort_keys: bool=True, *args, **kw) -> str:
     return self.__to_json(a, indent=indent, sort_keys=sort_keys, separators=(',', ': '), *args, **kw)
 
-  def __to_bool(self, a):
+  def __to_bool(self, a: Optional[Union[bool, str]]) -> bool:
     if a is None or isinstance(a, bool):
       return a
 
@@ -106,24 +107,21 @@ class plugin(Extension):
 
     return False
 
-  def __to_datetime(self, string, format="%Y-%m-%d %H:%M:%S"):
-    return datetime.datetime.strptime(string, format)
+  def __to_datetime(self, string: str, fmt: str="%Y-%m-%d %H:%M:%S") -> str:
+    return datetime.datetime.strptime(string, fmt)
 
-  def __strftime(self, string_format, second=None):
+  def __strftime(self, string_format: str, second: Optional[Union[int, float]]=None) -> str:
     if second is not None:
       second = float(second)
     return time.strftime(string_format, time.localtime(second))
 
-  def __b64decode(self, string, encoding='utf-8'):
+  def __b64decode(self, string: str, encoding: str='utf-8') -> str:
     return base64.b64decode(string.encode(encoding)).decode(encoding)
 
-  def __b64encode(self, string, encoding='utf-8'):
+  def __b64encode(self, string: str, encoding: str='utf-8') -> str:
     return base64.b64encode(string.encode(encoding)).decode(encoding)
 
-  def __random(self, end, start=None, step=None, seed=None):
-    #if seed is None:
-    #  r = random.SystemRandom()
-    #else:
+  def __random(self, end: int, start: Optional[int]=None, step: Optional[int]=None, seed: Optional[str]=None) -> str:
     r = random.Random(seed)
 
     if isinstance(end, int):
@@ -142,7 +140,7 @@ class plugin(Extension):
 
     raise JinjaFx.TemplateError('random can only be used on sequences and integers')
 
-  def __shuffle(self, mylist, seed=None):
+  def __shuffle(self, mylist: list[Any], seed: Optional[str]=None) -> list[Any]:
     try:
       mylist = list(mylist)
       if seed is None:
@@ -155,7 +153,7 @@ class plugin(Extension):
 
     return mylist
 
-  def __ternary(self, value, true_val, false_val, none_val=None):
+  def __ternary(self, value: Optional[bool], true_val: Any, false_val: Any, none_val: Optional[Any]=None) -> Optional[Any]:
     if value is None:
       return none_val
     elif bool(value):
@@ -163,7 +161,7 @@ class plugin(Extension):
     else:
       return false_val
 
-  def __urlsplit(self, value, query=None):
+  def __urlsplit(self, value: str, query: Optional[str]=None) -> dict[str, Any]:
     obj = urlsplit(value)
     results = dict((k, getattr(obj, k)) for k in dir(obj) if not k.startswith('_') and not callable(getattr(obj, k)))
 

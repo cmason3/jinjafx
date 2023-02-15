@@ -31,7 +31,7 @@ from typing import Optional, Union, Match, Any, Pattern
 
 __version__ = '1.16.0'
 
-def main():
+def main() -> None:
   exc_source = None
 
   try:
@@ -92,9 +92,9 @@ Environment Variables:
     if args.od is not None and not os.access(args.od, os.W_OK):
       parser.error('argument -od: unable to write to output directory')
 
-    gvars = {}
-    data = None
-    vpw = [ None ]
+    gvars: dict[str, Any] = {}
+    data: Optional[str] = None
+    vpw: list[Optional[str]] = [ None ]
 
     if args.encrypt is not None:
       if not args.encrypt:
@@ -362,14 +362,14 @@ Environment Variables:
     sys.exit(-2)
 
 
-def __decrypt_vault(vpw, string):
+def __decrypt_vault(vpw: list[Optional[str]], string: str) -> bytes:
   if string.lstrip().startswith('$ANSIBLE_VAULT;'):
     __get_vault_credentials(vpw)
     return Vault().decrypt(string.encode('utf-8'), vpw[0])
   return string.encode('utf-8')
 
 
-def __get_vault_credentials(vpw, verify=False):
+def __get_vault_credentials(vpw: list[Optional[str]], verify: bool=False) -> None:
   if vpw[0] is None:
     vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
 
@@ -390,7 +390,7 @@ def __get_vault_credentials(vpw, verify=False):
       print()
 
 
-def __format_bytes(b):
+def __format_bytes(b: Union[float, int]) -> str:
   for u in [ '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ]:
     if b >= 1000:
       b /= 1000
@@ -400,7 +400,7 @@ def __format_bytes(b):
   return f'{b:.2f}'.rstrip('0').rstrip('.') + u + 'B'
 
 
-def __merge(dst, src):
+def __merge(dst: dict[Any], src: dict[Any]) -> dict[Any]:
   for key in src:
     if key in dst:
       if isinstance(dst[key], dict) and isinstance(src[key], dict):
@@ -427,7 +427,7 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template: Union[str, io.TextIOWrapper], data: Optional[str], gvars: dict[str, Any], output: str, exts_dirs: Optional[list[str]]=None, sandbox=False) -> dict[str, list[str]]:
+  def jinjafx(self, template: Union[str, io.TextIOWrapper], data: Optional[str], gvars: dict[str, Any], output: str, exts_dirs: Optional[list[str]]=None, sandbox: bool=False) -> dict[str, list[str]]:
     self.__g_datarows: list[list[str]] = []
     self.__g_dict: dict[str, int] = {}
     self.__g_row = 0 
