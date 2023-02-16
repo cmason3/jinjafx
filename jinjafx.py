@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-from typing import Optional, Union, Match, Any, Pattern
+from typing import Optional, Union, Match, Any, Pattern, NoReturn
 
 __version__ = '1.16.0'
 
@@ -103,6 +103,7 @@ Environment Variables:
           raise Exception('multiline stings not permitted')
 
         __get_vault_credentials(vpw, True)
+        assert vpw[0] is not None
         vtext = Vault().encrypt(b_string, vpw[0])
         print('!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
 
@@ -115,6 +116,7 @@ Environment Variables:
 
             try:
               with open(f, 'rb') as fh:
+                assert vpw[0] is not None
                 vtext = Vault().encrypt(fh.read(), vpw[0])
 
               with open(f, 'wb') as fh:
@@ -135,6 +137,7 @@ Environment Variables:
       if not args.decrypt:
         b_vtext = sys.stdin.buffer.read()
         __get_vault_credentials(vpw)
+        assert vpw[0] is not None
         print(Vault().decrypt(b_vtext, vpw[0]).decode('utf-8'))
 
       else:
@@ -146,6 +149,7 @@ Environment Variables:
 
             try:
               with open(f, 'rb') as fh:
+                assert vpw[0] is not None
                 plaintext = Vault().decrypt(fh.read(), vpw[0])
 
               with open(f, 'wb') as fh:
@@ -365,6 +369,7 @@ Environment Variables:
 def __decrypt_vault(vpw: list[Optional[str]], string: str) -> bytes:
   if string.lstrip().startswith('$ANSIBLE_VAULT;'):
     __get_vault_credentials(vpw)
+    assert vpw[0] is not None
     return Vault().decrypt(string.encode('utf-8'), vpw[0])
   return string.encode('utf-8')
 
@@ -400,7 +405,7 @@ def __format_bytes(b: Union[float, int]) -> str:
   return f'{b:.2f}'.rstrip('0').rstrip('.') + u + 'B'
 
 
-def __merge(dst: dict[Any], src: dict[Any]) -> dict[Any]:
+def __merge(dst: dict[str, Any], src: dict[str, Any]) -> dict[str, Any]:
   for key in src:
     if key in dst:
       if isinstance(dst[key], dict) and isinstance(src[key], dict):
@@ -419,7 +424,7 @@ def __merge(dst: dict[Any], src: dict[Any]) -> dict[Any]:
 
 
 class __ArgumentParser(argparse.ArgumentParser):
-  def error(self, message):
+  def error(self, message: str) -> NoReturn:
     if '-q' not in sys.argv:
       print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
       print(f'Usage:\n  {self.format_usage()[7:]}', file=sys.stderr)
@@ -782,18 +787,17 @@ class JinjaFx():
     pass
 
 
-  def __find_re_match(self, o: list[list[Pattern[Any]]], v: str, default=0):
+  def __find_re_match(self, o: list[list[Pattern[Any]]], v: str, default: int=0) -> Union[Pattern[Any], int]:
     for rx in o:
       if rx[0].match(v):
         return rx[1]
-
     return default
 
 
-  def __jfx_lookup(self, method: str, *args) -> Union[str, list[str]]:
+  def __jfx_lookup(self, method: str, *args: str) -> Any:
     if method == 'vars' or method == 'ansible.builtin.vars':
       if args:
-        default = args[1] if len(args) > 1 else None
+        default: Optional[str] = args[1] if len(args) > 1 else None
 
         if args[0] in self.__g_vars:
           return self.__g_vars[args[0]]
@@ -846,9 +850,9 @@ class JinjaFx():
     return str(self.__g_dict[key])
 
 
-  def __jfx_expand(self, s, rg=False):
-    pofa = [s]
-    groups = [[s]]
+  def __jfx_expand(self, s: str, rg: bool=False) -> Any:
+    pofa: list[str] = [s]
+    groups: list[list[str]] = [[s]]
 
     if re.search(r'(?<!\\)[\(\[\{]', pofa[0]):
       i = 0
@@ -895,7 +899,7 @@ class JinjaFx():
 
             ngroups = list(groups[i])
             if group > 0 and group < len(ngroups):
-              ngroups[group] = ngroups[group].replace(m.group(), n, 1)
+              ngroups[group] = ngroups[group].replace(m.group(), str(n), 1)
 
             groups.append(ngroups)
 
@@ -953,8 +957,8 @@ class JinjaFx():
     return [pofa, groups] if rg else pofa
 
 
-  def __jfx_fandl(self, forl, fields, ffilter):
-    fpos = []
+  def __jfx_fandl(self, forl: str, fields: Optional[list[str]], ffilter: dict[str, str]) -> bool:
+    fpos: list[int] = []
 
     if not self.__g_row:
       return True
@@ -998,25 +1002,25 @@ class JinjaFx():
     return False
 
 
-  def __jfx_exception(self, message):
+  def __jfx_exception(self, message: str) -> NoReturn:
     raise JinjaFx.TemplateException(message)
 
 
-  def __jfx_warning(self, message, repeat=False):
+  def __jfx_warning(self, message: str, repeat: bool=False) -> str:
     if repeat or message not in self.__g_warnings:
       self.__g_warnings.append(message)
     return ''
 
 
-  def __jfx_first(self, fields=None, ffilter={}):
+  def __jfx_first(self, fields: Optional[list[str]]=None, ffilter: dict[str, str]={}) -> bool:
     return self.__jfx_fandl('first', fields, ffilter)
 
 
-  def __jfx_last(self, fields=None, ffilter={}):
+  def __jfx_last(self, fields: Optional[list[str]]=None, ffilter: dict[str, str]={}) -> bool:
     return self.__jfx_fandl('last', fields, ffilter)
 
   
-  def __jfx_fields(self, field=None, ffilter={}):
+  def __jfx_fields(self, field: Optional[str]=None, ffilter: dict[str, str]={}) -> Optional[list[str]]:
     if field is not None:
       if field in self.__g_datarows[0]:
         fpos = self.__g_datarows[0].index(field) + 1
@@ -1025,7 +1029,7 @@ class JinjaFx():
     else:
       return None
     
-    field_values = []
+    field_values: list[str] = []
         
     for r in range(1, len(self.__g_datarows)):
       fmatch = True
@@ -1049,7 +1053,7 @@ class JinjaFx():
     return field_values
 
  
-  def __jfx_data(self, row, col=None):
+  def __jfx_data(self, row: int, col: Optional[Union[str, int]]=None) -> Optional[Union[str, list[str]]]:
     if self.__g_datarows:
       if isinstance(col, str):
         if col in self.__g_datarows[0]:
@@ -1078,8 +1082,10 @@ class JinjaFx():
         else:
           raise JinjaFx.TemplateError(f'invalid row "{row}" passed to jinjafx.data()')
 
+    return None
 
-  def __jfx_counter(self, key=None, increment=1, start=1):
+
+  def __jfx_counter(self, key: Optional[str]=None, increment: int=1, start: int=1) -> int:
     if key is None:
       key = '_cnt_r_' + str(self.__g_row)
     else:
@@ -1090,34 +1096,32 @@ class JinjaFx():
     return self.__g_dict[key]
 
 
-  def __jfx_setg(self, key, value):
+  def __jfx_setg(self, key: str, value: Any) -> str:
     self.__g_dict['_val_' + str(key)] = value
     return ''
 
 
-  def __jfx_getg(self, key, default=None):
+  def __jfx_getg(self, key: str, default: Optional[str]=None) -> Any:
     return self.__g_dict.get('_val_' + str(key), default)
 
 
-  def __jfx_now(self, fmt=None, tz='UTC'):
-    tz = pytz.timezone(tz)
-
+  def __jfx_now(self, fmt: Optional[str]=None, tz: str='UTC') -> str:
     if fmt is not None:
-      return datetime.datetime.now(tz=tz).strftime(fmt)
+      return datetime.datetime.now(tz=pytz.timezone(tz)).strftime(fmt)
 
     else:
-      return str(datetime.datetime.now(tz=tz))
+      return str(datetime.datetime.now(tz=pytz.timezone(tz)))
 
 
 class Vault():
-  def __derive_key(self, b_password, b_salt=None):
+  def __derive_key(self, b_password: bytes, b_salt: Optional[bytes]=None) -> list[bytes]:
     if b_salt is None:
       b_salt = os.urandom(32)
 
     b_key = PBKDF2HMAC(hashes.SHA256(), 80, b_salt, 10000).derive(b_password)
-    return b_salt, b_key
+    return [b_salt, b_key]
 
-  def encrypt(self, b_string, password):
+  def encrypt(self, b_string: bytes, password: str) -> str:
     if b_string.lstrip().startswith(b'$ANSIBLE_VAULT;'):
       raise Exception('data is already encrypted with ansible vault')
 
@@ -1134,7 +1138,7 @@ class Vault():
     vtext = '\n'.join([b_salt.hex(), b_hmac.hex(), b_ciphertext.hex()]).encode('utf-8').hex()
     return '$ANSIBLE_VAULT;1.1;AES256\n'  + '\n'.join([vtext[i:i + 80] for i in range(0, len(vtext), 80)]) + '\n'
 
-  def decrypt(self, b_string, password):
+  def decrypt(self, b_string: bytes, password: str) -> bytes:
     slines = b_string.strip().splitlines()
     hdr = list(map(bytes.strip, slines[0].split(b';')))
 

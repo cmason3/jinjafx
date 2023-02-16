@@ -22,7 +22,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidTag
 from jinjafx import JinjaFx
 
-from typing import Optional, Union
+from typing import Optional, Union, NoReturn
 
 try:
   from lxml import etree
