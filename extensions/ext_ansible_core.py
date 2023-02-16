@@ -24,7 +24,8 @@ from urllib.parse import urlsplit
 from jinjafx import JinjaFx
 
 import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
- 
+
+
 class plugin(Extension):
   def __init__(self, environment):
     Extension.__init__(self, environment)
@@ -104,8 +105,8 @@ class plugin(Extension):
 
     return False
 
-  def __to_datetime(self, string, format="%Y-%m-%d %H:%M:%S"):
-    return datetime.datetime.strptime(string, format)
+  def __to_datetime(self, string, fmt="%Y-%m-%d %H:%M:%S"):
+    return datetime.datetime.strptime(string, fmt)
 
   def __strftime(self, string_format, second=None):
     if second is not None:
@@ -119,10 +120,7 @@ class plugin(Extension):
     return base64.b64encode(string.encode(encoding)).decode(encoding)
 
   def __random(self, end, start=None, step=None, seed=None):
-    if seed is None:
-      r = random.SystemRandom()
-    else:
-      r = random.Random(seed)
+    r = random.Random(seed)
 
     if isinstance(end, int):
       if not start:
@@ -172,7 +170,8 @@ class plugin(Extension):
     else:
       return results
 
-  def __dict2items(self, mydict, key_name='key', value_name='value', ret=[]):
+  def __dict2items(self, mydict, key_name='key', value_name='value'):
+    ret = []
     if not isinstance(mydict, dict):
       raise JinjaFx.TemplateError('dict2items requires a dictionary, got ' + str(type(mydict)) + ' instead')
 
@@ -229,13 +228,24 @@ class plugin(Extension):
       flags |= re.M
 
     _re = re.compile(pattern, flags=flags)
-    return bool(getattr(_re, match_type, 'search')(value))
+
+    if match_type == 'match':
+      return bool(_re.match(value))
+    elif match_type == 'findall':
+      return bool(_re.findall(value))
+    else:
+      return bool(_re.search(value))
+
+    #return bool(getattr(_re, match_type, 'search')(value))
 
   def __match(self, value, pattern='', ignorecase=False, multiline=False):
     return self.__regex(value, pattern, ignorecase, multiline, 'match')
 
   def __search(self, value, pattern='', ignorecase=False, multiline=False):
     return self.__regex(value, pattern, ignorecase, multiline, 'search')
+
+  def __regex_findall(self, value, pattern='', multiline=False, ignorecase=False):
+    return self.__regex(value, pattern, ignorecase, multiline, 'findall')
 
   def __contains(self, seq, value):
     return value in seq
@@ -261,16 +271,18 @@ class plugin(Extension):
     return _re.sub(replacement, value)
 
   def __regex_search(self, value, regex, *args, **kwargs):
-    groups = list()
+    groups = []
     flags = 0
 
     for arg in args:
       if arg.startswith('\\g'):
-        match = re.match(r'\\g<(\S+)>', arg).group(1)
-        groups.append(match)
+        match1 = re.match(r'\\g<(\S+)>', arg)
+        assert match1 is not None
+        groups.append(match1.group(1))
       elif arg.startswith('\\'):
-        match = int(re.match(r'\\(\d+)', arg).group(1))
-        groups.append(match)
+        match2 = re.match(r'\\(\d+)', arg)
+        assert match2 is not None
+        groups.append(int(match2.group(1)))
       else:
         raise JinjaFx.TemplateError('Unknown argument')
 
@@ -288,9 +300,6 @@ class plugin(Extension):
         for item in groups:
           items.append(match.group(item))
         return items
-
-  def __regex_findall(self, value, pattern='', multiline=False, ignorecase=False):
-    return self.__regex(value, pattern, ignorecase, multiline, 'findall')
 
   def __hash(self, data, hashtype='sha1'):
     h = hashlib.new(hashtype)
@@ -312,34 +321,34 @@ class plugin(Extension):
 
   @pass_environment
   def __intersect(self, environment, a, b):
-    if isinstance(a, Hashable) and isinstance(b, Hashable):
-      c = set(a) & set(b)
-    else:
-      c = self.__unique(environment, [x for x in a if x in b], True)
-    return c
+    #if isinstance(a, Hashable) and isinstance(b, Hashable):
+    #  c = set(a) & set(b)
+    #else:
+    return self.__unique(environment, [x for x in a if x in b], True)
+    #return c
 
   @pass_environment
   def __difference(self, environment, a, b):
-    if isinstance(a, Hashable) and isinstance(b, Hashable):
-      c = set(a) - set(b)
-    else:
-      c = self.__unique(environment, [x for x in a if x not in b], True)
-    return c
+    #if isinstance(a, Hashable) and isinstance(b, Hashable):
+    #  c = set(a) - set(b)
+    #else:
+    return self.__unique(environment, [x for x in a if x not in b], True)
+    #return c
 
   @pass_environment
   def __symmetric_difference(self, environment, a, b):
-    if isinstance(a, Hashable) and isinstance(b, Hashable):
-      c = set(a) ^ set(b)
-    else:
-      isect = self.__intersect(environment, a, b)
-      c = [x for x in self.__union(environment, a, b) if x not in isect]
-    return c
+    #if isinstance(a, Hashable) and isinstance(b, Hashable):
+    #  c = set(a) ^ set(b)
+    #else:
+    isect = self.__intersect(environment, a, b)
+    return [x for x in self.__union(environment, a, b) if x not in isect]
+    #return c
 
   @pass_environment
   def __union(self, environment, a, b):
-    if isinstance(a, Hashable) and isinstance(b, Hashable):
-      c = set(a) | set(b)
-    else:
-      c = self.__unique(environment, a + b, True)
-    return c
+    #if isinstance(a, Hashable) and isinstance(b, Hashable):
+    #  c = set(a) | set(b)
+    #else:
+    return self.__unique(environment, a + b, True)
+    #return c
 

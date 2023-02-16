@@ -13,6 +13,9 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from typing import Optional, Union, NoReturn, List, Dict, Tuple
+
+from jinja2 import Environment
 from jinja2.ext import Extension
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -21,6 +24,8 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidTag
 from jinjafx import JinjaFx
 
+import os, base64, random, re, hashlib
+
 try:
   from lxml import etree
   lxml = True
@@ -28,10 +33,9 @@ try:
 except:
   lxml = False
 
-import os, base64, random, re, hashlib
 
 class plugin(Extension):
-  def __init__(self, environment):
+  def __init__(self, environment: Environment) -> None:
     Extension.__init__(self, environment)
     
     self.__vaulty = Vaulty()
@@ -50,12 +54,12 @@ class plugin(Extension):
     environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
 
-  def __expand_snmpv3_key(self, password, algorithm):
+  def __expand_snmpv3_key(self, password: str, algorithm: str) -> bytes:
     h = hashlib.new(algorithm)
     h.update(((password * (1048576 // len(password))) + password[:1048576 % len(password)]).encode('utf-8'))
     return h.digest()
 
-  def __cisco_snmpv3_key(self, password, engineid, algorithm='sha1'):
+  def __cisco_snmpv3_key(self, password: str, engineid: str, algorithm: str='sha1') -> str:
     ekey = self.__expand_snmpv3_key(password, algorithm)
 
     h = hashlib.new(algorithm)
@@ -63,23 +67,25 @@ class plugin(Extension):
     hexdigest = h.hexdigest()
     return ':'.join([hexdigest[i:i + 2] for i in range(0, len(hexdigest), 2)])
 
-  def __junos_snmpv3_key(self, password, engineid, algorithm='sha1', prefix='80000a4c'):
+  def __junos_snmpv3_key(self, password: str, engineid: str, algorithm: str='sha1', prefix: str='80000a4c') -> str:
     ekey = self.__expand_snmpv3_key(password, algorithm)
 
-    if re.match(r'^(?:[a-f0-9]{2}:){5}[a-f0-9]{2}$', engineid):
-      engineid = prefix + '03' + ''.join(engineid.split(':'))
+    if re.match(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', engineid):
+      data = ''.join(f"{o:02x}" for o in map(int, engineid.split('.')))
+      engineid = prefix + '01' + data
 
-    elif re.match(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', engineid):
-      engineid = prefix + '01' + ''.join("{:02x}".format(int(o), 2) for o in engineid.split('.'))
+    elif re.match(r'^(?:[a-f0-9]{2}:){5}[a-f0-9]{2}$', engineid):
+      engineid = prefix + '03' + engineid.replace(':', '')
 
     else:
-      engineid = prefix + '04' + ''.join("{:02x}".format(ord(c)) for c in engineid)
+      data = ''.join(f"{c:02x}" for c in map(ord, engineid))
+      engineid = prefix + '04' + data
 
     h = hashlib.new(algorithm)
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
     return h.hexdigest()
 
-  def __cisco7encode(self, string, seed=False):
+  def __cisco7encode(self, string: str, seed: bool=False) -> str:
     KEY = 'dsfd;kfoA,.iyewrkldJKDHSUBsgvca69834ncxv9873254k;fg87'
 
     if seed:
@@ -92,14 +98,14 @@ class plugin(Extension):
 
     return result
 
-  def __junos9encode(self, string, seed=False):
+  def __junos9encode(self, string: str, seed: bool=False) -> str:
     ENCODING = [[1, 4, 32], [1, 16, 32], [1, 8, 32], [1, 64], [1, 32], [1, 4, 16, 128], [1, 32, 64]]
     FAMILY = ['QzF3n6/9CAtpu0O', 'B1IREhcSyrleKvMW8LXx', '7N-dVbwsY2g4oaJZGUDj', 'iHkq.mPf5T']
     EXTRA = { char: 3-i for i, f in enumerate(FAMILY) for char in f }
     NUM_ALPHA = [char for char in ''.join(FAMILY)]
     ALPHA_NUM = { NUM_ALPHA[i]: i for i, c in enumerate(NUM_ALPHA) }
   
-    def random_salt(length):
+    def random_salt(length: int) -> str:
       salt = ''
 
       for i in range(length):
@@ -107,9 +113,10 @@ class plugin(Extension):
 
       return salt
   
-    def gap_encode(char, prev, encode):
-      gaps = []
+    def gap_encode(char: str, prev: str, encode: List[int]) -> str:
+      gaps: List[int] = []
       val = ord(char)
+
       for e in encode[::-1]:
         gaps.insert(0, val // e)
         val %= e
@@ -139,10 +146,10 @@ class plugin(Extension):
   
     return result
 
-  def __generate_salt(self, length=16):
+  def __generate_salt(self, length: int=16) -> str:
     return ''.join(random.choice(self.__mod_b64chars) for _ in range(length))
 
-  def __cisco8hash(self, string, salt=None):
+  def __cisco8hash(self, string: str, salt: Optional[str]=None) -> str:
     if salt is None:
       salt = self.__generate_salt(14)
 
@@ -152,7 +159,7 @@ class plugin(Extension):
     h = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt.encode('utf-8'), iterations=20000).derive(string.encode('utf-8'))
     return '$8$' + salt + '$' + base64.b64encode(h).decode('utf-8').translate(self.__mod_b64table)[:-1]
 
-  def __cisco9hash(self, string, salt=None):
+  def __cisco9hash(self, string: str, salt: Optional[str]=None) -> str:
     if salt is None:
       salt = self.__generate_salt(14)
 
@@ -162,8 +169,8 @@ class plugin(Extension):
     h = Scrypt(salt.encode('utf-8'), 32, 16384, 1, 1).derive(string.encode('utf-8'))
     return '$9$' + salt + '$' + base64.b64encode(h).decode('utf-8').translate(self.__mod_b64table)[:-1]
 
-  def __sha512_crypt(self, key, salt):
-    def b64_from_24bit(b2, b1, b0, n):
+  def __sha512_crypt(self, key: str, salt: str) -> str:
+    def b64_from_24bit(b2: int, b1: int, b0: int, n: int) -> str:
       index = b2 << 16 | b1 << 8 | b0
 
       ret = []
@@ -173,16 +180,16 @@ class plugin(Extension):
       
       return ''.join(ret)
 
-    key = key.encode('utf-8')
-    klen = len(key)
+    nkey = key.encode('utf-8')
+    klen = len(nkey)
 
     h = hashlib.sha512()
     alt_h = hashlib.sha512()
 
-    alt_h.update(key + salt.encode('utf-8') + key)
+    alt_h.update(nkey + salt.encode('utf-8') + nkey)
     alt_r = alt_h.digest()
 
-    h.update(key + salt.encode('utf-8'))
+    h.update(nkey + salt.encode('utf-8'))
 
     for i in range(klen // 64):
       h.update(alt_r)
@@ -191,7 +198,7 @@ class plugin(Extension):
 
     while klen > 0:
       if klen & 1 == 0:
-        h.update(key)
+        h.update(nkey)
       else:
         h.update(alt_r)
 
@@ -202,12 +209,12 @@ class plugin(Extension):
     h = hashlib.sha512()
     alt_h = hashlib.sha512()
 
-    for i in range(len(key)):
-      h.update(key)
+    for i in range(len(nkey)):
+      h.update(nkey)
 
     t = h.digest()
-    p_bytes = t * (len(key) // 64)
-    p_bytes += t[:(len(key) % 64)]
+    p_bytes = t * (len(nkey) // 64)
+    p_bytes += t[:(len(nkey) % 64)]
 
     for i in range(16 + alt_r[0]):
       alt_h.update(salt.encode('utf-8'))
@@ -231,7 +238,7 @@ class plugin(Extension):
 
       alt_r = h.digest()
 
-    ret= []
+    ret: List[str] = []
     ret.append(b64_from_24bit(alt_r[0], alt_r[21], alt_r[42], 4))
     ret.append(b64_from_24bit(alt_r[22], alt_r[43], alt_r[1], 4))
     ret.append(b64_from_24bit(alt_r[44], alt_r[2], alt_r[23], 4))
@@ -256,7 +263,7 @@ class plugin(Extension):
     ret.append(b64_from_24bit(0, 0, alt_r[63], 2))
     return '$6$' + salt + '$' + ''.join(ret)
 
-  def __junos6hash(self, string, salt=None):
+  def __junos6hash(self, string: str, salt: Optional[str]=None) -> str:
     if salt is None:
       salt = self.__generate_salt(8)
 
@@ -265,13 +272,19 @@ class plugin(Extension):
 
     return self.__sha512_crypt(string, salt)
 
-  def __xpath(self, s_xml, s_path):
+  def __xpath(self, s_xml: str, s_path: str) -> List[str]:
     if lxml:
       s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
-      xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
-      xml = xml.xpath(s_path, namespaces=xml.nsmap)
+      p_xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
+      nsmap: Dict[str, Union[str, bytes]] = {}
 
-      r = []
+      for k in p_xml.nsmap:
+        if k is not None:
+          nsmap[k] = p_xml.nsmap[k]
+      
+      xml = p_xml.xpath(s_path, namespaces=nsmap)
+
+      r: List[str] = []
       for x in xml:
         if isinstance(x, str):
           r.append(x.strip())
@@ -283,11 +296,11 @@ class plugin(Extension):
       raise JinjaFx.TemplateError("'xpath' filter requires the 'lxml' python module")
 
 class Vaulty():
-  def __init__(self):
+  def __init__(self) -> None:
     self.__prefix = '$VAULTY;'
-    self.__kcache = {}
+    self.__kcache: Dict[Tuple[str, Optional[bytes]], List[bytes]] = {}
 
-  def __derive_key(self, password, salt=None):
+  def __derive_key(self, password: str, salt: Optional[bytes]=None) -> List[bytes]:
     ckey = (password, salt)
 
     if ckey in self.__kcache:
@@ -298,9 +311,9 @@ class Vaulty():
   
     key = Scrypt(salt, 32, 2**16, 8, 1).derive(password.encode('utf-8'))
     self.__kcache[ckey] = [salt, key]
-    return salt, key
+    return [salt, key]
 
-  def encrypt(self, plaintext, password, cols=None):
+  def encrypt(self, plaintext: str, password: str, cols: Optional[int]=None) -> str:
     version = b'\x01'
     salt, key = self.__derive_key(password)
     nonce = os.urandom(12)
@@ -313,14 +326,14 @@ class Vaulty():
 
     return r
   
-  def decrypt(self, ciphertext, password):
+  def decrypt(self, ciphertext: str, password: str) -> str:
     if ciphertext.lstrip().startswith(self.__prefix):
       try:
-        ciphertext = base64.b64decode(ciphertext.strip()[len(self.__prefix):])
+        nciphertext = base64.b64decode(ciphertext.strip()[len(self.__prefix):])
 
-        if ciphertext.startswith(b'\x01') and len(ciphertext) > 29:
-          key = self.__derive_key(password, ciphertext[1:17])[1]
-          return ChaCha20Poly1305(key).decrypt(ciphertext[17:29], ciphertext[29:], None).decode('utf-8')
+        if nciphertext.startswith(b'\x01') and len(nciphertext) > 29:
+          key = self.__derive_key(password, nciphertext[1:17])[1]
+          return ChaCha20Poly1305(key).decrypt(nciphertext[17:29], nciphertext[29:], None).decode('utf-8')
 
       except Exception:
         pass
