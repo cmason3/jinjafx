@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-from typing import Optional, Union, Match, Any, Pattern, NoReturn
+from typing import Optional, Union, Match, Any, Pattern, NoReturn, List, Dict
 
 __version__ = '1.16.0'
 
@@ -92,9 +92,9 @@ Environment Variables:
     if args.od is not None and not os.access(args.od, os.W_OK):
       parser.error('argument -od: unable to write to output directory')
 
-    gvars: dict[str, Any] = {}
+    gvars: Dict[str, Any] = {}
     data: Optional[str] = None
-    vpw: list[Optional[str]] = [ None ]
+    vpw: List[Optional[str]] = [ None ]
 
     if args.encrypt is not None:
       if not args.encrypt:
@@ -189,7 +189,7 @@ Environment Variables:
               except Exception:
                 parser.error('argument -ds: invalid regular expression')
   
-              matches: list[str] = list(filter(args.ds.search, list(dt['datasets'].keys())))
+              matches: List[str] = list(filter(args.ds.search, list(dt['datasets'].keys())))
               if len(matches) == 1:
                 if 'data' in dt['datasets'][matches[0]]:
                   dt['data'] = dt['datasets'][matches[0]]['data']
@@ -366,7 +366,7 @@ Environment Variables:
     sys.exit(-2)
 
 
-def __decrypt_vault(vpw: list[Optional[str]], string: str) -> bytes:
+def __decrypt_vault(vpw: List[Optional[str]], string: str) -> bytes:
   if string.lstrip().startswith('$ANSIBLE_VAULT;'):
     __get_vault_credentials(vpw)
     assert vpw[0] is not None
@@ -374,7 +374,7 @@ def __decrypt_vault(vpw: list[Optional[str]], string: str) -> bytes:
   return string.encode('utf-8')
 
 
-def __get_vault_credentials(vpw: list[Optional[str]], verify: bool=False) -> None:
+def __get_vault_credentials(vpw: List[Optional[str]], verify: bool=False) -> None:
   if vpw[0] is None:
     vpw[0] = os.getenv('ANSIBLE_VAULT_PASSWORD')
 
@@ -405,7 +405,7 @@ def __format_bytes(b: Union[float, int]) -> str:
   return f'{b:.2f}'.rstrip('0').rstrip('.') + u + 'B'
 
 
-def __merge(dst: dict[str, Any], src: dict[str, Any]) -> dict[str, Any]:
+def __merge(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any]:
   for key in src:
     if key in dst:
       if isinstance(dst[key], dict) and isinstance(src[key], dict):
@@ -432,19 +432,19 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template: Union[str, io.TextIOWrapper], data: Optional[str], gvars: dict[str, Any], output: str, exts_dirs: Optional[list[str]]=None, sandbox: bool=False) -> dict[str, list[str]]:
-    self.__g_datarows: list[list[str]] = []
-    self.__g_dict: dict[str, int] = {}
+  def jinjafx(self, template: Union[str, io.TextIOWrapper], data: Optional[str], gvars: Dict[str, Any], output: str, exts_dirs: Optional[List[str]]=None, sandbox: bool=False) -> Dict[str, List[str]]:
+    self.__g_datarows: List[List[str]] = []
+    self.__g_dict: Dict[str, int] = {}
     self.__g_row = 0 
-    self.__g_vars: dict[str, Any] = {}
-    self.__g_warnings: list[str] = []
+    self.__g_vars: Dict[str, Any] = {}
+    self.__g_warnings: List[str] = []
     self.__g_xlimit = 5000 if sandbox else 0
 
-    outputs: dict[str, list[str]] = {}
+    outputs: Dict[str, List[str]] = {}
     delim: Optional[str] = None
     rowkey = 1
-    int_indices: list[int] = []
-    float_indices: list[int] = []
+    int_indices: List[int] = []
+    float_indices: List[int] = []
 
     if not isinstance(template, (str, io.TextIOWrapper)):
       raise TypeError('template must be of type str or type FileType')
@@ -454,7 +454,7 @@ class JinjaFx():
         raise TypeError('data must be of type str')
 
       if data.strip():
-        jinjafx_filter: dict[int, str] = {}
+        jinjafx_filter: Dict[int, str] = {}
         jinjafx_adjust_headers = str(gvars.get('jinjafx_adjust_headers', 'no')).strip().lower()
         recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
 
@@ -506,7 +506,7 @@ class JinjaFx():
   
             else:
               gcount = 1
-              ufields: list[str] = []
+              ufields: List[str] = []
 
               assert delim is not None
               for f in re.split(delim, l.strip(schars)):
@@ -547,7 +547,7 @@ class JinjaFx():
                       break
   
                 else:
-                  xgroups: list[list[str]] = []
+                  xgroups: List[List[str]] = []
   
                   for col in range(1, len(fields[0])):
                     fields[0][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][0])
@@ -601,7 +601,7 @@ class JinjaFx():
         if isinstance(field, dict):
           fn = next(iter(field))
           r = True if fn.startswith('-') else False
-          mv: list[list[Pattern[Any]]] = []
+          mv: List[List[Pattern[Any]]] = []
 
           for rx, v in field[fn].items():
             mv.append([re.compile(rx + '$'), v])
@@ -677,7 +677,7 @@ class JinjaFx():
     routput = env.from_string(output)
 
     for row in range(1, max(2, len(self.__g_datarows))):
-      rowdata: dict[str, str] = {}
+      rowdata: Dict[str, str] = {}
 
       if self.__g_datarows:
         for col in range(len(self.__g_datarows[0])):
@@ -787,7 +787,7 @@ class JinjaFx():
     pass
 
 
-  def __find_re_match(self, o: list[list[Pattern[Any]]], v: str, default: int=0) -> Union[Pattern[Any], int]:
+  def __find_re_match(self, o: List[List[Pattern[Any]]], v: str, default: int=0) -> Union[Pattern[Any], int]:
     for rx in o:
       if rx[0].match(v):
         return rx[1]
@@ -813,7 +813,7 @@ class JinjaFx():
 
     elif method == 'varnames' or method == 'ansible.builtin.varnames':
       if args:
-        ret: list[str] = []
+        ret: List[str] = []
 
         for term in args:
           try:
@@ -851,8 +851,8 @@ class JinjaFx():
 
 
   def __jfx_expand(self, s: str, rg: bool=False) -> Any:
-    pofa: list[str] = [s]
-    groups: list[list[str]] = [[s]]
+    pofa: List[str] = [s]
+    groups: List[List[str]] = [[s]]
 
     if re.search(r'(?<!\\)[\(\[\{]', pofa[0]):
       i = 0
@@ -909,7 +909,7 @@ class JinjaFx():
         else:
           m = re.search(r'(?<!\\)\[([A-Z0-9\-]+)(?<!\\)\]', pofa[i], re.IGNORECASE)
           if m and not re.match(r'(?:[A-Z]-[^A-Z]|[a-z]-[^a-z]|[0-9]-[^0-9]|[^A-Za-z0-9]-)', m.group(1)):
-            clist: list[str] = []
+            clist: List[str] = []
   
             mpos = groups[i][0].index(m.group())
             nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
@@ -919,7 +919,7 @@ class JinjaFx():
   
             for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
               if x[1] != '':
-                ee: list[str] = x[0].split('-')
+                ee: List[str] = x[0].split('-')
 
                 start = ord(ee[0])
                 end = ord(ee[1]) + 1 if ord(ee[1]) >= ord(ee[0]) else ord(ee[1]) - 1
@@ -957,8 +957,8 @@ class JinjaFx():
     return [pofa, groups] if rg else pofa
 
 
-  def __jfx_fandl(self, forl: str, fields: Optional[list[str]], ffilter: dict[str, str]) -> bool:
-    fpos: list[int] = []
+  def __jfx_fandl(self, forl: str, fields: Optional[List[str]], ffilter: Dict[str, str]) -> bool:
+    fpos: List[int] = []
 
     if not self.__g_row:
       return True
@@ -1012,15 +1012,15 @@ class JinjaFx():
     return ''
 
 
-  def __jfx_first(self, fields: Optional[list[str]]=None, ffilter: dict[str, str]={}) -> bool:
+  def __jfx_first(self, fields: Optional[List[str]]=None, ffilter: Dict[str, str]={}) -> bool:
     return self.__jfx_fandl('first', fields, ffilter)
 
 
-  def __jfx_last(self, fields: Optional[list[str]]=None, ffilter: dict[str, str]={}) -> bool:
+  def __jfx_last(self, fields: Optional[List[str]]=None, ffilter: Dict[str, str]={}) -> bool:
     return self.__jfx_fandl('last', fields, ffilter)
 
   
-  def __jfx_fields(self, field: Optional[str]=None, ffilter: dict[str, str]={}) -> Optional[list[str]]:
+  def __jfx_fields(self, field: Optional[str]=None, ffilter: Dict[str, str]={}) -> Optional[List[str]]:
     if field is not None:
       if field in self.__g_datarows[0]:
         fpos = self.__g_datarows[0].index(field) + 1
@@ -1029,7 +1029,7 @@ class JinjaFx():
     else:
       return None
     
-    field_values: list[str] = []
+    field_values: List[str] = []
         
     for r in range(1, len(self.__g_datarows)):
       fmatch = True
@@ -1053,7 +1053,7 @@ class JinjaFx():
     return field_values
 
  
-  def __jfx_data(self, row: int, col: Optional[Union[str, int]]=None) -> Optional[Union[str, list[str]]]:
+  def __jfx_data(self, row: int, col: Optional[Union[str, int]]=None) -> Optional[Union[str, List[str]]]:
     if self.__g_datarows:
       if isinstance(col, str):
         if col in self.__g_datarows[0]:
@@ -1114,7 +1114,7 @@ class JinjaFx():
 
 
 class Vault():
-  def __derive_key(self, b_password: bytes, b_salt: Optional[bytes]=None) -> list[bytes]:
+  def __derive_key(self, b_password: bytes, b_salt: Optional[bytes]=None) -> List[bytes]:
     if b_salt is None:
       b_salt = os.urandom(32)
 

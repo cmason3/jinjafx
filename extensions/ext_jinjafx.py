@@ -22,7 +22,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidTag
 from jinjafx import JinjaFx
 
-from typing import Optional, Union, NoReturn
+from typing import Optional, Union, NoReturn, List, Dict, Tuple
 
 try:
   from lxml import etree
@@ -112,8 +112,8 @@ class plugin(Extension):
 
       return salt
   
-    def gap_encode(char: str, prev: str, encode: list[int]) -> str:
-      gaps: list[int] = []
+    def gap_encode(char: str, prev: str, encode: List[int]) -> str:
+      gaps: List[int] = []
       val = ord(char)
 
       for e in encode[::-1]:
@@ -237,7 +237,7 @@ class plugin(Extension):
 
       alt_r = h.digest()
 
-    ret: list[str] = []
+    ret: List[str] = []
     ret.append(b64_from_24bit(alt_r[0], alt_r[21], alt_r[42], 4))
     ret.append(b64_from_24bit(alt_r[22], alt_r[43], alt_r[1], 4))
     ret.append(b64_from_24bit(alt_r[44], alt_r[2], alt_r[23], 4))
@@ -271,11 +271,11 @@ class plugin(Extension):
 
     return self.__sha512_crypt(string, salt)
 
-  def __xpath(self, s_xml: str, s_path: str) -> list[str]:
+  def __xpath(self, s_xml: str, s_path: str) -> List[str]:
     if lxml:
       s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
       p_xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
-      nsmap: dict[str, Union[str, bytes]] = {}
+      nsmap: Dict[str, Union[str, bytes]] = {}
 
       for k in p_xml.nsmap:
         if k is not None:
@@ -283,7 +283,7 @@ class plugin(Extension):
       
       xml = p_xml.xpath(s_path, namespaces=nsmap)
 
-      r: list[str] = []
+      r: List[str] = []
       for x in xml:
         if isinstance(x, str):
           r.append(x.strip())
@@ -297,9 +297,9 @@ class plugin(Extension):
 class Vaulty():
   def __init__(self) -> None:
     self.__prefix = '$VAULTY;'
-    self.__kcache: dict[tuple[str, Optional[bytes]], list[bytes]] = {}
+    self.__kcache: Dict[Tuple[str, Optional[bytes]], List[bytes]] = {}
 
-  def __derive_key(self, password: str, salt: Optional[bytes]=None) -> list[bytes]:
+  def __derive_key(self, password: str, salt: Optional[bytes]=None) -> List[bytes]:
     ckey = (password, salt)
 
     if ckey in self.__kcache:
