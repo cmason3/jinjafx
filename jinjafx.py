@@ -30,7 +30,7 @@ from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
 
-__version__ = '1.16.0'
+__version__ = '1.16.1'
 
 def main() -> None:
   exc_source = None
@@ -955,7 +955,12 @@ class JinjaFx():
       g.pop(0)
 
     pofa = [re.sub(r'\\([\|\(\[\)\]])', r'\1', i) for i in pofa]
-    return [pofa, groups] if rg else pofa
+
+    if rg:
+      ret: List[Union[List[str], List[List[str]]]] = [pofa, groups]
+      return ret
+ 
+    return pofa
 
 
   def __jfx_fandl(self, forl: str, fields: Optional[List[str]], ffilter: Dict[str, str]) -> bool:

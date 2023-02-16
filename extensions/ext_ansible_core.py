@@ -16,9 +16,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+# mypy: disable-error-code="no-untyped-def,no-untyped-call"
+
 from jinja2.ext import Extension
-from jinja2.filters import pass_environment
 from jinja2.filters import do_unique
+from jinja2.utils import pass_environment
 from collections.abc import Sequence, Hashable
 from urllib.parse import urlsplit
 from jinjafx import JinjaFx
