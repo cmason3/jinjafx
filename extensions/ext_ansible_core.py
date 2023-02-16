@@ -25,6 +25,7 @@ from jinjafx import JinjaFx
 
 import re, base64, hashlib, yaml, json, datetime, time, math, random, itertools
 
+
 class plugin(Extension):
   def __init__(self, environment):
     Extension.__init__(self, environment)

@@ -13,6 +13,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from typing import Optional, Union, NoReturn, List, Dict, Tuple
+
 from jinja2 import Environment
 from jinja2.ext import Extension
 from cryptography.hazmat.primitives import hashes
@@ -22,7 +24,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidTag
 from jinjafx import JinjaFx
 
-from typing import Optional, Union, NoReturn, List, Dict, Tuple
+import os, base64, random, re, hashlib
 
 try:
   from lxml import etree
@@ -31,7 +33,6 @@ try:
 except:
   lxml = False
 
-import os, base64, random, re, hashlib
 
 class plugin(Extension):
   def __init__(self, environment: Environment) -> None:

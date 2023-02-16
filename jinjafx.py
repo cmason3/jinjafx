@@ -15,6 +15,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from typing import Optional, Union, Match, Any, Pattern, NoReturn, List, Dict
+
 import sys, os, io, importlib.util, argparse, re, getpass, datetime, traceback
 import jinja2, jinja2.sandbox, yaml, pytz
 
@@ -27,7 +29,6 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-from typing import Optional, Union, Match, Any, Pattern, NoReturn, List, Dict
 
 __version__ = '1.16.0'
 

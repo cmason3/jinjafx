@@ -16,12 +16,13 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from typing import Callable, Dict
+
 from jinja2.ext import Extension
 from jinjafx import JinjaFx
 
 import netaddr, types
 
-from typing import Callable
  
 class plugin(Extension):
   def __init__(self, environment):
@@ -501,7 +502,7 @@ def ipaddr(value, query="", version=False, alias="ipaddr"):
         "wrap": ("vtype", "value"),
     }
 
-    query_func_map: dict[str, Callable] = {
+    query_func_map: Dict[str, Callable] = {
         "": _empty_ipaddr_query,
         "6to4": _6to4_query,
         "address": _ip_query,
@@ -1073,7 +1074,7 @@ def hwaddr(value, query="", alias="hwaddr"):
 
     query_func_extra_args = {"": ("value",)}
 
-    query_func_map: dict[str, Callable] = {
+    query_func_map: Dict[str, Callable] = {
         "": _empty_hwaddr_query,
         "bare": _bare_query,
         "bool": _bool_hwaddr_query,
