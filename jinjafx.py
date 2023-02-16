@@ -29,7 +29,6 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-
 __version__ = '1.16.1'
 
 def main() -> None:
@@ -435,9 +434,9 @@ class __ArgumentParser(argparse.ArgumentParser):
 class JinjaFx():
   def jinjafx(self, template: Union[str, io.TextIOWrapper], data: Optional[str], gvars: Dict[str, Any], output: str, exts_dirs: Optional[List[str]]=None, sandbox: bool=False) -> Dict[str, List[str]]:
     self.__g_datarows: List[List[str]] = []
-    self.__g_dict: Dict[str, int] = {}
+    self.__g_dict: Dict[str, Union[int, str, bool]] = {}
     self.__g_row = 0 
-    self.__g_vars: Dict[str, Any] = {}
+    self.__g_vars: Dict[str, Union[int, str, bool]] = {}
     self.__g_warnings: List[str] = []
     self.__g_xlimit = 5000 if sandbox else 0
 
@@ -795,7 +794,7 @@ class JinjaFx():
     return default
 
 
-  def __jfx_lookup(self, method: str, *args: str) -> Any:
+  def __jfx_lookup(self, method: str, *args: str) -> Union[Union[int, str, bool], List[str]]:
     if method == 'vars' or method == 'ansible.builtin.vars':
       if args:
         default: Optional[str] = args[1] if len(args) > 1 else None
@@ -846,12 +845,12 @@ class JinjaFx():
 
     if self.__g_dict.get(key + '_' + str(row), True):
       n = self.__g_dict.get(key, int(start) - int(increment))
-      self.__g_dict[key] = n + int(increment)
+      self.__g_dict[key] = int(n) + int(increment)
       self.__g_dict[key + '_' + str(row)] = False
     return str(self.__g_dict[key])
 
 
-  def __jfx_expand(self, s: str, rg: bool=False) -> Any:
+  def __jfx_expand(self, s: str, rg: bool=False) -> Any: # FIXME: Any
     pofa: List[str] = [s]
     groups: List[List[str]] = [[s]]
 
@@ -1098,16 +1097,16 @@ class JinjaFx():
       key = '_cnt_k_' + str(key)
 
     n = self.__g_dict.get(key, int(start) - int(increment))
-    self.__g_dict[key] = n + int(increment)
-    return self.__g_dict[key]
+    self.__g_dict[key] = int(n) + int(increment)
+    return int(self.__g_dict[key])
 
 
-  def __jfx_setg(self, key: str, value: Any) -> str:
+  def __jfx_setg(self, key: str, value: Union[int, str, bool]) -> str:
     self.__g_dict['_val_' + str(key)] = value
     return ''
 
 
-  def __jfx_getg(self, key: str, default: Optional[str]=None) -> Any:
+  def __jfx_getg(self, key: str, default: Optional[Union[int, str, bool]]=None) -> Optional[Union[int, str, bool]]:
     return self.__g_dict.get('_val_' + str(key), default)
 
 

@@ -33,7 +33,6 @@ try:
 except:
   lxml = False
 
-
 class plugin(Extension):
   def __init__(self, environment: Environment) -> None:
     Extension.__init__(self, environment)

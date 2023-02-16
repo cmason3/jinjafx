@@ -24,7 +24,6 @@ from jinja2.ext import Extension
 from jinjafx import JinjaFx
 
 import netaddr, types
-
  
 class plugin(Extension):
   def __init__(self, environment):
