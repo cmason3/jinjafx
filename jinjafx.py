@@ -527,7 +527,7 @@ class JinjaFx():
                 ufields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
   
               n = len(self.__g_datarows[0])
-              fields = [list(map(self.__jfx_expand, ufields[:n] + [''] * (n - len(ufields)), [True] * n))]
+              fields = list(list(map(self.__jfx_expand, ufields[:n] + [''] * (n - len(ufields)), [True] * n)))
 
               row = 0
               while fields:
