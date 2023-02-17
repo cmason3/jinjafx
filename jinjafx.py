@@ -15,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from typing import Optional, Union, Match, Any, Pattern, NoReturn, List, Dict
+from typing import Optional, Union, Match, Any, Pattern, NoReturn, List, Dict, cast
 
 import sys, os, io, importlib.util, argparse, re, getpass, datetime, traceback
 import jinja2, jinja2.sandbox, yaml, pytz
@@ -527,7 +527,7 @@ class JinjaFx():
                 ufields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
   
               n = len(self.__g_datarows[0])
-              fields = list(list(map(self.__jfx_expand, ufields[:n] + [''] * (n - len(ufields)), [True] * n)))
+              fields = cast(List[List[Union[int, List[str], List[List[str]]]]], [list(map(self.__jfx_expand, ufields[:n] + [''] * (n - len(ufields)), [True] * n))])
 
               row = 0
               while fields:
@@ -535,7 +535,7 @@ class JinjaFx():
                   fields[0].insert(0, rowkey)
                   rowkey += 1
   
-                if any(isinstance(col[0], list) for col in fields[0][1:]):
+                if any(isinstance(colx[0], list) for colx in fields[0][1:]):
                   for col in range(1, len(fields[0])):
                     if isinstance(fields[0][col][0], list):
                       for i, v in enumerate(fields[0][col][0]):
@@ -850,7 +850,7 @@ class JinjaFx():
     return str(self.__g_dict[key])
 
 
-  def __jfx_expand(self, s: str, rg: bool=False) -> Any: # FIXME: Any
+  def __jfx_expand(self, s: str, rg: bool=False) -> Union[List[str], List[Union[List[str], List[List[str]]]]]:
     pofa: List[str] = [s]
     groups: List[List[str]] = [[s]]
 
