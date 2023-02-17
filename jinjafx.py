@@ -433,10 +433,10 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 class JinjaFx():
   def jinjafx(self, template: Union[str, io.TextIOWrapper], data: Optional[str], gvars: Dict[str, Any], output: str, exts_dirs: Optional[List[str]]=None, sandbox: bool=False) -> Dict[str, List[str]]:
-    self.__g_datarows: List[List[str]] = []
+    self.__g_datarows: List[List[Union[str, int, float]]] = []
     self.__g_dict: Dict[str, Union[int, str, bool]] = {}
     self.__g_row = 0 
-    self.__g_vars: Dict[str, Union[int, str, bool]] = {}
+    self.__g_vars: Dict[str, Union[int, str, float, bool]] = {}
     self.__g_warnings: List[str] = []
     self.__g_xlimit = 5000 if sandbox else 0
 
@@ -588,7 +588,7 @@ class JinjaFx():
                         break
   
                   if include_row:
-                    self.__g_datarows.append(cast(List[str], fields[0])) # FIXME: str, int, float
+                    self.__g_datarows.append(cast(List[Union[str, int, float]], fields[0]))
   
                   fields.pop(0)
                   row += 1
@@ -606,7 +606,7 @@ class JinjaFx():
           for rx, v in field[fn].items():
             mv.append([re.compile(rx + '$'), v])
 
-          self.__g_datarows[1:] = sorted(self.__g_datarows[1:], key=lambda n: (self.__find_re_match(mv, n[self.__g_datarows[0].index(fn.lstrip('+-')) + 1]), n[self.__g_datarows[0].index(fn.lstrip('+-')) + 1]), reverse=r)
+          self.__g_datarows[1:] = sorted(self.__g_datarows[1:], key=lambda n: (self.__find_re_match(mv, cast(str, n[self.__g_datarows[0].index(fn.lstrip('+-')) + 1])), n[self.__g_datarows[0].index(fn.lstrip('+-')) + 1]), reverse=r)
 
         else:
           r = True if field.startswith('-') else False
@@ -677,11 +677,11 @@ class JinjaFx():
     routput = env.from_string(output)
 
     for row in range(1, max(2, len(self.__g_datarows))):
-      rowdata: Dict[str, str] = {}
+      rowdata: Dict[str, Union[str, int, float]] = {}
 
       if self.__g_datarows:
         for col in range(len(self.__g_datarows[0])):
-          rowdata.update({ self.__g_datarows[0][col]: self.__g_datarows[row][col + 1] })
+          rowdata.update({ cast(str, self.__g_datarows[0][col]): self.__g_datarows[row][col + 1] })
 
         env.globals['jinjafx'].update({ 'row': row })
         self.__g_row = row
@@ -794,7 +794,7 @@ class JinjaFx():
     return default
 
 
-  def __jfx_lookup(self, method: str, *args: str) -> Union[Union[int, str, bool], List[str]]:
+  def __jfx_lookup(self, method: str, *args: str) -> Union[Union[int, str, float, bool], List[str]]:
     if method == 'vars' or method == 'ansible.builtin.vars':
       if args:
         default: Optional[str] = args[1] if len(args) > 1 else None
@@ -1025,7 +1025,7 @@ class JinjaFx():
     return self.__jfx_fandl('last', fields, ffilter)
 
   
-  def __jfx_fields(self, field: Optional[str]=None, ffilter: Dict[str, str]={}) -> Optional[List[str]]:
+  def __jfx_fields(self, field: Optional[str]=None, ffilter: Dict[str, str]={}) -> Optional[List[Union[str, int, float]]]:
     if field is not None:
       if field in self.__g_datarows[0]:
         fpos = self.__g_datarows[0].index(field) + 1
@@ -1034,7 +1034,7 @@ class JinjaFx():
     else:
       return None
     
-    field_values: List[str] = []
+    field_values: List[Union[str, int, float]] = []
         
     for r in range(1, len(self.__g_datarows)):
       fmatch = True
@@ -1058,7 +1058,7 @@ class JinjaFx():
     return field_values
 
  
-  def __jfx_data(self, row: int, col: Optional[Union[str, int]]=None) -> Optional[Union[str, List[str]]]:
+  def __jfx_data(self, row: int, col: Optional[Union[str, int]]=None) -> Optional[Union[Union[str, int, float], List[Union[str, int, float]]]]:
     if self.__g_datarows:
       if isinstance(col, str):
         if col in self.__g_datarows[0]:
