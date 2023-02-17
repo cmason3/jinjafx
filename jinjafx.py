@@ -527,7 +527,7 @@ class JinjaFx():
                 ufields.append(re.sub(r'^(["\'])(.*)\1$', r'\2', f))
   
               n = len(self.__g_datarows[0])
-              fields = cast(List[List[Union[int, List[str], List[List[str]]]]], [list(map(self.__jfx_expand, ufields[:n] + [''] * (n - len(ufields)), [True] * n))])
+              fields = cast(List[List[Union[int, str, float, List[str], List[List[str]]]]], [list(map(self.__jfx_expand, ufields[:n] + [''] * (n - len(ufields)), [True] * n))])
 
               row = 0
               while fields:
@@ -535,12 +535,12 @@ class JinjaFx():
                   fields[0].insert(0, rowkey)
                   rowkey += 1
   
-                if any(isinstance(colx[0], list) for colx in fields[0][1:]):
+                if any(isinstance(colx[0], list) for colx in cast(List[Any], fields[0][1:])):
                   for col in range(1, len(fields[0])):
-                    if isinstance(fields[0][col][0], list):
-                      for i, v in enumerate(fields[0][col][0]):
+                    if isinstance(cast(List[Any], fields[0][col])[0], list):
+                      for i, v in enumerate(cast(List[Any], fields[0][col])[0]):
                         nrow = [e[:] if isinstance(e, list) else e for e in fields[0]]
-                        nrow[col] = [v, fields[0][col][1][i]]
+                        nrow[col] = [v, cast(List[Any], fields[0][col])[1][i]]
                         fields.append(nrow)
   
                       fields.pop(0)
@@ -550,45 +550,45 @@ class JinjaFx():
                   xgroups: List[List[str]] = []
   
                   for col in range(1, len(fields[0])):
-                    fields[0][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][0])
+                    cast(List[Any], fields[0][col])[0] = recm.sub(lambda m: self.__jfx_data_counter(m, cast(int, fields[0][0]), col, row), cast(List[Any], fields[0][col])[0])
   
-                    for g in range(len(fields[0][col][1])):
-                      fields[0][col][1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][1][g])
+                    for g in range(len(cast(List[Any], fields[0][col])[1])):
+                      cast(List[Any], fields[0][col])[1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, cast(int, fields[0][0]), col, row), cast(List[Any], fields[0][col])[1][g])
   
-                    xgroups.append(fields[0][col][1])
+                    xgroups.append(cast(List[Any], fields[0][col])[1])
  
                   groups = dict(enumerate(sum(xgroups, ['\\0'])))
   
                   for col in range(1, len(fields[0])):
-                    fields[0][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + str(m.group(1))), fields[0][col][0])
+                    fields[0][col] = re.sub(r'\\([0-9]+)', lambda m: groups.get(int(m.group(1)), '\\' + str(m.group(1))), cast(List[Any], fields[0][col])[0])
   
                     delta = 0
-                    for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', fields[0][col]):
+                    for m in re.finditer(r'([0-9]+)(?<!\\)\%([0-9]+)', cast(str, fields[0][col])):
                       pvalue = str(int(m.group(1))).zfill(int(m.group(2)))
-                      fields[0][col] = fields[0][col][:m.start() + delta] + pvalue + fields[0][col][m.end() + delta:]
+                      fields[0][col] = cast(str, fields[0][col])[:m.start() + delta] + pvalue + cast(str, fields[0][col])[m.end() + delta:]
   
                       if len(m.group(0)) > len(pvalue):
                         delta -= len(m.group(0)) - len(pvalue)
                       else:
                         delta += len(pvalue) - len(m.group(0))
   
-                    fields[0][col] = re.sub(r'\\([}{%])', r'\1', fields[0][col])
+                    fields[0][col] = re.sub(r'\\([}{%])', r'\1', cast(str, fields[0][col]))
   
                     if col in int_indices:
-                      fields[0][col] = int(fields[0][col])
+                      fields[0][col] = int(cast(str, fields[0][col]))
 
                     elif col in float_indices:
-                      fields[0][col] = float(fields[0][col])
+                      fields[0][col] = float(cast(str, fields[0][col]))
 
                   include_row = True
                   if jinjafx_filter:
                     for index in jinjafx_filter:
-                      if not re.search(jinjafx_filter[index], fields[0][index]):
+                      if not re.search(jinjafx_filter[index], cast(str, fields[0][index])):
                         include_row = False
                         break
   
                   if include_row:
-                    self.__g_datarows.append(fields[0])
+                    self.__g_datarows.append(cast(List[str], fields[0])) # FIXME: str, int, float
   
                   fields.pop(0)
                   row += 1
