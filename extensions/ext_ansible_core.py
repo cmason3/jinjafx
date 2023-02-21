@@ -44,7 +44,7 @@ class plugin(Extension):
       environment.filters[p + 'to_json'] = self.__to_json
       environment.filters[p + 'to_nice_json'] = self.__to_nice_json
       environment.filters[p + 'from_json'] = json.loads
-      environment.filters[p + 'to_bool'] = self.__to_bool
+      environment.filters[p + 'bool'] = self.__bool
       environment.filters[p + 'to_datetime'] = self.__to_datetime
       environment.filters[p + 'strftime'] = self.__strftime
       environment.filters[p + 'b64decode'] = self.__b64decode
@@ -94,7 +94,7 @@ class plugin(Extension):
   def __to_nice_json(self, a, indent=4, sort_keys=True, *args, **kw):
     return self.__to_json(a, indent=indent, sort_keys=sort_keys, separators=(',', ': '), *args, **kw)
 
-  def __to_bool(self, a):
+  def __bool(self, a):
     if a is None or isinstance(a, bool):
       return a
 
