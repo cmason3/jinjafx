@@ -242,7 +242,7 @@ This contains the following Ansible filters:
 - `to_json`
 - `to_nice_json`
 - `from_json`
-- `to_bool`
+- `bool`
 - `to_datetime`
 - `strftime`
 - `b64encode`
