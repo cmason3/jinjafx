@@ -575,7 +575,7 @@ This function is used to stop processing and raise an exception with a meaningfu
 
 Nearly identical to the previous function, except this won't stop processing of the template but will raise a warning message when the output is generated - this can be specified multiple times for multiple warnings, although repeated warnings are suppressed unless you set the second parameter to True.
 
-- <b><code>jinjafx.first([fields[]], [{ "filter_field": "regex", ... }])</code></b>
+- <b><code>jinjafx.first(["field", "field", ...], { "filter_field": "regex", ... })</code></b>
 
 This function is used to determine whether this is the first row where you have seen this particular field value or not - if you don't specify any fields then it will return `True` for the first row and `False` for the rest.
 
@@ -590,11 +590,11 @@ If we take the above example, then `jinjafx.first(['A'])` would return `True` fo
 
 There is also an optional `filter_field` argument that allows you to filter the data using a regular expression to match certain rows before performing the check. For example, `jinjafx.first(['A'], { 'B': '3' })` would return `True` for row 3 only as it is the only row which matches the filter.
 
-- <b><code>jinjafx.last([fields[]], [{ "filter_field": "regex", ... }])</code></b>
+- <b><code>jinjafx.last(["field", "field", ...], { "filter_field": "regex", ... })</code></b>
 
 This function is used to determine whether this is the last row where you have seen this particular field value or not - if you don't specify any fields then it will return 'True' for the last row and 'False' for the rest.
 
-- <b><code>jinjafx.fields("field", [{ "filter_field": "regex", ... }])</code></b>
+- <b><code>jinjafx.fields("field", { "filter_field": "regex", ... })</code></b>
 
 This function is used to return a unique list of non-empty field values for a specific header field. It also allows the ability to limit what values are included in the list by specifying an optional `filter_field` argument that allows you to filter the data using a regular expression to match certain rows.
 
