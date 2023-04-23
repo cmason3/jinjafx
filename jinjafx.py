@@ -29,7 +29,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.16.2'
+__version__ = '1.17.0'
 
 def main() -> None:
   exc_source = None
