@@ -546,7 +546,7 @@ This variable will contain the current row number being processed.
 
 This variable will contain the total number of rows within the data.
 
-- <code><b>jinjafx.data(row</b>: Integer<b>, col</b>: Optional[Integer]<b>)</b> -> List[String] | String</code>
+- <code><b>jinjafx.data(row</b>: Integer<b>, col</b>: Optional[Integer | String]<b>)</b> -> List[String] | String</code>
 
 This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')`. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
 
@@ -577,7 +577,7 @@ This function is used to stop processing and raise an exception with a meaningfu
 
 Nearly identical to the previous function, except this won't stop processing of the template but will raise a warning message when the output is generated - this can be specified multiple times for multiple warnings, although repeated warnings are suppressed unless you set the second parameter to True.
 
-- <code><b>jinjafx.first(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[field: String, regex: String]]<b>)</b> -> Boolean</code>
+- <code><b>jinjafx.first(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[<b>field</b>: String<b>, regex</b>: String]]<b>)</b> -> Boolean</code>
 
 This function is used to determine whether this is the first row where you have seen this particular field value or not - if you don't specify any fields then it will return `True` for the first row and `False` for the rest.
 
@@ -592,11 +592,11 @@ If we take the above example, then `jinjafx.first(['A'])` would return `True` fo
 
 There is also an optional `filter_fields` argument that allows you to filter the data using a regular expression to match certain rows before performing the check. For example, `jinjafx.first(['A'], { 'B': '3' })` would return `True` for row 3 only as it is the only row which matches the filter, where 'B' contains a '3'.
 
-- <code><b>jinjafx.last(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[field: String, regex: String]]<b>)</b> -> Boolean</code>
+- <code><b>jinjafx.last(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[<b>field</b>: String<b>, regex</b>: String]]<b>)</b> -> Boolean</code>
 
 This function is used to determine whether this is the last row where you have seen this particular field value or not - if you don't specify any fields then it will return 'True' for the last row and 'False' for the rest.
 
-- <code><b>jinjafx.fields(field</b>: String<b>, filter_fields</b>: Optional[Dict[field: String, regex: String]]<b>)</b> -> List[String]</code>
+- <code><b>jinjafx.fields(field</b>: String<b>, filter_fields</b>: Optional[Dict[<b>field</b>: String<b>, regex</b>: String]]<b>)</b> -> List[String]</code>
 
 This function is used to return a unique list of non-empty field values for a specific header field. It also allows the ability to limit what values are included in the list by specifying an optional `filter_fields` argument that allows you to filter the data using a regular expression to match certain rows.
 
