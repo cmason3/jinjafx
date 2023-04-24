@@ -276,11 +276,9 @@ class plugin(Extension):
     for arg in args:
       if arg.startswith('\\g'):
         match1 = re.match(r'\\g<(\S+)>', arg)
-        assert match1 is not None
         groups.append(match1.group(1))
       elif arg.startswith('\\'):
         match2 = re.match(r'\\(\d+)', arg)
-        assert match2 is not None
         groups.append(int(match2.group(1)))
       else:
         raise JinjaFx.TemplateError('Unknown argument')

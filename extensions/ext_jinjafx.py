@@ -298,9 +298,7 @@ class Vaulty():
     self.__kcache = {}
 
   def __derive_key(self, password, salt=None):
-    ckey = (password, salt)
-
-    if ckey in self.__kcache:
+    if (ckey := (password, salt)) in self.__kcache:
       return self.__kcache[ckey]
 
     if salt is None:

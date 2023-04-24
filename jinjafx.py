@@ -101,7 +101,6 @@ Environment Variables:
           raise Exception('multiline stings not permitted')
 
         __get_vault_credentials(vpw, True)
-        assert vpw[0] is not None
         vtext = Vault().encrypt(b_string, vpw[0])
         print('!vault |\n' + re.sub(r'^', ' ' * 10, vtext, flags=re.MULTILINE))
 
@@ -114,7 +113,6 @@ Environment Variables:
 
             try:
               with open(f, 'rb') as fh:
-                assert vpw[0] is not None
                 vtext = Vault().encrypt(fh.read(), vpw[0])
 
               with open(f, 'wb') as fh:
@@ -135,7 +133,6 @@ Environment Variables:
       if not args.decrypt:
         b_vtext = sys.stdin.buffer.read()
         __get_vault_credentials(vpw)
-        assert vpw[0] is not None
         print(Vault().decrypt(b_vtext, vpw[0]).decode('utf-8'))
 
       else:
@@ -147,7 +144,6 @@ Environment Variables:
 
             try:
               with open(f, 'rb') as fh:
-                assert vpw[0] is not None
                 plaintext = Vault().decrypt(fh.read(), vpw[0])
 
               with open(f, 'wb') as fh:
@@ -187,8 +183,7 @@ Environment Variables:
               except Exception:
                 parser.error('argument -ds: invalid regular expression')
   
-              matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
-              if len(matches) == 1:
+              if len(matches := list(filter(args.ds.search, list(dt['datasets'].keys())))) == 1:
                 if 'data' in dt['datasets'][matches[0]]:
                   dt['data'] = dt['datasets'][matches[0]]['data']
 
@@ -211,8 +206,7 @@ Environment Variables:
             data = dt['data']
   
           if gv:
-            gyaml = __decrypt_vault(vpw, gv)
-            if gyaml:
+            if gyaml := __decrypt_vault(vpw, gv):
               try:
                 gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
@@ -221,8 +215,7 @@ Environment Variables:
                 raise
 
           if 'vars' in dt:
-            gyaml = __decrypt_vault(vpw, dt['vars'])
-            if gyaml:
+            if gyaml := __decrypt_vault(vpw, dt['vars']):
               try:
                 gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
@@ -261,9 +254,7 @@ Environment Variables:
   
         if 'prompt' in gvars['jinjafx_input'] and gvars['jinjafx_input']['prompt']:
           for k in gvars['jinjafx_input']['prompt']:
-            v = gvars['jinjafx_input']['prompt'][k]
-  
-            if isinstance(v, dict):
+            if isinstance(v := gvars['jinjafx_input']['prompt'][k], dict):
               if 'pattern' not in v:
                 v['pattern'] = '.*'
   
@@ -310,9 +301,7 @@ Environment Variables:
         print('', file=sys.stderr)
   
       for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
-        oname = o[0].rsplit(':', 1)[0]
-
-        if oname != '_stderr_':
+        if (oname := o[0].rsplit(':', 1)[0]) != '_stderr_':
           output = '\n'.join(o[1]) + '\n'
           if output.strip():
             if oname == '_stdout_':
@@ -356,7 +345,6 @@ Environment Variables:
 
     else:
       xyz = sys.exc_info()
-      assert xyz[2] is not None
       print(f'error[{exc_source or xyz[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     sys.exit(-2)
@@ -365,7 +353,6 @@ Environment Variables:
 def __decrypt_vault(vpw, string):
   if string.lstrip().startswith('$ANSIBLE_VAULT;'):
     __get_vault_credentials(vpw)
-    assert vpw[0] is not None
     return Vault().decrypt(string.encode('utf-8'), vpw[0])
   return string.encode('utf-8')
 
@@ -504,7 +491,6 @@ class JinjaFx():
               gcount = 1
               ufields = []
 
-              assert delim is not None
               for f in re.split(delim, l.strip(schars)):
                 delta = 0
   
@@ -712,12 +698,10 @@ class JinjaFx():
       end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
       clines = content.splitlines()
 
-      i = 0
-      while i < len(clines):
+      while (i := 0) < len(clines):
         l = clines[i]
 
-        block_begin = start_tag.search(l.strip())
-        if block_begin:
+        if block_begin := start_tag.search(l.strip()):
           if block_begin.start() != 0:
             clines[i] = l[:block_begin.start()]
             clines.insert(i + 1, l[block_begin.start():])
@@ -737,8 +721,7 @@ class JinjaFx():
           stack.append(str(index) + ':' + block_begin.group(2).strip() + oformat.lower())
 
         else:
-          block_end = end_tag.search(l.strip())
-          if block_end:
+          if block_end := end_tag.search(l.strip()):
             if block_end.start() != 0:
               clines[i] = l[:block_end.start()]
               clines.insert(i + 1, l[block_end.start():])
@@ -764,9 +747,7 @@ class JinjaFx():
         raise Exception('unbalanced output tags')
 
     for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
-      nkey = o.split(':', 1)[1]
-
-      if nkey not in outputs:
+      if (nkey := o.split(':', 1)[1]) not in outputs:
         outputs[nkey] = []
           
       outputs[nkey] += outputs[o]
@@ -853,8 +834,7 @@ class JinjaFx():
     if re.search(r'(?<!\\)[\(\[\{]', pofa[0]):
       i = 0
       while i < len(pofa):
-        m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
-        if m:
+        if m := re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i]):
           for g in re.split(r'(?<!\\)\|', m.group(1)):
             pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
             groups.append(groups[i] + [re.sub(r'\\([\|\(\[\)\]])', r'\1', g)])
@@ -871,9 +851,7 @@ class JinjaFx():
 
       i = 0
       while i < len(pofa):
-        m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)[ \t]*(?<!\\)\}', pofa[i])
-        if m:
-          assert m.lastindex is not None
+        if m := re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)[ \t]*(?<!\\)\}', pofa[i]):
           mpos = groups[i][0].index(m.group())
           nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
           ncb = len(re.findall(r'(?<!\\)\)', groups[i][0][:mpos]))
