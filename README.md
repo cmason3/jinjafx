@@ -309,8 +309,8 @@ In additional to Ansible Filters, Ansible also introduces [tests](https://docs.a
 
 JinjaFx supports the following Ansible lookups:
 
-- <code><b>lookup("vars", variable</b>: String<b>, default</b>: Optional[String]<b>=None)</b> -> String</code><br />
-  or <code><b>vars(variable</b>: String<b>, default</b>: Optional[String]<b>=None)</b> -> String</code>
+- <code><b>lookup("vars", variable</b>: String<b>, default</b>: Optional[String]<b>)</b> -> String</code><br />
+  or <code><b>vars(variable</b>: String<b>, default</b>: Optional[String]<b>)</b> -> String</code>
 
 The [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/vars_lookup.html) builtin is used to dynamically access variables based on the content of other variables, e.g:
 
