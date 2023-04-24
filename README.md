@@ -1,5 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
-![Python](https://img.shields.io/badge/python-≥&nbsp;3.7-brightgreen)
+![Python](https://img.shields.io/badge/python-≥&nbsp;3.8-brightgreen)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
 &nbsp;
 <h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
@@ -309,7 +309,8 @@ In additional to Ansible Filters, Ansible also introduces [tests](https://docs.a
 
 JinjaFx supports the following Ansible lookups:
 
-- <b><code>lookup("vars", "variable", [default=None])</code></b>
+- <code><b>lookup("vars", variable</b>: String<b>, default</b>: Optional[String]<b>)</b> -> String</code><br />
+  or <code><b>vars(variable</b>: String<b>, default</b>: Optional[String]<b>)</b> -> String</code>
 
 The [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/vars_lookup.html) builtin is used to dynamically access variables based on the content of other variables, e.g:
 
@@ -317,21 +318,22 @@ The [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/bu
 {{ lookup("vars", "my" ~ "variable") }}
 ```
 
-- <b><code>lookup("varnames", "regex", ["regex", ...])</code></b>
+- <code><b>lookup("varnames", regex</b>: String<b>, ...)</b> -> List[String]</code><br />
+  or <code><b>varnames(regex</b>: String<b>, ...)</b> -> List[String]</code>
 
 The [varnames lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/varnames_lookup.html) builtin is used to list variables that are accessible within the scope of the Jinja2 template, e.g:
 
 ```jinja2
-{{ lookup("varnames", ".+") }} {# Return all variables #}
+{{ lookup("varnames", ".+") }} {# return all variables #}
 
-{{ lookup("varnames", "^a", "^b") }} {# Return all variables which begin with "a" or "b" #}
+{{ lookup("varnames", "^a", "^b") }} {# return all variables which begin with "a" or "b" #}
 ```
 
 ### JinjaFx Variables
 
 The following variables, if defined within `vars.yml` control how JinjaFx works:
 
-- <b><code>jinjafx_adjust_headers</code></b>
+- <code><b>jinjafx_adjust_headers</b></code>
 
 There might be some situations where you can't control the format of the header fields that are provided in `data.csv` - it might come from a spreadsheet where someone hasn't been consistent with the header row and has used uppercase in some situations and lowercase in others or they might have used non-standard characters. The header fields are used by Jinja2 as case-sensitive variables and can't contain spaces or punctuation characters - they can only contain alphanumerical characters and the underscore. To help in these situations, the variable `jinjafx_adjust_headers` can be set in `vars.yml` to either "yes", "no" (the default), "upper" or "lower", which will remove any non-standard characters and change the case depending on the value (i.e. "Assigned / Unassigned" would become `ASSIGNEDUNASSIGNED` if the value was "upper" and `AssignedUnassigned` if the value was "yes").
 
@@ -340,7 +342,7 @@ There might be some situations where you can't control the format of the header 
 jinjafx_adjust_headers: "yes" | "no" | "upper" | "lower"
 ```
 
-- <b><code>jinjafx_render_vars</code></b>
+- <code><b>jinjafx_render_vars</b></code>
 
 JinjaFx by default will attempt to render your `vars.yml` using Jinja2, which means the following syntax is valid:
 
@@ -368,7 +370,7 @@ If you wish to use literal braces within your YAML (i.e. `{{`) then you need to 
 jinjafx_render_vars: "no"
 ```
 
-- <b><code>jinjafx_filter</code></b> and <b><code>jinjafx_sort</code></b>
+- <code><b>jinjafx_filter</b></code> and <code><b>jinjafx_sort</b></code>
 
 JinjaFx supports the ability to filter as well as sort the data within `data.csv` before it is passed to the templating engine. From a filtering perspective, while you could include and exclude certain rows within your `template.j2` with a conditional `if` statement, it won't allow you to use `jinjafx.first()` and `jinjafx.last()` on the reduced data set. This is where the `jinjafx_filter` key which can be specified in `vars.yml` comes into play - it lets you specify using regular expressions what field values you wish to include in your data, e.g:
 
@@ -528,39 +530,39 @@ jinja2_extensions:
 
 Templates should be written using Jinja2 template syntax to make them compatible with Ansible and other tools which use Jinja2. However, there are a few JinjaFx specific extensions that have been added to make JinjaFx much more powerful when dealing with rows of data, as well as providing some much needed functionality which isn't currently present in Jinja2 (e.g. being able to store persistent variables across templates). These are used within a template like any other variable or function (e.g. `{{ jinjafx.version }}`).
 
-- <b><code>jinjafx.version</code></b>
+- <code><b>jinjafx.version</b> -> String</code>
 
-This variable will contain the current version of JinjaFx as a string (e.g. "1.0.0").
+This variable will contain the current version of JinjaFx (e.g. "1.0.0").
 
-- <b><code>jinjafx.jinja2_version</code></b>
+- <code><b>jinjafx.jinja2_version</b> -> String</code>
 
-This variable will return the current version of the Jinja2 templating engine as a string (e.g. "2.10.3").
+This variable will return the current version of the Jinja2 templating engine (e.g. "2.10.3").
 
-- <b><code>jinjafx.row</code></b>
+- <code><b>jinjafx.row</b> -> Integer</code>
 
-This variable will contain the current row number being processed as an integer.
+This variable will contain the current row number being processed.
 
-- <b><code>jinjafx.rows</code></b>
+- <code><b>jinjafx.rows</b> -> Integer</code>
 
-This variable will contain the total number of rows within the data as an integer.
+This variable will contain the total number of rows within the data.
 
-- <b><code>jinjafx.data(row, [col])</code></b>
+- <code><b>jinjafx.data(row</b>: Integer<b>, col</b>: Optional[Integer | String]<b>)</b> -> List[String] | String</code>
 
 This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')`. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
 
-- <b><code>jinjafx.expand("string")</code></b>
+- <code><b>jinjafx.expand(value</b>: String<b>)</b> -> List[String]</code>
 
 This function is used to expand a string that contains static character classes (i.e. `[0-9]`), static groups (i.e. `(a|b)`) or active counters (i.e. `{ start-end:increment }`) into a list of all the different permutations. You are permitted to use as many classes, groups or counters within the same string - if it doesn't detect any classes, groups or counters within the string then the "string" will be returned as the only list element. Character classes support "A-Z", "a-z" and "0-9" characters, whereas static groups allow any string of characters (including static character classes). If you wish to include "[", "]", "(", ")", "{" or "}" literals within the string then they will need to be escaped.
 
-- <b><code>jinjafx.counter(["key"], [increment=1], [start=1])</code></b>
+- <code><b>jinjafx.counter(key</b>: Optional[String]<b>, increment</b>: Optional[Integer]<b>=1, start</b>: Optional[Integer]<b>=1)</b> -> Integer</code>
 
 This function is used to provide a persistent counter within a row or between rows. If you specify a `key` then it is a global counter that will persist between rows, but if you don't or you include `jinjafx.row` within the `key`, then the counter only persists within the template of the current row.
 
-- <b><code>jinjafx.now(["format"], [tz="UTC"])</code></b>
+- <code><b>jinjafx.now(format</b>: Optional[String]<b>, tz</b>: Optional[String]<b>="UTC")</b> -> String</code>
 
 This function is used to output the current date and time. If you don't specify the optional `format` argument then it will output using the default ISO 8601 format - if you wish to specify a custom format then it needs to be as per [strftime](https://strftime.org/). The `tz` argument is also optional and allows you to specify a timezone as opposed to `UTC` which is used by default.
 
-- <b><code>jinjafx.exception("message")</code></b>
+- <code><b>jinjafx.exception(message</b>: String<b>)</b> -> NoReturn</code>
 
 This function is used to stop processing and raise an exception with a meaningful message - for example, if an expected header field doesn't exist you could use it as follows:
 
@@ -571,11 +573,11 @@ This function is used to stop processing and raise an exception with a meaningfu
 
 ```
 
-- <b><code>jinjafx.warning("message", [repeat=False])</code></b>
+- <code><b>jinjafx.warning(message</b>: String<b>, repeat</b>: Optional[Boolean]<b>=False)</b> -> NoReturn</code>
 
 Nearly identical to the previous function, except this won't stop processing of the template but will raise a warning message when the output is generated - this can be specified multiple times for multiple warnings, although repeated warnings are suppressed unless you set the second parameter to True.
 
-- <b><code>jinjafx.first([list("field", ...)], [{ "filter_field": "regex", ... }])</code></b>
+- <code><b>jinjafx.first(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[<b>field</b>: String<b>, regex</b>: String]]<b>)</b> -> Boolean</code>
 
 This function is used to determine whether this is the first row where you have seen this particular field value or not - if you don't specify any fields then it will return `True` for the first row and `False` for the rest.
 
@@ -588,21 +590,21 @@ A, B, C    <- HEADER ROW
 
 If we take the above example, then `jinjafx.first(['A'])` would return `True` for rows 1 and 2, but `False` for row 3 as these rows are the first time we have seen this specific value for "A". We also have the option of specifying multiple fields, so `jinjafx.first(['A', 'B'])` would return `True` for all rows as the combination of "A" and "B" are different in all rows.
 
-There is also an optional `filter_field` argument that allows you to filter the data using a regular expression to match certain rows before performing the check. For example, `jinjafx.first(['A'], { 'B': '3' })` would return `True` for row 3 only as it is the only row which matches the filter.
+There is also an optional `filter_fields` argument that allows you to filter the data using a regular expression to match certain rows before performing the check. For example, `jinjafx.first(['A'], { 'B': '3' })` would return `True` for row 3 only as it is the only row which matches the filter, where 'B' contains a '3'.
 
-- <b><code>jinjafx.last([list("field", ...)], [{ "filter_field": "regex", ... }])</code></b>
+- <code><b>jinjafx.last(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[<b>field</b>: String<b>, regex</b>: String]]<b>)</b> -> Boolean</code>
 
 This function is used to determine whether this is the last row where you have seen this particular field value or not - if you don't specify any fields then it will return 'True' for the last row and 'False' for the rest.
 
-- <b><code>jinjafx.fields("field", [{ "filter_field": "regex", ... }])</code></b>
+- <code><b>jinjafx.fields(field</b>: String<b>, filter_fields</b>: Optional[Dict[<b>field</b>: String<b>, regex</b>: String]]<b>)</b> -> List[String]</code>
 
-This function is used to return a unique list of non-empty field values for a specific header field. It also allows the ability to limit what values are included in the list by specifying an optional `filter_field` argument that allows you to filter the data using a regular expression to match certain rows.
+This function is used to return a unique list of non-empty field values for a specific header field. It also allows the ability to limit what values are included in the list by specifying an optional `filter_fields` argument that allows you to filter the data using a regular expression to match certain rows.
 
-- <b><code>jinjafx.setg("key", "value")</code></b>
+- <code><b>jinjafx.setg(key</b>: String<b>, value</b>: String | Integer | Boolean]<b>)</b> -> NoReturn</code>
 
 This function is used to set a global variable that will persist throughout the processing of all rows.
 
-- <b><code>jinjafx.getg("key", ["default"])</code></b>
+- <code><b>jinjafx.getg(key</b>: String<b>, default</b>: Optional[String | Integer | Boolean])</b> -> String | Integer | Boolean</code>
 
 This function is used to get a global variable that has been set with `jinjafx.setg()` - optionally you can specify a default value that is returned if the `key` doesn't exist.
 
@@ -610,7 +612,7 @@ This function is used to get a global variable that has been set with `jinjafx.s
 
 JinjaFx comes with a custom Jinja2 Extension (`extensions/ext_jinjafx.py`) that is enabled by default which provides the following custom filters:
 
-- <b><code>cisco_snmpv3_key("engineid", [algorithm="sha1"])</code></b>
+- <code><b>cisco_snmpv3_key(engineid</b>: String<b>, algorithm</b>: Optional[String]<b>="sha1")</b> -> String</code>
 
 This filter is used to generate localised SNMPv3 authentication and privacy keys (section A.2 of [RFC3414](https://datatracker.ietf.org/doc/html/rfc3414#appendix-A.2)) for use by Cisco devices, e.g:
 
@@ -619,7 +621,7 @@ snmp-server engineID local {{ engineID }}
 snmp-server user {{ snmpUser }} {{ snmpGroup }} v3 encrypted auth sha {{ authPassword|cisco_snmpv3_key(engineID) }} priv aes 128 {{ privPassword|cisco_snmpv3_key(engineID) }}
 ```
 
-- <b><code>junos_snmpv3_key("engineid", [algorithm="sha1"])</code></b>
+- <code><b>junos_snmpv3_key(engineid</b>: String<b>, algorithm</b>: Optional[String]<b>="sha1")</b> -> String</code>
 
 This filter is used to generate localised SNMPv3 authentication and privacy keys (section A.2 of [RFC3414](https://datatracker.ietf.org/doc/html/rfc3414#appendix-A.2)) for use by Juniper devices, e.g:
 
@@ -629,27 +631,27 @@ set snmp v3 usm local-engine user {{ snmpUser }} authentication-sha authenticati
 set snmp v3 usm local-engine user {{ snmpUser }} privacy-aes128 privacy-key {{ privPassword|junos_snmpv3_key(engineID) }}
 ```
 
-- <b><code>cisco7encode("string", ["seed"])</code></b>
+- <code><b>cisco7encode(value</b>: String<b>, seed</b>: Optional[String]<b>)</b> -> String</code>
 
 This filter will encode a string using Cisco's Type 7 encoding scheme. An optional "seed" can be provided which makes the encoded string deterministic for idempotent operations.
 
-- <b><code>junos9encode("string", ["seed"])</code></b>
+- <code><b>junos9encode(value</b>: String<b>, seed</b>: Optional[String]<b>)</b> -> String</code>
 
 This filter will encode a string using Juniper's Type 9 encoding scheme. An optional "seed" can be provided which makes the encoded string deterministic for idempotent operations.
 
-- <b><code>cisco8hash("string", ["salt"])</code></b>
+- <code><b>cisco8hash(value</b>: String<b>, salt</b>: Optional[String]<b>)</b> -> String</code>
 
 This filter will hash a string using Cisco's Type 8 hashing scheme (SHA256 with PBKDF2). An optional "salt" (length must be 14 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
-- <b><code>cisco9hash("string", ["salt"])</code></b>
+- <code><b>cisco9hash(value</b>: String<b>, salt</b>: Optional[String]<b>)</b> -> String</code>
 
 This filter will hash a string using Cisco's Type 9 hashing scheme (SCrypt). An optional "salt" (length must be 14 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
-- <b><code>junos6hash("string", ["salt"])</code></b>
+- <code><b>junos6hash(value</b>: String<b>, salt</b>: Optional[String]<b>)</b> -> String</code>
 
 This filter will hash a string using Juniper's Type 6 hashing scheme (Unix Crypt based SHA512). An optional "salt" (length must be 8 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
-- <b><code>xpath("query")</code></b> (requires `lxml` python module)
+- <code><b>xpath(query</b>: String<b>)</b> -> String</code> (requires `lxml` python module)
 
 This filter is used to perform an xpath query on an XML based output and return the matching sections as a list (if you use namespaces you need to ensure you define them using the `xmlns:` syntax), e.g:
 
@@ -680,11 +682,11 @@ The following xpath query can be used to find all the "et" interfaces which have
 {% endfor %}
 ```
 
-- <b><code>vaulty_encrypt("string", "password", [cols])</code></b>
+- <code><b>vaulty_encrypt(plaintext</b>: String<b>, password</b>: String<b>, cols</b>: Optional[Integer]<b>)</b> -> String</code>
 
 This filter will encrypt a string using [Vaulty](https://github.com/cmason3/vaulty) which is an alternative to Ansible Vault. Vaulty provides 256-bit authenticated symmetric encryption (AEAD) using ChaCha20-Poly1305 and Scrypt as the password based key derivation function. Ansible Vault is very inefficient when it comes to output size - for example, a 256 byte string encrypted using Ansible Vault will take up 1,390 bytes (a 443% increase) compared to Vaulty where the same string will only take up 412 bytes (a 61% increase). The optional "cols" argument will split the output into rows of "cols" width similar to Ansible Vault output.
 
-- <b><code>vaulty_decrypt("string", "password")</code></b>
+- <code><b>vaulty_decrypt(ciphertext</b>: String<b>, password</b>: String<b>)</b> -> String</code>
 
 This filter will perform the opposite of `vaulty_encrypt` and takes a Vaulty encrypted string and the password, e.g:
 

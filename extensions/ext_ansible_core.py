@@ -16,8 +16,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-# mypy: disable-error-code="no-untyped-def,no-untyped-call"
-
 from jinja2.ext import Extension
 from jinja2.filters import do_unique
 from jinja2.utils import pass_environment
@@ -278,11 +276,9 @@ class plugin(Extension):
     for arg in args:
       if arg.startswith('\\g'):
         match1 = re.match(r'\\g<(\S+)>', arg)
-        assert match1 is not None
         groups.append(match1.group(1))
       elif arg.startswith('\\'):
         match2 = re.match(r'\\(\d+)', arg)
-        assert match2 is not None
         groups.append(int(match2.group(1)))
       else:
         raise JinjaFx.TemplateError('Unknown argument')
