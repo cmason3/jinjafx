@@ -700,7 +700,8 @@ class JinjaFx():
       end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
       clines = content.splitlines()
 
-      while (i := 0) < len(clines):
+      i = 0
+      while i < len(clines):
         l = clines[i]
 
         if block_begin := start_tag.search(l.strip()):
