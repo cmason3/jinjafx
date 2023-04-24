@@ -317,7 +317,7 @@ The [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/bu
 {{ lookup("vars", "my" ~ "variable") }}
 ```
 
-- <code><b>lookup("varnames", regex</b>: String<b>, *regex_n</b>: Optional[String]<b>)</b> -> List[String]</code>
+- <code><b>lookup("varnames", regex</b>: String<b>, ...)</b> -> List[String]</code>
 
 The [varnames lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/varnames_lookup.html) builtin is used to list variables that are accessible within the scope of the Jinja2 template, e.g:
 
@@ -530,21 +530,21 @@ Templates should be written using Jinja2 template syntax to make them compatible
 
 - <code><b>jinjafx.version</b> -> String</code>
 
-This variable will contain the current version of JinjaFx as a string (e.g. "1.0.0").
+This variable will contain the current version of JinjaFx (e.g. "1.0.0").
 
 - <code><b>jinjafx.jinja2_version</b> -> String</code>
 
-This variable will return the current version of the Jinja2 templating engine as a string (e.g. "2.10.3").
+This variable will return the current version of the Jinja2 templating engine (e.g. "2.10.3").
 
 - <code><b>jinjafx.row</b> -> Integer</code>
 
-This variable will contain the current row number being processed as an integer.
+This variable will contain the current row number being processed.
 
 - <code><b>jinjafx.rows</b> -> Integer</code>
 
-This variable will contain the total number of rows within the data as an integer.
+This variable will contain the total number of rows within the data.
 
-- <code><b>jinjafx.data(row</b>: Integer<b>, col</b>: Optional[Integer]<b>)</b> -> Union[List[String], String]</code>
+- <code><b>jinjafx.data(row</b>: Integer<b>, col</b>: Optional[Integer]<b>)</b> -> List[String] | String</code>
 
 This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')`. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
 
@@ -575,7 +575,7 @@ This function is used to stop processing and raise an exception with a meaningfu
 
 Nearly identical to the previous function, except this won't stop processing of the template but will raise a warning message when the output is generated - this can be specified multiple times for multiple warnings, although repeated warnings are suppressed unless you set the second parameter to True.
 
-- <code><b>jinjafx.first(field</b>: Optional[List[String]]<b>, { List["filter_field": "regex"] })</b> -> Boolean</code>
+- <code><b>jinjafx.first(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[field: String, regex: String]]<b>)</b> -> Boolean</code>
 
 This function is used to determine whether this is the first row where you have seen this particular field value or not - if you don't specify any fields then it will return `True` for the first row and `False` for the rest.
 
@@ -588,21 +588,21 @@ A, B, C    <- HEADER ROW
 
 If we take the above example, then `jinjafx.first(['A'])` would return `True` for rows 1 and 2, but `False` for row 3 as these rows are the first time we have seen this specific value for "A". We also have the option of specifying multiple fields, so `jinjafx.first(['A', 'B'])` would return `True` for all rows as the combination of "A" and "B" are different in all rows.
 
-There is also an optional `filter_field` argument that allows you to filter the data using a regular expression to match certain rows before performing the check. For example, `jinjafx.first(['A'], { 'B': '3' })` would return `True` for row 3 only as it is the only row which matches the filter.
+There is also an optional `filter_fields` argument that allows you to filter the data using a regular expression to match certain rows before performing the check. For example, `jinjafx.first(['A'], { 'B': '3' })` would return `True` for row 3 only as it is the only row which matches the filter, where 'B' contains a '3'.
 
-- <code><b>jinjafx.last(field</b>: Optional[List[String]]<b>, { List["filter_field": "regex"] })</b> -> Boolean</code>
+- <code><b>jinjafx.last(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[field: String, regex: String]]<b>)</b> -> Boolean</code>
 
 This function is used to determine whether this is the last row where you have seen this particular field value or not - if you don't specify any fields then it will return 'True' for the last row and 'False' for the rest.
 
-- <code><b>jinjafx.fields(field</b>: String<b>, { List["filter_field": "regex"] })</b> -> List[String]</code>
+- <code><b>jinjafx.fields(field</b>: String<b>, filter_fields</b>: Optional[Dict[field: String, regex: String]]<b>)</b> -> List[String]</code>
 
-This function is used to return a unique list of non-empty field values for a specific header field. It also allows the ability to limit what values are included in the list by specifying an optional `filter_field` argument that allows you to filter the data using a regular expression to match certain rows.
+This function is used to return a unique list of non-empty field values for a specific header field. It also allows the ability to limit what values are included in the list by specifying an optional `filter_fields` argument that allows you to filter the data using a regular expression to match certain rows.
 
-- <code><b>jinjafx.setg(key</b>: String<b>, value</b>: Union[String, Integer, Boolean]<b>)</b> -> NoReturn</code>
+- <code><b>jinjafx.setg(key</b>: String<b>, value</b>: String | Integer | Boolean]<b>)</b> -> NoReturn</code>
 
 This function is used to set a global variable that will persist throughout the processing of all rows.
 
-- <code><b>jinjafx.getg(key</b>: String<b>, default</b>: Optional[Union[String, Integer, Boolean]])</b> -> Union[String, Integer, Boolean]</code>
+- <code><b>jinjafx.getg(key</b>: String<b>, default</b>: Optional[String | Integer | Boolean])</b> -> String | Integer | Boolean</code>
 
 This function is used to get a global variable that has been set with `jinjafx.setg()` - optionally you can specify a default value that is returned if the `key` doesn't exist.
 
