@@ -309,7 +309,7 @@ In additional to Ansible Filters, Ansible also introduces [tests](https://docs.a
 
 JinjaFx supports the following Ansible lookups:
 
-- <b><code>lookup("vars", "variable", [default=None])</code></b>
+- <code><b>lookup("vars", variable</b>: String<b>, default</b>: Optional[String]<b>=None)</b> -> String</code>
 
 The [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/vars_lookup.html) builtin is used to dynamically access variables based on the content of other variables, e.g:
 
@@ -317,7 +317,7 @@ The [vars lookup](https://docs.ansible.com/ansible/latest/collections/ansible/bu
 {{ lookup("vars", "my" ~ "variable") }}
 ```
 
-- <b><code>lookup("varnames", "regex", ["regex", ...])</code></b>
+- <code><b>lookup("varnames", regex_1</b>: String<b>, regex_n</b>: Optional[String]<b>, ...)</b> -> List[String]</code>
 
 The [varnames lookup](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/varnames_lookup.html) builtin is used to list variables that are accessible within the scope of the Jinja2 template, e.g:
 
