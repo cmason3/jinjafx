@@ -653,7 +653,9 @@ class JinjaFx():
       'now': self.__jfx_now,
       'rows': max([0, len(self.__g_datarows) - 1]),
     },
-      'lookup': self.__jfx_lookup
+      'lookup': self.__jfx_lookup,
+      'vars': self.__jfx_lookup_vars,
+      'varnames': self.__jfx_lookup_varnames
     })
 
     routput = env.from_string(output)
@@ -813,6 +815,14 @@ class JinjaFx():
 
     else:
       raise JinjaFx.TemplateError(f'\'lookup\' method \'{method}\' is undefined')
+
+
+  def __jfx_lookup_vars(self, *args):
+    return self.__jfx_lookup('vars', *args)
+
+
+  def __jfx_lookup_varnames(self, *args):
+    return self.__jfx_lookup('varnames', *args)
 
 
   def __jfx_data_counter(self, m, orow, col, row):
