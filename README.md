@@ -601,7 +601,7 @@ LEAF-02
 LEAF-03
 ```
 
-By using the split operator we can specify `jinjafx.first(['A:-0'])`, which uses `-` as the split separator and `0` as the numeric position - this will use the value 'LEAF' when deciding if it is the first value or not. Similar to Python syntax we also support negative positions, so -1 would represent the last value.
+By using the split operator we can specify `jinjafx.first(['A:-0'])`, which uses `-` as the split character and `0` as the numeric position - this will use the value 'LEAF' when deciding if it is the first value or not. Similar to Python syntax we also support negative positions, so -1 would represent the last value.
 
 - <code><b>jinjafx.last(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[<b>field</b>: String<b>, regex</b>: String]]<b>)</b> -> Boolean</code>
 
