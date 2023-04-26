@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.17.0'
+__version__ = '1.17.1'
 
 def main():
   exc_source = None
@@ -950,16 +950,34 @@ class JinjaFx():
 
     if fields is not None:
       for f in fields:
+        if ':' in f:
+          try:
+            f, s = f.split(':', 1)
+            s = [s[0], int(s[1:])]
+
+          except Exception:
+            raise JinjaFx.TemplateError(f'invalid split operator for field "{f}" passed to jinjafx.{forl}()')
+
+        else:
+          s = ['_this_should_never_match_anything_', 0]
+
         if f in self.__g_datarows[0]:
-          fpos.append(self.__g_datarows[0].index(f) + 1)
+          fpos.append([self.__g_datarows[0].index(f) + 1, s])
+
         else:
           raise JinjaFx.TemplateError(f'invalid field "{f}" passed to jinjafx.{forl}()')
+
     elif forl == 'first':
       return True if self.__g_row == 1 else False
+
     else:
       return True if self.__g_row == (len(self.__g_datarows) - 1) else False
 
-    tv = ':'.join([str(self.__g_datarows[self.__g_row][i]) for i in fpos])
+    try:
+      tv = ':'.join([str(self.__g_datarows[self.__g_row][i[0]]).split(i[1][0])[i[1][1]] for i in fpos])
+
+    except IndexError:
+      raise JinjaFx.TemplateError(f'invalid split operator for field "{f}" passed to jinjafx.{forl}()')
 
     if forl == 'first':
       rows = range(1, len(self.__g_datarows))
@@ -981,7 +999,7 @@ class JinjaFx():
           raise JinjaFx.TemplateError(f'invalid filter field "{f}" passed to jinjafx.{forl}()')
 
       if fmatch:
-        if tv == ':'.join([str(self.__g_datarows[r][i]) for i in fpos]):
+        if tv == ':'.join([str(self.__g_datarows[r][i[0]]).split(i[1][0])[i[1][1]] for i in fpos]):
           return True if self.__g_row == r else False
 
     return False
