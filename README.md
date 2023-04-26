@@ -592,9 +592,20 @@ If we take the above example, then `jinjafx.first(['A'])` would return `True` fo
 
 There is also an optional `filter_fields` argument that allows you to filter the data using a regular expression to match certain rows before performing the check. For example, `jinjafx.first(['A'], { 'B': '3' })` would return `True` for row 3 only as it is the only row which matches the filter, where 'B' contains a '3'.
 
+There might be some scenarios where you don't want to match the entire value, but part of it - to support this, there is an optional split operator using the following syntax `FIELD:<CHAR><POS>`, e.g:
+
+```
+DEVICE
+LEAF-01
+LEAF-02
+LEAF-03
+```
+
+By using the split operator we can specify `jinjafx.first(['A:-0'])`, which uses `-` as the split separator and `0` as the numeric position - this will use the value 'LEAF' when deciding if it is the first value or not.
+
 - <code><b>jinjafx.last(field</b>: Optional[List[String]]<b>, filter_fields</b>: Optional[Dict[<b>field</b>: String<b>, regex</b>: String]]<b>)</b> -> Boolean</code>
 
-This function is used to determine whether this is the last row where you have seen this particular field value or not - if you don't specify any fields then it will return 'True' for the last row and 'False' for the rest.
+This function is used to determine whether this is the last row where you have seen this particular field value or not - if you don't specify any fields then it will return 'True' for the last row and 'False' for the rest. Similar to `jinjafx.first()` it supports the same syntax.
 
 - <code><b>jinjafx.fields(field</b>: String<b>, filter_fields</b>: Optional[Dict[<b>field</b>: String<b>, regex</b>: String]]<b>)</b> -> List[String]</code>
 
