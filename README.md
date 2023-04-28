@@ -137,7 +137,7 @@ et-0/0/8, r740-041
 et-0/0/9, r740-042
 ```
 
-Another type of passive counter is a looping counter, which is used to loop through a set of predefined numerical values via the syntax `{n1|n2|n3[:repeat]}`. For example, if we were to use `{1|3|5:1}` then it would output 1, 1, 3, 3, 5, 5, 1, 1, 3, 3, etc - it will only keep going based on the number of rows it is being expanded into.
+Another type of passive counter is a looping counter, which is used to loop through a set of predefined numerical values via the syntax `{n1|n2|n3|..[:repeat]}`. For example, if we were to use `{1|3|5:1}` then it would output 1, 1, 3, 3, 5, 5, 1, 1, 3, 3, etc - it will only keep going based on the number of rows it is being expanded into.
 
 #### Field Values
 
