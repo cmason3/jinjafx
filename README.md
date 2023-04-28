@@ -107,7 +107,7 @@ spine-03, et-0/0/4, leaf-04
 
 #### Expansion Counters
 
-We also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step }` syntax (step must be positive) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
+We also support the ability to use active and passive counters during data expansion with the `{ start[-end]:step[:repeat] }` syntax (step must be positive and repeat specifies the number of times the same number is repeated) - counters are row specific (i.e. they don't persist between different rows). Active counters are easier to explain as they are used to expand rows based on a start and end number (they are bounded) as per the example below. In this instance as we have specified a start (0) and an end (9) it will expand the row to 10 rows using the values from 0 to 9 (i.e. 'et-0/0/0' to 'et-0/0/9').
 
 ```
 INTERFACE

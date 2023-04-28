@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.17.1'
+__version__ = '1.17.2'
 
 def main():
   exc_source = None
@@ -339,6 +339,7 @@ Environment Variables:
     sys.exit(-2)
 
   except Exception as e:
+    traceback.print_exc()
     if 'JinjaFx.Template' in str(type(e)):
       m2 = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-2), re.IGNORECASE | re.MULTILINE)
       print(f'error[{m2.group(1)}:{m2.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
@@ -439,7 +440,7 @@ class JinjaFx():
       if data.strip():
         jinjafx_filter = {}
         jinjafx_adjust_headers = str(gvars.get('jinjafx_adjust_headers', 'no')).strip().lower()
-        recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)[ \t]*(?<!\\)}')
+        recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(:[0-9]+)?[ \t]*(?<!\\)}')
 
         for l in data.splitlines():
           if l.strip() and not re.match(r'^[ \t]*#', l):
@@ -533,9 +534,11 @@ class JinjaFx():
   
                   for col in range(1, len(fields[0])):
                     fields[0][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][0])
+                    #fields[0][col][0] = rotm.sub(lambda m: self.__jfx_data_rotate(m, fields[0][0], col, row), fields[0][col][0])
   
                     for g in range(len(fields[0][col][1])):
                       fields[0][col][1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][1][g])
+                      #fields[0][col][1][g] = rotm.sub(lambda m: self.__jfx_data_rotate(m, fields[0][0], col, row), fields[0][col][1][g])
   
                     xgroups.append(fields[0][col][1])
  
@@ -827,13 +830,21 @@ class JinjaFx():
 
 
   def __jfx_data_counter(self, m, orow, col, row):
-    start = m.group(1)
-    increment = m.group(2)
+    start = int(m.group(1))
+    increment = int(m.group(2))
+    repeat = int((m.group(3) or ':0')[1:])
     key = '_datacnt_r_' + str(orow) + '_' + str(col) + '_' + m.group()
 
     if self.__g_dict.get(key + '_' + str(row), True):
-      n = self.__g_dict.get(key, int(start) - int(increment))
-      self.__g_dict[key] = int(n) + int(increment)
+      n = self.__g_dict.get(key, start - increment)
+
+      if r := repeat:
+        r = self.__g_dict.get(key + '_repeat', repeat + 1)
+        self.__g_dict[key + '_repeat'] = r - 1 if r > 1 else repeat + 1
+
+      if r > repeat or not r:
+        self.__g_dict[key] = n + increment
+
       self.__g_dict[key + '_' + str(row)] = False
     return str(self.__g_dict[key])
 
@@ -862,7 +873,7 @@ class JinjaFx():
 
       i = 0
       while i < len(pofa):
-        if m := re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)[ \t]*(?<!\\)\}', pofa[i]):
+        if m := re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)(:[0-9]+)?[ \t]*(?<!\\)\}', pofa[i]):
           mpos = groups[i][0].index(m.group())
           nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
           ncb = len(re.findall(r'(?<!\\)\)', groups[i][0][:mpos]))
@@ -874,19 +885,21 @@ class JinjaFx():
           start = e[0]
           end = e[1] + 1 if e[1] >= e[0] else e[1] - 1
           step = int(m.group(2)) if end > start else 0 - int(m.group(2))
+          repeat = int((m.group(3) or ':0')[1:])
 
           for n in range(start, end, step):
-            pofa.append(pofa[i][:m.start(1) - 1] + str(n) + pofa[i][m.end(m.lastindex) + 1:])
-            self.__g_xlimit -= 1
+            for r in range(repeat + 1):
+              pofa.append(pofa[i][:m.start(1) - 1] + str(n) + pofa[i][m.end(m.lastindex) + 1:])
+              self.__g_xlimit -= 1
 
-            if not self.__g_xlimit:
-              raise OverflowError("jinjafx.expand() - expansion limit reached")
+              if not self.__g_xlimit:
+                raise OverflowError("jinjafx.expand() - expansion limit reached")
 
-            ngroups = list(groups[i])
-            if group > 0 and group < len(ngroups):
-              ngroups[group] = ngroups[group].replace(m.group(), str(n), 1)
+              ngroups = list(groups[i])
+              if group > 0 and group < len(ngroups):
+                ngroups[group] = ngroups[group].replace(m.group(), str(n), 1)
 
-            groups.append(ngroups)
+              groups.append(ngroups)
 
           pofa.pop(i)
           groups.pop(i)
