@@ -440,6 +440,7 @@ class JinjaFx():
         jinjafx_filter = {}
         jinjafx_adjust_headers = str(gvars.get('jinjafx_adjust_headers', 'no')).strip().lower()
         recm = re.compile(r'(?<!\\){[ \t]*([0-9]+):([0-9]+)(:[0-9]+)?[ \t]*(?<!\\)}')
+        rotm = re.compile(r'(?<!\\){[ \t]*((?:[0-9]+\|)+[0-9]+)(:[0-9]+)?[ \t]*(?<!\\)}')
 
         for l in data.splitlines():
           if l.strip() and not re.match(r'^[ \t]*#', l):
@@ -533,9 +534,11 @@ class JinjaFx():
   
                   for col in range(1, len(fields[0])):
                     fields[0][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][0])
+                    fields[0][col][0] = rotm.sub(lambda m: self.__jfx_data_loop(m, fields[0][0], col, row), fields[0][col][0])
   
                     for g in range(len(fields[0][col][1])):
                       fields[0][col][1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][1][g])
+                      fields[0][col][1][g] = rotm.sub(lambda m: self.__jfx_data_loop(m, fields[0][0], col, row), fields[0][col][1][g])
   
                     xgroups.append(fields[0][col][1])
  
@@ -844,6 +847,25 @@ class JinjaFx():
 
       self.__g_dict[key + '_' + str(row)] = False
     return str(self.__g_dict[key])
+
+
+  def __jfx_data_loop(self, m, orow, col, row):
+    group = m.group(1).split('|')
+    repeat = int((m.group(2) or ':0')[1:])
+    key = '_dataloop_r_' + str(orow) + '_' + str(col) + '_' + m.group()
+
+    if self.__g_dict.get(key + '_' + str(row), True):
+      n = self.__g_dict.get(key, -1)
+
+      if r := repeat:
+        r = self.__g_dict.get(key + '_repeat', repeat + 1)
+        self.__g_dict[key + '_repeat'] = r - 1 if r > 1 else repeat + 1
+
+      if r > repeat or not r:
+        self.__g_dict[key] = n + 1
+
+      self.__g_dict[key + '_' + str(row)] = False
+    return str(group[self.__g_dict[key] % len(group)])
 
 
   def __jfx_expand(self, s, rg=False):

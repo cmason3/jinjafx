@@ -137,6 +137,8 @@ et-0/0/8, r740-041
 et-0/0/9, r740-042
 ```
 
+Another type of passive counter is a looping counter, which is used to loop through a set of predefined numerical values via the syntax `{n1|n2|n3[:repeat]}`. For example, if we were to use `{1|3|5:1}` then it would output 1, 1, 3, 3, 5, 5, 1, 1, 3, 3, etc - it will only keep going based on the number of rows it is being expanded into.
+
 #### Field Values
 
 By default all field values are treated as strings which means you need to use the `int` filter (e.g. `{{ NUMBER|int }}`) if you wish to perform mathematical functions on them (e.g. `{{ NUMBER|int + 1 }}`). If you have a field where all the values are numbers and you wish them to be treated as numerical values without having to use the `int` filter, then you can suffix `:int` onto the field name (if it detects a non-numerical value in the data then an error will occur), e.g:
