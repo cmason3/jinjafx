@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.17.2'
+__version__ = '1.17.3'
 
 def main():
   exc_source = None
@@ -339,7 +339,6 @@ Environment Variables:
     sys.exit(-2)
 
   except Exception as e:
-    traceback.print_exc()
     if 'JinjaFx.Template' in str(type(e)):
       m2 = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-2), re.IGNORECASE | re.MULTILINE)
       print(f'error[{m2.group(1)}:{m2.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
