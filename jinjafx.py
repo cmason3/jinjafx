@@ -534,11 +534,9 @@ class JinjaFx():
   
                   for col in range(1, len(fields[0])):
                     fields[0][col][0] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][0])
-                    #fields[0][col][0] = rotm.sub(lambda m: self.__jfx_data_rotate(m, fields[0][0], col, row), fields[0][col][0])
   
                     for g in range(len(fields[0][col][1])):
                       fields[0][col][1][g] = recm.sub(lambda m: self.__jfx_data_counter(m, fields[0][0], col, row), fields[0][col][1][g])
-                      #fields[0][col][1][g] = rotm.sub(lambda m: self.__jfx_data_rotate(m, fields[0][0], col, row), fields[0][col][1][g])
   
                     xgroups.append(fields[0][col][1])
  
