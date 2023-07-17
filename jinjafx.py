@@ -29,7 +29,7 @@ from cryptography.exceptions import InvalidSignature
 
 __version__ = '1.17.4'
 
-__any__ = ['JinjaFx', 'Vault']
+__all__ = ['JinjaFx', 'Vault']
 
 def main():
   exc_source = None
