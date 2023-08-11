@@ -441,6 +441,27 @@ Under the field the `text` key is always mandatory, but the following optional k
 
 - `type` - if set to "password" then echo is turned off - used for inputting sensitive values
 
+### Keyless YAML ###
+
+There might be some scenarios where you want to define YAML without a root key, e.g:
+
+```yaml
+- name: "Alice"
+  age: 27
+- name: "Bob"
+  age: 37
+- name: "Eve"
+  age: 29
+```
+
+While this is valid in YAML, it isn't valid to have a list when Jinja2 expects a dict. In this scenario, JinjaFx will create a parent key of `_` to allow you to iterate over it within a Jinja2 template:
+
+```jinja2
+{% for k in _ %}
+  {{ k.name }} is {{ k.age }}
+{% endfor %}
+```
+
 ### JinjaFx DataTemplates ###
 
 JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.

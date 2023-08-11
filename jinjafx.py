@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.17.4'
+__version__ = '1.17.5'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -210,7 +210,12 @@ Environment Variables:
           if gv:
             if gyaml := __decrypt_vault(vpw, gv):
               try:
-                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+
+                if isinstance(y, list):
+                  y = {'_': y}
+
+                gvars.update(y)
 
               except Exception as e:
                 exc_source = 'dt:global'
@@ -219,7 +224,12 @@ Environment Variables:
           if 'vars' in dt:
             if gyaml := __decrypt_vault(vpw, dt['vars']):
               try:
-                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+
+                if isinstance(y, list):
+                  y = {'_': y}
+
+                gvars.update(y)
 
               except Exception as e:
                 exc_source = 'dt:vars'
@@ -234,10 +244,15 @@ Environment Variables:
           with open(g.name, 'rt') as f:
             gyaml = __decrypt_vault(vpw, f.read())
             try:
+              y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+
+              if isinstance(y, list):
+                y = {'_': y}
+
               if args.m == True:
-                __merge(gvars, yaml.load(gyaml, Loader=yaml.SafeLoader))
+                __merge(gvars, y)
               else:
-                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+                gvars.update(y)
 
             except Exception as e:
               exc_source = g.name
