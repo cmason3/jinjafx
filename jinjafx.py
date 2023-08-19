@@ -40,13 +40,13 @@ def main():
       print('Copyright (c) 2020-2023 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
-    jinjafx_usage = '-t <template.j2> [-d <data.csv or ->] [-g <vars.yml>]\n'
+    jinjafx_usage = '-t <template.j2> [-d <data.csv> or -] [-g <vars.yml>]\n'
     jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]\n'
     jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file1] [file2] [...]\n'
     jinjafx_usage += '''
 
     -t <template.j2>           - specify a Jinja2 template
-    -d <data.csv or ->         - specify row/column based data (comma or tab separated)
+    -d <data.csv> or -         - specify row/column based data (comma or tab separated)
     -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml> [-g ...]     - specify global variables in yaml (supports Ansible Vault)
@@ -237,7 +237,8 @@ Environment Variables:
   
       elif args.d is not None:
         if args.d.name == '<stdin>':
-          print('Paste in Data (CTRL+D to End):')
+          if sys.stdin.isatty():
+            print('Paste in Data (CTRL+D to End):')
           data = args.d.read()
 
         else:
