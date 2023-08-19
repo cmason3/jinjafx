@@ -21,12 +21,12 @@ python3 -m pip install --upgrade --user jinjafx
 ### JinjaFx Usage
 
 ```
- jinjafx -t <template.j2> [-d <data.csv>] [-g <vars.yml>]
+ jinjafx -t <template.j2> [-d [data.csv]] [-g <vars.yml>]
          -dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]
          -encrypt/-decrypt [file1] [file2] [...]
 
     -t <template.j2>          - specify a Jinja2 template
-    -d <data.csv>             - specify row/column based data (comma or tab separated)
+    -d [data.csv]             - specify row/column based data (omit file for <stdin>)
     -dt <dt.yml>              - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>             - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml> [-g ...]    - specify global variables in yaml (supports Ansible Vault)

@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.17.5'
+__version__ = '1.17.6'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -40,13 +40,13 @@ def main():
       print('Copyright (c) 2020-2023 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
-    jinjafx_usage = '-t <template.j2> [-d <data.csv>] [-g <vars.yml>]\n'
+    jinjafx_usage = '-t <template.j2> [-d [data.csv]] [-g <vars.yml>]\n'
     jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]\n'
     jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file1] [file2] [...]\n'
     jinjafx_usage += '''
 
     -t <template.j2>           - specify a Jinja2 template
-    -d <data.csv>              - specify row/column based data (comma or tab separated)
+    -d [data.csv]              - specify row/column based data (omit file for <stdin>)
     -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml> [-g ...]     - specify global variables in yaml (supports Ansible Vault)
@@ -69,7 +69,7 @@ Environment Variables:
     group_ex.add_argument('-dt', type=argparse.FileType('r'))
     group_ex.add_argument('-encrypt', type=str, nargs='*')
     group_ex.add_argument('-decrypt', type=str, nargs='*')
-    parser.add_argument('-d', type=argparse.FileType('r'))
+    parser.add_argument('-d', type=argparse.FileType('r'), nargs='?', const=sys.stdin)
     parser.add_argument('-ds', type=str)
     parser.add_argument('-g', type=argparse.FileType('r'), action='append')
     parser.add_argument('-var', type=str, action='append')
@@ -236,8 +236,13 @@ Environment Variables:
                 raise
   
       elif args.d is not None:
-        with open(args.d.name, 'rt') as f:
-          data = f.read()
+        if args.d.name == '<stdin>':
+          print('Paste in Data (CTRL+D to End):')
+          data = args.d.read()
+
+        else:
+          with open(args.d.name, 'rt') as f:
+            data = f.read()
   
       if args.g is not None:
         for g in args.g:
