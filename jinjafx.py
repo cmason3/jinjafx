@@ -46,7 +46,7 @@ def main():
     jinjafx_usage += '''
 
     -t <template.j2>           - specify a Jinja2 template
-    -d [data.csv]              - specify row/column based data (comma or tab separated)
+    -d [data.csv]              - specify row/column based data (comma or tab separated) - omit for <stdin>
     -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml> [-g ...]     - specify global variables in yaml (supports Ansible Vault)
@@ -239,7 +239,11 @@ Environment Variables:
         if args.d.name == '<stdin>':
           if sys.stdin.isatty():
             print('Paste in Data (CTRL+D to End)...')
+
           data = args.d.read()
+
+          if sys.stdin.isatty():
+            print()
 
         else:
           with open(args.d.name, 'rt') as f:
