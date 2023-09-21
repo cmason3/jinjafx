@@ -15,7 +15,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import sys, os, io, importlib.util, argparse, re, getpass, datetime, traceback
+import sys
+if sys.version_info < (3, 8):
+  sys.exit('Requires Python >= 3.8')
+
+import os, io, importlib.util, argparse, re, getpass, datetime, traceback
 import jinja2, jinja2.sandbox, yaml, pytz
 
 from cryptography.hazmat.primitives import hashes
@@ -27,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.17.6'
+__version__ = '1.17.7'
 
 __all__ = ['JinjaFx', 'Vault']
 
