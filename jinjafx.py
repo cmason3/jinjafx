@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.17.7'
+__version__ = '1.17.8'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -189,7 +189,8 @@ Environment Variables:
               except Exception:
                 parser.error('argument -ds: invalid regular expression')
   
-              if len(matches := list(filter(args.ds.search, list(dt['datasets'].keys())))) == 1:
+              matches = list(filter(args.ds.search, list(dt['datasets'].keys())))
+              if len(matches) == 1:
                 if 'data' in dt['datasets'][matches[0]]:
                   dt['data'] = dt['datasets'][matches[0]]['data']
 
@@ -212,7 +213,8 @@ Environment Variables:
             data = dt['data']
   
           if gv:
-            if gyaml := __decrypt_vault(vpw, gv):
+            gyaml = __decrypt_vault(vpw, gv)
+            if gyaml:
               try:
                 y = yaml.load(gyaml, Loader=yaml.SafeLoader)
 
@@ -226,7 +228,8 @@ Environment Variables:
                 raise
 
           if 'vars' in dt:
-            if gyaml := __decrypt_vault(vpw, dt['vars']):
+            gyaml = __decrypt_vault(vpw, dt['vars'])
+            if gyaml:
               try:
                 y = yaml.load(gyaml, Loader=yaml.SafeLoader)
 
@@ -285,7 +288,8 @@ Environment Variables:
   
         if 'prompt' in gvars['jinjafx_input'] and gvars['jinjafx_input']['prompt']:
           for k in gvars['jinjafx_input']['prompt']:
-            if isinstance(v := gvars['jinjafx_input']['prompt'][k], dict):
+            v = gvars['jinjafx_input']['prompt'][k]
+            if isinstance(v, dict):
               if 'pattern' not in v:
                 v['pattern'] = '.*'
   
@@ -332,7 +336,8 @@ Environment Variables:
         print('', file=sys.stderr)
   
       for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
-        if (oname := o[0].rsplit(':', 1)[0]) != '_stderr_':
+        oname = o[0].rsplit(':', 1)[0]
+        if oname != '_stderr_':
           output = '\n'.join(o[1]) + '\n'
           if output.strip():
             if oname == '_stdout_':
@@ -738,7 +743,8 @@ class JinjaFx():
       while i < len(clines):
         l = clines[i]
 
-        if block_begin := start_tag.search(l.strip()):
+        block_begin = start_tag.search(l.strip())
+        if block_begin:
           if block_begin.start() != 0:
             clines[i] = l[:block_begin.start()]
             clines.insert(i + 1, l[block_begin.start():])
@@ -758,7 +764,8 @@ class JinjaFx():
           stack.append(str(index) + ':' + block_begin.group(2).strip() + oformat.lower())
 
         else:
-          if block_end := end_tag.search(l.strip()):
+          block_end = end_tag.search(l.strip())
+          if block_end:
             if block_end.start() != 0:
               clines[i] = l[:block_end.start()]
               clines.insert(i + 1, l[block_end.start():])
@@ -784,7 +791,8 @@ class JinjaFx():
         raise Exception('unbalanced output tags')
 
     for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
-      if (nkey := o.split(':', 1)[1]) not in outputs:
+      nkey = o.split(':', 1)[1]
+      if nkey not in outputs:
         outputs[nkey] = []
           
       outputs[nkey] += outputs[o]
@@ -868,8 +876,9 @@ class JinjaFx():
 
     if self.__g_dict.get(key + '_' + str(row), True):
       n = self.__g_dict.get(key, start - increment)
+      r = repeat
 
-      if r := repeat:
+      if r:
         r = self.__g_dict.get(key + '_repeat', repeat + 1)
         self.__g_dict[key + '_repeat'] = r - 1 if r > 1 else repeat + 1
 
@@ -887,8 +896,9 @@ class JinjaFx():
 
     if self.__g_dict.get(key + '_' + str(row), True):
       n = self.__g_dict.get(key, -1)
+      r = repeat
 
-      if r := repeat:
+      if r:
         r = self.__g_dict.get(key + '_repeat', repeat + 1)
         self.__g_dict[key + '_repeat'] = r - 1 if r > 1 else repeat + 1
 
@@ -906,7 +916,8 @@ class JinjaFx():
     if re.search(r'(?<!\\)[\(\[\{]', pofa[0]):
       i = 0
       while i < len(pofa):
-        if m := re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i]):
+        m = re.search(r'(?<!\\)\((.+?)(?<!\\)\)', pofa[i])
+        if m:
           for g in re.split(r'(?<!\\)\|', m.group(1)):
             pofa.append(pofa[i][:m.start(1) - 1] + g + pofa[i][m.end(1) + 1:])
             groups.append(groups[i] + [re.sub(r'\\([\|\(\[\)\]])', r'\1', g)])
@@ -923,7 +934,8 @@ class JinjaFx():
 
       i = 0
       while i < len(pofa):
-        if m := re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)(:[0-9]+)?[ \t]*(?<!\\)\}', pofa[i]):
+        m = re.search(r'(?<!\\)\{[ \t]*([0-9]+-[0-9]+):([0-9]+)(:[0-9]+)?[ \t]*(?<!\\)\}', pofa[i])
+        if m:
           mpos = groups[i][0].index(m.group())
           nob = len(re.findall(r'(?<!\\)\(', groups[i][0][:mpos]))
           ncb = len(re.findall(r'(?<!\\)\)', groups[i][0][:mpos]))
