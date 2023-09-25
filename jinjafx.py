@@ -335,7 +335,7 @@ Environment Variables:
   
         print('', file=sys.stderr)
   
-      for o in sorted(outputs.items(), key=lambda x: (x[0] == '_stdout_')):
+      for o in sorted(sorted(outputs.items()), key=lambda x: (x[0] == '_stdout_')):
         oname = o[0].rsplit(':', 1)[0]
         if oname != '_stderr_':
           output = '\n'.join(o[1]) + '\n'
