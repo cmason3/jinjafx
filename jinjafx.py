@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.17.8'
+__version__ = '1.17.9'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -355,7 +355,7 @@ Environment Variables:
               with open(ofile, 'wt') as f:
                 f.write(output)
     
-              print(__format_bytes(len(output)) + ' > ' + ofile)
+              print(__format_bytes(len(output)) + ' > ' + os.path.abspath(ofile))
     
             ocount += 1
   
