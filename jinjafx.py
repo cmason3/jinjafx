@@ -19,7 +19,7 @@ import sys
 if sys.version_info < (3, 8):
   sys.exit('Requires Python >= 3.8')
 
-import os, io, importlib.util, argparse, re, getpass, datetime, traceback
+import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
 import jinja2, jinja2.sandbox, yaml, pytz
 
 from cryptography.hazmat.primitives import hashes
@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.17.9'
+__version__ = '1.18.0'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -674,8 +674,6 @@ class JinjaFx():
         gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
         gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
 
-      env.globals.update(gvars)
-
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
@@ -713,11 +711,11 @@ class JinjaFx():
         env.globals['jinjafx'].update({ 'row': 0 })
         self.__g_row = 0
 
-      self.__g_vars = gvars
+      self.__g_vars = copy.deepcopy(gvars)
       self.__g_vars.update(rowdata)
 
       try:
-        content = rtemplate.render(rowdata)
+        content = rtemplate.render(self.__g_vars)
 
         outputs['0:_stderr_'] = []
         if self.__g_warnings:
