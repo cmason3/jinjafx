@@ -579,7 +579,29 @@ This function is used to expand a string that contains static character classes 
 
 - <code><b>jinjafx.counter(key</b>: Optional[String]<b>, increment</b>: Optional[Integer]<b>=1, start</b>: Optional[Integer]<b>=1)</b> -> Integer</code>
 
-This function is used to provide a persistent counter within a row or between rows. If you specify a `key` then it is a global counter that will persist between rows, but if you don't or you include `jinjafx.row` within the `key`, then the counter only persists within the template of the current row.
+This function is used to provide a persistent counter within a row or between rows. If you specify a case insensitive `key` then it is a global counter that will persist between rows, but if you don't or you include `jinjafx.row` within the `key`, then the counter only persists within the template of the current row.
+
+This function also supports a hierarchical counter which can be used for numbering of headings, e.g:
+
+```
+1.
+1.1.
+1.1.1.
+1.1.2.
+2.
+```
+
+This is achieved by using a special syntax for the `key` value:
+
+```jinja2
+{{ jinjafx.counter('A') }}.
+{{ jinjafx.counter('A.A') }}.
+{{ jinjafx.counter('A.A.A') }}.
+{{ jinjafx.counter('A.A.A') }}.
+{{ jinjafx.counter('A') }}.
+```
+
+When this function detects a `key` which consists of single letters separated by dots, then it will act as a hierarchical counter and will produce the above output. Using different letters will reset the counter value back to 1 (or a different number if you have specified `start`). You aren't able to skip levels (i.e. 'A.A.A' isn't valid if 'A.A' and 'A' haven't been used previously, etc).
 
 - <code><b>jinjafx.now(format</b>: Optional[String]<b>, tz</b>: Optional[String]<b>="UTC")</b> -> String</code>
 
