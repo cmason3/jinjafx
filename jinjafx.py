@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.18.0'
+__version__ = '1.18.1'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -1164,8 +1164,26 @@ class JinjaFx():
   def __jfx_counter(self, key=None, increment=1, start=1):
     if key is None:
       key = '_cnt_r_' + str(self.__g_row)
+
+    elif '.' in str(key): # must be [A-Z.]
+      nkey = '_cnt_k'
+      kelements = str(key).lower().split('.')
+      for i, v in enumerate(kelements[:-1]):
+        nkey += '_' + v
+
+        if nkey in self.__g_dict:
+          nkey = '_'.join(nkey.split('_')[:-1]) + '_' + str(self.__g_dict[nkey])
+
+        else:
+          return None
+
+      nkey += '_' + kelements[-1]
+      n = self.__g_dict.get(nkey, int(start) - int(increment))
+      self.__g_dict[nkey] = int(n) + int(increment)
+      return '.'.join(nkey.split('_')[3:-1]) + '.' + str(self.__g_dict[nkey])
+
     else:
-      key = '_cnt_k_' + str(key)
+      key = '_cnt_k_' + str(key).lower()
 
     n = self.__g_dict.get(key, int(start) - int(increment))
     self.__g_dict[key] = int(n) + int(increment)
