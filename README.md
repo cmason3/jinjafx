@@ -594,14 +594,14 @@ This function also supports a hierarchical counter which can be used for numberi
 This is achieved by using a special syntax for the `key` value:
 
 ```jinja2
-{{ jinjafx.counter('A') }}.
-{{ jinjafx.counter('A.A') }}.
-{{ jinjafx.counter('A.A.A') }}.
-{{ jinjafx.counter('A.A.A') }}.
-{{ jinjafx.counter('A') }}.
+{{ jinjafx.counter('A.') }}
+{{ jinjafx.counter('A.A.') }}
+{{ jinjafx.counter('A.A.A.') }}
+{{ jinjafx.counter('A.A.A.') }}
+{{ jinjafx.counter('A.') }}
 ```
 
-When this function detects a `key` which consists of single letters separated by dots, then it will act as a hierarchical counter and will produce the above output. Using different letters will reset the counter value back to 1 (or a different number if you have specified `start`). You aren't able to skip levels (i.e. 'A.A.A' isn't valid if 'A.A' and 'A' haven't been used previously, etc).
+When this function detects a `key` which consists of single letters preceded by a dot, then it will act as a hierarchical counter and will produce the above output. Using different letters will reset the counter value back to 1 (or a different number if you have specified `start`). You aren't able to skip levels (i.e. 'A.A.A.' isn't valid if 'A.A.' and 'A.' haven't been used previously, etc).
 
 - <code><b>jinjafx.now(format</b>: Optional[String]<b>, tz</b>: Optional[String]<b>="UTC")</b> -> String</code>
 

@@ -458,7 +458,7 @@ class JinjaFx():
     self.__g_vars = {}
     self.__g_warnings = []
     self.__g_xlimit = 5000 if sandbox else 0
-    self.__g_hcounter = re.compile(r'[A-Z](?:\.[A-Z])+$', re.IGNORECASE)
+    self.__g_hcounter = re.compile(r'(?:[A-Z]\.)+$', re.IGNORECASE)
 
     outputs = {}
     delim = None
@@ -1166,16 +1166,15 @@ class JinjaFx():
     if key is None:
       key = '_cnt_r_' + str(self.__g_row)
 
-    elif '.' in str(key) and self.__g_hcounter.match(str(key)):
-      nkey = '_cnt_k'
-      kelements = str(key).lower().split('.')
+    elif str(key).endswith('.') and self.__g_hcounter.match(key):
+      nkey = '_cnt_hk'
+      kelements = key[:-1].lower().split('.')
+
       for i, v in enumerate(kelements[:-1]):
         nkey += '_' + v
 
         if nkey in self.__g_dict:
           nkey = '_'.join(nkey.split('_')[:-1]) + '_' + str(self.__g_dict[nkey])
-          if not i:
-            nkey = nkey.replace('_cnt_k_', '_cnt_hk_')
 
         else:
           return None
@@ -1183,7 +1182,8 @@ class JinjaFx():
       nkey += '_' + kelements[-1]
       n = self.__g_dict.get(nkey, int(start) - int(increment))
       self.__g_dict[nkey] = int(n) + int(increment)
-      return '.'.join(nkey.split('_')[3:-1]) + '.' + str(self.__g_dict[nkey])
+      rv = nkey.split('_')[3:-1] + [str(self.__g_dict[nkey])]
+      return '.'.join(rv) + '.'
 
     else:
       key = '_cnt_k_' + str(key).lower()
