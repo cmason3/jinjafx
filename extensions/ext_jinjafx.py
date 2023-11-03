@@ -46,6 +46,7 @@ class plugin(Extension):
     environment.filters['junos9encode'] = self.__junos9encode
     environment.filters['cisco8hash'] = self.__cisco8hash
     environment.filters['cisco9hash'] = self.__cisco9hash
+    environment.filters['cisco10hash'] = self.__cisco10hash
     environment.filters['junos6hash'] = self.__junos6hash
     environment.filters['xpath'] = self.__xpath
     environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
@@ -259,6 +260,15 @@ class plugin(Extension):
     ret.append(b64_from_24bit(alt_r[62], alt_r[20], alt_r[41], 4))
     ret.append(b64_from_24bit(0, 0, alt_r[63], 2))
     return '$6$' + salt + '$' + ''.join(ret)
+
+  def __cisco10hash(self, string, salt=None):
+    if salt is None:
+      salt = self.__generate_salt(16)
+
+    elif len(salt) != 16 or any(c not in self.__mod_b64chars for c in salt):
+      raise JinjaFx.TemplateError('invalid salt provided to cisco10hash')
+
+    return self.__sha512_crypt(string, salt)
 
   def __junos6hash(self, string, salt=None):
     if salt is None:
