@@ -713,7 +713,7 @@ This filter will hash a string using Juniper's Type 6 hashing scheme (Unix Crypt
 
 - <code><b>ipsort(query</b>: List[String]<b>)</b> -> List[String]</code>
 
-This filter will sort a list of IPv4 or IPv6 addresses into numerical order.
+This filter will sort a list of IPv4 and/or IPv6 addresses into numerical order.
 
 - <code><b>xpath(query</b>: String<b>)</b> -> String</code> (requires `lxml` python module)
 
