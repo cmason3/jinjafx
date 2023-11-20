@@ -22,7 +22,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidTag
 from jinjafx import JinjaFx
 
-import os, base64, random, re, hashlib
+import os, base64, random, re, hashlib, ipaddress
 
 try:
   from lxml import etree
@@ -48,6 +48,7 @@ class plugin(Extension):
     environment.filters['cisco9hash'] = self.__cisco9hash
     environment.filters['cisco10hash'] = self.__cisco10hash
     environment.filters['junos6hash'] = self.__junos6hash
+    environment.filters['ipsort'] = self.__ipsort
     environment.filters['xpath'] = self.__xpath
     environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
@@ -278,6 +279,12 @@ class plugin(Extension):
       raise JinjaFx.TemplateError('invalid salt provided to junos6hash')
 
     return self.__sha512_crypt(string, salt)
+
+  def __ipsort(self, a):
+    if isinstance(a, list):
+      return sorted(a, key=lambda x: int(ipaddress.ip_address(x)))
+
+    raise JinjaFx.TemplateError("'ipsort' filter requires a list")
 
   def __xpath(self, s_xml, s_path):
     if lxml:

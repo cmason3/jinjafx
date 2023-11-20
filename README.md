@@ -711,6 +711,10 @@ This filter will hash a string using Cisco's Type 10 hashing scheme (Unix Crypt 
 
 This filter will hash a string using Juniper's Type 6 hashing scheme (Unix Crypt based SHA512). An optional "salt" (length must be 8 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
+- <code><b>ipsort(query</b>: List[String]<b>)</b> -> List[String]</code>
+
+This filter will sort a list of IPv4 or IPv6 addresses into numerical order.
+
 - <code><b>xpath(query</b>: String<b>)</b> -> String</code> (requires `lxml` python module)
 
 This filter is used to perform an xpath query on an XML based output and return the matching sections as a list (if you use namespaces you need to ensure you define them using the `xmlns:` syntax), e.g:
