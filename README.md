@@ -718,7 +718,7 @@ This custom filter will be removed if and when the standard Ansible `ipaddr` fil
 
 - <code><b>summarize_address_range(range</b>: String<b>)</b> -> List[String]</code>
 
-This filter will summarise an IP address range into the smallest list of CIDR networks, e.g:
+This filter will summarise an IPv4 or IPv6 range into a list of CIDR networks, e.g:
 
 ```jinja2
 {{ "192.0.2.0-192.0.2.255"|summarize_address_range }}
