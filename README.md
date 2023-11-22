@@ -714,7 +714,7 @@ This filter will hash a string using Juniper's Type 6 hashing scheme (Unix Crypt
 - <code><b>ipsort(query</b>: List[String]<b>)</b> -> List[String]</code>
 
 This filter will sort a list of IPv4 and/or IPv6 addresses into numerical order.
-This custom filter will be removed if the standard Ansible `ipaddr` filter provides support.
+This custom filter will be removed if and when the standard Ansible `ipaddr` filter provides support.
 
 - <code><b>summarize_address_range(range</b>: String<b>)</b> -> List[String]</code>
 
@@ -730,7 +730,7 @@ This will result in the following output:
 ['192.0.2.0/24']
 ```
 
-This custom filter will be removed if the standard Ansible `ipaddr` filter provides support.
+This custom filter will be removed if and when the standard Ansible `ipaddr` filter provides support.
 
 - <code><b>xpath(query</b>: String<b>)</b> -> String</code> (requires `lxml` python module)
 
