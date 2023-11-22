@@ -715,6 +715,20 @@ This filter will hash a string using Juniper's Type 6 hashing scheme (Unix Crypt
 
 This filter will sort a list of IPv4 and/or IPv6 addresses into numerical order.
 
+- <code><b>summarize_address_range(range</b>: String<b>)</b> -> List[String]</code>
+
+This filter will summarise an IP address range into the smallest list of CIDR networks, e.g:
+
+```jinja2
+{{ "192.0.2.0-192.0.2.255"|summarize_address_range }}
+```
+
+This will result in the following output:
+
+```
+['192.0.2.0/24']
+```
+
 - <code><b>xpath(query</b>: String<b>)</b> -> String</code> (requires `lxml` python module)
 
 This filter is used to perform an xpath query on an XML based output and return the matching sections as a list (if you use namespaces you need to ensure you define them using the `xmlns:` syntax), e.g:

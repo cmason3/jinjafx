@@ -49,6 +49,7 @@ class plugin(Extension):
     environment.filters['cisco10hash'] = self.__cisco10hash
     environment.filters['junos6hash'] = self.__junos6hash
     environment.filters['ipsort'] = self.__ipsort
+    environment.filters['summarize_address_range'] = self.__summarize_address_range
     environment.filters['xpath'] = self.__xpath
     environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
@@ -285,6 +286,11 @@ class plugin(Extension):
       return sorted(a, key=lambda x: int(ipaddress.ip_address(x)))
 
     raise JinjaFx.TemplateError("'ipsort' filter requires a list")
+
+  def __summarize_address_range(self, r):
+    start, end = r.split('-', 2)
+    clist = ipaddress.summarize_address_range(ipaddress.ip_address(start.strip()), ipaddress.ip_address(end.strip()))
+    return list(map(str, clist))
 
   def __xpath(self, s_xml, s_path):
     if lxml:
