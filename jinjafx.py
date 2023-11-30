@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.18.5'
+__version__ = '1.18.6'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -645,8 +645,8 @@ class JinjaFx():
     if importlib.util.find_spec('ext_jinjafx') is not None:
       gvars['jinja2_extensions'].insert(0, 'ext_jinjafx.plugin')
 
-    if importlib.util.find_spec('ext_ansible_ipaddr') is not None:
-      gvars['jinja2_extensions'].insert(0, 'ext_ansible_ipaddr.plugin')
+    if importlib.util.find_spec('ext_ansible_netcommon') is not None:
+      gvars['jinja2_extensions'].insert(0, 'ext_ansible_netcommon.plugin')
 
     if importlib.util.find_spec('ext_ansible_core') is not None:
       gvars['jinja2_extensions'].insert(0, 'ext_ansible_core.plugin')

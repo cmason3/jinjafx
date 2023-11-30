@@ -275,6 +275,8 @@ This contains the following Ansible filters:
 - `pow`
 - `root`
 - `urlsplit`
+- `vlan_expander`
+- `vlan_parser`
 
 This also contains the following "[ipaddr](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html)" Ansible filters:
 
