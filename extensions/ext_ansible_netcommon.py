@@ -43,6 +43,8 @@ class plugin(Extension):
       environment.filters[p + 'slaac'] = slaac
       environment.filters[p + 'hwaddr'] = hwaddr
       environment.filters[p + 'macaddr'] = macaddr
+
+    for p in ('', 'ansible.netcommon.'):
       environment.filters[p + 'vlan_expander'] = vlan_expander
       environment.filters[p + 'vlan_parser'] = vlan_parser
 
