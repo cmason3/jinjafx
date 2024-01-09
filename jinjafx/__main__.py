@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # JinjaFx - Jinja2 Templating Tool
-# Copyright (c) 2020-2023 Chris Mason <chris@netnix.org>
+# Copyright (c) 2020-2024 Chris Mason <chris@netnix.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above

@@ -1,5 +1,5 @@
 # JinjaFx - Jinja2 Templating Tool
-# Copyright (c) 2020-2023 Chris Mason <chris@netnix.org>
+# Copyright (c) 2020-2024 Chris Mason <chris@netnix.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -322,19 +322,21 @@ class Vaulty():
 
   def __derive_key(self, password, salt=None):
     if (ckey := (password, salt)) in self.__kcache:
+      e = self.__kcache[ckey]
+      self.__kcache[ckey] = e[0], e[1], e[2] + 1
       return self.__kcache[ckey]
 
     if salt is None:
       salt = os.urandom(16)
   
     key = Scrypt(salt, 32, 2**16, 8, 1).derive(password.encode('utf-8'))
-    self.__kcache[ckey] = [salt, key]
-    return [salt, key]
+    self.__kcache[ckey] = [salt, key, 0]
+    return [salt, key, 0]
 
   def encrypt(self, plaintext, password, cols=None):
     version = b'\x01'
-    salt, key = self.__derive_key(password)
-    nonce = os.urandom(12)
+    salt, key, uc = self.__derive_key(password)
+    nonce = os.urandom(12)[:-4] + uc.to_bytes(4, 'big')
     ciphertext = ChaCha20Poly1305(key).encrypt(nonce, plaintext.encode('utf-8'), None)
 
     r = self.__prefix + base64.b64encode(version + salt + nonce + ciphertext).decode('utf-8')
@@ -349,7 +351,7 @@ class Vaulty():
       try:
         nciphertext = base64.b64decode(ciphertext.strip()[len(self.__prefix):])
 
-        if nciphertext.startswith(b'\x01') and len(nciphertext) > 29:
+        if len(nciphertext) > 29 and nciphertext.startswith(b'\x01'):
           key = self.__derive_key(password, nciphertext[1:17])[1]
           return ChaCha20Poly1305(key).decrypt(nciphertext[17:29], nciphertext[29:], None).decode('utf-8')
 
