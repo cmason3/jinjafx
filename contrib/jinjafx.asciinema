@@ -236,4 +236,4 @@
 [81.00, "o", "\u001b[0m\r\n"]
 [81.25, "o", "config term\r\n\r\nusername fallback secret 9 $9$wZH21KqlxxNJLu$PhawQ9Kz/h3Q0ESXg7t9fg4zbu7332AikhKI4mhbc1o\r\nenable secret 9 $9$uWarhPbz.xcaw1$tIjFf5JdgY5VlHqCSWlnFmxLMSl6Z8t/piKHpdXNqYk\r\n\r\ninterface Gi0/0/1\r\n description ## 1GE Link to LEAF-01 (Gi0/0) ##\r\n ip address 192.0.2.1 255.255.255.252\r\n no shutdown\r\n!\r\ninterface Gi0/0/2\r\n description ## 1GE Link to LEAF-02 (Gi0/0) ##\r\n ip address 192.0.2.5 255.255.255.252\r\n no shutdown\r\n!\r\ninterface Gi0/0/3\r\n description ## 1GE Link to LEAF-03 (Gi0/0) ##\r\n ip address 192.0.2.9 255.255.255.252\r\n no shutdown\r\n!\r\ninterface Gi0/0/4\r\n description ## 1GE Link to LEAF-04 (Gi0/0) ##\r\n ip address 192.0.2.13 255.255.255.252\r\n no shutdown\r\n!\r\n\r\nend\r\nwrite mem\r\n"]
 [81.25, "o", "\r\n\u001b[1;32m~\u001b[0m$ "]
-[85.25, "o", "\u001b[0m"]
+[87.25, "o", "\u001b[0m"]
