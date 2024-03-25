@@ -1,12 +1,12 @@
 [![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
-![Python](https://img.shields.io/badge/python-≥&nbsp;3.8-brightgreen)
+![Python](https://img.shields.io/badge/python-≥&nbsp;3.9-brightgreen)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
 &nbsp;
 <h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it only requires a couple of Python modules that aren't in the base install - [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [cryptography](https://pypi.org/project/cryptography/) for Ansible Vault.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.1.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it only requires a couple of Python modules that aren't in the base install - [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [cryptography](https://pypi.org/project/cryptography/) for Ansible Vault.
 
 JinjaFx differs from the Ansible "template" module as it allows data to be specified in a dynamic "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
 
@@ -21,23 +21,23 @@ python3 -m pip install --upgrade --user jinjafx
 ### JinjaFx Usage
 
 ```
- jinjafx -t <template.j2> [-d [data.csv]] [-g <vars.yml>]
-         -dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]
-         -encrypt/-decrypt [file1] [file2] [...]
+ jinjafx -t <template.j2> [-d [data.csv]] [-g <vars.(yml|json)>]
+         -dt <dt.yml> [-ds <dataset>] [-g <vars.(yml|json)>]
+         -encrypt/-decrypt [file1] [file2] [..]
 
-    -t <template.j2>          - specify a Jinja2 template
-    -d [data.csv]             - specify row/column based data (comma or tab separated) - omit for <stdin>
-    -dt <dt.yml>              - specify a JinjaFx DataTemplate (combines template, data and vars)
-    -ds <dataset>             - specify a regex to match a DataSet within a JinjaFx DataTemplate
-    -g <vars.yml> [-g ...]    - specify global variables in yaml (supports Ansible Vault)
-    -var <x=value> [-var ...] - specify global variables on the command line (overrides existing)
-    -ed <exts dir> [-ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
-    -o <output file>          - specify the output file (supports Jinja2 variables) (default is stdout)
-    -od <output dir>          - set output dir for output files with a relative path (default is ".")
-    -encrypt [file] [...]     - encrypt files or stdin (if file omitted) using Ansible Vault
-    -decrypt [file] [...]     - decrypt files or stdin (if file omitted) using Ansible Vault
-    -m                        - merge duplicate global variables (dicts and lists) instead of replacing
-    -q                        - quiet mode - don't output version or usage information
+    -t <template.j2>              - specify a Jinja2 template
+    -d [data.csv]                 - specify row/column based data (comma or tab separated) - omit for <stdin>
+    -dt <dt.yml>                  - specify a JinjaFx DataTemplate (combines template, data and vars)
+    -ds <dataset>                 - specify a regex to match a DataSet within a JinjaFx DataTemplate
+    -g <vars.(yml|json)> [-g ..]  - specify global variables in yaml or json (supports Ansible Vault)
+    -var <x=value> [-var ..]      - specify global variables on the command line (overrides existing)
+    -ed <exts dir> [-ed ..]       - specify where to look for extensions (default is "." and "~/.jinjafx")
+    -o <output file>              - specify the output file (supports Jinja2 variables) (default is stdout)
+    -od <output dir>              - set output dir for output files with a relative path (default is ".")
+    -encrypt [file] [..]          - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [file] [..]          - decrypt files or stdin (if file omitted) using Ansible Vault
+    -m                            - merge duplicate global variables (dicts and lists) instead of replacing
+    -q                            - quiet mode - don't output version or usage information
 
  Environment Variables:
    ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
