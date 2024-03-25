@@ -23,12 +23,12 @@ python3 -m pip install --upgrade --user jinjafx
 ### JinjaFx Usage
 
 ```
- jinjafx -t <template.j2> [-d [data.csv]] [-g <vars.(yml|json)>]
+ jinjafx -t <template.j2> [-d [<data.csv>]] [-g <vars.(yml|json)>]
          -dt <dt.yml> [-ds <dataset>] [-g <vars.(yml|json)>]
-         -encrypt/-decrypt [file1] [file2] [..]
+         -encrypt/-decrypt [<file1>] [<file2>] [..]
 
     -t <template.j2>          - specify a Jinja2 template
-    -d [data.csv]             - specify row/column based data (comma or tab separated) - omit for <stdin>
+    -d [<data.csv>]           - specify row/column based data (comma or tab separated) - omit for <stdin>
     -dt <dt.yml>              - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>             - specify a regex to match a DataSet within a JinjaFx DataTemplate
     -g <vars.yml> [-g ..]     - specify global variables in yaml (supports Ansible Vaulted variables and files)
@@ -37,8 +37,8 @@ python3 -m pip install --upgrade --user jinjafx
     -ed <exts dir> [-ed ..]   - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>          - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>          - set output dir for output files with a relative path (default is ".")
-    -encrypt [file] [..]      - encrypt files or stdin (if file omitted) using Ansible Vault
-    -decrypt [file] [..]      - decrypt files or stdin (if file omitted) using Ansible Vault
+    -encrypt [<file>] [..]    - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [<file>] [..]    - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                        - merge duplicate global variables (dicts and lists) instead of replacing
     -q                        - quiet mode - don't output version or usage information
 
