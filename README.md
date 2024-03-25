@@ -1,14 +1,16 @@
 [![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
-![Python](https://img.shields.io/badge/python-≥&nbsp;3.8-brightgreen)
+![Python](https://img.shields.io/badge/python-≥&nbsp;3.9-brightgreen)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
 &nbsp;
 <h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 
-JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it only requires a couple of Python modules that aren't in the base install - [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [cryptography](https://pypi.org/project/cryptography/) for Ansible Vault.
+JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.1.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it only requires a couple of Python modules that aren't in the base install - [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [cryptography](https://pypi.org/project/cryptography/) for Ansible Vault.
 
-JinjaFx differs from the Ansible "template" module as it allows data to be specified in a dynamic "csv" format as well as multiple yaml files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into yaml, hence the need to be able to use "csv" as a data format in these scenarios.
+JinjaFx differs from the Ansible "template" module as it allows data to be specified in a dynamic "csv" format as well as multiple YAML or JSON files. Providing data in "csv" format is easier if the data originates from a spreadsheet or is already in a tabular format. In networking it is common to find a list of physical connections within a patching schedule, which has each connection on a different row - this format isn't easily transposed into YAML or JSON, hence the need to be able to use "csv" as a data format in these scenarios.
+
+In most cases the use of YAML can be substituted for JSON, except you can't use JSON as a DataTemplate as JSON doesn't support multiline strings.
 
 ![GIF](https://github.com/cmason3/jinjafx/raw/main/contrib/jinjafx.gif)
  
@@ -21,21 +23,22 @@ python3 -m pip install --upgrade --user jinjafx
 ### JinjaFx Usage
 
 ```
- jinjafx -t <template.j2> [-d [data.csv]] [-g <vars.yml>]
-         -dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]
-         -encrypt/-decrypt [file1] [file2] [...]
+ jinjafx -t <template.j2> [-d [data.csv]] [-g <vars.(yml|json)>]
+         -dt <dt.yml> [-ds <dataset>] [-g <vars.(yml|json)>]
+         -encrypt/-decrypt [file1] [file2] [..]
 
     -t <template.j2>          - specify a Jinja2 template
     -d [data.csv]             - specify row/column based data (comma or tab separated) - omit for <stdin>
     -dt <dt.yml>              - specify a JinjaFx DataTemplate (combines template, data and vars)
     -ds <dataset>             - specify a regex to match a DataSet within a JinjaFx DataTemplate
-    -g <vars.yml> [-g ...]    - specify global variables in yaml (supports Ansible Vault)
-    -var <x=value> [-var ...] - specify global variables on the command line (overrides existing)
-    -ed <exts dir> [-ed ...]  - specify where to look for extensions (default is "." and "~/.jinjafx")
+    -g <vars.yml> [-g ..]     - specify global variables in yaml (supports Ansible Vaulted variables and files)
+    -g <vars.json> [-g ..]    - specify global variables in json (doesn't support Ansible Vaulted variables)
+    -var <x=value> [-var ..]  - specify global variables on the command line (overrides existing)
+    -ed <exts dir> [-ed ..]   - specify where to look for extensions (default is "." and "~/.jinjafx")
     -o <output file>          - specify the output file (supports Jinja2 variables) (default is stdout)
     -od <output dir>          - set output dir for output files with a relative path (default is ".")
-    -encrypt [file] [...]     - encrypt files or stdin (if file omitted) using Ansible Vault
-    -decrypt [file] [...]     - decrypt files or stdin (if file omitted) using Ansible Vault
+    -encrypt [file] [..]      - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [file] [..]      - decrypt files or stdin (if file omitted) using Ansible Vault
     -m                        - merge duplicate global variables (dicts and lists) instead of replacing
     -q                        - quiet mode - don't output version or usage information
 
@@ -53,7 +56,7 @@ A, B, C    <- HEADER ROW
 7, 8, 9    <- DATA ROW 3
 ```
 
-The case-sensitive header row (see `jinjafx_adjust_headers` in [JinjaFx Variables](#jinjafx-variables)) determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value) and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you define the same key in different files then the last file specified will overwrite the key value, unless you specify `-m` which tells JinjaFx to merge keys, although this only works for keys of the same type that are mergable (i.e. dicts and lists). If you do omit the data then the template will still be executed, but with a single empty row of data.
+The case-sensitive header row (see `jinjafx_adjust_headers` in [JinjaFx Variables](#jinjafx-variables)) determines the Jinja2 variables that you will use in your template (which means they can only contain `A-Z`, `a-z`, `0-9` or `_` in their value) and the data rows determine the value of that variable for a given row/template combination. Each data row within your data will be passed to the Jinja2 templating engine to construct an output. In addition or instead of the "csv" data, you also have the option to specify multiple yaml or json files (using the `-g` argument) to include additional variables that would be global to all rows - multiple `-g` arguments can be specified to combine variables from multiple files. If you define the same key in different files then the last file specified will overwrite the key value, unless you specify `-m` which tells JinjaFx to merge keys, although this only works for keys of the same type that are mergable (i.e. dicts and lists). If you do omit the data then the template will still be executed, but with a single empty row of data.
 
 #### RegEx Style Character Classes and Groups
 
@@ -348,7 +351,7 @@ jinjafx_adjust_headers: "yes" | "no" | "upper" | "lower"
 
 - <code><b>jinjafx_render_vars</b></code>
 
-JinjaFx by default will attempt to render your `vars.yml` using Jinja2, which means the following syntax is valid:
+JinjaFx by default will attempt to render your `vars.yml` file using Jinja2, which means the following syntax is valid:
 
 ```yaml
 ---
@@ -456,7 +459,7 @@ There might be some scenarios where you want to define YAML without a root key, 
   age: 29
 ```
 
-While this is valid in YAML, it isn't valid to have a list when Jinja2 expects a dict. In this scenario, JinjaFx will create a parent key of `_` to allow you to iterate over it within a Jinja2 template:
+While this is valid in YAML, it isn't valid to have a list when Jinja2 expects a dict. In this scenario, JinjaFx will create a parent key of `_` to allow you to iterate over it within a Jinja2 template (the same applies for JSON):
 
 ```jinja2
 {% for k in _ %}
@@ -466,7 +469,7 @@ While this is valid in YAML, it isn't valid to have a list when Jinja2 expects a
 
 ### JinjaFx DataTemplates ###
 
-JinjaFx also supports the ability to combine the data, template and vars into a single YAML file (called a DataTemplate), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
+JinjaFx also supports the ability to combine the data, template and vars into a single YAML file called a DataTemplate (no support for JSON as JSON doesn't support multiline strings, although you can specify the `vars` section using JSON), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
 
 ```yaml
 ---
@@ -478,7 +481,7 @@ dt:
     ... TEMPLATE.J2 ...
 
   vars: |2
-    ... VARS.YML ...
+    ... VARS.(YML|JSON) ...
 ```
 
 You also have the option to specify different DataSets within a DataTemplate - this is where the template is common, but the data and vars can be specified multiple times for different scenarios (e.g. "Test" and "Live"). When you use the DataSet format you will also need to specify which DataSet to generate the outputs for with `-ds`, which takes a case insensitive regular expression to match against.
@@ -487,7 +490,7 @@ You also have the option to specify different DataSets within a DataTemplate - t
 ---
 dt:
   global: |2
-    ... GLOBAL.YML ...
+    ... GLOBAL.(YML|JSON) ...
 
   datasets:
     "Test":
@@ -495,14 +498,14 @@ dt:
         ... DATA.CSV ...
 
       vars: |2
-        ... VARS.YML ...
+        ... VARS.(YML|JSON) ...
 
     "Live":
       data: |2
         ... DATA.CSV ...
 
       vars: |2
-        ... VARS.YML ...
+        ... VARS.(YML|JSON) ...
 
   template: |2
     ... TEMPLATE.J2 ...

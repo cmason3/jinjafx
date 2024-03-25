@@ -16,8 +16,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import sys
-if sys.version_info < (3, 8):
-  sys.exit('Requires Python >= 3.8')
+if sys.version_info < (3, 9):
+  sys.exit('Requires Python >= 3.9')
 
 import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
 import jinja2, jinja2.sandbox, yaml, pytz
@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.18.7'
+__version__ = '1.19.0'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -44,24 +44,25 @@ def main():
       print('Copyright (c) 2020-2024 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
-    jinjafx_usage = '-t <template.j2> [-d [data.csv]] [-g <vars.yml>]\n'
-    jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.yml>]\n'
-    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file1] [file2] [...]\n'
+    jinjafx_usage = '-t <template.j2> [-d [data.csv]] [-g <vars.(yml|json)>]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.(yml|json)>]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [file1] [file2] [..]\n'
     jinjafx_usage += '''
 
-    -t <template.j2>           - specify a Jinja2 template
-    -d [data.csv]              - specify row/column based data (comma or tab separated) - omit for <stdin>
-    -dt <dt.yml>               - specify a JinjaFx DataTemplate (combines template, data and vars)
-    -ds <dataset>              - specify a regex to match a DataSet within a JinjaFx DataTemplate
-    -g <vars.yml> [-g ...]     - specify global variables in yaml (supports Ansible Vault)
-    -var <x=value> [-var ...]  - specify global variables on the command line (overrides existing)
-    -ed <exts dir> [-ed ...]   - specify where to look for extensions (default is "." and "~/.jinjafx")
-    -o <output file>           - specify the output file (supports Jinja2 variables) (default is stdout)
-    -od <output dir>           - set output dir for output files with a relative path (default is ".")
-    -encrypt [file] [...]      - encrypt files or stdin (if file omitted) using Ansible Vault
-    -decrypt [file] [...]      - decrypt files or stdin (if file omitted) using Ansible Vault
-    -m                         - merge duplicate global variables (dicts and lists) instead of replacing
-    -q                         - quiet mode - don't output version or usage information
+    -t <template.j2>          - specify a Jinja2 template
+    -d [data.csv]             - specify row/column based data (comma or tab separated) - omit for <stdin>
+    -dt <dt.yml>              - specify a JinjaFx DataTemplate (combines template, data and vars)
+    -ds <dataset>             - specify a regex to match a DataSet within a JinjaFx DataTemplate
+    -g <vars.yml> [-g ..]     - specify global variables in yaml (supports Ansible Vaulted variables and files)
+    -g <vars.json> [-g ..]    - specify global variables in json (doesn't support Ansible Vaulted variables)
+    -var <x=value> [-var ..]  - specify global variables on the command line (overrides existing)
+    -ed <exts dir> [-ed ..]   - specify where to look for extensions (default is "." and "~/.jinjafx")
+    -o <output file>          - specify the output file (supports Jinja2 variables) (default is stdout)
+    -od <output dir>          - set output dir for output files with a relative path (default is ".")
+    -encrypt [file] [..]      - encrypt files or stdin (if file omitted) using Ansible Vault
+    -decrypt [file] [..]      - decrypt files or stdin (if file omitted) using Ansible Vault
+    -m                        - merge duplicate global variables (dicts and lists) instead of replacing
+    -q                        - quiet mode - don't output version or usage information
 
 Environment Variables:
   ANSIBLE_VAULT_PASSWORD       - specify an Ansible Vault password
