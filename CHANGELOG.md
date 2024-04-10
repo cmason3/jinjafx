@@ -515,7 +515,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 ### [1.0.1] - April 29, 2020
 - Added support for Jinja2 extensions using the `jinja_extensions` variable
 
-### [1.0.0] - April 20, 2020
+### 1.0.0 - April 20, 2020
 - Initial release
 
 
