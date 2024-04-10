@@ -372,20 +372,12 @@ Environment Variables:
 
   except jinja2.TemplateError as e:
     m1 = re.search(r'(?s:.*)File "(.+)", line ([0-9]+), .+ template', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
-    # m1 = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
     print(f'error[{m1.group(1)}:{m1.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
     sys.exit(-2)
 
   except Exception as e:
-    if 'JinjaFx.Template' in str(type(e)):
-      m2 = re.search(r'(?s:.*)File "(.+)", line ([0-9]+), .+ template', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
-      # m2 = re.search(r'File "(.+)", line ([0-9]+),', traceback.format_exc(-2), re.IGNORECASE | re.MULTILINE)
-      print(f'error[{m2.group(1)}:{m2.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
-
-    else:
-      xyz = sys.exc_info()
-      print(f'error[{exc_source or xyz[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
-
+    xyz = sys.exc_info()
+    print(f'error[{exc_source or xyz[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
     sys.exit(-2)
 
 
@@ -803,11 +795,11 @@ class JinjaFx():
     return outputs
 
 
-  class TemplateError(Exception):
+  class TemplateError(jinja2.TemplateError):
     pass
 
 
-  class TemplateException(Exception):
+  class TemplateException(jinja2.TemplateError):
     pass
 
 
