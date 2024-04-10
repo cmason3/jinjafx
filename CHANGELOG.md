@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.19.2] - In Development
+### [1.19.2] - April 10, 2024
 - Exceptions are now always mapped back to the specific line within the Jinja2 template
 - Added an actual `CHANGELOG.md` instead of relying on GitHub Release history
 
@@ -519,6 +519,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Initial release
 
 
+[1.19.2]: https://github.com/cmason3/jinjafx/compare/v1.19.1...v1.19.2
 [1.19.1]: https://github.com/cmason3/jinjafx/compare/v1.18.7...v1.19.1
 [1.18.7]: https://github.com/cmason3/jinjafx/compare/v1.18.6...v1.18.7
 [1.18.6]: https://github.com/cmason3/jinjafx/compare/v1.18.5...v1.18.6
