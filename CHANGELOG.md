@@ -519,6 +519,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Initial release
 
 
+[1.19.2]: https://github.com/cmason3/jinjafx/compare/v1.19.1...HEAD
 [1.19.1]: https://github.com/cmason3/jinjafx/compare/v1.18.7...v1.19.1
 [1.18.7]: https://github.com/cmason3/jinjafx/compare/v1.18.6...v1.18.7
 [1.18.6]: https://github.com/cmason3/jinjafx/compare/v1.18.5...v1.18.6
