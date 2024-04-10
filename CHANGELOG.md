@@ -1,32 +1,32 @@
 ## CHANGELOG
 
-### [v1.19.2] - In Development
+### [1.19.2] - In Development
 - Exceptions are now always mapped back to the specific line within the Jinja2 template
 - Added an actual `CHANGELOG.md` instead of relying on GitHub Release history
 
-### [v1.19.1] - March 25, 2024
+### [1.19.1] - March 25, 2024
 - Dropped support for Python 3.8
 - Added support for using `vars.json` alongside `vars.yml`
 
-### [v1.18.7] - January 9, 2024
+### [1.18.7] - January 9, 2024
 - Don't use a completely random nonce for `vaulty_encrypt` as it will potentially result in nonce re-use
 - Update copyright year to 2024 in all files
 
-### [v1.18.6] - November 30, 2023
+### [1.18.6] - November 30, 2023
 - Added support for `ansible.netcommon.vlan_parser` filter
 - Added support for `ansible.netcommon.vlan_expander` filter
 - Renamed `ext_ansible_ipaddr.py` extension to `ext_ansible_netcommon.py`
 
-### [v1.18.5] - November 22, 2023
+### [1.18.5] - November 22, 2023
 - Added support for `summarize_address_range` filter due to a lack of support in the Ansible `ipaddr` filter
 
-### [v1.18.4] - November 20, 2023
+### [1.18.4] - November 20, 2023
 - Added support for `ipsort` filter which will sort a list of IPv4 and/or IPv6 addresses into numerical order
 
-### [v1.18.3] - November 3 2023
+### [1.18.3] - November 3 2023
 - Added support for Cisco's Type 10 hashing algorithm (Unix Crypt based SHA512) as used in IOS-XR 64-bit
 
-### [v1.18.2] - October 25, 2023
+### [1.18.2] - October 25, 2023
 - Added support for row specific hierarchical counters to allow `jinjafx.counter()` to be used for heading numbering (see `README.md` for more details), e.g:
 
 ```jinja2
@@ -49,70 +49,70 @@ Would result in the following:
 
 - `jinjafx.counter()` keys are now case insensitive
 
-### [v1.18.0] - October 19, 2023
+### [1.18.0] - October 19, 2023
 - Fixed an issue where a Jinja2 template could modify variables within `vars.yml` and the change would persist to subsequent data rows. This was fixed by performing a deep copy instead of a shallow copy before each data row is rendered - hopefully it doesn't have any unexpected consequences
 
-### [v1.17.9] - September 27, 2023
+### [1.17.9] - September 27, 2023
 - JinjaFx will now display the full output path when writing outputs to file
 
-### [v1.17.8] - September 23, 2023
+### [1.17.8] - September 23, 2023
 - Fixed syntax errors on Python <3.8 so version checking works
 
-### [v1.17.7] - September 21, 2023
+### [1.17.7] - September 21, 2023
 - Enforce minimal Python version in code
 
-### [v1.17.6] - August 20, 2023
+### [1.17.6] - August 20, 2023
 - Allow `data.csv` to be read from `<stdin>`
 
-### [v1.17.5] - August 11, 2023
+### [1.17.5] - August 11, 2023
 - Added support for keyless YAML via the `_` website
 
-### [v1.17.4] - July 18, 2023
+### [1.17.4] - July 18, 2023
 - Added `__all__` variable to `jinjafx.py`
 
-### [v1.17.3] - April 28, 2023
+### [1.17.3] - April 28, 2023
 - Added support for a looping counter `{n1|n2|n3[:repeat]}`
 - Removed debug statement that was left in the previous release
 
-### [v1.17.2] - April 28, 2023
+### [1.17.2] - April 28, 2023
 - Added support for an optional repeat operator to passive `{start:step[:repeat]}` and active `{start[-end]:step[:repeat]}` counters
 
-### [v1.17.1] - April 26, 2023
+### [1.17.1] - April 26, 2023
 - Added support for an optional split operator for `jinjafx.first()` and `jinjafx.last()`
 
-### [v1.17.0] - April 24, 2023
+### [1.17.0] - April 24, 2023
 - Dropped support for Python 3.7
 - Added support for `vars` and `varnames` shorthand aliases
 - Migrated codebase to use Python's walrus operator
 - Migrated type annotations into `README.md`
 
-### [v1.16.2] - February 21, 2023
+### [1.16.2] - February 21, 2023
 - Fixed typo - rename filter `to_bool` to `bool` to align with Ansible
 
-### [v1.16.1] - February 17, 2023
+### [1.16.1] - February 17, 2023
 - Further enhancements to Python Type Hints - removed `Any` return type from `__jfx_expand()` and replaced with valid type
 - JinjaFx now passes `mypy` validation with `--strict` across entire codebase (added `ignore` directive to Ansible extensions for untyped and resolved other errors)
 
-### [v1.16.0] - February 16, 2023
+### [1.16.0] - February 16, 2023
 - Python Type Hints (PEP484) have been added to core JinjaFx (`jinjafx.py` and `ext_jinjafx.py`) files and pass `strict` validation with `mypy`
 - The Ansible extensions (`ext_ansible_core.py` and `ext_ansible_ipaddr.py`) have been updated so they pass `mypy` validation with `check-untyped-defs` but not `strict` as that is for Ansible upstream to update and then they will be incorporated into JinjaFx
 - Fixed an issue where `hwaddr("linux")` wasn't working
 
-### [v1.15.4] - February 1, 2023
+### [1.15.4] - February 1, 2023
 - Added support for Ansible filter `urlsplit`
 
-### [v1.15.3] - January 18, 2023
+### [1.15.3] - January 18, 2023
 - Further enhancements to exception handling within templates
 
-### [v1.15.2] - January 17, 2023
+### [1.15.2] - January 17, 2023
 - Added support for Ansible's `varnames` lookup
 - Improved exception handling within templates to include line numbers
 
-### [v1.15.1] - December 30, 2022
+### [1.15.1] - December 30, 2022
 - Removed support for Python 3.6 due to end of life
 - Updated Python build to use `pyproject.toml` to avoid deprecation
 
-### [v1.15.0] - December 30, 2022
+### [1.15.0] - December 30, 2022
 - Deprecated support for Python 3.6 as it is end of life
 - Added support for the "global" section within DataTemplates
 - The `xpath` filter only works if the `lxml` python module is present
@@ -122,30 +122,30 @@ Would result in the following:
 - Improved exception handling by displaying more context
 - Fixed a Python 3.6 issue with `importlib`
 
-### [v1.14.3] - December 14, 2022
+### [1.14.3] - December 14, 2022
 - Fixed issue with jinja2 rendering of `vars.yml` with lookup
 - Fixed `link_local_query` to use /16 instead of /24
 - Update copyright year to 2023 in all files
 
-### [v1.14.2] - November 5, 2022
+### [1.14.2] - November 5, 2022
 - Added `jinjafx_render_vars` variable to replace command line option `-xg`
 
-### [v1.14.1] - November 2, 2022
+### [1.14.1] - November 2, 2022
 - Added `-xg` command line option to disable recursive rendering of global variables
 
-### [v1.14.0] - November 2, 2022
+### [1.14.0] - November 2, 2022
 - Support Jinja2 syntax within `vars.yml` which can reference variables it defines
 
-### [v1.13.3] - September 30, 2022
+### [1.13.3] - September 30, 2022
 - Fixed an issue with `jinjafx.now()` where it wasn't working when passed a timezone
 
-### [v1.13.2] - August 19, 2022
+### [1.13.2] - August 19, 2022
 - The `JinjaFx()` function will now throw a `MemoryError` exception if required
 
-### [v1.13.1] - August 17, 2022
+### [1.13.1] - August 17, 2022
 - Fixed `jinjafx_adjust_headers` which was broken in the last release
 
-### [v1.13.0] - August 17, 2022
+### [1.13.0] - August 17, 2022
 - BREAKING CHANGE - `jinjafx.data` has reluctantly been changed from a list of lists to a function. This has been done to address memory issues with large datasets, where it doubled the memory requirements. Any occurrences of `jinjafx.data[row][col]` will now need to be replaced with `jinjafx.data(row, col)`, which should be functionally the same
 - Massive performance improvements following the removal of `deepcopy` and profiling/optimising the code - using a large dataset, processing was improved from 104 seconds down to 8 seconds!
 - Further memory reductions by ensuring data doesn't get duplicated multiple times while rows are being expanded
@@ -154,22 +154,22 @@ Would result in the following:
 - Added support for Jinja2's `SandboxedEnvironment` which will be used by JinjaFx Server. When the Sandbox is enabled there is also a global limit of 5000 expansions to limit the size of datasets
 - Code re-arrangements to make it more Pythonic and updates to strings to use f-strings for formatting
 
-### [v1.12.3] - July 13, 2022
+### [1.12.3] - July 13, 2022
 - Backported [ansible/ansible#70337](https://github.com/ansible/ansible/issues/70337) to Ansible Core filters
 - Allow `ipaddr` style filters to be used via `ansible.utils.ipaddr`
 - Improved exception handling to match Exception explicitly
 
-### [v1.12.2] - June 21, 2022
+### [1.12.2] - June 21, 2022
 - Added support for an `xpath` filter to manipulate XML and HTML
 
-### [v1.12.1] - May 29, 2022
+### [1.12.1] - May 29, 2022
 - Changed order of import so extensions will now redefine existing filters if using the same name
 
-### [v1.12.0] - May 13, 2022
+### [1.12.0] - May 13, 2022
 - Increased `jinja2` minimal version to 3.0.0 to support `jinja2.pass_environment`
 - Allow output format to be transparently passed through in templates for JinjaFx Server
 
-### [v1.11.9] - May 11, 2022
+### [1.11.9] - May 11, 2022
 - Added support for Ansible filter `extract`
 - Added support for Ansible filter `flatten`
 - Added support for Ansible filter `product`
@@ -183,102 +183,102 @@ Would result in the following:
 - Added support for Ansible filter `zip`
 - Added support for Ansible filter `zip_longest`
 
-### [v1.11.8] - May 6, 2022
+### [1.11.8] - May 6, 2022
 - Added support for Ansible filter `dict2items`
 - Added support for Ansible filter `items2dict`
 
-### [v1.11.7] - May 5, 2022
+### [1.11.7] - May 5, 2022
 - Added support for Ansible filter `regex_escape`
 - Added support for Ansible filter `random`
 - Added support for Ansible filter `shuffle`
 - Added support for Ansible filter `ternary`
 
-### [v1.11.6] - May 1, 2022
+### [1.11.6] - May 1, 2022
 - Added `py36` specific wheel to deal with dependencies deprecating Python 3.6 due to EOL (RHEL8 uses 3.6 as default)
 
-### [v1.11.4] - April 29, 2022
+### [1.11.4] - April 29, 2022
 - Nothing significant - updates to PyPI packaging and `README.md`
 
-### [v1.11.3] - April 21, 2022
+### [1.11.3] - April 21, 2022
 - Added support for `vaulty_encrypt` and `vaulty_decrypt` using ChaCha20-Poly1305 encryption
 
-### [v1.11.2] - April 15, 2022
+### [1.11.2] - April 15, 2022
 Added Support for Ansible Tests `contains`, `any` and `all`
 Added Support for Ansible Filters `from_yaml` and `from_json`
 Updated `lookup` to accept `ansible.builtin.vars` as well as `vars`
 Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 
-### [v1.11.1] - April 11, 2022
+### [1.11.1] - April 11, 2022
 - Added support for `-encrypt` to encrypt strings and files using Ansible Vault
 - Added support for `-decrypt` to decrypt strings and files using Ansible Vault
 
-### [v1.11.0] - April 5, 2022
+### [1.11.0] - April 5, 2022
 - Added support for DataTemplates (`-dt`) with DataSets (`-ds`)
 - Updated usage screen to include more detailed output
 
-### [v1.10.4] - March 22, 2022
+### [1.10.4] - March 22, 2022
 - Fixed a bug when output tags aren't on their own line and output was being lost
 
-### [v1.10.3] - March 22, 2022
+### [1.10.3] - March 22, 2022
 - Added support for the following Ansible core filters: `to_yaml`, `to_nice_yaml`, `to_json`, `to_nice_json`, `to_bool`, `to_datetime` and `strftime`
 - Added support for the following Ansible math filters: `log`, `pow` and `root`
 
-### [v1.10.2] - March 21, 2022
+### [1.10.2] - March 21, 2022
 - Added `ansible_vault_decrypt` public method for JinjaFx Server
 
-### [v1.10.1] - March 21, 2022
+### [1.10.1] - March 21, 2022
 - Ported Ansible Vault decryption to JinjaFx which completely removes Ansible as a dependency
 
-### [v1.10.0] - March 3, 2022
+### [1.10.0] - March 3, 2022
 - Removed support for passing a DataTemplate on the command line using `-dt`
 - Removed support for importing Ansible Filters and Tests - provide common ones as JinjaFx extensions (this may cause breakages if a filter was being used that I haven't included)
 - Added extension `ext_ansible_core.plugin` for `b64encode`, `b64decode`, `hash`, `regex_replace`, `regex_search` and `regex_findall` filters
 - Added extension `ext_ansible_ipaddr.plugin` to port all `ipaddr` filters (i.e. `ipaddr`, `ipmath`, etc)
 
-### [v1.9.5] - February 17, 2022
+### [1.9.5] - February 17, 2022
 - Added support for `cisco8hash` filter
 - Added support for `cisco9hash` filter
 - Added support for `junos6hash` filter
 
-### [v1.9.2] - February 8, 2022
+### [1.9.2] - February 8, 2022
 - Removed legacy Python 2 fudges around `bytes` vs `str` - inputs to `jinjafx()` must now be of type `str`
 - Removed support for previously deprecated legacy padding in counters
 
-### [v1.9.1] - January 21, 2022
+### [1.9.1] - January 21, 2022
 - Fixed an issue when importing Extensions
 
-### [v1.9.0] - January 21, 2022
+### [1.9.0] - January 21, 2022
 - Added JinjaFx Extension which adds support for `cisco_snmpv3_key`, `junos_snmpv3_key`, `cisco7encode` and `junos9encode` custom filters
 
-### [v1.8.5] - January 20, 2022
+### [1.8.5] - January 20, 2022
 - Added support for specifying directories to search for Jinja2 Extensions
 
-### [v1.8.4] - January 7, 2022
+### [1.8.4] - January 7, 2022
 - Added missing `pyyaml` dependency to `setup.py`
 
-### [v1.8.2] - December 10, 2021
+### [1.8.2] - December 10, 2021
 - Added support for `jinjafx.now()` to output current date and time
 
-### [v1.8.1] - December 8, 2021
+### [1.8.1] - December 8, 2021
 - Added support for `ansible.builtin.vars` lookup
 
-### [v1.8.0] - December 6, 2021
+### [1.8.0] - December 6, 2021
 - Added support for the `%` Pad Operator for zero padding on numbers
 - Deprecated zero padding on counters in favour of the Pad Operator
 
-### [v1.7.3] - November 30, 2021
+### [1.7.3] - November 30, 2021
 - Fixed an issue where it couldn't import a `jinja2_extension` from the current directory
 
-### [v1.7.2] - November 26, 2021
+### [1.7.2] - November 26, 2021
 - Added `__main__.py` so `python3 -m jinjafx` works
 
-### [v1.7.1] - November 26, 2021
+### [1.7.1] - November 26, 2021
 - Split out jinjafx_server into separate repository
 - Improved function and variable encapsulation
 - Make jinjafx available as a PyPI module
 - Removed support for `jinjafx.nslookup()`
 
-### [v1.7.0] - October 20, 2021
+### [1.7.0] - October 20, 2021
 #### JinjaFx Server
 - Completely removed jQuery dependency and migrated codebase to Bootstrap v5
 - Improved the security of the HAProxy Dockerfile by dropping to a non-root user
@@ -288,7 +288,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Updated CodeMirror library to 5.63.3
 - Improved HTTP `<meta>` tags for SEO
 
-### [v1.6.1] - October 12, 2021
+### [1.6.1] - October 12, 2021
 #### JinjaFx Server
 - Dropped support for IE11 - it is a security risk and is holding back development
 - Reduced logging output to only show legitimate requests if verbose logging is not enabled
@@ -299,21 +299,21 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Updated font size of CSV table as it was too small
 - Added support for GZip compression of resources
 
-### [v1.6.0] - September 1, 2021
+### [1.6.0] - September 1, 2021
 - Added support for `prompt` syntax for JinjaFx Input
 - Changed the shebang lines to use Python 3 as Python 2 is EOL
 - Commented out `__future__` imports for Python 2 as it is EOL
 
-### [v1.5.7] - July 2, 2021
+### [1.5.7] - July 2, 2021
 #### JinjaFx Server
 - Terminate gracefully when receiving `SIGTERM` or `SIGINT`
 
-### [v1.5.6] - June 17, 2021
+### [1.5.6] - June 17, 2021
 #### JinjaFx Server
 - Fixed an issue where Ansible Vaulted credentials didn't work
 - Reduced Docker image size to around 150MB from over 650MB
 
-### [v1.5.5] - June 11, 2021
+### [1.5.5] - June 11, 2021
 #### JinjaFx Server
 - Logging now includes the number of bytes on POST requests
 - Fixed a bug where the reported revision wasn't formatted correctly
@@ -323,14 +323,14 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Fixed a left radius on the "Update" button
 - Updated CodeMirror to v5.61.1
 
-### [v1.5.4] - May 11, 2021
+### [1.5.4] - May 11, 2021
 - Added support for `jinjafx.warning()`
 
-### [v1.5.3] - April 27, 2021
+### [1.5.3] - April 27, 2021
 #### JinjaFx Server
 - Non-printable ASCII characters are now highlighted in red in the data pane
 
-### [v1.5.2] - April 19, 2021
+### [1.5.2] - April 19, 2021
 #### JinjaFx Server
 - Updated versions of included JavaScript libraries
 - Included `Content-Security-Policy` header
@@ -340,14 +340,14 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Removed all inline script blocks
 - Removed support for inline JavaScript in JinjaFx Input Forms
 
-### [v1.5.1] - April 13, 2021
+### [1.5.1] - April 13, 2021
 #### JinjaFx Server
 - Added support for inline JavaScript in JinjaFx Input Forms
 - Added support for Jinja2 templating in JinjaFx Input Forms
 - Added support for being able to change protection passwords
 - Added support for HTTP OPTIONS method
 
-### [v1.5.0] - April 6, 2021
+### [1.5.0] - April 6, 2021
 #### JinjaFx
 - Added support for `match`, `search` and `regex` Ansible tests
 #### JinjaFx Server
@@ -363,7 +363,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Fixed an issue where `template.j2` was being trimmed
 - Fixed an issue if `vars.yml` was all commented out
 
-### [v1.4.0] - March 10, 2021
+### [1.4.0] - March 10, 2021
 #### JinjaFx Server
 - Added support for Data Sets - the same template can now be used with different `data.csv`/`vars.yml`
 - Log output now hides valid internal .js, .css and .png requests in output
@@ -375,24 +375,24 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Added a "Copy" button on Output window to copy output to clipboard
 - Updated CodeMirror and Bootstrap to latest versions
 
-### [v1.3.4] - February 24, 2021
+### [1.3.4] - February 24, 2021
 - Fixed a code execution security risk in YAML parsing thanks to `@b1nslashsh`
 - Fixed an issue where a colon couldn't be used in output names
 - Minor tweak to the default pane dimensions in JinjaFx Server
 - Improved the formatting of the Generated time and date
 
-### [v1.3.3] - February 19, 2021
+### [1.3.3] - February 19, 2021
 - Added support for using the longer `ansible.netcommon` prefix for `ipaddr` Ansible filters
 - Improved `jinjafx_adjust_headers` variable to specify desired case (upper or lower)
 - Updated fields in saved DataTemplates to use valid field names
 - Updated CodeMirror from version 5.58.3 to 5.59.2
 
-### [v1.3.2] - February 11, 2021
+### [1.3.2] - February 11, 2021
 - Fixed an issue where `data.csv` didn't go disabled when waiting
 - Split out JinjaFx Server into a separate directory
 - Updates to `jinjafx.nslookup` to use `getnameinfo` instead of `gethostbyname`
 
-### [v1.3.1] - January 23, 2021
+### [1.3.1] - January 23, 2021
 - Added support for `ANSIBLE_VAULT_PASSWORD_FILE` to match Ansible
 - Renamed `ANSIBLE_VAULT_PASS` to `ANSIBLE_VAULT_PASSWORD` for consistency
 - Added support for `-m` to merge global variables instead of overwriting duplicate keys
@@ -400,7 +400,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - JinjaFx Server now makes it obvious if it is waiting for something
 - Updated error handling routines and fixed a few minor bugs
 
-### [v1.3.0] - December 15, 2020
+### [1.3.0] - December 15, 2020
 #### JinjaFx
 - Added JinjaFx function `jinjafx.nslookup()` for dns lookups in templates
 - Renamed `jfx` symlink to `jinjafx`
@@ -413,24 +413,24 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 #### All
 - Stop officially supporting Python 2.7
 
-### [v1.2.3] - December 1, 2020
+### [1.2.3] - December 1, 2020
 - Added support for `vars.yml` variable `jinjafx_adjust_headers`
 - Added support for JinjaFx function `jinjafx.exception()`
 
-### [v1.2.2] - November 12, 2020
+### [1.2.2] - November 12, 2020
 - Added support for "intelligent bracket auto-escaping"
 - Escape characters are now removed from inside capture groups
 - Updated `jinjafx_filter` so it is now case sensitive when matching
 - Added support for custom sort order in `jinjafx_sort`
 - Added support for ordered output blocks
 
-### [v1.2.1] - October 30, 2020
+### [1.2.1] - October 30, 2020
 - Added `jfx` symlink to jinjafx repository
 - Only try to expand static groups if it detects a `|` between parenthesis
 - Whitespace is now automatically removed from header fields
 - Added `jinjafx.yml` for deploying using Kubernetes
 
-### [v1.2.0] - October 13, 2020
+### [1.2.0] - October 13, 2020
 - Renamed variable `jinja_extensions` to `jinja2_extensions` in `vars.yml`
 - Added support for variable `jinjafx_sort` in `vars.yml`
 - Added support for variable `jinjafx_filter` in `vars.yml`
@@ -439,185 +439,185 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Updated 3rd party libraries to latest versions from `cdnjs`
 - Added option `-q` to JinjaFx which suppresses title and version
 
-### [v1.1.6] - September 28, 2020
+### [1.1.6] - September 28, 2020
 - Better handling of read-only DataTemplates in JinjaFx Server
 - JinjaFx now correctly imports the `ipaddr` filter with Ansible 2.10
 - Added support to JinjaFx to change the default output directory for relative outputs
 
-### [v1.1.5] - September 7, 2020
+### [1.1.5] - September 7, 2020
 - Added support to be able to maximise panes in JinjaFx Server
 - JinjaFx will now warn if it can't import Ansible filters via `jinjafx.import_filters()`
 
-### [v1.1.4] - August 20, 2020
+### [1.1.4] - August 20, 2020
 - Added support for Ansible Vaulted strings in `vars.yml`
 
-### [v1.1.3] - July 19, 2020
+### [1.1.3] - July 19, 2020
 - Active counters and ranges in character classes can now decrement as well as increment
 
-### [v1.1.2] - July 9, 2020
+### [1.1.2] - July 9, 2020
 - Added support for "Update Link" capability
 - Added support for active counters in `jinjafx.expand()`
 - Improved error handling - it now reports the data row
 
-### [v1.1.1] - June 28, 2020
+### [1.1.1] - June 28, 2020
 - Completely rewrote JinjaFx Server web UI using Bootstrap v4.4.1
 - Added support for processing JinjaFx DataTemplates to JinjaFx
 
-### [v1.1.0] - June 22, 2020
+### [1.1.0] - June 22, 2020
 - Removed propriety DataTemplate format in JinjaFx Server in favour of YAML
 - Fixed an issue where the data pane was blank after pasting in JinjaFx Server
 - Removed `--ask-vault-pass` in JinjaFx - it now detects if it needs to ask you
 - Added support for a vaulted `vars.yml` in JinjaFx Server
 - Updated CodeMirror to version 5.55.0 in JinjaFx Server
 
-### [v1.0.10] - June 14, 2020
+### [1.0.10] - June 14, 2020
 - Added support for comments in `data.csv`
 - Error message if it detects invalid characters in header fields
 - Minor changes to the link format on "Get Link"
 - Fixed an issue with white-space at the beginning of rows
 - Cosmetic changes to `data.csv` table in JinjaFx Server
 
-### [v1.0.9] - June 9, 2020
+### [1.0.9] - June 9, 2020
 - Greatly improved error reporting in templates
 - Fixed HTTP status codes for AJAX requests
 - Fixed CodeMirror search dialogue
 - Added HAProxy rate limit example
 
-### [v1.0.8] - June 1, 2020
+### [1.0.8] - June 1, 2020
 - Removed Data URL in DataTemplate Export in JinjaFx Server
 - Added support for "Get Link" in JinjaFx Server using a Repository Directory
 - Added support for data row expansion counters
 
-### [v1.0.7] - May 18, 2020
+### [1.0.7] - May 18, 2020
 - Added Data URL in DataTemplate Export in JinjaFx Server
 - Improved support for tabular view of the `data.csv` window
 
-### [v1.0.6] - May 12, 2020
+### [1.0.6] - May 12, 2020
 - Fixed regression from previous version where I completely messed up `jinjafx.expand()` with regex capture groups
 - The `data.csv` pane in the JinjaFx Server now formats itself into a table when focus is lost
 
-### [v1.0.5] - May 11, 2020
+### [1.0.5] - May 11, 2020
 - Added support for regex style capture groups
 - Added support for `jinjafx.fields()`
 - Enabled Ansible Core filters if available
 - Improved error reporting in JinjaFx Server
 - Fixed an issue with elapsed time being incorrect
 
-### [v1.0.4] - May 5, 2020
+### [1.0.4] - May 5, 2020
 - Added support for `ipaddr` Ansible filters (if Ansible is installed and requires `netaddr` Python module)
 
-### [v1.0.3] - May 4, 2020
+### [1.0.3] - May 4, 2020
 - Fixed an issue where whitespace options weren't being acted upon
 
-### [v1.0.2] - May 3, 2020
+### [1.0.2] - May 3, 2020
 - Added support for the JinjaFx Server
 
-### [v1.0.1] - April 29, 2020
+### [1.0.1] - April 29, 2020
 - Added support for Jinja2 extensions using the `jinja_extensions` variable
 
-### [v1.0.0] - April 20, 2020
+### [1.0.0] - April 20, 2020
 - Initial release
 
 
-[v1.19.1]: https://github.com/cmason3/jinjafx/compare/v1.18.7...v1.19.1
-[v1.18.7]: https://github.com/cmason3/jinjafx/compare/v1.18.6...v1.18.7
-[v1.18.6]: https://github.com/cmason3/jinjafx/compare/v1.18.5...v1.18.6
-[v1.18.5]: https://github.com/cmason3/jinjafx/compare/v1.18.4...v1.18.5
-[v1.18.4]: https://github.com/cmason3/jinjafx/compare/v1.18.3...v1.18.4
-[v1.18.3]: https://github.com/cmason3/jinjafx/compare/v1.18.2...v1.18.3
-[v1.18.2]: https://github.com/cmason3/jinjafx/compare/v1.18.0...v1.18.2
-[v1.18.0]: https://github.com/cmason3/jinjafx/compare/v1.17.9...v1.18.0
-[v1.17.9]: https://github.com/cmason3/jinjafx/compare/v1.17.8...v1.17.9
-[v1.17.8]: https://github.com/cmason3/jinjafx/compare/v1.17.7...v1.17.8
-[v1.17.7]: https://github.com/cmason3/jinjafx/compare/v1.17.6...v1.17.7
-[v1.17.6]: https://github.com/cmason3/jinjafx/compare/v1.17.5...v1.17.6
-[v1.17.5]: https://github.com/cmason3/jinjafx/compare/v1.17.4...v1.17.5
-[v1.17.4]: https://github.com/cmason3/jinjafx/compare/v1.17.3...v1.17.4
-[v1.17.3]: https://github.com/cmason3/jinjafx/compare/v1.17.2...v1.17.3
-[v1.17.2]: https://github.com/cmason3/jinjafx/compare/v1.17.1...v1.17.2
-[v1.17.1]: https://github.com/cmason3/jinjafx/compare/v1.17.0...v1.17.1
-[v1.17.0]: https://github.com/cmason3/jinjafx/compare/v1.16.2...v1.17.0
-[v1.16.2]: https://github.com/cmason3/jinjafx/compare/v1.16.1...v1.16.2
-[v1.16.1]: https://github.com/cmason3/jinjafx/compare/v1.16.0...v1.16.1
-[v1.16.0]: https://github.com/cmason3/jinjafx/compare/v1.15.4...v1.16.0
-[v1.15.4]: https://github.com/cmason3/jinjafx/compare/v1.15.3...v1.15.4
-[v1.15.3]: https://github.com/cmason3/jinjafx/compare/v1.15.2...v1.15.3
-[v1.15.2]: https://github.com/cmason3/jinjafx/compare/v1.15.1...v1.15.2
-[v1.15.1]: https://github.com/cmason3/jinjafx/compare/v1.15.0...v1.15.1
-[v1.15.0]: https://github.com/cmason3/jinjafx/compare/v1.14.3...v1.15.0
-[v1.14.3]: https://github.com/cmason3/jinjafx/compare/v1.14.2...v1.14.3
-[v1.14.2]: https://github.com/cmason3/jinjafx/compare/v1.14.1...v1.14.2
-[v1.14.1]: https://github.com/cmason3/jinjafx/compare/v1.14.0...v1.14.1
-[v1.14.0]: https://github.com/cmason3/jinjafx/compare/v1.13.3...v1.14.0
-[v1.13.3]: https://github.com/cmason3/jinjafx/compare/v1.13.2...v1.13.3
-[v1.13.2]: https://github.com/cmason3/jinjafx/compare/v1.13.1...v1.13.2
-[v1.13.1]: https://github.com/cmason3/jinjafx/compare/v1.13.0...v1.13.1
-[v1.13.0]: https://github.com/cmason3/jinjafx/compare/v1.12.3...v1.13.0
-[v1.12.3]: https://github.com/cmason3/jinjafx/compare/v1.12.2...v1.12.3
-[v1.12.2]: https://github.com/cmason3/jinjafx/compare/v1.12.1...v1.12.2
-[v1.12.1]: https://github.com/cmason3/jinjafx/compare/v1.12.0...v1.12.1
-[v1.12.0]: https://github.com/cmason3/jinjafx/compare/v1.11.9...v1.12.0
-[v1.11.9]: https://github.com/cmason3/jinjafx/compare/v1.11.8...v1.11.9
-[v1.11.8]: https://github.com/cmason3/jinjafx/compare/v1.11.7...v1.11.8
-[v1.11.7]: https://github.com/cmason3/jinjafx/compare/v1.11.6...v1.11.7
-[v1.11.6]: https://github.com/cmason3/jinjafx/compare/v1.11.4...v1.11.6
-[v1.11.4]: https://github.com/cmason3/jinjafx/compare/v1.11.3...v1.11.4
-[v1.11.3]: https://github.com/cmason3/jinjafx/compare/v1.11.2...v1.11.3
-[v1.11.2]: https://github.com/cmason3/jinjafx/compare/v1.11.1...v1.11.2
-[v1.11.1]: https://github.com/cmason3/jinjafx/compare/v1.11.0...v1.11.1
-[v1.11.0]: https://github.com/cmason3/jinjafx/compare/v1.10.4...v1.11.0
-[v1.10.4]: https://github.com/cmason3/jinjafx/compare/v1.10.3...v1.10.4
-[v1.10.3]: https://github.com/cmason3/jinjafx/compare/v1.10.2...v1.10.3
-[v1.10.2]: https://github.com/cmason3/jinjafx/compare/v1.10.1...v1.10.2
-[v1.10.1]: https://github.com/cmason3/jinjafx/compare/v1.10.0...v1.10.1
-[v1.10.0]: https://github.com/cmason3/jinjafx/compare/v1.9.5...v1.10.0
-[v1.9.5]: https://github.com/cmason3/jinjafx/compare/v1.9.2...v1.9.5
-[v1.9.2]: https://github.com/cmason3/jinjafx/compare/v1.9.1...v1.9.2
-[v1.9.1]: https://github.com/cmason3/jinjafx/compare/v1.9.0...v1.9.1
-[v1.9.0]: https://github.com/cmason3/jinjafx/compare/v1.8.5...v1.9.0
-[v1.8.5]: https://github.com/cmason3/jinjafx/compare/v1.8.4...v1.8.5
-[v1.8.4]: https://github.com/cmason3/jinjafx/compare/v1.8.2...v1.8.4
-[v1.8.2]: https://github.com/cmason3/jinjafx/compare/v1.8.1...v1.8.2
-[v1.8.1]: https://github.com/cmason3/jinjafx/compare/v1.8.0...v1.8.1
-[v1.8.0]: https://github.com/cmason3/jinjafx/compare/v1.7.3...v1.8.0
-[v1.7.3]: https://github.com/cmason3/jinjafx/compare/v1.7.2...v1.7.3
-[v1.7.2]: https://github.com/cmason3/jinjafx/compare/v1.7.1...v1.7.2
-[v1.7.1]: https://github.com/cmason3/jinjafx/compare/v1.7.0...v1.7.1
-[v1.7.0]: https://github.com/cmason3/jinjafx/compare/v1.6.1...v1.7.0
-[v1.6.1]: https://github.com/cmason3/jinjafx/compare/v1.6.0...v1.6.1
-[v1.6.0]: https://github.com/cmason3/jinjafx/compare/v1.5.7...v1.6.0
-[v1.5.7]: https://github.com/cmason3/jinjafx/compare/v1.5.6...v1.5.7
-[v1.5.6]: https://github.com/cmason3/jinjafx/compare/v1.5.5...v1.5.6
-[v1.5.5]: https://github.com/cmason3/jinjafx/compare/v1.5.4...v1.5.5
-[v1.5.4]: https://github.com/cmason3/jinjafx/compare/v1.5.3...v1.5.4
-[v1.5.3]: https://github.com/cmason3/jinjafx/compare/v1.5.2...v1.5.3
-[v1.5.2]: https://github.com/cmason3/jinjafx/compare/v1.5.1...v1.5.2
-[v1.5.1]: https://github.com/cmason3/jinjafx/compare/v1.5.0...v1.5.1
-[v1.5.0]: https://github.com/cmason3/jinjafx/compare/v1.4.0...v1.5.0
-[v1.4.0]: https://github.com/cmason3/jinjafx/compare/v1.3.4...v1.4.0
-[v1.3.4]: https://github.com/cmason3/jinjafx/compare/v1.3.3...v1.3.4
-[v1.3.3]: https://github.com/cmason3/jinjafx/compare/v1.3.2...v1.3.3
-[v1.3.2]: https://github.com/cmason3/jinjafx/compare/v1.3.1...v1.3.2
-[v1.3.1]: https://github.com/cmason3/jinjafx/compare/v1.3.0...v1.3.1
-[v1.3.0]: https://github.com/cmason3/jinjafx/compare/v1.2.3...v1.3.0
-[v1.2.3]: https://github.com/cmason3/jinjafx/compare/v1.2.2...v1.2.3
-[v1.2.2]: https://github.com/cmason3/jinjafx/compare/v1.2.1...v1.2.2
-[v1.2.1]: https://github.com/cmason3/jinjafx/compare/v1.2.0...v1.2.1
-[v1.2.0]: https://github.com/cmason3/jinjafx/compare/v1.1.6...v1.2.0
-[v1.1.6]: https://github.com/cmason3/jinjafx/compare/v1.1.5...v1.1.6
-[v1.1.5]: https://github.com/cmason3/jinjafx/compare/v1.1.4...v1.1.5
-[v1.1.4]: https://github.com/cmason3/jinjafx/compare/v1.1.3...v1.1.4
-[v1.1.3]: https://github.com/cmason3/jinjafx/compare/v1.1.2...v1.1.3
-[v1.1.2]: https://github.com/cmason3/jinjafx/compare/v1.1.1...v1.1.2
-[v1.1.1]: https://github.com/cmason3/jinjafx/compare/v1.1.0...v1.1.1
-[v1.1.0]: https://github.com/cmason3/jinjafx/compare/v1.0.10...v1.1.0
-[v1.0.10]: https://github.com/cmason3/jinjafx/compare/v1.0.9...v1.0.10
-[v1.0.9]: https://github.com/cmason3/jinjafx/compare/v1.0.8...v1.0.9
-[v1.0.8]: https://github.com/cmason3/jinjafx/compare/v1.0.7...v1.0.8
-[v1.0.7]: https://github.com/cmason3/jinjafx/compare/v1.0.6...v1.0.7
-[v1.0.6]: https://github.com/cmason3/jinjafx/compare/v1.0.5...v1.0.6
-[v1.0.5]: https://github.com/cmason3/jinjafx/compare/v1.0.4...v1.0.5
-[v1.0.4]: https://github.com/cmason3/jinjafx/compare/v1.0.3...v1.0.4
-[v1.0.3]: https://github.com/cmason3/jinjafx/compare/v1.0.2...v1.0.3
-[v1.0.2]: https://github.com/cmason3/jinjafx/compare/v1.0.1...v1.0.2
-[v1.0.1]: https://github.com/cmason3/jinjafx/compare/v1.0.0...v1.0.1
+[1.19.1]: https://github.com/cmason3/jinjafx/compare/v1.18.7...v1.19.1
+[1.18.7]: https://github.com/cmason3/jinjafx/compare/v1.18.6...v1.18.7
+[1.18.6]: https://github.com/cmason3/jinjafx/compare/v1.18.5...v1.18.6
+[1.18.5]: https://github.com/cmason3/jinjafx/compare/v1.18.4...v1.18.5
+[1.18.4]: https://github.com/cmason3/jinjafx/compare/v1.18.3...v1.18.4
+[1.18.3]: https://github.com/cmason3/jinjafx/compare/v1.18.2...v1.18.3
+[1.18.2]: https://github.com/cmason3/jinjafx/compare/v1.18.0...v1.18.2
+[1.18.0]: https://github.com/cmason3/jinjafx/compare/v1.17.9...v1.18.0
+[1.17.9]: https://github.com/cmason3/jinjafx/compare/v1.17.8...v1.17.9
+[1.17.8]: https://github.com/cmason3/jinjafx/compare/v1.17.7...v1.17.8
+[1.17.7]: https://github.com/cmason3/jinjafx/compare/v1.17.6...v1.17.7
+[1.17.6]: https://github.com/cmason3/jinjafx/compare/v1.17.5...v1.17.6
+[1.17.5]: https://github.com/cmason3/jinjafx/compare/v1.17.4...v1.17.5
+[1.17.4]: https://github.com/cmason3/jinjafx/compare/v1.17.3...v1.17.4
+[1.17.3]: https://github.com/cmason3/jinjafx/compare/v1.17.2...v1.17.3
+[1.17.2]: https://github.com/cmason3/jinjafx/compare/v1.17.1...v1.17.2
+[1.17.1]: https://github.com/cmason3/jinjafx/compare/v1.17.0...v1.17.1
+[1.17.0]: https://github.com/cmason3/jinjafx/compare/v1.16.2...v1.17.0
+[1.16.2]: https://github.com/cmason3/jinjafx/compare/v1.16.1...v1.16.2
+[1.16.1]: https://github.com/cmason3/jinjafx/compare/v1.16.0...v1.16.1
+[1.16.0]: https://github.com/cmason3/jinjafx/compare/v1.15.4...v1.16.0
+[1.15.4]: https://github.com/cmason3/jinjafx/compare/v1.15.3...v1.15.4
+[1.15.3]: https://github.com/cmason3/jinjafx/compare/v1.15.2...v1.15.3
+[1.15.2]: https://github.com/cmason3/jinjafx/compare/v1.15.1...v1.15.2
+[1.15.1]: https://github.com/cmason3/jinjafx/compare/v1.15.0...v1.15.1
+[1.15.0]: https://github.com/cmason3/jinjafx/compare/v1.14.3...v1.15.0
+[1.14.3]: https://github.com/cmason3/jinjafx/compare/v1.14.2...v1.14.3
+[1.14.2]: https://github.com/cmason3/jinjafx/compare/v1.14.1...v1.14.2
+[1.14.1]: https://github.com/cmason3/jinjafx/compare/v1.14.0...v1.14.1
+[1.14.0]: https://github.com/cmason3/jinjafx/compare/v1.13.3...v1.14.0
+[1.13.3]: https://github.com/cmason3/jinjafx/compare/v1.13.2...v1.13.3
+[1.13.2]: https://github.com/cmason3/jinjafx/compare/v1.13.1...v1.13.2
+[1.13.1]: https://github.com/cmason3/jinjafx/compare/v1.13.0...v1.13.1
+[1.13.0]: https://github.com/cmason3/jinjafx/compare/v1.12.3...v1.13.0
+[1.12.3]: https://github.com/cmason3/jinjafx/compare/v1.12.2...v1.12.3
+[1.12.2]: https://github.com/cmason3/jinjafx/compare/v1.12.1...v1.12.2
+[1.12.1]: https://github.com/cmason3/jinjafx/compare/v1.12.0...v1.12.1
+[1.12.0]: https://github.com/cmason3/jinjafx/compare/v1.11.9...v1.12.0
+[1.11.9]: https://github.com/cmason3/jinjafx/compare/v1.11.8...v1.11.9
+[1.11.8]: https://github.com/cmason3/jinjafx/compare/v1.11.7...v1.11.8
+[1.11.7]: https://github.com/cmason3/jinjafx/compare/v1.11.6...v1.11.7
+[1.11.6]: https://github.com/cmason3/jinjafx/compare/v1.11.4...v1.11.6
+[1.11.4]: https://github.com/cmason3/jinjafx/compare/v1.11.3...v1.11.4
+[1.11.3]: https://github.com/cmason3/jinjafx/compare/v1.11.2...v1.11.3
+[1.11.2]: https://github.com/cmason3/jinjafx/compare/v1.11.1...v1.11.2
+[1.11.1]: https://github.com/cmason3/jinjafx/compare/v1.11.0...v1.11.1
+[1.11.0]: https://github.com/cmason3/jinjafx/compare/v1.10.4...v1.11.0
+[1.10.4]: https://github.com/cmason3/jinjafx/compare/v1.10.3...v1.10.4
+[1.10.3]: https://github.com/cmason3/jinjafx/compare/v1.10.2...v1.10.3
+[1.10.2]: https://github.com/cmason3/jinjafx/compare/v1.10.1...v1.10.2
+[1.10.1]: https://github.com/cmason3/jinjafx/compare/v1.10.0...v1.10.1
+[1.10.0]: https://github.com/cmason3/jinjafx/compare/v1.9.5...v1.10.0
+[1.9.5]: https://github.com/cmason3/jinjafx/compare/v1.9.2...v1.9.5
+[1.9.2]: https://github.com/cmason3/jinjafx/compare/v1.9.1...v1.9.2
+[1.9.1]: https://github.com/cmason3/jinjafx/compare/v1.9.0...v1.9.1
+[1.9.0]: https://github.com/cmason3/jinjafx/compare/v1.8.5...v1.9.0
+[1.8.5]: https://github.com/cmason3/jinjafx/compare/v1.8.4...v1.8.5
+[1.8.4]: https://github.com/cmason3/jinjafx/compare/v1.8.2...v1.8.4
+[1.8.2]: https://github.com/cmason3/jinjafx/compare/v1.8.1...v1.8.2
+[1.8.1]: https://github.com/cmason3/jinjafx/compare/v1.8.0...v1.8.1
+[1.8.0]: https://github.com/cmason3/jinjafx/compare/v1.7.3...v1.8.0
+[1.7.3]: https://github.com/cmason3/jinjafx/compare/v1.7.2...v1.7.3
+[1.7.2]: https://github.com/cmason3/jinjafx/compare/v1.7.1...v1.7.2
+[1.7.1]: https://github.com/cmason3/jinjafx/compare/v1.7.0...v1.7.1
+[1.7.0]: https://github.com/cmason3/jinjafx/compare/v1.6.1...v1.7.0
+[1.6.1]: https://github.com/cmason3/jinjafx/compare/v1.6.0...v1.6.1
+[1.6.0]: https://github.com/cmason3/jinjafx/compare/v1.5.7...v1.6.0
+[1.5.7]: https://github.com/cmason3/jinjafx/compare/v1.5.6...v1.5.7
+[1.5.6]: https://github.com/cmason3/jinjafx/compare/v1.5.5...v1.5.6
+[1.5.5]: https://github.com/cmason3/jinjafx/compare/v1.5.4...v1.5.5
+[1.5.4]: https://github.com/cmason3/jinjafx/compare/v1.5.3...v1.5.4
+[1.5.3]: https://github.com/cmason3/jinjafx/compare/v1.5.2...v1.5.3
+[1.5.2]: https://github.com/cmason3/jinjafx/compare/v1.5.1...v1.5.2
+[1.5.1]: https://github.com/cmason3/jinjafx/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/cmason3/jinjafx/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/cmason3/jinjafx/compare/v1.3.4...v1.4.0
+[1.3.4]: https://github.com/cmason3/jinjafx/compare/v1.3.3...v1.3.4
+[1.3.3]: https://github.com/cmason3/jinjafx/compare/v1.3.2...v1.3.3
+[1.3.2]: https://github.com/cmason3/jinjafx/compare/v1.3.1...v1.3.2
+[1.3.1]: https://github.com/cmason3/jinjafx/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/cmason3/jinjafx/compare/v1.2.3...v1.3.0
+[1.2.3]: https://github.com/cmason3/jinjafx/compare/v1.2.2...v1.2.3
+[1.2.2]: https://github.com/cmason3/jinjafx/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/cmason3/jinjafx/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/cmason3/jinjafx/compare/v1.1.6...v1.2.0
+[1.1.6]: https://github.com/cmason3/jinjafx/compare/v1.1.5...v1.1.6
+[1.1.5]: https://github.com/cmason3/jinjafx/compare/v1.1.4...v1.1.5
+[1.1.4]: https://github.com/cmason3/jinjafx/compare/v1.1.3...v1.1.4
+[1.1.3]: https://github.com/cmason3/jinjafx/compare/v1.1.2...v1.1.3
+[1.1.2]: https://github.com/cmason3/jinjafx/compare/v1.1.1...v1.1.2
+[1.1.1]: https://github.com/cmason3/jinjafx/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/cmason3/jinjafx/compare/v1.0.10...v1.1.0
+[1.0.10]: https://github.com/cmason3/jinjafx/compare/v1.0.9...v1.0.10
+[1.0.9]: https://github.com/cmason3/jinjafx/compare/v1.0.8...v1.0.9
+[1.0.8]: https://github.com/cmason3/jinjafx/compare/v1.0.7...v1.0.8
+[1.0.7]: https://github.com/cmason3/jinjafx/compare/v1.0.6...v1.0.7
+[1.0.6]: https://github.com/cmason3/jinjafx/compare/v1.0.5...v1.0.6
+[1.0.5]: https://github.com/cmason3/jinjafx/compare/v1.0.4...v1.0.5
+[1.0.4]: https://github.com/cmason3/jinjafx/compare/v1.0.3...v1.0.4
+[1.0.3]: https://github.com/cmason3/jinjafx/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/cmason3/jinjafx/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/cmason3/jinjafx/compare/v1.0.0...v1.0.1
