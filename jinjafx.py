@@ -453,7 +453,7 @@ class JinjaFx():
     self.__g_vars = {}
     self.__g_warnings = []
     self.__g_xlimit = 5000 if sandbox else 0
-    self.__g_hcounter = re.compile(r'(?:[0-9A-Z]\.)+$', re.IGNORECASE)
+    self.__g_hcounter = re.compile(r'(?:[A-Z]\.)+$', re.IGNORECASE)
 
     outputs = {}
     delim = None
