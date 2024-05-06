@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.19.3'
+__version__ = '1.20.0'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -680,6 +680,7 @@ class JinjaFx():
       'first': self.__jfx_first,
       'last': self.__jfx_last,
       'fields': self.__jfx_fields,
+      'tabulate': self.__jfx_tabulate,
       'data': self.__jfx_data,
       'setg': self.__jfx_setg,
       'getg': self.__jfx_getg,
@@ -1125,6 +1126,30 @@ class JinjaFx():
     return field_values
 
  
+  def __jfx_tabulate(self, datarows=None, *, cols=None):
+    colwidth = []
+    offset = 0
+
+    if datarows is None:
+      datarows = self.__g_datarows
+      offset = 1
+
+    if len(datarows) > 0:
+      for c in range(len(datarows[0])):
+        colwidth.append(len(datarows[0][c]))
+
+      for r in range(1, len(datarows)):
+        for c in range(offset, len(datarows[r])):
+          if colwidth[c - offset] < len(datarows[r][c]):
+            colwidth[c - offset] = len(datarows[r][c])
+
+      print(str(colwidth))
+          
+      return(f"datarows = { datarows }, cols = { cols }")
+
+    return None
+
+
   def __jfx_data(self, row, col=None):
     if self.__g_datarows:
       if isinstance(col, str):
