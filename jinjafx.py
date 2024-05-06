@@ -1134,7 +1134,7 @@ class JinjaFx():
       datarows = self.__g_datarows
       offset = 1
 
-    if len(datarows) > 0:
+    if len(datarows) > 1:
       for c in range(len(datarows[0])):
         colwidth.append(len(datarows[0][c]))
 
