@@ -1129,6 +1129,7 @@ class JinjaFx():
   def __jfx_tabulate(self, datarows=None, *, cols=None):
     colwidth = []
     offset = 0
+    o = ''
 
     if datarows is None:
       datarows = self.__g_datarows
@@ -1143,11 +1144,13 @@ class JinjaFx():
           if colwidth[c - offset] < len(datarows[r][c]):
             colwidth[c - offset] = len(datarows[r][c])
 
-      print(str(colwidth))
-          
-      return(f"datarows = { datarows }, cols = { cols }")
+      o = "| " + " | ".join([f"{x:{colwidth[i]}}" for i, x in enumerate(datarows[0])]) + " |\n"
+      o += "|-" + "-|-".join([f"{'-' * colwidth[i]}" for i, x in enumerate(datarows[0])]) + "-|\n"
 
-    return None
+      for r in range(1, len(datarows)):
+        o += "| " + " | ".join([f"{x:{colwidth[i]}}" for i, x in enumerate(datarows[r][offset:])]) + " |\n"
+
+    return o.strip()
 
 
   def __jfx_data(self, row, col=None):
