@@ -1145,7 +1145,7 @@ class JinjaFx():
             colwidth[c - offset] = len(datarows[r][c])
 
       o = "| " + " | ".join([f"{x:{colwidth[i]}}" for i, x in enumerate(datarows[0])]) + " |\n"
-      o += "|-" + "-|-".join([f"{'-' * colwidth[i]}" for i, x in enumerate(datarows[0])]) + "-|\n"
+      o += "|-" + "-+-".join([f"{'-' * colwidth[i]}" for i, x in enumerate(datarows[0])]) + "-|\n"
 
       for r in range(1, len(datarows)):
         o += "| " + " | ".join([f"{x:{colwidth[i]}}" for i, x in enumerate(datarows[r][offset:])]) + " |\n"
