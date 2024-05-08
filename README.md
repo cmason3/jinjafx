@@ -611,7 +611,7 @@ This will produce the following table:
 | 6 | 4 |
 ```
 
-This function only supports left alignment of columns are present, but if you wish to include the `:` as used by GitHub Markdown to force left alignment, you can set `include_alignment` to `True`.
+This function only supports left alignment of columns at present, but if you wish to include the `:` as used by GitHub Markdown to force left alignment, you can set `include_alignment` to `True`.
 
 - <code><b>jinjafx.expand(value</b>: String<b>)</b> -> List[String]</code>
 
