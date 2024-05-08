@@ -1126,8 +1126,10 @@ class JinjaFx():
     return field_values
 
  
-  def __jfx_tabulate(self, datarows=None, *, cols=None):
+  def __jfx_tabulate(self, datarows=None, *, cols=None, include_alignment=False):
+    alignment = [":", " "] if include_alignment else [" ", " "]
     colwidth = []
+    colmap = []
     offset = 0
     o = ''
 
@@ -1136,6 +1138,17 @@ class JinjaFx():
       offset = 1
 
     if len(datarows) > 1:
+      if not cols:
+        colmap = list(range(len(datarows[0])))
+      
+      else:
+        for c in cols:
+          try:
+            colmap.append(datarows[0].index(c))
+
+          except Exception:
+            raise JinjaFx.TemplateError(f'invalid column "{c}" passed to jinjafx.tabulate()')
+
       for c in range(len(datarows[0])):
         colwidth.append(len(datarows[0][c]))
 
@@ -1144,11 +1157,11 @@ class JinjaFx():
           if colwidth[c - offset] < len(datarows[r][c]):
             colwidth[c - offset] = len(datarows[r][c])
 
-      o = "| " + " | ".join([f"{x:{colwidth[i]}}" for i, x in enumerate(datarows[0])]) + " |\n"
-      o += "|-" + "-+-".join([f"{'-' * colwidth[i]}" for i, x in enumerate(datarows[0])]) + "-|\n"
+      o = "| " + " | ".join([f"{datarows[0][c]:{colwidth[c]}}" for c in colmap]) + " |\n"
+      o += f"|{alignment[0]}" + f"{alignment[1]}|{alignment[0]}".join([f"{'-' * colwidth[c]}" for c in colmap]) + f"{alignment[1]}|\n"
 
       for r in range(1, len(datarows)):
-        o += "| " + " | ".join([f"{x:{colwidth[i]}}" for i, x in enumerate(datarows[r][offset:])]) + " |\n"
+        o += "| " + " | ".join([f"{datarows[r][c + offset]:{colwidth[c]}}" for c in colmap]) + " |\n"
 
     return o.strip()
 

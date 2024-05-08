@@ -578,6 +578,41 @@ This variable will contain the total number of rows within the data.
 
 This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')`. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
 
+- <code><b>jinjafx.tabulate(datarows</b>: Optional[List[List[String]]]<b>, cols</b>: Optional[List[String]]<b>, include_alignment:</b>: Optional[Boolean]<b>=False)</b> -> String</code>
+
+This function will produce a GitHub Markdown styled table using either the provided `datarows` variable, or (if omitted) using the data from `data.csv`, e.g:
+
+```jinja2
+{{ jinjafx.tabulate([["A", "B", "C"], ["1", "2", "3"], ["4", "5", "6"]]) }}
+```
+
+This will produce the following table:
+
+```
+| A | B | C |
+| - | - | - |
+| 1 | 2 | 3 |
+| 4 | 5 | 6 |
+```
+
+The first row will always be used as the header row, which matches the behaviour of JinjaFx with respect to `data.csv`. You can also change the order of the columns or decide to only include some of the columns using the `cols` argument, e.g:
+
+
+```jinja2
+{{ jinjafx.tabulate([["A", "B", "C"], ["1", "2", "3"], ["4", "5", "6"]], cols=["C", "A"]) }}
+```
+
+This will produce the following table:
+
+```
+| C | A |
+| - | - |
+| 3 | 1 |
+| 6 | 4 |
+```
+
+This function only supports left alignment of columns are present, but if you wish to include the `:` as used by GitHub Markdown to force left alignment, you can set `include_alignment` to `True`.
+
 - <code><b>jinjafx.expand(value</b>: String<b>)</b> -> List[String]</code>
 
 This function is used to expand a string that contains static character classes (i.e. `[0-9]`), static groups (i.e. `(a|b)`) or active counters (i.e. `{ start-end:increment }`) into a list of all the different permutations. You are permitted to use as many classes, groups or counters within the same string - if it doesn't detect any classes, groups or counters within the string then the "string" will be returned as the only list element. Character classes support "A-Z", "a-z" and "0-9" characters, whereas static groups allow any string of characters (including static character classes). If you wish to include "[", "]", "(", ")", "{" or "}" literals within the string then they will need to be escaped.
