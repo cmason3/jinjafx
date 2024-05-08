@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.19.3'
+__version__ = '1.20.0'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -680,6 +680,7 @@ class JinjaFx():
       'first': self.__jfx_first,
       'last': self.__jfx_last,
       'fields': self.__jfx_fields,
+      'tabulate': self.__jfx_tabulate,
       'data': self.__jfx_data,
       'setg': self.__jfx_setg,
       'getg': self.__jfx_getg,
@@ -1125,6 +1126,53 @@ class JinjaFx():
     return field_values
 
  
+  def __jfx_tabulate(self, datarows=None, *, cols=None, colons=False):
+    colwidth = []
+    colmap = []
+    offset = 0
+    o = ''
+
+    if datarows is None:
+      datarows = self.__g_datarows
+      offset = 1
+
+    if len(datarows) > 1:
+      if not cols:
+        colmap = list(range(len(datarows[0])))
+      
+      else:
+        for c in cols:
+          try:
+            colmap.append(datarows[0].index(c))
+
+          except Exception:
+            raise JinjaFx.TemplateError(f'invalid column "{c}" passed to jinjafx.tabulate()')
+
+      colalign = [["<", ":", " "]] * len(datarows[0])
+      coltype = [0] * len(datarows[0])
+
+      for c in range(len(datarows[0])):
+        colwidth.append(len(datarows[0][c]))
+
+      for r in range(1, len(datarows)):
+        for c in range(offset, len(datarows[r])):
+          coltype[c - offset] |= (1<<(isinstance(datarows[r][c], (int, float))))
+          if colwidth[c - offset] < len(str(datarows[r][c])):
+            colwidth[c - offset] = len(str(datarows[r][c]))
+
+      for c, t in enumerate(coltype):
+        if t == 2:
+          colalign[c] = [">", " ", ":"]
+
+      o = "| " + " | ".join([f"{datarows[0][c]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
+      o += "|" + "|".join([f"{colalign[c][1] if colons else ' '}{'-' * colwidth[c]}{colalign[c][2] if colons else ' '}" for c in colmap]) + "|\n"
+
+      for r in range(1, len(datarows)):
+        o += "| " + " | ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
+
+    return o.strip()
+
+
   def __jfx_data(self, row, col=None):
     if self.__g_datarows:
       if isinstance(col, str):

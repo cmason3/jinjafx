@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.20.0] - May 8, 2024
+- Added support for `jinjafx.tabulate()` to produce GitHub Markdown style tables from `data.csv`
+
 ### [1.19.3] - April 22, 2024
 - Added an optional `row` argument to `jinjafx.counter()` to allow the current row to be overridden
 
@@ -522,6 +525,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Initial release
 
 
+[1.20.0]: https://github.com/cmason3/jinjafx/compare/v1.19.3...v1.20.0
 [1.19.3]: https://github.com/cmason3/jinjafx/compare/v1.19.2...v1.19.3
 [1.19.2]: https://github.com/cmason3/jinjafx/compare/v1.19.1...v1.19.2
 [1.19.1]: https://github.com/cmason3/jinjafx/compare/v1.18.7...v1.19.1
