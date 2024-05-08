@@ -578,7 +578,7 @@ This variable will contain the total number of rows within the data.
 
 This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')`. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
 
-- <code><b>jinjafx.tabulate(datarows</b>: Optional[List[List[String]]]<b>, *, cols</b>: Optional[List[String]]<b>, include_alignment</b>: Optional[Boolean]<b>=False)</b> -> String</code>
+- <code><b>jinjafx.tabulate(datarows</b>: Optional[List[List[String]]]<b>, *, cols</b>: Optional[List[String]]<b>, colons</b>: Optional[Boolean]<b>=False)</b> -> String</code>
 
 This function will produce a GitHub Markdown styled table using either the provided `datarows` variable, or (if omitted) using the data from `data.csv`, e.g:
 
@@ -611,7 +611,7 @@ This will produce the following table:
 | 6 | 4 |
 ```
 
-This function only supports left alignment of columns at present, but if you wish to include the `:` as used by GitHub Markdown to force left alignment, you can set `include_alignment` to `True`.
+All columns are left aligned, except if the column value is of type `int` or `float` (`data.csv` uses `:int` and `:float` syntax to force this) and then they are right aligned. At this point you can't change this, but if you wish to include the `:` as used by GitHub Markdown to force the alignment, you can set `colons` to `True`.
 
 - <code><b>jinjafx.expand(value</b>: String<b>)</b> -> List[String]</code>
 

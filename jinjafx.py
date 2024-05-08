@@ -1126,8 +1126,7 @@ class JinjaFx():
     return field_values
 
  
-  def __jfx_tabulate(self, datarows=None, *, cols=None, include_alignment=False):
-    alignment = [":", " "] if include_alignment else [" ", " "]
+  def __jfx_tabulate(self, datarows=None, *, cols=None, colons=False):
     colwidth = []
     colmap = []
     offset = 0
@@ -1149,19 +1148,27 @@ class JinjaFx():
           except Exception:
             raise JinjaFx.TemplateError(f'invalid column "{c}" passed to jinjafx.tabulate()')
 
+      colalign = [["<", ":", " "]] * len(datarows[0])
+      coltype = [0] * len(datarows[0])
+
       for c in range(len(datarows[0])):
         colwidth.append(len(datarows[0][c]))
 
       for r in range(1, len(datarows)):
         for c in range(offset, len(datarows[r])):
-          if colwidth[c - offset] < len(datarows[r][c]):
-            colwidth[c - offset] = len(datarows[r][c])
+          coltype[c - offset] |= (1<<(isinstance(datarows[r][c], (int, float))))
+          if colwidth[c - offset] < len(str(datarows[r][c])):
+            colwidth[c - offset] = len(str(datarows[r][c]))
 
-      o = "| " + " | ".join([f"{datarows[0][c]:{colwidth[c]}}" for c in colmap]) + " |\n"
-      o += f"|{alignment[0]}" + f"{alignment[1]}|{alignment[0]}".join([f"{'-' * colwidth[c]}" for c in colmap]) + f"{alignment[1]}|\n"
+      for c, t in enumerate(coltype):
+        if t == 2:
+          colalign[c] = [">", " ", ":"]
+
+      o = "| " + " | ".join([f"{datarows[0][c]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
+      o += "|" + "|".join([f"{colalign[c][1] if colons else ' '}{'-' * colwidth[c]}{colalign[c][2] if colons else ' '}" for c in colmap]) + "|\n"
 
       for r in range(1, len(datarows)):
-        o += "| " + " | ".join([f"{datarows[r][c + offset]:{colwidth[c]}}" for c in colmap]) + " |\n"
+        o += "| " + " | ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
 
     return o.strip()
 
