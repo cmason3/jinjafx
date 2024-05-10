@@ -1,7 +1,7 @@
 ## CHANGELOG
 
 ### [1.20.1] - In Development
-- Added suport for different table styles to `jinjafx.tabulate()`
+- Added suport for different table styles for `jinjafx.tabulate()`
 
 ### [1.20.0] - May 8, 2024
 - Added support for `jinjafx.tabulate()` to produce GitHub Markdown style tables from `data.csv`
