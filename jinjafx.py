@@ -1177,7 +1177,6 @@ class JinjaFx():
       for r in range(1, len(datarows)):
         if style == "simple":
           o += "  ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + "\n"
-
         else:
           o += "| " + " | ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
 

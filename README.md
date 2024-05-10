@@ -611,11 +611,11 @@ This will produce the following table:
 | 6 | 4 |
 ```
 
-All columns are left aligned, except if the column value is of type `int` or `float` (`data.csv` uses `:int` and `:float` syntax to force this) and then they are right aligned. The `style` argument can be specififed to change the style of table - it currently suports 3 different styles:
+All columns are left aligned, except if the column value is of type `int` or `float` (`data.csv` uses `:int` and `:float` syntax to force this) and then they are right aligned. The `style` argument can be specified to change the style of table - it currently supports 3 different styles:
 
 #### default
 
-This is the default and is based on GitHub Markdown, except we don't include the alignment colons.
+This is the default and is based on GitHub Markdown, except we don't include the alignment colons:
 
 ```
 | A | B | C |
@@ -626,7 +626,7 @@ This is the default and is based on GitHub Markdown, except we don't include the
 
 #### github
 
-This is the same as the default style, except we explicitly include the alignment colons.
+This is the same as the default style, except we explicitly include the alignment colons:
 
 ```
 | A | B | C |
@@ -637,7 +637,7 @@ This is the same as the default style, except we explicitly include the alignmen
 
 #### simple
 
-This style will produce a table which looks like this.
+This style will produce a table which looks like this:
 
 ```
 A  B  C
