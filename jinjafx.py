@@ -1132,6 +1132,7 @@ class JinjaFx():
     offset = 0
     o = ''
 
+    style = style.lower()
     if style not in ('default', 'github', 'simple'):
       raise JinjaFx.TemplateError(f'invalid style "{style}" passed to jinjafx.tabulate()')
 
