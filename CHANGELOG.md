@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.20.1] - May 15, 2024
+- Added suport for different table styles for `jinjafx.tabulate()`
+
 ### [1.20.0] - May 8, 2024
 - Added support for `jinjafx.tabulate()` to produce GitHub Markdown style tables from `data.csv`
 
@@ -525,6 +528,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Initial release
 
 
+[1.20.1]: https://github.com/cmason3/jinjafx/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/cmason3/jinjafx/compare/v1.19.3...v1.20.0
 [1.19.3]: https://github.com/cmason3/jinjafx/compare/v1.19.2...v1.19.3
 [1.19.2]: https://github.com/cmason3/jinjafx/compare/v1.19.1...v1.19.2

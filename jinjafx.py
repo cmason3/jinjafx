@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.20.0'
+__version__ = '1.20.1'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -1126,11 +1126,15 @@ class JinjaFx():
     return field_values
 
  
-  def __jfx_tabulate(self, datarows=None, *, cols=None, colons=False):
+  def __jfx_tabulate(self, datarows=None, *, cols=None, style='default'):
     colwidth = []
     colmap = []
     offset = 0
     o = ''
+
+    style = style.lower()
+    if style not in ('default', 'github', 'simple'):
+      raise JinjaFx.TemplateError(f'invalid style "{style}" passed to jinjafx.tabulate()')
 
     if datarows is None:
       datarows = self.__g_datarows
@@ -1164,11 +1168,18 @@ class JinjaFx():
         if t == 2:
           colalign[c] = [">", " ", ":"]
 
-      o = "| " + " | ".join([f"{datarows[0][c]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
-      o += "|" + "|".join([f"{colalign[c][1] if colons else ' '}{'-' * colwidth[c]}{colalign[c][2] if colons else ' '}" for c in colmap]) + "|\n"
+      if style == 'simple':
+        o = "  ".join([f"{datarows[0][c]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + "\n"
+        o += "  ".join([f"{'-' * colwidth[c]}" for c in colmap]) + "\n"
+      else:
+        o = "| " + " | ".join([f"{datarows[0][c]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
+        o += "|" + "|".join([f"{colalign[c][1] if style == 'github' else ' '}{'-' * colwidth[c]}{colalign[c][2] if style == 'github' else ' '}" for c in colmap]) + "|\n"
 
       for r in range(1, len(datarows)):
-        o += "| " + " | ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
+        if style == "simple":
+          o += "  ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + "\n"
+        else:
+          o += "| " + " | ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
 
     return o.strip()
 
