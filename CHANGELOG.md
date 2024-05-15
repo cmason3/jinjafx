@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.20.1] - In Development
+### [1.20.1] - May 15, 2024
 - Added suport for different table styles for `jinjafx.tabulate()`
 
 ### [1.20.0] - May 8, 2024
