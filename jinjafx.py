@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.20.1'
+__version__ = '1.20.2'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -217,12 +217,7 @@ Environment Variables:
             gyaml = __decrypt_vault(vpw, gv)
             if gyaml:
               try:
-                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
-
-                if isinstance(y, list):
-                  y = {'_': y}
-
-                gvars.update(y)
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
               except Exception as e:
                 exc_source = 'dt:global'
@@ -232,12 +227,7 @@ Environment Variables:
             gyaml = __decrypt_vault(vpw, dt['vars'])
             if gyaml:
               try:
-                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
-
-                if isinstance(y, list):
-                  y = {'_': y}
-
-                gvars.update(y)
+                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
 
               except Exception as e:
                 exc_source = 'dt:vars'
@@ -283,6 +273,9 @@ Environment Variables:
   
       if args.o is None:
         args.o = '_stdout_'
+
+      if gvars:
+        gvars.update({'_': gvars})
   
       if 'jinjafx_input' in gvars:
         jinjafx_input = {}
@@ -635,7 +628,7 @@ class JinjaFx():
       sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions']
 
     if 'jinja2_extensions' not in gvars:
-      gvars.update({ 'jinja2_extensions': [] })
+      gvars.update({ 'jinja2_extensions': [ 'jinja2.ext.loopcontrols' ] })
 
     if importlib.util.find_spec('ext_jinjafx') is not None:
       gvars['jinja2_extensions'].insert(0, 'ext_jinjafx.plugin')
