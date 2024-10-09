@@ -1139,6 +1139,8 @@ class JinjaFx():
     offset = 0
     o = ''
 
+    ansi = re.compile(r'\033\[(?:[01];[0-9][0-9]|0)m')
+
     style = style.lower()
     if style not in ('default', 'github', 'simple'):
       raise JinjaFx.TemplateError(f'invalid style "{style}" passed to jinjafx.tabulate()')
@@ -1168,8 +1170,9 @@ class JinjaFx():
       for r in range(1, len(datarows)):
         for c in range(offset, len(datarows[r])):
           coltype[c - offset] |= (1<<(isinstance(datarows[r][c], (int, float))))
-          if colwidth[c - offset] < len(str(datarows[r][c])):
-            colwidth[c - offset] = len(str(datarows[r][c]))
+          lendr = len(ansi.sub('', str(datarows[r][c])))
+          if colwidth[c - offset] < lendr:
+            colwidth[c - offset] = lendr
 
       for c, t in enumerate(coltype):
         if t == 2:
@@ -1183,10 +1186,12 @@ class JinjaFx():
         o += "|" + "|".join([f"{colalign[c][1] if style == 'github' else ' '}{'-' * colwidth[c]}{colalign[c][2] if style == 'github' else ' '}" for c in colmap]) + "|\n"
 
       for r in range(1, len(datarows)):
+        delta = [len(str(datarows[r][c + offset])) - len(ansi.sub('', str(datarows[r][c + offset]))) for c in colmap]
+
         if style == "simple":
-          o += "  ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + "\n"
+          o += "  ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c] + delta[c]}}" for c in colmap]) + "\n"
         else:
-          o += "| " + " | ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c]}}" for c in colmap]) + " |\n"
+          o += "| " + " | ".join([f"{datarows[r][c + offset]:{colalign[c][0]}{colwidth[c] + delta[c]}}" for c in colmap]) + " |\n"
 
     return o.strip()
 
