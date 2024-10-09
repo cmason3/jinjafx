@@ -336,6 +336,16 @@ The [varnames lookup](https://docs.ansible.com/ansible/latest/collections/ansibl
 {{ lookup("varnames", "^a", "^b") }} {# return all variables which begin with "a" or "b" #}
 ```
 
+JinjaFx also supports the following non-Ansible lookups:
+
+- <code><b>lookup("filters", filter_name</b>: String<b>)(args</b>: Any<b>)</b> -> Any</code><br />
+
+This allows you to call a filter dynamically, e.g:
+
+```jinja2
+{{ lookup("filters", "cisco10hash")("password") }}
+```
+
 ### JinjaFx Variables
 
 The following variables, if defined within `vars.yml` control how JinjaFx works:

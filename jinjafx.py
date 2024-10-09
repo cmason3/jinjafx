@@ -444,6 +444,7 @@ class JinjaFx():
     self.__g_dict = {}
     self.__g_row = 0 
     self.__g_vars = {}
+    self.__g_filters = {}
     self.__g_warnings = []
     self.__g_xlimit = 5000 if sandbox else 0
     self.__g_hcounter = re.compile(r'(?:[A-Z]\.)+$', re.IGNORECASE)
@@ -685,6 +686,8 @@ class JinjaFx():
       'varnames': self.__jfx_lookup_varnames
     })
 
+    self.__g_filters = env.filters
+
     routput = env.from_string(output)
 
     for row in range(1, max(2, len(self.__g_datarows))):
@@ -840,6 +843,17 @@ class JinjaFx():
               ret.append(varname)
 
         return ret
+
+      else:
+        raise JinjaFx.TemplateError(f'\'lookup\' method doesn\'t have enough arguments')
+
+    elif method == 'filters':
+      if args:
+        if args[0] in self.__g_filters:
+          return self.__g_filters[args[0]]
+
+        else:
+          raise JinjaFx.TemplateError(f'\'lookup\' filter \'{args[0]}\' is undefined')
 
       else:
         raise JinjaFx.TemplateError(f'\'lookup\' method doesn\'t have enough arguments')
