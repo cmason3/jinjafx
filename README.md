@@ -336,7 +336,7 @@ The [varnames lookup](https://docs.ansible.com/ansible/latest/collections/ansibl
 {{ lookup("varnames", "^a", "^b") }} {# return all variables which begin with "a" or "b" #}
 ```
 
-JinjaFx also supports the following non-Ansible lookups:
+JinjaFx also supports the following non-Ansible lookup:
 
 - <code><b>lookup("filters", filter_name</b>: String<b>)(args</b>: Any<b>)</b> -> Any</code><br />
 

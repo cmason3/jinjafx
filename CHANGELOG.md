@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.20.2] - October 9, 2024
+### [1.21.0] - October 9, 2024
 - Updated how Keyless YAML (`_`) works - it now creates a root key of `_` regardless of contents
 - Added support for a `filters` lookup to dynamically use filters
 - Jinja2 Extension `jinja2.ext.loopcontrols` is now enabled by default
@@ -533,7 +533,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Initial release
 
 
-[1.20.2]: https://github.com/cmason3/jinjafx/compare/v1.20.1...v1.20.2
+[1.21.0]: https://github.com/cmason3/jinjafx/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/cmason3/jinjafx/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/cmason3/jinjafx/compare/v1.19.3...v1.20.0
 [1.19.3]: https://github.com/cmason3/jinjafx/compare/v1.19.2...v1.19.3
