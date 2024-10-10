@@ -24,7 +24,7 @@ python3 -m pip install --upgrade --user jinjafx
 
 ```
  jinjafx -t <template.j2> [-d [<data.csv>]] [-g <vars.(yml|json)>]
-         -dt <dt.yml> [-ds <dataset>] [-g <vars.(yml|json)>]
+         -dt <dt.yml> [-ds <dataset>] [-d [<data.csv>]] [-g <vars.(yml|json)>]
          -encrypt/-decrypt [<file1>] [<file2>] [..]
 
     -t <template.j2>          - specify a Jinja2 template
@@ -479,7 +479,7 @@ While this is valid in YAML, it isn't valid to have a list when Jinja2 expects a
 
 ### JinjaFx DataTemplates ###
 
-JinjaFx also supports the ability to combine the data, template and vars into a single YAML file called a DataTemplate (no support for JSON as JSON doesn't support multiline strings, although you can specify the `vars` section using JSON), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
+JinjaFx also supports the ability to combine the data, template and vars into a single YAML file called a DataTemplate (no support for JSON as JSON doesn't support multiline strings, although you can specify the `vars` section using JSON), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts. If you specify `-d` alongside `-dt` then it will append to the data section of the DataTemplate with what is provided via `-d`.
 
 ```yaml
 ---

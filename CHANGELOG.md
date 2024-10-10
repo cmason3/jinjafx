@@ -1,8 +1,9 @@
 ## CHANGELOG
 
-### [1.21.0] - October 9, 2024
+### [1.21.0] - October 10, 2024
 - Added support for a `filters` lookup to dynamically use filters
 - Column widths are now correctly worked out if `jinjafx.tabulate()` uses row values with simple ANSI colour codes
+- You can now append additional data using `-d` alongside `-dt`
 - Jinja2 Extension `jinja2.ext.loopcontrols` is now enabled by default
 
 ### [1.20.1] - May 15, 2024

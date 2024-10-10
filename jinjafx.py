@@ -45,7 +45,7 @@ def main():
 
     prog = os.path.basename(sys.argv[0])
     jinjafx_usage = '-t <template.j2> [-d [<data.csv>]] [-g <vars.(yml|json)>]\n'
-    jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-g <vars.(yml|json)>]\n'
+    jinjafx_usage += (' ' * (len(prog) + 3)) + '-dt <dt.yml> [-ds <dataset>] [-d [<data.csv>]] [-g <vars.(yml|json)>]\n'
     jinjafx_usage += (' ' * (len(prog) + 3)) + '-encrypt/-decrypt [<file1>] [<file2>] [..]\n'
     jinjafx_usage += '''
 
@@ -85,8 +85,8 @@ Environment Variables:
     parser.add_argument('-q', action='store_true')
     args = parser.parse_args()
 
-    if args.dt is not None and args.d is not None:
-      parser.error('argument -d: not allowed with argument -dt')
+#    if args.dt is not None and args.d is not None:
+#      parser.error('argument -d: not allowed with argument -dt')
 
     if args.dt is None and args.ds is not None:
       parser.error('argument -ds: only allowed with argument -dt')
@@ -243,19 +243,25 @@ Environment Variables:
                 exc_source = 'dt:vars'
                 raise
   
-      elif args.d is not None:
+      if args.d is not None:
         if args.d.name == '<stdin>':
           if sys.stdin.isatty():
             print('Paste in Data (CTRL+D to End)...')
 
-          data = args.d.read()
+          if data is not None:
+            data += args.d.read()
+          else:
+            data = args.d.read()
 
           if sys.stdin.isatty():
             print()
 
         else:
           with open(args.d.name, 'rt') as f:
-            data = f.read()
+            if data is not None:
+              data += f.read()
+            else:
+              data = f.read()
   
       if args.g is not None:
         for g in args.g:
