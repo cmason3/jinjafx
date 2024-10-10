@@ -24,7 +24,7 @@ python3 -m pip install --upgrade --user jinjafx
 
 ```
  jinjafx -t <template.j2> [-d [<data.csv>]] [-g <vars.(yml|json)>]
-         -dt <dt.yml> [-ds <dataset>] [-g <vars.(yml|json)>]
+         -dt <dt.yml> [-ds <dataset>] [-d [<data.csv>]] [-g <vars.(yml|json)>]
          -encrypt/-decrypt [<file1>] [<file2>] [..]
 
     -t <template.j2>          - specify a Jinja2 template
@@ -336,6 +336,16 @@ The [varnames lookup](https://docs.ansible.com/ansible/latest/collections/ansibl
 {{ lookup("varnames", "^a", "^b") }} {# return all variables which begin with "a" or "b" #}
 ```
 
+JinjaFx also supports the following non-Ansible lookup:
+
+- <code><b>lookup("filters", filter_name</b>: String<b>)(args</b>: Any<b>)</b> -> Any</code><br />
+
+This allows you to call a filter dynamically, e.g:
+
+```jinja2
+{{ lookup("filters", "cisco10hash")("password") }}
+```
+
 ### JinjaFx Variables
 
 The following variables, if defined within `vars.yml` control how JinjaFx works:
@@ -469,7 +479,7 @@ While this is valid in YAML, it isn't valid to have a list when Jinja2 expects a
 
 ### JinjaFx DataTemplates ###
 
-JinjaFx also supports the ability to combine the data, template and vars into a single YAML file called a DataTemplate (no support for JSON as JSON doesn't support multiline strings, although you can specify the `vars` section using JSON), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts.
+JinjaFx also supports the ability to combine the data, template and vars into a single YAML file called a DataTemplate (no support for JSON as JSON doesn't support multiline strings, although you can specify the `vars` section using JSON), which you can pass to JinjaFx using `-dt`. This is the same format used by the JinjaFx Server when you click on 'Export DataTemplate'. It uses headers with block indentation to separate out the different components - you must ensure the indentation is maintained on all lines as this is how YAML knows when one section ends and another starts. If you specify `-d` alongside `-dt` then it will append to the data section of the DataTemplate with what is provided via `-d`.
 
 ```yaml
 ---
@@ -523,6 +533,8 @@ jinja2_extensions:
   - 'jinja2.ext.do'
   - 'jinja2.ext.debug'  
 ```
+
+The `jinja2.ext.loopcontrols` extension is enabled by default unless you have defined `jinja2_extensions` and then it isn't enabled unless you have explicitly enabled it.
 
 JinjaFx will then attempt to load and enable the extensions that will then be used when processing your Jinja2 templates. You also have the ability to check whether an extensions is loaded within your template by querying `jinja2_extensions` directly.
 
