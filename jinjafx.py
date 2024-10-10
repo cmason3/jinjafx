@@ -217,7 +217,12 @@ Environment Variables:
             gyaml = __decrypt_vault(vpw, gv)
             if gyaml:
               try:
-                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+
+                if isinstance(y, list):
+                  y = {'_': y}
+
+                gvars.update(y)
 
               except Exception as e:
                 exc_source = 'dt:global'
@@ -227,7 +232,12 @@ Environment Variables:
             gyaml = __decrypt_vault(vpw, dt['vars'])
             if gyaml:
               try:
-                gvars.update(yaml.load(gyaml, Loader=yaml.SafeLoader))
+                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+
+                if isinstance(y, list):
+                  y = {'_': y}
+
+                gvars.update(y)
 
               except Exception as e:
                 exc_source = 'dt:vars'
@@ -274,9 +284,6 @@ Environment Variables:
       if args.o is None:
         args.o = '_stdout_'
 
-      if gvars:
-        gvars.update({'_': gvars})
-  
       if 'jinjafx_input' in gvars:
         jinjafx_input = {}
   

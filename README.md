@@ -469,29 +469,12 @@ There might be some scenarios where you want to define YAML without a root key, 
   age: 29
 ```
 
-While this is valid in YAML, it isn't valid to have a list when Jinja2 expects a dict. JinjaFx will create a parent key of `_` to allow you to iterate over it within a Jinja2 template (the same applies for JSON):
+While this is valid in YAML, it isn't valid to have a list when Jinja2 expects a dict. In this scenario, JinjaFx will create a parent key of `_` to allow you to iterate over it within a Jinja2 template (the same applies for JSON):
 
 ```jinja2
 {% for k in _ %}
   {{ k.name }} is {{ k.age }}
 {% endfor %}
-```
-
-You can also use `_` to traverse the keys of a dictionary at root level, e.g:
-
-```yaml
-alice: 27
-bob: 37
-eve: 29
-```
-
-Would be accessible as:
-
-```yaml
-_:
-  alice: 27
-  bob: 37
-  eve: 29
 ```
 
 ### JinjaFx DataTemplates ###
