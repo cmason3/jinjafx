@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.21.1] - In Development
+- Update copyright year to 2025 in all files
+
 ### [1.21.0] - October 10, 2024
 - Added support for a `filters` lookup to dynamically use filters
 - Column widths are now correctly worked out if `jinjafx.tabulate()` uses row values with simple ANSI colour codes
@@ -534,6 +537,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Initial release
 
 
+[1.21.1]: https://github.com/cmason3/jinjafx/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/cmason3/jinjafx/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/cmason3/jinjafx/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/cmason3/jinjafx/compare/v1.19.3...v1.20.0

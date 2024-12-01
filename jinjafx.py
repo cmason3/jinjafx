@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # JinjaFx - Jinja2 Templating Tool
-# Copyright (c) 2020-2024 Chris Mason <chris@netnix.org>
+# Copyright (c) 2020-2025 Chris Mason <chris@netnix.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.21.0'
+__version__ = '1.21.1'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -41,7 +41,7 @@ def main():
   try:
     if not any(x in ['-q', '-encrypt', '-decrypt'] for x in sys.argv):
       print(f'JinjaFx v{__version__} - Jinja2 Templating Tool')
-      print('Copyright (c) 2020-2024 Chris Mason <chris@netnix.org>\n')
+      print('Copyright (c) 2020-2025 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
     jinjafx_usage = '-t <template.j2> [-d [<data.csv>]] [-g <vars.(yml|json)>]\n'
