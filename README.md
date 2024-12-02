@@ -156,7 +156,7 @@ NUMBER:int, NAME
 
 Like `:int` you can also use `:float` to treat all values as a float.
 
-In a similar way, you can also designate field values as lists using a semicolon as a list separater and enclosing the header value within brackets, e.g:
+In a similar way, you can also designate field values as lists using a semicolon as a list separator and enclosing the header value within brackets, e.g:
 
 ```
 NAME, [HOBBIES]
