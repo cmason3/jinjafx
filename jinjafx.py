@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.22.1'
+__version__ = '1.22.2'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -667,7 +667,7 @@ class JinjaFx():
       sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions']
 
     if 'jinja2_extensions' not in gvars:
-      gvars.update({ 'jinja2_extensions': [ 'jinja2.ext.loopcontrols' ] })
+      gvars.update({ 'jinja2_extensions': [ 'jinja2.ext.do', 'jinja2.ext.loopcontrols' ] })
 
     if importlib.util.find_spec('ext_jinjafx') is not None:
       gvars['jinja2_extensions'].insert(0, 'ext_jinjafx.plugin')
