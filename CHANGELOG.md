@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.22.1] - December 2, 2024
+- Added support so you can escape a comma (i.e. `\,`) within `data.csv`
+
 ### [1.22.0] - December 2, 2024
 - Added support for list values in `data.csv` using brackets around header fields
 - Removed `pytz` dependency and replaced it with the built-in `zoneinfo` package
