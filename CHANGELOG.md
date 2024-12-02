@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.22.0] - In Development
+### [1.22.0] - December 2, 2024
 - Added support for list values in `data.csv` using brackets around header fields
 - Removed `pytz` dependency and replaced it with the built-in `zoneinfo` package
 - Updated copyright year to 2025 in all files
