@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # JinjaFx - Jinja2 Templating Tool
-# Copyright (c) 2020-2024 Chris Mason <chris@netnix.org>
+# Copyright (c) 2020-2025 Chris Mason <chris@netnix.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -20,7 +20,7 @@ if sys.version_info < (3, 9):
   sys.exit('Requires Python >= 3.9')
 
 import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
-import jinja2, jinja2.sandbox, yaml, pytz
+import jinja2, jinja2.sandbox, yaml, zoneinfo
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.21.0'
+__version__ = '1.22.0'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -41,7 +41,7 @@ def main():
   try:
     if not any(x in ['-q', '-encrypt', '-decrypt'] for x in sys.argv):
       print(f'JinjaFx v{__version__} - Jinja2 Templating Tool')
-      print('Copyright (c) 2020-2024 Chris Mason <chris@netnix.org>\n')
+      print('Copyright (c) 2020-2025 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
     jinjafx_usage = '-t <template.j2> [-d [<data.csv>]] [-g <vars.(yml|json)>]\n'
@@ -464,6 +464,7 @@ class JinjaFx():
     rowkey = 1
     int_indices = []
     float_indices = []
+    list_indices = []
 
     if not isinstance(template, (str, io.TextIOWrapper)):
       raise TypeError('template must be of type str or type FileType')
@@ -492,6 +493,11 @@ class JinjaFx():
               hfields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in hfields]
 
               for i, v in enumerate(hfields):
+                hfields[i] = re.sub(r'^\[[ \t]*(\S+)[ \t]*\]$', r'\1', v)
+                if hfields[i] != v:
+                  list_indices.append(i + 1)
+                  v = hfields[i]
+
                 if v.lower().endswith(':int'):
                   int_indices.append(i + 1)
                   hfields[i] = v[:-4]
@@ -595,7 +601,16 @@ class JinjaFx():
 
                     fields[0][col] = re.sub(r'\\([}{%])', r'\1', fields[0][col])
 
-                    if col in int_indices:
+                    if col in list_indices:
+                      fields[0][col] = re.split(r'[ \t]*;[ \t]*', fields[0][col])
+
+                      if col in int_indices:
+                        fields[0][col] = list(map(int, fields[0][col]))
+
+                      elif col in float_indices:
+                        fields[0][col] = list(map(float, fields[0][col]))
+
+                    elif col in int_indices:
                       fields[0][col] = int(fields[0][col])
 
                     elif col in float_indices:
@@ -604,8 +619,21 @@ class JinjaFx():
                   include_row = True
                   if jinjafx_filter:
                     for index in jinjafx_filter:
-                      if not re.search(jinjafx_filter[index], fields[0][index]):
-                        include_row = False
+                      if isinstance(fields[0][index], list):
+                        field_match = False
+                        for v in fields[0][index]:
+                          if re.search(jinjafx_filter[index], v):
+                            field_match = True
+                            break
+
+                        if not field_match:
+                          include_row = False
+
+                      else:
+                        if not re.search(jinjafx_filter[index], fields[0][index]):
+                          include_row = False
+
+                      if not include_row:
                         break
 
                   if include_row:
@@ -1283,10 +1311,10 @@ class JinjaFx():
 
   def __jfx_now(self, fmt=None, tz='UTC'):
     if fmt is not None:
-      return datetime.datetime.now(tz=pytz.timezone(tz)).strftime(fmt)
+      return datetime.datetime.now(tz=zoneinfo.ZoneInfo(tz)).strftime(fmt)
 
     else:
-      return str(datetime.datetime.now(tz=pytz.timezone(tz)))
+      return str(datetime.datetime.now(tz=zoneinfo.ZoneInfo(tz)))
 
 
 class Vault():

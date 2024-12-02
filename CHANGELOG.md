@@ -1,5 +1,10 @@
 ## CHANGELOG
 
+### [1.22.0] - December 2, 2024
+- Added support for list values in `data.csv` using brackets around header fields
+- Removed `pytz` dependency and replaced it with the built-in `zoneinfo` package
+- Updated copyright year to 2025 in all files
+
 ### [1.21.0] - October 10, 2024
 - Added support for a `filters` lookup to dynamically use filters
 - Column widths are now correctly worked out if `jinjafx.tabulate()` uses row values with simple ANSI colour codes
@@ -25,7 +30,7 @@
 
 ### [1.18.7] - January 9, 2024
 - Don't use a completely random nonce for `vaulty_encrypt` as it will potentially result in nonce re-use
-- Update copyright year to 2024 in all files
+- Updated copyright year to 2024 in all files
 
 ### [1.18.6] - November 30, 2023
 - Added support for `ansible.netcommon.vlan_parser` filter
@@ -140,7 +145,7 @@ Would result in the following:
 ### [1.14.3] - December 14, 2022
 - Fixed issue with jinja2 rendering of `vars.yml` with lookup
 - Fixed `link_local_query` to use /16 instead of /24
-- Update copyright year to 2023 in all files
+- Updated copyright year to 2023 in all files
 
 ### [1.14.2] - November 5, 2022
 - Added `jinjafx_render_vars` variable to replace command line option `-xg`
@@ -218,10 +223,10 @@ Would result in the following:
 - Added support for `vaulty_encrypt` and `vaulty_decrypt` using ChaCha20-Poly1305 encryption
 
 ### [1.11.2] - April 15, 2022
-Added Support for Ansible Tests `contains`, `any` and `all`
-Added Support for Ansible Filters `from_yaml` and `from_json`
-Updated `lookup` to accept `ansible.builtin.vars` as well as `vars`
-Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
+- Added Support for Ansible Tests `contains`, `any` and `all`
+- Added Support for Ansible Filters `from_yaml` and `from_json`
+- Updated `lookup` to accept `ansible.builtin.vars` as well as `vars`
+- Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 
 ### [1.11.1] - April 11, 2022
 - Added support for `-encrypt` to encrypt strings and files using Ansible Vault
@@ -534,6 +539,7 @@ Updated `to_yaml` and `to_nice_yaml` to use `SafeDumper`
 - Initial release
 
 
+[1.22.0]: https://github.com/cmason3/jinjafx/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/cmason3/jinjafx/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/cmason3/jinjafx/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/cmason3/jinjafx/compare/v1.19.3...v1.20.0
