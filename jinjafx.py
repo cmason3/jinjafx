@@ -619,8 +619,21 @@ class JinjaFx():
                   include_row = True
                   if jinjafx_filter:
                     for index in jinjafx_filter:
-                      if not re.search(jinjafx_filter[index], fields[0][index]):
-                        include_row = False
+                      if isinstance(fields[0][index], list):
+                        field_match = False
+                        for v in fields[0][index]:
+                          if re.search(jinjafx_filter[index], v):
+                            field_match = True
+                            break
+
+                        if not field_match:
+                          include_row = False
+
+                      else:
+                        if not re.search(jinjafx_filter[index], fields[0][index]):
+                          include_row = False
+
+                      if not include_row:
                         break
 
                   if include_row:
