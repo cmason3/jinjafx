@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.22.1] - December 2, 2024
+- Added support so you can escape a comma (i.e. `\,`) within `data.csv`
+
 ### [1.22.0] - December 2, 2024
 - Added support for list values in `data.csv` using brackets around header fields
 - Removed `pytz` dependency and replaced it with the built-in `zoneinfo` package
@@ -539,6 +542,7 @@ Would result in the following:
 - Initial release
 
 
+[1.22.1]: https://github.com/cmason3/jinjafx/compare/v1.22.0...v1.22.1
 [1.22.0]: https://github.com/cmason3/jinjafx/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/cmason3/jinjafx/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/cmason3/jinjafx/compare/v1.20.0...v1.20.1

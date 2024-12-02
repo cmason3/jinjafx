@@ -47,7 +47,7 @@ python3 -m pip install --upgrade --user jinjafx
    ANSIBLE_VAULT_PASSWORD_FILE  - specify an Ansible Vault password file
 ```
 
-JinjaFx allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
+JinjaFx allows you to specify a text based "csv" file using the `-d` argument - it is composed of a header row and a series of data rows. It supports both comma (non-escaped) and tab separated data and will automagically detect what you are using by analysing the header row - it counts the number of occurrences to determine what one is most prevalent. If it detects a "#" at the beginning of a row then that row is ignored as it is treated as a comment.
 
 ```
 A, B, C    <- HEADER ROW

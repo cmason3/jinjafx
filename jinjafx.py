@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.22.0'
+__version__ = '1.22.1'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -483,7 +483,7 @@ class JinjaFx():
           if l.strip() and not re.match(r'^[ \t]*#', l):
             if not self.__g_datarows:
               if l.count(',') > l.count('\t'):
-                delim = r'[ \t]*,[ \t]*'
+                delim = r'[ \t]*(?<!\\),[ \t]*'
                 schars = ' \t'
               else:
                 delim = r' *\t *'
@@ -599,7 +599,7 @@ class JinjaFx():
                       else:
                         delta += len(pvalue) - len(m.group(0))
 
-                    fields[0][col] = re.sub(r'\\([}{%])', r'\1', fields[0][col])
+                    fields[0][col] = re.sub(r'\\([}{%,])', r'\1', fields[0][col])
 
                     if col in list_indices:
                       fields[0][col] = re.split(r'[ \t]*;[ \t]*', fields[0][col])
