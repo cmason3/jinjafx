@@ -156,6 +156,16 @@ NUMBER:int, NAME
 
 Like `:int` you can also use `:float` to treat all values as a float.
 
+In a similar way, you can also designate field values as lists using a semicolon as a list separater and enclosing the header value within brackets, e.g:
+
+```
+NAME, [HOBBIES]
+Chris, Running; Cooking
+Paul, Reading; Swimming
+Brian, Darts
+```
+
+The Jinja2 variable `HOBBIES` will now be defined as a list where you will need to provide an index to access a value (i.e. `HOBBIES[0]`). You can also combine the two and create a list of ints or a list of floats (i.e. `[NUMBERS:int]`).
 
 #### Pad Operator
 

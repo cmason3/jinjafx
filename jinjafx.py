@@ -464,6 +464,7 @@ class JinjaFx():
     rowkey = 1
     int_indices = []
     float_indices = []
+    list_indices = []
 
     if not isinstance(template, (str, io.TextIOWrapper)):
       raise TypeError('template must be of type str or type FileType')
@@ -492,6 +493,11 @@ class JinjaFx():
               hfields = [re.sub(r'^(["\'])(.*)\1$', r'\2', f) for f in hfields]
 
               for i, v in enumerate(hfields):
+                hfields[i] = re.sub(r'^\[[ \t]*(\S+)[ \t]*\]$', r'\1', v)
+                if hfields[i] != v:
+                  list_indices.append(i + 1)
+                  v = hfields[i]
+
                 if v.lower().endswith(':int'):
                   int_indices.append(i + 1)
                   hfields[i] = v[:-4]
@@ -595,7 +601,16 @@ class JinjaFx():
 
                     fields[0][col] = re.sub(r'\\([}{%])', r'\1', fields[0][col])
 
-                    if col in int_indices:
+                    if col in list_indices:
+                      fields[0][col] = re.split(r'[ \t]*;[ \t]*', fields[0][col])
+
+                      if col in int_indices:
+                        fields[0][col] = list(map(int, fields[0][col]))
+
+                      elif col in float_indices:
+                        fields[0][col] = list(map(float, fields[0][col]))
+
+                    elif col in int_indices:
                       fields[0][col] = int(fields[0][col])
 
                     elif col in float_indices:

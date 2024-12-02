@@ -1,6 +1,7 @@
 ## CHANGELOG
 
 ### [1.21.1] - In Development
+- Added support for list values in `data.csv` using brackets around header fields
 - Update copyright year to 2025 in all files
 
 ### [1.21.0] - October 10, 2024
