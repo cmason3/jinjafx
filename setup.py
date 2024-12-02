@@ -12,7 +12,7 @@ README = (HERE / "README.md").read_text()
 README = re.sub(r'^.*\[<img', '[<img', README, flags=re.DOTALL)
 README = re.sub(r'<p.+?</p>', '', README, flags=re.DOTALL)
 
-install_requires = ["jinja2>=3.0", "pytz", "pyyaml", "cryptography>=3.1", "netaddr"]
+install_requires = ["jinja2>=3.0", "pyyaml", "cryptography>=3.1", "netaddr"]
 
 # if sys.version_info.major == 3 and sys.version_info.minor == 6:
 #   install_requires = ["jinja2>=3.0,<3.1", "pytz", "pyyaml", "cryptography>=3.1,<37.0", "netaddr"]

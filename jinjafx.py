@@ -20,7 +20,7 @@ if sys.version_info < (3, 9):
   sys.exit('Requires Python >= 3.9')
 
 import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
-import jinja2, jinja2.sandbox, yaml, pytz
+import jinja2, jinja2.sandbox, yaml, zoneinfo
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.21.1'
+__version__ = '1.22.0'
 
 __all__ = ['JinjaFx', 'Vault']
 
@@ -1311,10 +1311,10 @@ class JinjaFx():
 
   def __jfx_now(self, fmt=None, tz='UTC'):
     if fmt is not None:
-      return datetime.datetime.now(tz=pytz.timezone(tz)).strftime(fmt)
+      return datetime.datetime.now(tz=zoneinfo.ZoneInfo(tz)).strftime(fmt)
 
     else:
-      return str(datetime.datetime.now(tz=pytz.timezone(tz)))
+      return str(datetime.datetime.now(tz=zoneinfo.ZoneInfo(tz)))
 
 
 class Vault():
