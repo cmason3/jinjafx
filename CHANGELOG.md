@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.23.0] - In Development
+- Added support for multiple templates within a DataTemplate to allow templates to be nested
+
 ### [1.22.2] - December 2, 2024
 - Jinja2 Extension `jinja2.ext.do` is now enabled by default
 
@@ -545,6 +548,7 @@ Would result in the following:
 - Initial release
 
 
+[1.23.0]: https://github.com/cmason3/jinjafx/compare/v1.22.2...v1.23.0
 [1.22.2]: https://github.com/cmason3/jinjafx/compare/v1.22.1...v1.22.2
 [1.22.1]: https://github.com/cmason3/jinjafx/compare/v1.22.0...v1.22.1
 [1.22.0]: https://github.com/cmason3/jinjafx/compare/v1.21.0...v1.22.0

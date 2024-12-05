@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.exceptions import InvalidSignature
 
-__version__ = '1.22.2'
+__version__ = '1.23.0'
 
 __all__ = ['JinjaFx', 'Vault']
 
