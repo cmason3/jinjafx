@@ -466,8 +466,11 @@ class JinjaFx():
     float_indices = []
     list_indices = []
 
-    if not isinstance(template, (str, io.TextIOWrapper)):
-      raise TypeError('template must be of type str or type FileType')
+    if not isinstance(template, (str, io.TextIOWrapper, dict)):
+      raise TypeError('template must be of type str, dict or type FileType')
+
+    if isinstance(template, dict) and ('Default' not in template):
+      raise TypeError('dict based templates must contain a "Default" key')
 
     if data is not None:
       if not isinstance(data, str):
@@ -690,6 +693,10 @@ class JinjaFx():
     if isinstance(template, str):
       env = jinja2env(extensions=gvars['jinja2_extensions'], **jinja2_options)
       rtemplate = env.from_string(template)
+
+    elif isinstance(template, dict):
+      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.DictLoader(template), **jinja2_options)
+      rtemplate = env.get_template('Default')
 
     else:
       env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)

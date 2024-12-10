@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.23.0] - In Development
+### [1.23.0] - December 10, 2024
 - Added support for multiple templates within a DataTemplate to allow templates to be nested
 
 ### [1.22.2] - December 2, 2024
