@@ -531,6 +531,18 @@ dt:
     ... TEMPLATE.J2 ...
 ```
 
+In a similar way, a DataTemplate can also contain multiple templates, where a "Default" base template can include other templates, e.g:
+
+```yaml
+---
+dt:
+  template:
+    "Default": |2
+      {% include "Other" %}
+    "Other": |2
+      ... OTHER.J2 ...
+```
+
 ### Jinja2 Extensions
 
 Jinja2 supports the ability to provide extended functionality through [extensions](https://jinja.palletsprojects.com/en/3.0.x/extensions/). To enable specific Jinja2 extensions in JinjaFx you can use the `jinja2_extensions` global variable, which you can set within one of your `vars.yml` files (it expects a list):
