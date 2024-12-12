@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### [1.23.1] - December 12, 2024
+- Renamed class `Vault` to `AnsibleVault`
+- Moved class `Vaulty` from `ext_jinjafx.py` into `jinjafx.py`
+
 ### [1.23.0] - December 10, 2024
 - Added support for multiple templates within a DataTemplate to allow templates to be nested
 
@@ -548,6 +552,7 @@ Would result in the following:
 - Initial release
 
 
+[1.23.1]: https://github.com/cmason3/jinjafx/compare/v1.23.0...v1.23.1
 [1.23.0]: https://github.com/cmason3/jinjafx/compare/v1.22.2...v1.23.0
 [1.22.2]: https://github.com/cmason3/jinjafx/compare/v1.22.1...v1.22.2
 [1.22.1]: https://github.com/cmason3/jinjafx/compare/v1.22.0...v1.22.1

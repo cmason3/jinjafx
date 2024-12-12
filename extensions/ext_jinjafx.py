@@ -18,9 +18,7 @@ from jinja2.ext import Extension
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-from cryptography.exceptions import InvalidTag
-from jinjafx import JinjaFx
+from jinjafx import JinjaFx, Vaulty
 
 import os, base64, random, re, hashlib, ipaddress
 
@@ -314,51 +312,3 @@ class plugin(Extension):
 
     else:
       raise JinjaFx.TemplateError("'xpath' filter requires the 'lxml' python module")
-
-class Vaulty():
-  def __init__(self):
-    self.__prefix = '$VAULTY;'
-    self.__kcache = {}
-
-  def __derive_key(self, password, salt=None):
-    if (ckey := (password, salt)) in self.__kcache:
-      e = self.__kcache[ckey]
-      self.__kcache[ckey] = e[0], e[1], e[2] + 1
-      return self.__kcache[ckey]
-
-    if salt is None:
-      salt = os.urandom(16)
-  
-    key = Scrypt(salt, 32, 2**16, 8, 1).derive(password.encode('utf-8'))
-    self.__kcache[ckey] = [salt, key, 0]
-    return [salt, key, 0]
-
-  def encrypt(self, plaintext, password, cols=None):
-    version = b'\x01'
-    salt, key, uc = self.__derive_key(password)
-    nonce = os.urandom(12)[:-4] + uc.to_bytes(4, 'big')
-    ciphertext = ChaCha20Poly1305(key).encrypt(nonce, plaintext.encode('utf-8'), None)
-
-    r = self.__prefix + base64.b64encode(version + salt + nonce + ciphertext).decode('utf-8')
-   
-    if cols is not None:
-      r = '\n'.join([r[i:i + cols] for i in range(0, len(r), cols)])
-
-    return r
-  
-  def decrypt(self, ciphertext, password):
-    if ciphertext.lstrip().startswith(self.__prefix):
-      try:
-        nciphertext = base64.b64decode(ciphertext.strip()[len(self.__prefix):])
-
-        if len(nciphertext) > 29 and nciphertext.startswith(b'\x01'):
-          key = self.__derive_key(password, nciphertext[1:17])[1]
-          return ChaCha20Poly1305(key).decrypt(nciphertext[17:29], nciphertext[29:], None).decode('utf-8')
-
-      except Exception:
-        pass
-
-      raise JinjaFx.TemplateError('invalid vaulty password or ciphertext malformed')
-
-    raise JinjaFx.TemplateError('data not encrypted with vaulty')
-
