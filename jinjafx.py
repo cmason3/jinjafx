@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.23.1'
+__version__ = '1.23.2'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -775,7 +775,7 @@ class JinjaFx():
         raise
 
       stack = ['0:' + routput.render(rowdata)]
-      start_tag = re.compile(r'<output(:\S+)?[\t ]+["\']*(.+?)["\']*[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
+      start_tag = re.compile(r'<output(:\S+)?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
       end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
       clines = content.splitlines()
 
@@ -795,13 +795,24 @@ class JinjaFx():
             clines.insert(i + 1, l[block_begin.end():])
             continue
 
+          oname = block_begin.group(2)
+          if oname.startswith(('"', "'")) or oname.endswith(('"', "'")):
+            if (len(oname.replace(' ', '')) > 2) and (oname[0] == oname[-1]) and not (oname[0] in oname[1:-1]):
+              oname = oname[1:-1].strip()
+
+            else:
+              raise Exception('invalid output tag')
+
+          elif len(oname.strip()) == 0:
+            raise Exception('invalid output tag')
+
           if block_begin.group(3) is not None:
             index = int(block_begin.group(3))
           else:
             index = 0
 
           oformat = block_begin.group(1) if block_begin.group(1) is not None else ':text'
-          stack.append(str(index) + ':' + block_begin.group(2).strip() + oformat.lower())
+          stack.append(str(index) + ':' + oname.strip() + oformat.lower())
 
         else:
           block_end = end_tag.search(l.strip())
