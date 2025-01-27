@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.24.2] - In Development
+### [1.24.2] - January 27, 2025
 - Fix another regression in error handling code
 
 ### [1.24.1] - January 27, 2025
