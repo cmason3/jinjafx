@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.23.2'
+__version__ = '1.24.0'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -330,7 +330,7 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
 
       args.ed = [os.getcwd(), os.getenv('HOME', '') + '/.jinjafx'] + args.ed
-      outputs = JinjaFx().jinjafx(args.t, data, gvars, args.o, args.ed)
+      outputs = JinjaFx()._jinjafx(args.t, data, gvars, args.o, args.ed)
       ocount = 0
 
       if args.od is not None:
@@ -344,17 +344,16 @@ Environment Variables:
         print('', file=sys.stderr)
 
       for o in sorted(sorted(outputs.items()), key=lambda x: (x[0] == '_stdout_')):
-        oname = o[0].rsplit(':', 1)[0]
-        if oname != '_stderr_':
+        if o[0] != '_stderr_':
           output = '\n'.join(o[1]) + '\n'
           if output.strip():
-            if oname == '_stdout_':
+            if o[0] == '_stdout_':
               if ocount:
                 print('\n-\n')
               print(output)
 
             else:
-              ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(oname)))
+              ofile = re.sub(r'_+', '_', re.sub(r'[^A-Za-z0-9_. -/]', '_', os.path.normpath(o[0])))
 
               if os.path.dirname(ofile) != '':
                 if not os.path.isdir(os.path.dirname(ofile)):
@@ -378,8 +377,12 @@ Environment Variables:
     sys.exit(-1)
 
   except jinja2.TemplateError as e:
-    m1 = re.search(r'(?s:.*)File "(.+)", line ([0-9]+), .+ template', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
-    print(f'error[{m1.group(1)}:{m1.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+    t = e.name.replace('Default', 'template.j2')
+    if isinstance(e, jinja2.TemplateNotFound):
+      print(f'error[<unknown>]: {type(e).__name__}: {e}', file=sys.stderr)
+    else:
+      print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+
     sys.exit(-2)
 
   except Exception as e:
@@ -453,7 +456,7 @@ class __ArgumentParser(argparse.ArgumentParser):
 
 
 class JinjaFx():
-  def jinjafx(self, template, data, gvars, output, exts_dirs=None, sandbox=False):
+  def _jinjafx(self, template, data, gvars, output, exts_dirs=None, sandbox=False, use_oformat=False):
     self.__g_datarows = []
     self.__g_dict = {}
     self.__g_row = 0 
@@ -695,10 +698,9 @@ class JinjaFx():
     jinja2env = jinja2.sandbox.SandboxedEnvironment if sandbox else jinja2.Environment
 
     if isinstance(template, str):
-      env = jinja2env(extensions=gvars['jinja2_extensions'], **jinja2_options)
-      rtemplate = env.from_string(template)
+      template = { 'Default': template }
 
-    elif isinstance(template, dict):
+    if isinstance(template, dict):
       env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.DictLoader(template), **jinja2_options)
       rtemplate = env.get_template('Default')
 
@@ -775,7 +777,7 @@ class JinjaFx():
         raise
 
       stack = ['0:' + routput.render(rowdata)]
-      start_tag = re.compile(r'<output(:\S+)?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
+      start_tag = re.compile(r'<output(' + (':\S+' if use_oformat else '') + ')?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
       end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
       clines = content.splitlines()
 
@@ -811,7 +813,7 @@ class JinjaFx():
           else:
             index = 0
 
-          oformat = block_begin.group(1) if block_begin.group(1) is not None else ':text'
+          oformat = block_begin.group(1) if block_begin.group(1) else (':text' if use_oformat else '')
           stack.append(str(index) + ':' + oname.strip() + oformat.lower())
 
         else:
