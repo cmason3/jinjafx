@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.24.2] - January 27, 2025
+- Fix another regression in error handling code
+
 ### [1.24.1] - January 27, 2025
 - Fix regression in error handling code
 
@@ -565,6 +568,7 @@ Would result in the following:
 - Initial release
 
 
+[1.24.2]: https://github.com/cmason3/jinjafx/compare/v1.24.1...v1.24.2
 [1.24.1]: https://github.com/cmason3/jinjafx/compare/v1.24.0...v1.24.1
 [1.24.0]: https://github.com/cmason3/jinjafx/compare/v1.23.2...v1.24.0
 [1.23.2]: https://github.com/cmason3/jinjafx/compare/v1.23.1...v1.23.2

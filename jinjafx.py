@@ -377,7 +377,7 @@ Environment Variables:
     sys.exit(-1)
 
   except jinja2.TemplateError as e:
-    if hasattr(e, 'name') and hasattr(e, 'lineno'):
+    if hasattr(e, 'name') and e.name and hasattr(e, 'lineno') and e.lineno:
       t = e.name.replace('Default', 'template.j2')
       print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
