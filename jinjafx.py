@@ -379,7 +379,7 @@ Environment Variables:
   except jinja2.TemplateError as e:
     t = e.name.replace('Default', 'template.j2')
     if isinstance(e, jinja2.TemplateNotFound):
-      print(f'error[<unknown>]: {type(e).__name__}: {e}', file=sys.stderr)
+      print(f'error[<template>]: {type(e).__name__}: {e}', file=sys.stderr)
     else:
       print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
