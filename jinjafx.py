@@ -851,6 +851,7 @@ class JinjaFx():
       outputs[nkey] += outputs[o]
       del outputs[o]
 
+    outputs = {k: v for k, v in outputs.items() if (k == '_stderr_') or len(''.join(v).strip())}
     return outputs
 
 

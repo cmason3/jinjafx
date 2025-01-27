@@ -4,7 +4,8 @@
 - Don't append an output format of `:text` onto output name if it doesn't exist
 - Rename `jinjafx` function to `_jinjafx` as it is internal and is considered unstable
 - Correctly print the name of the template in the error when using nested templates
-- Consistently use `jinja2.DictLoader` for string based templates
+- Consistently use `jinja2.DictLoader()` for string based templates
+- Don't return empty outputs from `JinjaFx()._jinjafx()`
 
 ### [1.23.2] - January 23, 2025
 - Improved the validation of output names as it was allowing empty entries
