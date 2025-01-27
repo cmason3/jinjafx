@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.24.0] - In Development
+### [1.24.0] - January 27, 2025
 - Don't append an output format of `:text` onto output name if it doesn't exist
 - Rename `jinjafx` function to `_jinjafx` as it is internal and is considered unstable
 - Correctly print the name of the template in the error when using nested templates
