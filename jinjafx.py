@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.24.0'
+__version__ = '1.24.1'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -377,11 +377,13 @@ Environment Variables:
     sys.exit(-1)
 
   except jinja2.TemplateError as e:
-    t = e.name.replace('Default', 'template.j2')
-    if isinstance(e, jinja2.TemplateNotFound):
-      print(f'error[<template>]: {type(e).__name__}: {e}', file=sys.stderr)
-    else:
+    if hasattr(e, 'name') and hasattr(e, 'lineno'):
+      t = e.name.replace('Default', 'template.j2')
       print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+
+    else:
+      m = re.search(r'(?s:.*)File "(.+)", line ([0-9]+), .+ template', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
+      print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     sys.exit(-2)
 
