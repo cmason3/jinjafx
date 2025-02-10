@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.24.2'
+__version__ = '1.24.3'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -169,7 +169,15 @@ Environment Variables:
             print(f'Decrypting {f}... unsupported')
 
     else:
-      yaml.add_constructor('!vault', lambda x, y: __decrypt_vault(vpw, y.value).decode('utf-8'), yaml.SafeLoader)
+      def yaml_vault_tag(loader, node):
+        x = __decrypt_vault(vpw, node.value, False)
+        if x is not None:
+          return x.decode('utf-8')
+
+        else:
+          return '_undef'
+        
+      yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
 
       if args.dt is not None:
         with open(args.dt.name, 'rt') as f:
@@ -291,6 +299,20 @@ Environment Variables:
       if args.o is None:
         args.o = '_stdout_'
 
+      s = [gvars]
+
+      while s:
+        c = s.pop()
+        for key in list(c.keys()):
+          if c[key] == '_undef':
+            del c[key]
+          elif isinstance(c[key], dict):
+            s.append(c[key])
+          elif isinstance(c[key], list):
+            for item in c[key]:
+              if isinstance(item, dict):
+                s.append(item)
+
       if 'jinjafx_input' in gvars:
         jinjafx_input = {}
 
@@ -393,10 +415,10 @@ Environment Variables:
     sys.exit(-2)
 
 
-def __decrypt_vault(vpw, string):
+def __decrypt_vault(vpw, string, return_none=False):
   if string.lstrip().startswith('$ANSIBLE_VAULT;'):
     __get_vault_credentials(vpw)
-    return AnsibleVault().decrypt(string.encode('utf-8'), vpw[0])
+    return AnsibleVault().decrypt(string.encode('utf-8'), vpw[0], return_none)
   return string.encode('utf-8')
 
 
@@ -1369,7 +1391,7 @@ class AnsibleVault():
     vtext = '\n'.join([b_salt.hex(), b_hmac.hex(), b_ciphertext.hex()]).encode('utf-8').hex()
     return '$ANSIBLE_VAULT;1.1;AES256\n'  + '\n'.join([vtext[i:i + 80] for i in range(0, len(vtext), 80)]) + '\n'
 
-  def decrypt(self, b_string, password):
+  def decrypt(self, b_string, password, return_none=False):
     slines = b_string.strip().splitlines()
     hdr = list(map(bytes.strip, slines[0].split(b';')))
 
@@ -1389,7 +1411,11 @@ class AnsibleVault():
             hmac.verify(b_hmac)
 
           except InvalidSignature:
-            raise Exception('invalid ansible vault password')
+            if return_none:
+              return None
+
+            else:
+              raise Exception('invalid ansible vault password')
 
           u = PKCS7(128).unpadder()
           d = Cipher(AES(b_derivedkey[:32]), CTR(b_derivedkey[64:80])).decryptor()
