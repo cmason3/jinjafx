@@ -369,6 +369,16 @@ There might be some situations where you can't control the format of the header 
 jinjafx_adjust_headers: "yes" | "no" | "upper" | "lower"
 ```
 
+- <code><b>jinjafx_vault_undefined</b></code>
+
+By default JinjaFx will fail with "invalid ansible vault password" if the provided Ansible Vault password is incorrect. The `jinjafx_vault_undefined` variable allows you to change this behaviour - if set to `True` then it will proceed to process the template, but if it can't decrypt a vaulted variable due to an incorrect password then the variable won't be defined - you can then test this within your template, e.g:
+
+```jinja2
+{% if vaulted_variable is defined %}
+{{ vaulted_variable }}
+{% endif %}
+```
+
 - <code><b>jinjafx_render_vars</b></code>
 
 JinjaFx by default will attempt to render your `vars.yml` file using Jinja2, which means the following syntax is valid:

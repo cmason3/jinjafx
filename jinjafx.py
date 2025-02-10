@@ -169,15 +169,15 @@ Environment Variables:
             print(f'Decrypting {f}... unsupported')
 
     else:
+      vault_undef = False
+
       def yaml_vault_tag(loader, node):
-        x = __decrypt_vault(vpw, node.value, False)
+        x = __decrypt_vault(vpw, node.value, vault_undef)
         if x is not None:
           return x.decode('utf-8')
 
         else:
           return '_undef'
-        
-      yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
 
       if args.dt is not None:
         with open(args.dt.name, 'rt') as f:
@@ -222,35 +222,55 @@ Environment Variables:
           if 'data' in dt:
             data = dt['data']
 
+          yaml.add_constructor('!vault', lambda x, y: None, yaml.SafeLoader)
+
           if gv:
-            gyaml = __decrypt_vault(vpw, gv)
-            if gyaml:
-              try:
-                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+            try:
+              if 'jinjafx_vault_undefined' in gv:
+                y = yaml.load(gv, Loader=yaml.SafeLoader)
+                vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
 
-                if isinstance(y, list):
-                  y = {'_': y}
-
-                gvars.update(y)
-
-              except Exception as e:
-                exc_source = 'dt:global'
-                raise
+            except Exception as e:
+              exc_source = 'dt:global'
+              raise
 
           if 'vars' in dt:
-            gyaml = __decrypt_vault(vpw, dt['vars'])
-            if gyaml:
-              try:
-                y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+            try:
+              if 'jinjafx_vault_undefined' in dt['vars']:
+                y = yaml.load(dt['vars'], Loader=yaml.SafeLoader)
+                vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
 
-                if isinstance(y, list):
-                  y = {'_': y}
+            except Exception as e:
+              exc_source = 'dt:vars'
+              raise
 
-                gvars.update(y)
+          yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
 
-              except Exception as e:
-                exc_source = 'dt:vars'
-                raise
+          if gv:
+            try:
+              y = yaml.load(gv, Loader=yaml.SafeLoader)
+
+              if isinstance(y, list):
+                y = {'_': y}
+
+              gvars.update(y)
+
+            except Exception as e:
+              exc_source = 'dt:global'
+              raise
+
+          if 'vars' in dt:
+            try:
+              y = yaml.load(dt['vars'], Loader=yaml.SafeLoader)
+
+              if isinstance(y, list):
+                y = {'_': y}
+
+              gvars.update(y)
+
+            except Exception as e:
+              exc_source = 'dt:vars'
+              raise
 
       if args.d is not None:
         if args.d.name == '<stdin>':
@@ -273,23 +293,40 @@ Environment Variables:
               data = f.read()
 
       if args.g is not None:
+        fcontents = []
+
+        yaml.add_constructor('!vault', lambda x, y: None, yaml.SafeLoader)
+
         for g in args.g:
           with open(g.name, 'rt') as f:
-            gyaml = __decrypt_vault(vpw, f.read())
-            try:
-              y = yaml.load(gyaml, Loader=yaml.SafeLoader)
+            fcontents[g.name] = __decrypt_vault(vpw, f.read())
 
-              if isinstance(y, list):
-                y = {'_': y}
+          try:
+            if 'jinjafx_vault_undefined' in fcontents[g.name]:
+              if y := yaml.load(fcontents[g.name], Loader=yaml.SafeLoader):
+                vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
 
-              if args.m == True:
-                __merge(gvars, y)
-              else:
-                gvars.update(y)
+          except Exception as e:
+            exc_source = g.name
+            raise
 
-            except Exception as e:
-              exc_source = g.name
-              raise
+        yaml.add_constructor('!vault', yaml_vault_tag, yaml.SafeLoader)
+
+        for g in args.g:
+          try:
+            y = yaml.load(fcontents[g.name], Loader=yaml.SafeLoader)
+
+            if isinstance(y, list):
+              y = {'_': y}
+
+            if args.m == True:
+              __merge(gvars, y)
+            else:
+              gvars.update(y)
+
+          except Exception as e:
+            exc_source = g.name
+            raise
 
       if args.var is not None:
         for v in args.var:

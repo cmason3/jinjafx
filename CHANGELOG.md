@@ -1,8 +1,8 @@
 ## CHANGELOG
 
 ### [1.24.3] - February 10, 2025
+- Added support for the `jinjafx_vault_undefined` option, so it doesn't hard fail if the vault password is incorrect
 - Added support for an undefined variable if it contains the string "_undef"
-- Updated `AnsibleVault.decrypt()` so it can return None instead of raise an Exception for invalid_passwords
 
 ### [1.24.2] - January 27, 2025
 - Fix another regression in error handling code
