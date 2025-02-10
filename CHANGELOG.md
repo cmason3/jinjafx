@@ -572,6 +572,7 @@ Would result in the following:
 - Initial release
 
 
+[1.24.3]: https://github.com/cmason3/jinjafx/compare/v1.24.2...v1.24.3
 [1.24.2]: https://github.com/cmason3/jinjafx/compare/v1.24.1...v1.24.2
 [1.24.1]: https://github.com/cmason3/jinjafx/compare/v1.24.0...v1.24.1
 [1.24.0]: https://github.com/cmason3/jinjafx/compare/v1.23.2...v1.24.0
