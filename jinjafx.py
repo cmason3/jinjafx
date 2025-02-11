@@ -802,6 +802,7 @@ class JinjaFx():
     self.__g_filters = env.filters
 
     routput = env.from_string(output)
+    blanks = {}
 
     for row in range(1, max(2, len(self.__g_datarows))):
       rowdata = {}
@@ -842,7 +843,6 @@ class JinjaFx():
       start_tag = re.compile(r'<output(' + (':\S+' if use_oformat else '') + ')?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
       end_tag = re.compile(r'</output[\t ]*(\\n[\t ]*)?>', re.IGNORECASE)
       clines = content.splitlines()
-      blanks = {}
 
       i = 0
       while i < len(clines):
