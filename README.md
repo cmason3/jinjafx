@@ -237,6 +237,8 @@ second
 first
 ```
 
+There is a further enhancement that allows you to specify `</output\n>` as the closing tag, which will then append an empty line after that specific numbered output section.
+
 By default the following Jinja2 templating options are enabled, but they can be overridden as required in the template as per standard Jinja2 syntax:
 
 ```
@@ -371,7 +373,7 @@ jinjafx_adjust_headers: "yes" | "no" | "upper" | "lower"
 
 - <code><b>jinjafx_vault_undefined</b></code>
 
-By default JinjaFx will fail with "invalid ansible vault password" if the provided Ansible Vault password is incorrect. The `jinjafx_vault_undefined` variable allows you to change this behaviour - if set to `True` then it will proceed to process the template, but if it can't decrypt a vaulted variable due to an incorrect or missing password then the variable won't be defined - you can then test this within your template, e.g:
+By default JinjaFx will fail with "invalid ansible vault password" if the provided Ansible Vault password is empty or missing. The `jinjafx_vault_undefined` variable allows you to change this behaviour - if set to `True` then it will proceed to process the template, but if it can't decrypt a vaulted variable due to a missing password then the variable won't be defined - you can then test this within your template, e.g:
 
 ```jinja2
 {% if vaulted_variable is defined %}

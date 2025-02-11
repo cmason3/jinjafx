@@ -1,7 +1,11 @@
 ## CHANGELOG
 
+### [1.24.4] - February 11, 2025
+- Changed behaviour of `jinjafx_vault_undefined`, so it only returns undefined if the password is missing
+- Added support for adding blank lines between output sections using `</output\n>` as closing tag
+
 ### [1.24.3] - February 10, 2025
-- Added support for the `jinjafx_vault_undefined` option, so it doesn't hard fail if the vault password is incorrect
+- Added support for the `jinjafx_vault_undefined` option, so it doesn't hard fail if the vault password is incorrect or missing
 - Added support for an undefined variable if it contains the string "_undef"
 
 ### [1.24.2] - January 27, 2025
@@ -572,6 +576,7 @@ Would result in the following:
 - Initial release
 
 
+[1.24.4]: https://github.com/cmason3/jinjafx/compare/v1.24.3...v1.24.4
 [1.24.3]: https://github.com/cmason3/jinjafx/compare/v1.24.2...v1.24.3
 [1.24.2]: https://github.com/cmason3/jinjafx/compare/v1.24.1...v1.24.2
 [1.24.1]: https://github.com/cmason3/jinjafx/compare/v1.24.0...v1.24.1

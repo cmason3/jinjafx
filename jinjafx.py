@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.24.3'
+__version__ = '1.24.4'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -452,6 +452,10 @@ Environment Variables:
 def __decrypt_vault(vpw, string, return_none=False):
   if string.lstrip().startswith('$ANSIBLE_VAULT;'):
     __get_vault_credentials(vpw)
+
+    if vpw[0].strip():
+      return_none = False
+
     return AnsibleVault().decrypt(string.encode('utf-8'), vpw[0], return_none)
   return string.encode('utf-8')
 
@@ -836,8 +840,9 @@ class JinjaFx():
 
       stack = ['0:' + routput.render(rowdata)]
       start_tag = re.compile(r'<output(' + (':\S+' if use_oformat else '') + ')?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
-      end_tag = re.compile(r'</output[\t ]*>', re.IGNORECASE)
+      end_tag = re.compile(r'</output[\t ]*(\\n[\t ]*)?>', re.IGNORECASE)
       clines = content.splitlines()
+      blanks = {}
 
       i = 0
       while i < len(clines):
@@ -887,6 +892,9 @@ class JinjaFx():
               clines.insert(i + 1, l[block_end.end():])
               continue
 
+            if block_end.group(1):
+              blanks[stack[-1]] = True
+
             if len(stack) > 1:
               stack.pop()
             else:
@@ -907,6 +915,8 @@ class JinjaFx():
         outputs[nkey] = []
 
       outputs[nkey] += outputs[o]
+      if o in blanks:
+        outputs[nkey] += ' '
       del outputs[o]
 
     outputs = {k: v for k, v in outputs.items() if (k == '_stderr_') or len(''.join(v).strip())}
