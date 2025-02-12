@@ -1115,7 +1115,7 @@ class JinjaFx():
             groups[i][0] = groups[i][0].replace(m.group(), 'x', 1)
             group = max(0, (nob - ncb) * nob)
 
-            for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
+            for x in re.findall(r'([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
               if x[1] != '':
                 ee = x[0].split('-')
 
