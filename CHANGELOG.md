@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### [1.24.5] - In Development
+- Fixed an issue where I forgot to properly escape a Regex when looking for `<output>` tags
+- Added support for `jinja2_options` to allow you to pass Jinja2 formatting options (e.g. `trim_blocks`)
+
 ### [1.24.4] - February 11, 2025
 - Changed behaviour of `jinjafx_vault_undefined`, so it only returns undefined if the password is missing
 - Added support for adding blank lines between output sections using `</output\n>` as closing tag
@@ -576,6 +580,7 @@ Would result in the following:
 - Initial release
 
 
+[1.24.5]: https://github.com/cmason3/jinjafx/compare/v1.24.4...v1.24.5
 [1.24.4]: https://github.com/cmason3/jinjafx/compare/v1.24.3...v1.24.4
 [1.24.3]: https://github.com/cmason3/jinjafx/compare/v1.24.2...v1.24.3
 [1.24.2]: https://github.com/cmason3/jinjafx/compare/v1.24.1...v1.24.2

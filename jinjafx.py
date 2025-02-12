@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.24.4'
+__version__ = '1.24.5'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -757,6 +757,11 @@ class JinjaFx():
       'keep_trailing_newline': True
     }
 
+    if 'jinja2_options' in gvars and gvars['jinja2_options']:
+      for o in ('trim_blocks', 'lstrip_blocks', 'keep_trailing_newline'):
+        if o in gvars['jinja2_options']:
+          jinja2_options[o] = gvars['jinja2_options'][o]
+
     jinja2env = jinja2.sandbox.SandboxedEnvironment if sandbox else jinja2.Environment
 
     if isinstance(template, str):
@@ -840,7 +845,7 @@ class JinjaFx():
         raise
 
       stack = ['0:' + routput.render(rowdata)]
-      start_tag = re.compile(r'<output(' + (':\S+' if use_oformat else '') + ')?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
+      start_tag = re.compile(r'<output(' + (r':\S+' if use_oformat else '') + r')?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
       end_tag = re.compile(r'</output[\t ]*(\\n[\t ]*)?>', re.IGNORECASE)
       clines = content.splitlines()
 
@@ -1110,7 +1115,7 @@ class JinjaFx():
             groups[i][0] = groups[i][0].replace(m.group(), 'x', 1)
             group = max(0, (nob - ncb) * nob)
 
-            for x in re.findall('([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
+            for x in re.findall(r'([A-Z0-9](-[A-Z0-9])?)', m.group(1), re.IGNORECASE):
               if x[1] != '':
                 ee = x[0].split('-')
 

@@ -239,12 +239,13 @@ first
 
 There is a further enhancement that allows you to specify `</output\n>` as the closing tag, which will then append an empty line after that specific numbered output section.
 
-By default the following Jinja2 templating options are enabled, but they can be overridden as required in the template as per standard Jinja2 syntax:
+By default the following Jinja2 templating options are enabled, which control whitespace, but they can be overridden as required in `global.yml` or `vars.yml` using the following syntax via `jinja2_options`:
 
-```
-trim_blocks = True
-lstrip_blocks = True
-keep_trailing_newline = True
+```yaml
+jinja2_options:
+  trim_blocks = True
+  lstrip_blocks = True
+  keep_trailing_newline = True
 ```
 
 ### Ansible Filters
