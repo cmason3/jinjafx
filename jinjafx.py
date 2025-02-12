@@ -754,12 +754,11 @@ class JinjaFx():
       'undefined': jinja2.StrictUndefined,
       'trim_blocks': True,
       'lstrip_blocks': True,
-      'keep_trailing_newline': True,
-      'line_comment_prefix': None
+      'keep_trailing_newline': True
     }
 
     if 'jinja2_options' in gvars and gvars['jinja2_options']:
-      for o in ('trim_blocks', 'lstrip_blocks', 'keep_trailing_newline', 'line_comment_prefix'):
+      for o in ('trim_blocks', 'lstrip_blocks', 'keep_trailing_newline'):
         if o in gvars['jinja2_options']:
           jinja2_options[o] = gvars['jinja2_options'][o]
 
