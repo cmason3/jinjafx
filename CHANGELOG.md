@@ -1,7 +1,7 @@
 ## CHANGELOG
 
 ### [1.24.5] - In Development
-- Fixed issue where I forgot to properly escape a Regex when looking for `<output>` tags
+- Fixed an issue where I forgot to properly escape a Regex when looking for `<output>` tags
 - Added support for `jinja2_options` to allow you to pass Jinja2 formatting options (e.g. `trim_blocks`)
 
 ### [1.24.4] - February 11, 2025
