@@ -382,6 +382,10 @@ By default JinjaFx will fail with "invalid ansible vault password" if the provid
 {% endif %}
 ```
 
+- <code><b>jinjafx_disable_dataloop</b></code>
+
+If set to `True`, JinjaFx won't loop through `data.csv` row by row - the data will only be accessible via `jinjafx.data()` and similar methods. The template will only be processed once as opposed to once per row within `data.csv`.
+
 - <code><b>jinjafx_render_vars</b></code>
 
 JinjaFx by default will attempt to render your `vars.yml` file using Jinja2, which means the following syntax is valid:

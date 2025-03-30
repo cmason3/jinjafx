@@ -1,6 +1,9 @@
 ## CHANGELOG
 
-### [1.24.5] - In Development
+### [1.24.6] - In Development
+- Added support for `jinjafx_disable_dataloop` variable
+
+### [1.24.5] - February 12, 2025
 - Fixed an issue where I forgot to properly escape a Regex when looking for `<output>` tags
 - Added support for `jinja2_options` to allow you to pass Jinja2 formatting options (e.g. `trim_blocks`)
 
@@ -580,6 +583,7 @@ Would result in the following:
 - Initial release
 
 
+[1.24.6]: https://github.com/cmason3/jinjafx/compare/v1.24.5...v1.24.6
 [1.24.5]: https://github.com/cmason3/jinjafx/compare/v1.24.4...v1.24.5
 [1.24.4]: https://github.com/cmason3/jinjafx/compare/v1.24.3...v1.24.4
 [1.24.3]: https://github.com/cmason3/jinjafx/compare/v1.24.2...v1.24.3
