@@ -1,7 +1,7 @@
 ## CHANGELOG
 
 ### [1.24.6] - In Development
-- Added support for `jinjafx_disable_dataloop` variable
+- Added support for the `jinjafx_disable_dataloop` option, which allows for a template-only option
 
 ### [1.24.5] - February 12, 2025
 - Fixed an issue where I forgot to properly escape a Regex when looking for `<output>` tags

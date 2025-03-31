@@ -777,10 +777,14 @@ class JinjaFx():
 
     if gvars:
       jinjafx_render_vars = str(gvars.get('jinjafx_render_vars', 'yes')).strip().lower()
+      jinjafx_disable_dataloop = gvars.get('jinjafx_disable_dataloop', False)
 
       if jinjafx_render_vars != 'no':
         gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
         gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
+
+    else:
+      jinjafx_disable_dataloop = False
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
@@ -812,7 +816,7 @@ class JinjaFx():
     for row in range(1, max(2, len(self.__g_datarows))):
       rowdata = {}
 
-      if self.__g_datarows:
+      if self.__g_datarows and not jinjafx_disable_dataloop:
         for col in range(len(self.__g_datarows[0])):
           rowdata.update({ self.__g_datarows[0][col]: self.__g_datarows[row][col + 1] })
 
@@ -913,6 +917,9 @@ class JinjaFx():
 
       if len(stack) != 1:
         raise Exception('unbalanced output tags')
+
+      if jinjafx_disable_dataloop:
+        break
 
     for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
       nkey = o.split(':', 1)[1]
