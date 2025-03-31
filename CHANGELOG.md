@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.24.6] - In Development
+### [1.24.6] - March 31, 2025
 - Added support for the `jinjafx_disable_dataloop` option, which allows for a template-only option
 
 ### [1.24.5] - February 12, 2025
