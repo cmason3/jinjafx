@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.24.7] - April 1, 2025
+- Minor tweak to exception handling, so it now prints the line number within the template under certain conditions
+
 ### [1.24.6] - March 31, 2025
 - Added support for the `jinjafx_disable_dataloop` option, which allows for a template-only option
 
@@ -583,6 +586,7 @@ Would result in the following:
 - Initial release
 
 
+[1.24.7]: https://github.com/cmason3/jinjafx/compare/v1.24.6...v1.24.7
 [1.24.6]: https://github.com/cmason3/jinjafx/compare/v1.24.5...v1.24.6
 [1.24.5]: https://github.com/cmason3/jinjafx/compare/v1.24.4...v1.24.5
 [1.24.4]: https://github.com/cmason3/jinjafx/compare/v1.24.3...v1.24.4

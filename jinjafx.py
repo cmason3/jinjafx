@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.24.6'
+__version__ = '1.24.7'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -444,8 +444,14 @@ Environment Variables:
     sys.exit(-2)
 
   except Exception as e:
-    xyz = sys.exc_info()
-    print(f'error[{exc_source or xyz[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+    m = re.search(r'(?s:.*)File "(.+)", line ([0-9]+), .+ template', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
+    if m:
+      print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+
+    else:
+      xyz = sys.exc_info()
+      print(f'error[{exc_source or xyz[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+
     sys.exit(-2)
 
 
