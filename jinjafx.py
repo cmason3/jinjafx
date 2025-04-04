@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.24.7'
+__version__ = '1.24.8'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
