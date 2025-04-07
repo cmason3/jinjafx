@@ -361,7 +361,25 @@ This allows you to call a filter dynamically, e.g:
 
 ### JinjaFx Variables
 
-The following variables, if defined within `vars.yml` control how JinjaFx works:
+The following variables, if defined within `vars.yml` control how JinjaFx works. JinjaFx by default will attempt to "render" your `vars.yml` file using Jinja2, which means you can do the following within `vars.yml`:
+
+```yaml
+---
+fullname: "Firstname Surname"
+firstname: "{{ fullname.split()[0] }}"
+surname: "{{ fullname.split()[1] }}"
+```
+
+However, the rendering will happen after `vars.yml` has been processed by YAML, which means it must be valid YAML to start with - the following isn't valid YAML:
+
+```yaml
+---
+{% if x != y %}
+x: "{{ y }}"
+{% endif %}
+```
+
+If you wish to use literal braces within your YAML (i.e. `{{`) then you will need to ensure they are escaped using a `{% raw %}{% endraw %}` block or enclosing it like `{{ '{{ variable }}' }}`.
 
 - <code><b>jinjafx_adjust_headers</b></code>
 
@@ -385,34 +403,6 @@ By default JinjaFx will fail with "invalid ansible vault password" if the provid
 - <code><b>jinjafx_disable_dataloop</b></code>
 
 If set to `True`, JinjaFx won't loop through `data.csv` row by row - the data will only be accessible via `jinjafx.data()` and similar methods. The template will only be processed once as opposed to once per row within `data.csv`.
-
-- <code><b>jinjafx_render_vars</b></code>
-
-JinjaFx by default will attempt to render your `vars.yml` file using Jinja2, which means the following syntax is valid:
-
-```yaml
----
-fullname: "Firstname Surname"
-firstname: "{{ fullname.split()[0] }}"
-surname: "{{ fullname.split()[1] }}"
-```
-
-However, the rendering will happen after `vars.yml` has been processed by YAML, which means it must be valid YAML to start with - the following isn't valid YAML:
-
-
-```yaml
----
-{% if x != y %}
-x: "{{ y }}"
-{% endif %}
-```
-
-If you wish to use literal braces within your YAML (i.e. `{{`) then you need to ensure they are escaped, or you can disable this functionality by specifying the following variable in `vars.yml`:
-
-```yaml
----
-jinjafx_render_vars: "no"
-```
 
 - <code><b>jinjafx_filter</b></code> and <code><b>jinjafx_sort</b></code>
 
@@ -790,7 +780,17 @@ This function is used to get a global variable that has been set with `jinjafx.s
 
 ### JinjaFx Filters
 
-JinjaFx comes with a custom Jinja2 Extension (`extensions/ext_jinjafx.py`) that is enabled by default which provides the following custom filters:
+JinjaFx has a few built-in filters:
+
+- <code><b>eval()</b> -> String</code>
+
+This filter allows you to evaluate the contents of a variable using Jinja2, e.g:
+
+```jinja2
+{{ '{{ 4 + 4 }}'|eval }}
+```
+
+JinjaFx also comes with a custom Jinja2 Extension (`extensions/ext_jinjafx.py`) that is enabled by default, which provides the following custom filters:
 
 - <code><b>cisco_snmpv3_key(engineid</b>: String<b>, algorithm</b>: Optional[String]<b>="sha1")</b> -> String</code>
 

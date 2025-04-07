@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### [1.25.0] - April 7, 2025
+- Removed `jinjafx_render_vars` as disabling this functionality can be achieved via `{% raw %}{% endraw %}` blocks
+- Added support for a `eval` filter that allows you to specify Jinja2 syntax within variables
+
 ### [1.24.7] - April 1, 2025
 - Minor tweak to exception handling, so it now prints the line number within the template under certain conditions
 
@@ -586,6 +590,7 @@ Would result in the following:
 - Initial release
 
 
+[1.25.0]: https://github.com/cmason3/jinjafx/compare/v1.24.7...v1.25.0
 [1.24.7]: https://github.com/cmason3/jinjafx/compare/v1.24.6...v1.24.7
 [1.24.6]: https://github.com/cmason3/jinjafx/compare/v1.24.5...v1.24.6
 [1.24.5]: https://github.com/cmason3/jinjafx/compare/v1.24.4...v1.24.5
