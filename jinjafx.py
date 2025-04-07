@@ -20,8 +20,9 @@ if sys.version_info < (3, 9):
   sys.exit('Requires Python >= 3.9')
 
 import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
-import jinja2, jinja2.sandbox, yaml, zoneinfo, base64
+import jinja2, jinja2.sandbox, jinja2.filters, yaml, zoneinfo, base64
 
+from jinja2.utils import pass_context
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -31,11 +32,10 @@ from cryptography.hazmat.primitives.ciphers import Cipher
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.24.8'
+__version__ = '1.25.0'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -769,6 +769,7 @@ class JinjaFx():
           jinja2_options[o] = gvars['jinja2_options'][o]
 
     jinja2env = jinja2.sandbox.SandboxedEnvironment if sandbox else jinja2.Environment
+    jinja2.filters.FILTERS['eval'] = self.__jfx_eval
 
     if isinstance(template, str):
       template = { 'Default': template }
@@ -782,12 +783,9 @@ class JinjaFx():
       rtemplate = env.get_template(os.path.basename(template.name))
 
     if gvars:
-      jinjafx_render_vars = str(gvars.get('jinjafx_render_vars', 'yes')).strip().lower()
       jinjafx_disable_dataloop = gvars.get('jinjafx_disable_dataloop', False)
-
-      if jinjafx_render_vars != 'no':
-        gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
-        gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
+      gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
+      gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
 
     else:
       jinjafx_disable_dataloop = False
@@ -954,6 +952,17 @@ class JinjaFx():
       if rx[0].match(v):
         return rx[1]
     return default
+
+
+  @pass_context
+  def __jfx_eval(self, context, value):
+    template = context.eval_ctx.environment.from_string(value)
+    result = template.render(**context)
+
+    if context.eval_ctx.autoescape:
+      result = jinja2.Markup(result)
+
+    return result
 
 
   def __jfx_lookup(self, method, *args):
