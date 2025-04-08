@@ -22,7 +22,6 @@ if sys.version_info < (3, 9):
 import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
 import jinja2, jinja2.sandbox, jinja2.filters, yaml, zoneinfo, base64
 
-#from jinja2.utils import pass_context
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt

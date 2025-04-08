@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.25.1] - In Development
+### [1.25.1] - April 8, 2025
 - Enhanced the `eval` filter so you can pass values that can be used within the evaluated template
 
 ### [1.25.0] - April 7, 2025
