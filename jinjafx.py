@@ -22,7 +22,6 @@ if sys.version_info < (3, 9):
 import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
 import jinja2, jinja2.sandbox, jinja2.filters, yaml, zoneinfo, base64
 
-from jinja2.utils import pass_context
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -35,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.25.0'
+__version__ = '1.25.1'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -954,15 +953,10 @@ class JinjaFx():
     return default
 
 
-  @pass_context
-  def __jfx_eval(self, context, value):
+  @jinja2.pass_context
+  def __jfx_eval(self, context, value, **args):
     template = context.eval_ctx.environment.from_string(value)
-    result = template.render(**context)
-
-    if context.eval_ctx.autoescape:
-      result = jinja2.Markup(result)
-
-    return result
+    return template.render(context, **args)
 
 
   def __jfx_lookup(self, method, *args):
