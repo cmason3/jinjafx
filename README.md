@@ -782,9 +782,9 @@ This function is used to get a global variable that has been set with `jinjafx.s
 
 JinjaFx has a few built-in filters:
 
-- <code><b>eval(**args)</b> -> String</code>
+- <code><b>eval(**args</b>: Optional[String]<b>)</b> -> String</code>
 
-This filter allows you to evaluate the contents of a variable using Jinja2, e.g:
+This filter allows you to evaluate the contents of a variable as Jinja2 syntax, e.g:
 
 ```jinja2
 {{ '{{ 4 + x }}'|eval(x=7) }}
