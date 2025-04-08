@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.25.1'
+__version__ = '1.25.2'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -955,6 +955,9 @@ class JinjaFx():
 
   @jinja2.pass_context
   def __jfx_eval(self, context, value, **args):
+    if isinstance(value, jinja2.Undefined):
+      return value
+
     template = context.eval_ctx.environment.from_string(value)
     return template.render(context, **args)
 
