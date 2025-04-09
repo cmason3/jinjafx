@@ -627,7 +627,7 @@ This function allows you to evaluate the contents of a string (`jinja2_template`
 {{ jinjafx.eval('{{ 4 + x }}', x=7) }}
 ```
 
-There is a bug in Jinja2, where it won't resolve any template variables that are defined within a loop - the following will fail as `ab` will be undefined:
+There is a bug in Jinja2, where it won't resolve the loop variable inside the loop - the following will fail as `ab` will be undefined:
 
 ```jinja2
 {% for ab in ('a', 'b') %}
