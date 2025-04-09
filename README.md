@@ -619,6 +619,24 @@ This variable will contain the total number of rows within the data.
 
 This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')`. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
 
+- <code><b>jinjafx.eval(jinja2_template</b>: String<b>, **args</b>: Optional[String]<b>)</b> -> String</code>
+
+This function allows you to evaluate the contents of a string (`jinja2_template`) as Jinja2 syntax, e.g:
+
+```jinja2
+{{ jinjafx.eval('{{ 4 + x }}', x=7) }}
+```
+
+There is a bug in Jinja2, where it won't resolve any template variables that are defined within a loop - the following will fail as `ab` will be undefined:
+
+```jinja2
+{% for ab in ('a', 'b') %}
+  {{ jinjafx.eval('{{ ab }}') }}
+{% endfor %}
+```
+
+There are two potential workarounds - the first is to redefine the loop variable inside the loop (i.e. `{% set ab = ab %}`) and the second is to pass any template variables that you define inside the loop explicitly to the function (i.e. `jinjafx.eval(jinja2_template, ab=ab)`).
+
 - <code><b>jinjafx.tabulate(datarows</b>: Optional[List[List[String]]]<b>, *, cols</b>: Optional[List[String]]<b>, style</b>: Optional[String]<b>="default")</b> -> String</code>
 
 This function will produce a GitHub Markdown styled table using either the provided `datarows` variable, or (if omitted) using the data from `data.csv`, e.g:
@@ -780,17 +798,8 @@ This function is used to get a global variable that has been set with `jinjafx.s
 
 ### JinjaFx Filters
 
-JinjaFx has a few built-in filters:
 
-- <code><b>eval(**args</b>: Optional[String]<b>)</b> -> String</code>
-
-This filter allows you to evaluate the contents of a variable as Jinja2 syntax, e.g:
-
-```jinja2
-{{ '{{ 4 + x }}'|eval(x=7) }}
-```
-
-JinjaFx also comes with a custom Jinja2 Extension (`extensions/ext_jinjafx.py`) that is enabled by default, which provides the following custom filters:
+JinjaFx comes with a custom Jinja2 Extension (`extensions/ext_jinjafx.py`) that is enabled by default, which provides the following custom filters:
 
 - <code><b>cisco_snmpv3_key(engineid</b>: String<b>, algorithm</b>: Optional[String]<b>="sha1")</b> -> String</code>
 

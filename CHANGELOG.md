@@ -1,7 +1,8 @@
 ## CHANGELOG
 
-### [1.25.2] - In Development
+### [1.25.2] - April 9, 2025
 - Fixed an issue if an undefined variable was passed to `eval`
+- Changed the `eval` filter to be a global function (`jinjafx.eval()`) as it then allows variables defined inside loops to be resolved
 
 ### [1.25.1] - April 8, 2025
 - Enhanced the `eval` filter so you can pass values that can be used within the evaluated template

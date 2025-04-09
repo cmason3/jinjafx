@@ -20,7 +20,7 @@ if sys.version_info < (3, 9):
   sys.exit('Requires Python >= 3.9')
 
 import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
-import jinja2, jinja2.sandbox, jinja2.filters, yaml, zoneinfo, base64
+import jinja2, jinja2.sandbox, yaml, zoneinfo, base64
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -768,7 +768,6 @@ class JinjaFx():
           jinja2_options[o] = gvars['jinja2_options'][o]
 
     jinja2env = jinja2.sandbox.SandboxedEnvironment if sandbox else jinja2.Environment
-    jinja2.filters.FILTERS['eval'] = self.__jfx_eval
 
     if isinstance(template, str):
       template = { 'Default': template }
@@ -792,6 +791,7 @@ class JinjaFx():
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
+      'eval': self.__jfx_eval,
       'expand': self.__jfx_expand,
       'counter': self.__jfx_counter,
       'exception': self.__jfx_exception,
