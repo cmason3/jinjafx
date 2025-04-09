@@ -351,7 +351,7 @@ The [varnames lookup](https://docs.ansible.com/ansible/latest/collections/ansibl
 
 JinjaFx also supports the following non-Ansible lookup:
 
-- <code><b>lookup("filters", filter_name</b>: String<b>)(args</b>: Any<b>)</b> -> Any</code><br />
+- <code><b>lookup("filters", filter_name</b>: String<b>)(*args</b>: Unpack[Any]<b>)</b> -> String</code><br />
 
 This allows you to call a filter dynamically, e.g:
 
@@ -619,7 +619,7 @@ This variable will contain the total number of rows within the data.
 
 This function is used to access all the row and column data that JinjaFx is currently traversing through. The first row (0) will contain the header row with subsequent rows containing the row data - it is accessed using `jinjafx.data(row, col)`. If you wish to access the columns via their case-sensitive name then you can also use `jinjafx.data(row, 'FIELD')`. The `row` argument is mandatory, but if you omit the `col` argument then it will return the whole row as a list.
 
-- <code><b>jinjafx.eval(jinja2_template</b>: String<b>, **args</b>: Optional[String]<b>)</b> -> String</code>
+- <code><b>jinjafx.eval(jinja2_template</b>: String<b>, **kwargs</b>: Optional[Unpack[Dict[String, Any]]]<b>)</b> -> String</code>
 
 This function allows you to evaluate the contents of a string (`jinja2_template`) as Jinja2 syntax, e.g:
 

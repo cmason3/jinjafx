@@ -954,12 +954,12 @@ class JinjaFx():
 
 
   @jinja2.pass_context
-  def __jfx_eval(self, context, value, **args):
+  def __jfx_eval(self, context, value, **kwargs):
     if isinstance(value, jinja2.Undefined):
       return value
 
     template = context.eval_ctx.environment.from_string(value)
-    return template.render(context, **args)
+    return template.render(context, **kwargs)
 
 
   def __jfx_lookup(self, method, *args):
