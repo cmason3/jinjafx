@@ -20,7 +20,7 @@ if sys.version_info < (3, 9):
   sys.exit('Requires Python >= 3.9')
 
 import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
-import jinja2, jinja2.sandbox, jinja2.filters, yaml, zoneinfo, base64
+import jinja2, jinja2.sandbox, yaml, zoneinfo, base64
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.25.1'
+__version__ = '1.25.2'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -768,7 +768,6 @@ class JinjaFx():
           jinja2_options[o] = gvars['jinja2_options'][o]
 
     jinja2env = jinja2.sandbox.SandboxedEnvironment if sandbox else jinja2.Environment
-    jinja2.filters.FILTERS['eval'] = self.__jfx_eval
 
     if isinstance(template, str):
       template = { 'Default': template }
@@ -792,6 +791,7 @@ class JinjaFx():
     env.globals.update({ 'jinjafx': {
       'version': __version__,
       'jinja2_version': jinja2.__version__,
+      'eval': self.__jfx_eval,
       'expand': self.__jfx_expand,
       'counter': self.__jfx_counter,
       'exception': self.__jfx_exception,
@@ -954,9 +954,12 @@ class JinjaFx():
 
 
   @jinja2.pass_context
-  def __jfx_eval(self, context, value, **args):
+  def __jfx_eval(self, context, value, **kwargs):
+    if isinstance(value, jinja2.Undefined):
+      return value
+
     template = context.eval_ctx.environment.from_string(value)
-    return template.render(context, **args)
+    return template.render(context, **kwargs)
 
 
   def __jfx_lookup(self, method, *args):
