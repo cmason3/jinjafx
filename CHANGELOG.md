@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.25.3] - June 13, 2025
+- Improved exception logging if an error happened within `JinjaFx()._jinjafx()`
+
 ### [1.25.2] - April 9, 2025
 - Fixed an issue if an undefined variable was passed to `eval`
 - Changed the `eval` filter to be a global function (`jinjafx.eval()`) as it then allows variables defined inside loops to be resolved
@@ -597,6 +600,7 @@ Would result in the following:
 - Initial release
 
 
+[1.25.3]: https://github.com/cmason3/jinjafx/compare/v1.25.2...v1.25.3
 [1.25.2]: https://github.com/cmason3/jinjafx/compare/v1.25.1...v1.25.2
 [1.25.1]: https://github.com/cmason3/jinjafx/compare/v1.25.0...v1.25.1
 [1.25.0]: https://github.com/cmason3/jinjafx/compare/v1.24.7...v1.25.0

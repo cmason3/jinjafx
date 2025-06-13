@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.25.2'
+__version__ = '1.25.3'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -448,8 +448,18 @@ Environment Variables:
       print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     else:
-      xyz = sys.exc_info()
-      print(f'error[{exc_source or xyz[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+      tb = e.__traceback__
+      stack = []
+
+      while tb is not None:
+        stack.append([tb.tb_frame.f_code.co_filename, tb.tb_frame.f_code.co_name, tb.tb_lineno])
+        tb = tb.tb_next
+
+        if stack[-1][1] == '_jinjafx':
+          print(f'error[{os.path.basename(stack[-1][0])}:{stack[-1][2]}]: {type(e).__name__}: {e}', file=sys.stderr)
+          sys.exit(-2)
+
+      print(f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     sys.exit(-2)
 
