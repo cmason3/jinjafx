@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.25.3] - June 13, 2025
+### [1.25.3] - In Development
 - Improved exception logging if an error happened within `JinjaFx()._jinjafx()`
 
 ### [1.25.2] - April 9, 2025

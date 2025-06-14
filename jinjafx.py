@@ -437,31 +437,30 @@ Environment Variables:
       print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     else:
-      m = re.search(r'(?s:.*)File "(.+)", line ([0-9]+), .+ template', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
-      print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+      __print_error(e, 'template code')
 
     sys.exit(-2)
 
   except Exception as e:
-    m = re.search(r'(?s:.*)File "(.+)", line ([0-9]+), .+ template', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
-    if m:
-      print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
-
-    else:
-      tb = e.__traceback__
-      stack = []
-
-      while tb is not None:
-        stack.append([tb.tb_frame.f_code.co_filename, tb.tb_frame.f_code.co_name, tb.tb_lineno])
-        tb = tb.tb_next
-
-        if stack[-1][1] == '_jinjafx':
-          print(f'error[{os.path.basename(stack[-1][0])}:{stack[-1][2]}]: {type(e).__name__}: {e}', file=sys.stderr)
-          sys.exit(-2)
-
-      print(f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {e}', file=sys.stderr)
-
+    __print_error(e, 'template code', '_jinjafx')
     sys.exit(-2)
+
+
+def __print_error(e, *args):
+  tb = e.__traceback__
+  stack = []
+
+  while tb is not None:
+    stack.append([tb.tb_frame.f_code.co_filename, tb.tb_frame.f_code.co_name, tb.tb_lineno])
+    tb = tb.tb_next
+
+  for a in args:
+    for s in reversed(stack):
+      if a in s[1]:
+        print(f'error[{os.path.basename(s[0])}:{s[2]}]: {type(e).__name__}: {e}', file=sys.stderr)
+        return
+
+  print(f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {e}', file=sys.stderr)
 
 
 def __decrypt_vault(vpw, string, return_none=False):
@@ -536,7 +535,7 @@ class JinjaFx():
   def _jinjafx(self, template, data, gvars, output, exts_dirs=None, sandbox=False, use_oformat=False):
     self.__g_datarows = []
     self.__g_dict = {}
-    self.__g_row = 0 
+    self.__g_row = 0
     self.__g_vars = {}
     self.__g_filters = {}
     self.__g_warnings = []
@@ -1365,7 +1364,7 @@ class JinjaFx():
     if self.__g_datarows:
       if isinstance(col, str):
         if col in self.__g_datarows[0]:
-          col = self.__g_datarows[0].index(col) 
+          col = self.__g_datarows[0].index(col)
         else:
           raise JinjaFx.TemplateError(f'invalid column "{col}" passed to jinjafx.data()')
 
