@@ -2,6 +2,7 @@
 
 ### [1.25.3] - In Development
 - Improved exception logging if an error happened within `JinjaFx()._jinjafx()`
+- Don't use `jinja2.__version__` for `jinjafx.jinja2_version` as it has been deprecated
 
 ### [1.25.2] - April 9, 2025
 - Fixed an issue if an undefined variable was passed to `eval`

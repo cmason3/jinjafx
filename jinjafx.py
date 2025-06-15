@@ -19,7 +19,7 @@ import sys
 if sys.version_info < (3, 9):
   sys.exit('Requires Python >= 3.9')
 
-import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
+import os, io, importlib.util, importlib.metadata, argparse, re, getpass, datetime, copy
 import jinja2, jinja2.sandbox, yaml, zoneinfo, base64
 
 from cryptography.hazmat.primitives import hashes
@@ -437,16 +437,16 @@ Environment Variables:
       print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     else:
-      __print_error(e, 'template code')
+      _print_error(e, 'template code')
 
     sys.exit(-2)
 
   except Exception as e:
-    __print_error(e, 'template code', '_jinjafx')
+    _print_error(e, 'template code', '_jinjafx')
     sys.exit(-2)
 
 
-def __print_error(e, *args):
+def _print_error(e, *args):
   tb = e.__traceback__
   stack = []
 
@@ -799,7 +799,7 @@ class JinjaFx():
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
-      'jinja2_version': jinja2.__version__,
+      'jinja2_version': importlib.metadata.version('jinja2'),
       'eval': self.__jfx_eval,
       'expand': self.__jfx_expand,
       'counter': self.__jfx_counter,
