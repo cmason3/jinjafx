@@ -19,7 +19,7 @@ import sys
 if sys.version_info < (3, 9):
   sys.exit('Requires Python >= 3.9')
 
-import os, io, importlib.util, argparse, re, getpass, datetime, traceback, copy
+import os, io, importlib.util, importlib.metadata, argparse, re, getpass, datetime, copy
 import jinja2, jinja2.sandbox, yaml, zoneinfo, base64
 
 from cryptography.hazmat.primitives import hashes
@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.25.2'
+__version__ = '1.25.3'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -437,21 +437,29 @@ Environment Variables:
       print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     else:
-      m = re.search(r'(?s:.*)File "(.+)", line ([0-9]+), .+ template', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
-      print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
+      print(_format_error(e, 'template code'), file=sys.stderr)
 
     sys.exit(-2)
 
   except Exception as e:
-    m = re.search(r'(?s:.*)File "(.+)", line ([0-9]+), .+ template', traceback.format_exc(), re.IGNORECASE | re.MULTILINE)
-    if m:
-      print(f'error[{m.group(1)}:{m.group(2)}]: {type(e).__name__}: {e}', file=sys.stderr)
-
-    else:
-      xyz = sys.exc_info()
-      print(f'error[{exc_source or xyz[2].tb_lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
-
+    print(_format_error(e, 'template code', '_jinjafx'), file=sys.stderr)
     sys.exit(-2)
+
+
+def _format_error(e, *args):
+  tb = e.__traceback__
+  stack = []
+
+  while tb is not None:
+    stack.append([tb.tb_frame.f_code.co_filename, tb.tb_frame.f_code.co_name, tb.tb_lineno])
+    tb = tb.tb_next
+
+  for a in args:
+    for s in reversed(stack):
+      if a in s[1]:
+        return f'error[{os.path.basename(s[0])}:{s[2]}]: {type(e).__name__}: {e}'
+
+  return f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {e}'
 
 
 def __decrypt_vault(vpw, string, return_none=False):
@@ -526,7 +534,7 @@ class JinjaFx():
   def _jinjafx(self, template, data, gvars, output, exts_dirs=None, sandbox=False, use_oformat=False):
     self.__g_datarows = []
     self.__g_dict = {}
-    self.__g_row = 0 
+    self.__g_row = 0
     self.__g_vars = {}
     self.__g_filters = {}
     self.__g_warnings = []
@@ -790,7 +798,7 @@ class JinjaFx():
 
     env.globals.update({ 'jinjafx': {
       'version': __version__,
-      'jinja2_version': jinja2.__version__,
+      'jinja2_version': importlib.metadata.version('jinja2'),
       'eval': self.__jfx_eval,
       'expand': self.__jfx_expand,
       'counter': self.__jfx_counter,
@@ -1355,7 +1363,7 @@ class JinjaFx():
     if self.__g_datarows:
       if isinstance(col, str):
         if col in self.__g_datarows[0]:
-          col = self.__g_datarows[0].index(col) 
+          col = self.__g_datarows[0].index(col)
         else:
           raise JinjaFx.TemplateError(f'invalid column "{col}" passed to jinjafx.data()')
 
