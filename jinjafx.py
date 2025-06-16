@@ -437,16 +437,16 @@ Environment Variables:
       print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     else:
-      _print_error(e, 'template code')
+      print(_format_error(e, 'template code'), file=sys.stderr)
 
     sys.exit(-2)
 
   except Exception as e:
-    _print_error(e, 'template code', '_jinjafx')
+    print(_format_error(e, 'template code', '_jinjafx'), file=sys.stderr)
     sys.exit(-2)
 
 
-def _print_error(e, *args):
+def _format_error(e, *args):
   tb = e.__traceback__
   stack = []
 
@@ -457,10 +457,9 @@ def _print_error(e, *args):
   for a in args:
     for s in reversed(stack):
       if a in s[1]:
-        print(f'error[{os.path.basename(s[0])}:{s[2]}]: {type(e).__name__}: {e}', file=sys.stderr)
-        return
+        return f'error[{os.path.basename(s[0])}:{s[2]}]: {type(e).__name__}: {e}'
 
-  print(f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {e}', file=sys.stderr)
+  return f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {e}'
 
 
 def __decrypt_vault(vpw, string, return_none=False):

@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.25.3] - In Development
+### [1.25.3] - June 16, 2025
 - Improved exception logging if an error happened within `JinjaFx()._jinjafx()`
 - Don't use `jinja2.__version__` for `jinjafx.jinja2_version` as it has been deprecated
 
