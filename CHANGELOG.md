@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.25.4] - June 17, 2025
+- Replace occurrences of `__init__.py` with `jinjafx.py` in error messages
+
 ### [1.25.3] - June 16, 2025
 - Improved exception logging if an error happened within `JinjaFx()._jinjafx()`
 - Don't use `jinja2.__version__` for `jinjafx.jinja2_version` as it has been deprecated
@@ -601,6 +604,7 @@ Would result in the following:
 - Initial release
 
 
+[1.25.4]: https://github.com/cmason3/jinjafx/compare/v1.25.3...v1.25.4
 [1.25.3]: https://github.com/cmason3/jinjafx/compare/v1.25.2...v1.25.3
 [1.25.2]: https://github.com/cmason3/jinjafx/compare/v1.25.1...v1.25.2
 [1.25.1]: https://github.com/cmason3/jinjafx/compare/v1.25.0...v1.25.1

@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.25.3'
+__version__ = '1.25.4'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -437,12 +437,14 @@ Environment Variables:
       print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     else:
-      print(_format_error(e, 'template code'), file=sys.stderr)
+      error = _format_error(e, 'template code')
+      print(error.replace('__init__.py:', 'jinjafx.py:'), file=sys.stderr)
 
     sys.exit(-2)
 
   except Exception as e:
-    print(_format_error(e, 'template code', '_jinjafx'), file=sys.stderr)
+    error = _format_error(e, 'template code', '_jinjafx')
+    print(error.replace('__init__.py:', 'jinjafx.py:'), file=sys.stderr)
     sys.exit(-2)
 
 
