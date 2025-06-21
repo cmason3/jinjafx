@@ -20,7 +20,7 @@ if sys.version_info < (3, 9):
   sys.exit('Requires Python >= 3.9')
 
 import os, io, importlib.util, importlib.metadata, argparse, re, getpass, datetime, copy
-import jinja2, jinja2.sandbox, yaml, zoneinfo, base64
+import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -549,6 +549,7 @@ class JinjaFx():
     int_indices = []
     float_indices = []
     list_indices = []
+    tempdir = None
 
     if not isinstance(template, (str, io.TextIOWrapper, dict)):
       raise TypeError('template must be of type str, dict or type FileType')
@@ -782,170 +783,185 @@ class JinjaFx():
     if isinstance(template, str):
       template = { 'Default': template }
 
-    if isinstance(template, dict):
-      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.DictLoader(template), **jinja2_options)
-      rtemplate = env.get_template('Default')
-
-    else:
-      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
-      rtemplate = env.get_template(os.path.basename(template.name))
-
-    if gvars:
-      jinjafx_disable_dataloop = gvars.get('jinjafx_disable_dataloop', False)
-      gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
-      gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
-
-    else:
-      jinjafx_disable_dataloop = False
-
-    env.globals.update({ 'jinjafx': {
-      'version': __version__,
-      'jinja2_version': importlib.metadata.version('jinja2'),
-      'eval': self.__jfx_eval,
-      'expand': self.__jfx_expand,
-      'counter': self.__jfx_counter,
-      'exception': self.__jfx_exception,
-      'warning': self.__jfx_warning,
-      'first': self.__jfx_first,
-      'last': self.__jfx_last,
-      'fields': self.__jfx_fields,
-      'tabulate': self.__jfx_tabulate,
-      'data': self.__jfx_data,
-      'setg': self.__jfx_setg,
-      'getg': self.__jfx_getg,
-      'now': self.__jfx_now,
-      'rows': max([0, len(self.__g_datarows) - 1]),
-    },
-      'lookup': self.__jfx_lookup,
-      'vars': self.__jfx_lookup_vars,
-      'varnames': self.__jfx_lookup_varnames
-    })
-
-    self.__g_filters = env.filters
-
-    routput = env.from_string(output)
-    blanks = {}
-
-    for row in range(1, max(2, len(self.__g_datarows))):
-      rowdata = {}
-
-      if self.__g_datarows and not jinjafx_disable_dataloop:
-        for col in range(len(self.__g_datarows[0])):
-          rowdata.update({ self.__g_datarows[0][col]: self.__g_datarows[row][col + 1] })
-
-        env.globals['jinjafx'].update({ 'row': row })
-        self.__g_row = row
-
+    try:
+      if isinstance(template, dict):
+        tempdir = tempfile.mkdtemp(prefix='jinjafx_')
+  
+        for f in template:
+  
+          f = tempdir + '/' + os.path.normpath(f).strip('./')
+  
+          print('file is ' + f)
+  
+  
+        # create temporary directory and then point template at Default file
+        env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.DictLoader(template), **jinja2_options)
+        rtemplate = env.get_template('Default')
+  
+      else: # this will always happen now
+        env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
+        rtemplate = env.get_template(os.path.basename(template.name))
+  
+      if gvars:
+        jinjafx_disable_dataloop = gvars.get('jinjafx_disable_dataloop', False)
+        gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
+        gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
+  
       else:
-        env.globals['jinjafx'].update({ 'row': 0 })
-        self.__g_row = 0
-
-      self.__g_vars = copy.deepcopy(gvars)
-      self.__g_vars.update(rowdata)
-
-      try:
-        content = rtemplate.render(self.__g_vars)
-
-        outputs['0:_stderr_'] = []
-        if self.__g_warnings:
-          outputs['0:_stderr_'] = self.__g_warnings
-
-      except MemoryError:
-        raise MemoryError('not enough memory to process template')
-
-      except JinjaFx.TemplateException:
-        raise
-
-      except Exception as e:
-        if len(e.args) >= 1 and self.__g_row:
-          e.args = (e.args[0] + ' at data row ' + str(self.__g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
-        raise
-
-      stack = ['0:' + routput.render(rowdata)]
-      start_tag = re.compile(r'<output(' + (r':\S+' if use_oformat else '') + r')?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
-      end_tag = re.compile(r'</output[\t ]*(\\n[\t ]*)?>', re.IGNORECASE)
-      clines = content.splitlines()
-
-      i = 0
-      while i < len(clines):
-        l = clines[i]
-
-        block_begin = start_tag.search(l.strip())
-        if block_begin:
-          if block_begin.start() != 0:
-            clines[i] = l[:block_begin.start()]
-            clines.insert(i + 1, l[block_begin.start():])
-            continue
-
-          if block_begin.end() != len(l.strip()):
-            clines[i] = l[:block_begin.end()]
-            clines.insert(i + 1, l[block_begin.end():])
-            continue
-
-          oname = block_begin.group(2)
-          if oname.startswith(('"', "'")) or oname.endswith(('"', "'")):
-            if (len(oname.replace(' ', '')) > 2) and (oname[0] == oname[-1]) and not (oname[0] in oname[1:-1]):
-              oname = oname[1:-1].strip()
-
-            else:
-              raise Exception('invalid output tag')
-
-          elif len(oname.strip()) == 0:
-            raise Exception('invalid output tag')
-
-          if block_begin.group(3) is not None:
-            index = int(block_begin.group(3))
-          else:
-            index = 0
-
-          oformat = block_begin.group(1) if block_begin.group(1) else (':text' if use_oformat else '')
-          stack.append(str(index) + ':' + oname.strip() + oformat.lower())
-
+        jinjafx_disable_dataloop = False
+  
+      env.globals.update({ 'jinjafx': {
+        'version': __version__,
+        'jinja2_version': importlib.metadata.version('jinja2'),
+        'eval': self.__jfx_eval,
+        'expand': self.__jfx_expand,
+        'counter': self.__jfx_counter,
+        'exception': self.__jfx_exception,
+        'warning': self.__jfx_warning,
+        'first': self.__jfx_first,
+        'last': self.__jfx_last,
+        'fields': self.__jfx_fields,
+        'tabulate': self.__jfx_tabulate,
+        'data': self.__jfx_data,
+        'setg': self.__jfx_setg,
+        'getg': self.__jfx_getg,
+        'now': self.__jfx_now,
+        'rows': max([0, len(self.__g_datarows) - 1]),
+      },
+        'lookup': self.__jfx_lookup,
+        'vars': self.__jfx_lookup_vars,
+        'varnames': self.__jfx_lookup_varnames
+      })
+  
+      self.__g_filters = env.filters
+  
+      routput = env.from_string(output)
+      blanks = {}
+  
+      for row in range(1, max(2, len(self.__g_datarows))):
+        rowdata = {}
+  
+        if self.__g_datarows and not jinjafx_disable_dataloop:
+          for col in range(len(self.__g_datarows[0])):
+            rowdata.update({ self.__g_datarows[0][col]: self.__g_datarows[row][col + 1] })
+  
+          env.globals['jinjafx'].update({ 'row': row })
+          self.__g_row = row
+  
         else:
-          block_end = end_tag.search(l.strip())
-          if block_end:
-            if block_end.start() != 0:
-              clines[i] = l[:block_end.start()]
-              clines.insert(i + 1, l[block_end.start():])
+          env.globals['jinjafx'].update({ 'row': 0 })
+          self.__g_row = 0
+  
+        self.__g_vars = copy.deepcopy(gvars)
+        self.__g_vars.update(rowdata)
+  
+        try:
+          content = rtemplate.render(self.__g_vars)
+  
+          outputs['0:_stderr_'] = []
+          if self.__g_warnings:
+            outputs['0:_stderr_'] = self.__g_warnings
+  
+        except MemoryError:
+          raise MemoryError('not enough memory to process template')
+  
+        except JinjaFx.TemplateException:
+          raise
+  
+        except Exception as e:
+          if len(e.args) >= 1 and self.__g_row:
+            e.args = (e.args[0] + ' at data row ' + str(self.__g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
+          raise
+  
+        stack = ['0:' + routput.render(rowdata)]
+        start_tag = re.compile(r'<output(' + (r':\S+' if use_oformat else '') + r')?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
+        end_tag = re.compile(r'</output[\t ]*(\\n[\t ]*)?>', re.IGNORECASE)
+        clines = content.splitlines()
+  
+        i = 0
+        while i < len(clines):
+          l = clines[i]
+  
+          block_begin = start_tag.search(l.strip())
+          if block_begin:
+            if block_begin.start() != 0:
+              clines[i] = l[:block_begin.start()]
+              clines.insert(i + 1, l[block_begin.start():])
               continue
-
-            if block_end.end() != len(l.strip()):
-              clines[i] = l[:block_end.end()]
-              clines.insert(i + 1, l[block_end.end():])
+  
+            if block_begin.end() != len(l.strip()):
+              clines[i] = l[:block_begin.end()]
+              clines.insert(i + 1, l[block_begin.end():])
               continue
-
-            if block_end.group(1):
-              blanks[stack[-1]] = True
-
-            if len(stack) > 1:
-              stack.pop()
+  
+            oname = block_begin.group(2)
+            if oname.startswith(('"', "'")) or oname.endswith(('"', "'")):
+              if (len(oname.replace(' ', '')) > 2) and (oname[0] == oname[-1]) and not (oname[0] in oname[1:-1]):
+                oname = oname[1:-1].strip()
+  
+              else:
+                raise Exception('invalid output tag')
+  
+            elif len(oname.strip()) == 0:
+              raise Exception('invalid output tag')
+  
+            if block_begin.group(3) is not None:
+              index = int(block_begin.group(3))
             else:
-              raise Exception('unbalanced output tags')
+              index = 0
+  
+            oformat = block_begin.group(1) if block_begin.group(1) else (':text' if use_oformat else '')
+            stack.append(str(index) + ':' + oname.strip() + oformat.lower())
+
           else:
-            if stack[-1] not in outputs:
-              outputs[stack[-1]] = []
-            outputs[stack[-1]].append(l)
+            block_end = end_tag.search(l.strip())
+            if block_end:
+              if block_end.start() != 0:
+                clines[i] = l[:block_end.start()]
+                clines.insert(i + 1, l[block_end.start():])
+                continue
 
-        i += 1
+              if block_end.end() != len(l.strip()):
+                clines[i] = l[:block_end.end()]
+                clines.insert(i + 1, l[block_end.end():])
+                continue
 
-      if len(stack) != 1:
-        raise Exception('unbalanced output tags')
+              if block_end.group(1):
+                blanks[stack[-1]] = True
 
-      if jinjafx_disable_dataloop:
-        break
+              if len(stack) > 1:
+                stack.pop()
+              else:
+                raise Exception('unbalanced output tags')
+            else:
+              if stack[-1] not in outputs:
+                outputs[stack[-1]] = []
+              outputs[stack[-1]].append(l)
 
-    for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
-      nkey = o.split(':', 1)[1]
-      if nkey not in outputs:
-        outputs[nkey] = []
+          i += 1
 
-      outputs[nkey] += outputs[o]
-      if o in blanks:
-        outputs[nkey] += ' '
-      del outputs[o]
+        if len(stack) != 1:
+          raise Exception('unbalanced output tags')
 
-    outputs = {k: v for k, v in outputs.items() if (k == '_stderr_') or len(''.join(v).strip())}
-    return outputs
+        if jinjafx_disable_dataloop:
+          break
+
+      for o in sorted(outputs.keys(), key=lambda x: int(x.split(':')[0])):
+        nkey = o.split(':', 1)[1]
+        if nkey not in outputs:
+          outputs[nkey] = []
+
+        outputs[nkey] += outputs[o]
+        if o in blanks:
+          outputs[nkey] += ' '
+        del outputs[o]
+
+      outputs = {k: v for k, v in outputs.items() if (k == '_stderr_') or len(''.join(v).strip())}
+      return outputs
+
+    finally:
+      if tempdir is not None:
+        print('FIXME - need to delete tempdir ' + tempdir)
 
 
   class TemplateError(jinja2.TemplateError):
