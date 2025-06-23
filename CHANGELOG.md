@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.26.0] - June 23, 2025
+- Completely remove the use of `jinja2.DictLoader` for processing inline templates
+
 ### [1.25.4] - June 17, 2025
 - Replace occurrences of `__init__.py` with `jinjafx.py` in error messages
 
@@ -604,6 +607,7 @@ Would result in the following:
 - Initial release
 
 
+[1.26.0]: https://github.com/cmason3/jinjafx/compare/v1.25.4...v1.26.0
 [1.25.4]: https://github.com/cmason3/jinjafx/compare/v1.25.3...v1.25.4
 [1.25.3]: https://github.com/cmason3/jinjafx/compare/v1.25.2...v1.25.3
 [1.25.2]: https://github.com/cmason3/jinjafx/compare/v1.25.1...v1.25.2

@@ -20,7 +20,7 @@ if sys.version_info < (3, 9):
   sys.exit('Requires Python >= 3.9')
 
 import os, io, importlib.util, importlib.metadata, argparse, re, getpass, datetime, copy
-import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile
+import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile, shutil
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.25.4'
+__version__ = '1.26.0'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -433,8 +433,7 @@ Environment Variables:
 
   except jinja2.TemplateError as e:
     if hasattr(e, 'name') and e.name and hasattr(e, 'lineno') and e.lineno:
-      t = e.name.replace('Default', 'template.j2')
-      print(f'error[{t}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
+      print(f'error[{e.name}:{e.lineno}]: {type(e).__name__}: {e}', file=sys.stderr)
 
     else:
       error = _format_error(e, 'template code')
@@ -779,37 +778,37 @@ class JinjaFx():
           jinja2_options[o] = gvars['jinja2_options'][o]
 
     jinja2env = jinja2.sandbox.SandboxedEnvironment if sandbox else jinja2.Environment
+    template_name = 'Default'
 
     if isinstance(template, str):
-      template = { 'Default': template }
+      template = { 'template.j2': template }
+      template_name = 'template.j2'
 
     try:
       if isinstance(template, dict):
         tempdir = tempfile.mkdtemp(prefix='jinjafx_')
-  
-        for f in template:
-  
+
+        for f, v in template.items():
           f = tempdir + '/' + os.path.normpath(f).strip('./')
-  
-          print('file is ' + f)
-  
-  
-        # create temporary directory and then point template at Default file
-        env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.DictLoader(template), **jinja2_options)
-        rtemplate = env.get_template('Default')
-  
-      else: # this will always happen now
-        env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
-        rtemplate = env.get_template(os.path.basename(template.name))
-  
+          os.makedirs(os.path.dirname(f), exist_ok=True)
+
+          with open(f, 'wt') as fh:
+            fh.write(v)
+
+        os.chdir(tempdir)
+        template = open(template_name, 'rt')
+
+      env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
+      rtemplate = env.get_template(os.path.basename(template.name))
+
       if gvars:
         jinjafx_disable_dataloop = gvars.get('jinjafx_disable_dataloop', False)
         gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
         gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
-  
+
       else:
         jinjafx_disable_dataloop = False
-  
+
       env.globals.update({ 'jinjafx': {
         'version': __version__,
         'jinja2_version': importlib.metadata.version('jinja2'),
@@ -832,84 +831,84 @@ class JinjaFx():
         'vars': self.__jfx_lookup_vars,
         'varnames': self.__jfx_lookup_varnames
       })
-  
+
       self.__g_filters = env.filters
-  
+
       routput = env.from_string(output)
       blanks = {}
-  
+
       for row in range(1, max(2, len(self.__g_datarows))):
         rowdata = {}
-  
+
         if self.__g_datarows and not jinjafx_disable_dataloop:
           for col in range(len(self.__g_datarows[0])):
             rowdata.update({ self.__g_datarows[0][col]: self.__g_datarows[row][col + 1] })
-  
+
           env.globals['jinjafx'].update({ 'row': row })
           self.__g_row = row
-  
+
         else:
           env.globals['jinjafx'].update({ 'row': 0 })
           self.__g_row = 0
-  
+
         self.__g_vars = copy.deepcopy(gvars)
         self.__g_vars.update(rowdata)
-  
+
         try:
           content = rtemplate.render(self.__g_vars)
-  
+
           outputs['0:_stderr_'] = []
           if self.__g_warnings:
             outputs['0:_stderr_'] = self.__g_warnings
-  
+
         except MemoryError:
           raise MemoryError('not enough memory to process template')
-  
+
         except JinjaFx.TemplateException:
           raise
-  
+
         except Exception as e:
           if len(e.args) >= 1 and self.__g_row:
             e.args = (e.args[0] + ' at data row ' + str(self.__g_datarows[row][0]) + ':\n - ' + str(rowdata),) + e.args[1:]
           raise
-  
+
         stack = ['0:' + routput.render(rowdata)]
         start_tag = re.compile(r'<output(' + (r':\S+' if use_oformat else '') + r')?[\t ]+(.+?)[\t ]*>(?:\[(-?\d+)\])?', re.IGNORECASE)
         end_tag = re.compile(r'</output[\t ]*(\\n[\t ]*)?>', re.IGNORECASE)
         clines = content.splitlines()
-  
+
         i = 0
         while i < len(clines):
           l = clines[i]
-  
+
           block_begin = start_tag.search(l.strip())
           if block_begin:
             if block_begin.start() != 0:
               clines[i] = l[:block_begin.start()]
               clines.insert(i + 1, l[block_begin.start():])
               continue
-  
+
             if block_begin.end() != len(l.strip()):
               clines[i] = l[:block_begin.end()]
               clines.insert(i + 1, l[block_begin.end():])
               continue
-  
+
             oname = block_begin.group(2)
             if oname.startswith(('"', "'")) or oname.endswith(('"', "'")):
               if (len(oname.replace(' ', '')) > 2) and (oname[0] == oname[-1]) and not (oname[0] in oname[1:-1]):
                 oname = oname[1:-1].strip()
-  
+
               else:
                 raise Exception('invalid output tag')
-  
+
             elif len(oname.strip()) == 0:
               raise Exception('invalid output tag')
-  
+
             if block_begin.group(3) is not None:
               index = int(block_begin.group(3))
             else:
               index = 0
-  
+
             oformat = block_begin.group(1) if block_begin.group(1) else (':text' if use_oformat else '')
             stack.append(str(index) + ':' + oname.strip() + oformat.lower())
 
@@ -961,7 +960,7 @@ class JinjaFx():
 
     finally:
       if tempdir is not None:
-        print('FIXME - need to delete tempdir ' + tempdir)
+        shutil.rmtree(tempdir)
 
 
   class TemplateError(jinja2.TemplateError):
