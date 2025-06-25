@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.26.1] - June 25, 2025
+- Fixed an issue with `jinjafx_server` as we performed a chdir to a temporary directory
+
 ### [1.26.0] - June 23, 2025
 - Completely remove the use of `jinja2.DictLoader` for processing inline templates
 
@@ -607,6 +610,7 @@ Would result in the following:
 - Initial release
 
 
+[1.26.1]: https://github.com/cmason3/jinjafx/compare/v1.26.0...v1.26.1
 [1.26.0]: https://github.com/cmason3/jinjafx/compare/v1.25.4...v1.26.0
 [1.25.4]: https://github.com/cmason3/jinjafx/compare/v1.25.3...v1.25.4
 [1.25.3]: https://github.com/cmason3/jinjafx/compare/v1.25.2...v1.25.3

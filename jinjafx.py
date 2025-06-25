@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.26.0'
+__version__ = '1.26.1'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -450,6 +450,10 @@ Environment Variables:
 def _format_error(e, *args):
   tb = e.__traceback__
   stack = []
+  msg = str(e)
+
+  if isinstance(e, jinja2.TemplateNotFound):
+    msg = msg[:msg.index(' in search path')]
 
   while tb is not None:
     stack.append([tb.tb_frame.f_code.co_filename, tb.tb_frame.f_code.co_name, tb.tb_lineno])
@@ -458,9 +462,9 @@ def _format_error(e, *args):
   for a in args:
     for s in reversed(stack):
       if a in s[1]:
-        return f'error[{os.path.basename(s[0])}:{s[2]}]: {type(e).__name__}: {e}'
+        return f'error[{os.path.basename(s[0])}:{s[2]}]: {type(e).__name__}: {msg}'
 
-  return f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {e}'
+  return f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {msg}'
 
 
 def __decrypt_vault(vpw, string, return_none=False):
@@ -795,8 +799,7 @@ class JinjaFx():
           with open(f, 'wt') as fh:
             fh.write(v)
 
-        os.chdir(tempdir)
-        template = open(template_name, 'rt')
+        template = open(tempdir + '/' + template_name, 'rt')
 
       env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       rtemplate = env.get_template(os.path.basename(template.name))
