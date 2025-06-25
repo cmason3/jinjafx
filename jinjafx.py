@@ -453,7 +453,8 @@ def _format_error(e, *args):
   msg = str(e)
 
   if isinstance(e, jinja2.TemplateNotFound):
-    msg = msg[:msg.index(' in search path')]
+    if ' in search path' in msg:
+      msg = msg[:msg.index(' in search path')]
 
   while tb is not None:
     stack.append([tb.tb_frame.f_code.co_filename, tb.tb_frame.f_code.co_name, tb.tb_lineno])
