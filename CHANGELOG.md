@@ -3,6 +3,8 @@
 ### [1.27.0] - In Development
 - Dropped support for Python 3.9
 - Updated copyright notices in preparation for 2026
+- Added support for `arista_snmpv3_key` filter
+- Added support for `arista6hash` filter
 
 ### [1.26.1] - June 25, 2025
 - Fixed an issue with `jinjafx_server` as we performed a chdir to a temporary directory

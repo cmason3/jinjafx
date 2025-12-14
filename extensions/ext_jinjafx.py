@@ -46,6 +46,7 @@ class plugin(Extension):
     environment.filters['cisco8hash'] = self.__cisco8hash
     environment.filters['cisco9hash'] = self.__cisco9hash
     environment.filters['cisco10hash'] = self.__cisco10hash
+    environment.filters['arista6hash'] = self.__arista6hash
     environment.filters['junos6hash'] = self.__junos6hash
     environment.filters['ipsort'] = self.__ipsort
     environment.filters['summarize_address_range'] = self.__summarize_address_range
@@ -275,6 +276,15 @@ class plugin(Extension):
 
     elif len(salt) != 16 or any(c not in self.__mod_b64chars for c in salt):
       raise JinjaFx.TemplateError('invalid salt provided to cisco10hash')
+
+    return self.__sha512_crypt(string, salt)
+
+  def __arista6hash(self, string, salt=None):
+    if salt is None:
+      salt = self.__generate_salt(16)
+
+    elif len(salt) != 16 or any(c not in self.__mod_b64chars for c in salt):
+      raise JinjaFx.TemplateError('invalid salt provided to arista6hash')
 
     return self.__sha512_crypt(string, salt)
 
