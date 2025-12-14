@@ -1,5 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
-![Python](https://img.shields.io/badge/python-≥&nbsp;3.9-brightgreen)
+![Python](https://img.shields.io/badge/python-≥&nbsp;3.10-brightgreen)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
 &nbsp;
 <h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
@@ -810,6 +810,15 @@ snmp-server engineID local {{ engineID }}
 snmp-server user {{ snmpUser }} {{ snmpGroup }} v3 encrypted auth sha {{ authPassword|cisco_snmpv3_key(engineID) }} priv aes 128 {{ privPassword|cisco_snmpv3_key(engineID) }}
 ```
 
+- <code><b>arista_snmpv3_key(engineid</b>: String<b>, algorithm</b>: Optional[String]<b>="sha1")</b> -> String</code>
+
+This filter is used to generate localised SNMPv3 authentication and privacy keys (section A.2 of [RFC3414](https://datatracker.ietf.org/doc/html/rfc3414#appendix-A.2)) for use by Arista devices, e.g:
+
+```jinja2
+snmp-server engineID local {{ engineID }}
+snmp-server user {{ snmpUser }} {{ snmpGroup }} v3 localized {{ engineID }} auth sha256 {{ authPassword|arista_snmpv3_key(engineID, "sha256") }} priv aes256 {{ privPassword|arista_snmpv3_key(engineID, "sha256") }}
+```
+
 - <code><b>junos_snmpv3_key(engineid</b>: String<b>, algorithm</b>: Optional[String]<b>="sha1")</b> -> String</code>
 
 This filter is used to generate localised SNMPv3 authentication and privacy keys (section A.2 of [RFC3414](https://datatracker.ietf.org/doc/html/rfc3414#appendix-A.2)) for use by Juniper devices, e.g:
@@ -839,6 +848,10 @@ This filter will hash a string using Cisco's Type 9 hashing scheme (SCrypt). An 
 - <code><b>cisco10hash(value</b>: String<b>, salt</b>: Optional[String]<b>)</b> -> String</code>
 
 This filter will hash a string using Cisco's Type 10 hashing scheme (Unix Crypt based SHA512). An optional "salt" (length must be 16 characters) can be provided which makes the hashed string deterministic for idempotent operations.
+
+- <code><b>arista6hash(value</b>: String<b>, salt</b>: Optional[String]<b>)</b> -> String</code>
+
+This filter will hash a string using Arista's Type 6 hashing scheme (Unix Crypt based SHA512). An optional "salt" (length must be 16 characters) can be provided which makes the hashed string deterministic for idempotent operations.
 
 - <code><b>junos6hash(value</b>: String<b>, salt</b>: Optional[String]<b>)</b> -> String</code>
 

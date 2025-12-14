@@ -1,5 +1,5 @@
 # JinjaFx - Jinja2 Templating Tool
-# Copyright (c) 2020-2025 Chris Mason <chris@netnix.org>
+# Copyright (c) 2020-2026 Chris Mason <chris@netnix.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -39,12 +39,14 @@ class plugin(Extension):
     self.__mod_b64table = str.maketrans(self.__std_b64chars, self.__mod_b64chars)
     
     environment.filters['cisco_snmpv3_key'] = self.__cisco_snmpv3_key
+    environment.filters['arista_snmpv3_key'] = self.__arista_snmpv3_key
     environment.filters['junos_snmpv3_key'] = self.__junos_snmpv3_key
     environment.filters['cisco7encode'] = self.__cisco7encode
     environment.filters['junos9encode'] = self.__junos9encode
     environment.filters['cisco8hash'] = self.__cisco8hash
     environment.filters['cisco9hash'] = self.__cisco9hash
     environment.filters['cisco10hash'] = self.__cisco10hash
+    environment.filters['arista6hash'] = self.__arista6hash
     environment.filters['junos6hash'] = self.__junos6hash
     environment.filters['ipsort'] = self.__ipsort
     environment.filters['summarize_address_range'] = self.__summarize_address_range
@@ -64,6 +66,13 @@ class plugin(Extension):
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
     hexdigest = h.hexdigest()
     return ':'.join([hexdigest[i:i + 2] for i in range(0, len(hexdigest), 2)])
+
+  def __arista_snmpv3_key(self, password, engineid, algorithm='sha1'):
+    ekey = self.__expand_snmpv3_key(password, algorithm)
+
+    h = hashlib.new(algorithm)
+    h.update(ekey + bytearray.fromhex(engineid) + ekey)
+    return h.hexdigest()
 
   def __junos_snmpv3_key(self, password, engineid, algorithm='sha1', prefix='80000a4c'):
     ekey = self.__expand_snmpv3_key(password, algorithm)
@@ -267,6 +276,15 @@ class plugin(Extension):
 
     elif len(salt) != 16 or any(c not in self.__mod_b64chars for c in salt):
       raise JinjaFx.TemplateError('invalid salt provided to cisco10hash')
+
+    return self.__sha512_crypt(string, salt)
+
+  def __arista6hash(self, string, salt=None):
+    if salt is None:
+      salt = self.__generate_salt(16)
+
+    elif len(salt) != 16 or any(c not in self.__mod_b64chars for c in salt):
+      raise JinjaFx.TemplateError('invalid salt provided to arista6hash')
 
     return self.__sha512_crypt(string, salt)
 

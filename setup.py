@@ -17,7 +17,7 @@ install_requires = ["jinja2>=3.0", "pyyaml", "cryptography>=3.1", "netaddr"]
 setup(
   name="jinjafx",
   version=__version__,
-  python_requires=">=3.9",
+  python_requires=">=3.10",
   description="JinjaFx - Jinja2 Templating Tool",
   long_description=README,
   long_description_content_type="text/markdown",
