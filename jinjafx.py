@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # JinjaFx - Jinja2 Templating Tool
-# Copyright (c) 2020-2025 Chris Mason <chris@netnix.org>
+# Copyright (c) 2020-2026 Chris Mason <chris@netnix.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -16,8 +16,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import sys
-if sys.version_info < (3, 9):
-  sys.exit('Requires Python >= 3.9')
+if sys.version_info < (3, 10):
+  sys.exit('Requires Python >= 3.10')
 
 import os, io, importlib.util, importlib.metadata, argparse, re, getpass, datetime, copy
 import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile, shutil
@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.26.1'
+__version__ = '1.27.0'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -44,7 +44,7 @@ def main():
   try:
     if not any(x in ['-q', '-encrypt', '-decrypt'] for x in sys.argv):
       print(f'JinjaFx v{__version__} - Jinja2 Templating Tool')
-      print('Copyright (c) 2020-2025 Chris Mason <chris@netnix.org>\n')
+      print('Copyright (c) 2020-2026 Chris Mason <chris@netnix.org>\n')
 
     prog = os.path.basename(sys.argv[0])
     jinjafx_usage = '-t <template.j2> [-d [<data.csv>]] [-g <vars.(yml|json)>]\n'

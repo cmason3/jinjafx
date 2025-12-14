@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### [1.27.0] - In Development
+- Dropped support for Python 3.9
+- Updated copyright notices in preparation for 2026
+
 ### [1.26.1] - June 25, 2025
 - Fixed an issue with `jinjafx_server` as we performed a chdir to a temporary directory
 
@@ -610,6 +614,7 @@ Would result in the following:
 - Initial release
 
 
+[1.27.0]: https://github.com/cmason3/jinjafx/compare/v1.26.1...v1.27.0
 [1.26.1]: https://github.com/cmason3/jinjafx/compare/v1.26.0...v1.26.1
 [1.26.0]: https://github.com/cmason3/jinjafx/compare/v1.25.4...v1.26.0
 [1.25.4]: https://github.com/cmason3/jinjafx/compare/v1.25.3...v1.25.4
