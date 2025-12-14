@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.27.0] - In Development
+### [1.27.0] - December 14, 2025
 - Dropped support for Python 3.9
 - Updated copyright notices in preparation for 2026
 - Added support for `arista_snmpv3_key` filter
