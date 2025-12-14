@@ -39,6 +39,7 @@ class plugin(Extension):
     self.__mod_b64table = str.maketrans(self.__std_b64chars, self.__mod_b64chars)
     
     environment.filters['cisco_snmpv3_key'] = self.__cisco_snmpv3_key
+    environment.filters['arista_snmpv3_key'] = self.__arista_snmpv3_key
     environment.filters['junos_snmpv3_key'] = self.__junos_snmpv3_key
     environment.filters['cisco7encode'] = self.__cisco7encode
     environment.filters['junos9encode'] = self.__junos9encode
@@ -64,6 +65,13 @@ class plugin(Extension):
     h.update(ekey + bytearray.fromhex(engineid) + ekey)
     hexdigest = h.hexdigest()
     return ':'.join([hexdigest[i:i + 2] for i in range(0, len(hexdigest), 2)])
+
+  def __arista_snmpv3_key(self, password, engineid, algorithm='sha1'):
+    ekey = self.__expand_snmpv3_key(password, algorithm)
+
+    h = hashlib.new(algorithm)
+    h.update(ekey + bytearray.fromhex(engineid) + ekey)
+    return h.hexdigest()
 
   def __junos_snmpv3_key(self, password, engineid, algorithm='sha1', prefix='80000a4c'):
     ekey = self.__expand_snmpv3_key(password, algorithm)

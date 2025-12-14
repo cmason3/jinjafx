@@ -810,6 +810,15 @@ snmp-server engineID local {{ engineID }}
 snmp-server user {{ snmpUser }} {{ snmpGroup }} v3 encrypted auth sha {{ authPassword|cisco_snmpv3_key(engineID) }} priv aes 128 {{ privPassword|cisco_snmpv3_key(engineID) }}
 ```
 
+- <code><b>arista_snmpv3_key(engineid</b>: String<b>, algorithm</b>: Optional[String]<b>="sha1")</b> -> String</code>
+
+This filter is used to generate localised SNMPv3 authentication and privacy keys (section A.2 of [RFC3414](https://datatracker.ietf.org/doc/html/rfc3414#appendix-A.2)) for use by Arista devices, e.g:
+
+```jinja2
+snmp-server engineID local {{ engineID }}
+snmp-server user {{ snmpUser }} {{ snmpGroup }} v3 localized {{ engineID }} auth sha256 {{ authPassword|arista_snmpv3_key(engineID, "sha256") }} priv aes256 {{ privPassword|arista_snmpv3_key(engineID, "sha256") }}
+```
+
 - <code><b>junos_snmpv3_key(engineid</b>: String<b>, algorithm</b>: Optional[String]<b>="sha1")</b> -> String</code>
 
 This filter is used to generate localised SNMPv3 authentication and privacy keys (section A.2 of [RFC3414](https://datatracker.ietf.org/doc/html/rfc3414#appendix-A.2)) for use by Juniper devices, e.g:
