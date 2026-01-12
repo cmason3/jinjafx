@@ -1,8 +1,11 @@
 ## CHANGELOG
 
+### [1.27.2] - January 12, 2026
+- Use `json` to convert integer keys into strings in `vars.yml` before passing to `jsonschema`
+
 ### [1.27.1] - January 12, 2026
 - Replaced `setup.py` with `pyproject.toml`
-- Added support for `jinjafx_schema` to validate `data.yml` using `jsonschema`
+- Added support for `jinjafx_schema` to validate `vars.yml` using `jsonschema`
 
 ### [1.27.0] - December 14, 2025
 - Dropped support for Python 3.9
@@ -620,6 +623,7 @@ Would result in the following:
 - Initial release
 
 
+[1.27.2]: https://github.com/cmason3/jinjafx/compare/v1.27.1...v1.27.2
 [1.27.1]: https://github.com/cmason3/jinjafx/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/cmason3/jinjafx/compare/v1.26.1...v1.27.0
 [1.26.1]: https://github.com/cmason3/jinjafx/compare/v1.26.0...v1.26.1

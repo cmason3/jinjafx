@@ -898,37 +898,6 @@ This will result in the following output:
 
 This custom filter will be removed if and when the standard Ansible `ipaddr` filter provides support.
 
-- <code><b>xpath(query</b>: String<b>)</b> -> String</code> (requires `lxml` python module)
-
-This filter is used to perform an xpath query on an XML based output and return the matching sections as a list (if you use namespaces you need to ensure you define them using the `xmlns:` syntax), e.g:
-
-```yaml
----
-xml: |2
-  <interfaces xmlns:junos="http://xml.juniper.net/junos/*/junos">
-      <interface>
-          <name>et-0/1/0</name>
-          <description junos:changed='changed'>## [DCI] 100GE Circuit to ROUTER-01 (et-0/1/0) ##</description>
-      </interface>
-      <interface>
-          <name>et-0/1/1</name>
-          <description>## 100GE Link to SPINE-01 (et-0/0/0) ##</description>
-      </interface>
-      <interface>
-          <name>et-0/1/2</name>
-          <description>## 100GE Link to SPINE-02 (et-0/0/0) ##</description>
-      </interface>
-  </interfaces>
-```
-
-The following xpath query can be used to find all the "et" interfaces which have the attribute "junos:changed" applied to them and then output the interface's description:
-
-```jinja2
-{% for description in xml|xpath("//interfaces/interface[starts-with(name, 'et')]/description[@junos:changed]/text()") %}
-{{ description }}
-{% endfor %}
-```
-
 - <code><b>vaulty_encrypt(plaintext</b>: String<b>, password</b>: String<b>, cols</b>: Optional[Integer]<b>)</b> -> String</code>
 
 This filter will encrypt a string using [Vaulty](https://github.com/cmason3/vaulty) which is an alternative to Ansible Vault. Vaulty provides 256-bit authenticated symmetric encryption (AEAD) using ChaCha20-Poly1305 and Scrypt as the password based key derivation function. Ansible Vault is very inefficient when it comes to output size - for example, a 256 byte string encrypted using Ansible Vault will take up 1,390 bytes (a 443% increase) compared to Vaulty where the same string will only take up 412 bytes (a 61% increase). The optional "cols" argument will split the output into rows of "cols" width similar to Ansible Vault output.
