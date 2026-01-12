@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.27.1] - In Development
+### [1.27.1] - January 12, 2026
 - Replaced `setup.py` with `pyproject.toml`
 - Added support for `jinjafx_schema` to validate `data.yml` using `jsonschema`
 
