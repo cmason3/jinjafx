@@ -20,7 +20,7 @@ if sys.version_info < (3, 10):
   sys.exit('Requires Python >= 3.10')
 
 import os, io, importlib.util, importlib.metadata, argparse, re, getpass, datetime, copy
-import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile, shutil, jsonschema
+import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile, shutil, json, jsonschema
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.27.1'
+__version__ = '1.27.2'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -443,16 +443,15 @@ Environment Variables:
 
   except Exception as e:
     if isinstance(e, jsonschema.ValidationError):
-      error = _format_error(e, 'vars.yml', 'template code', '_jinjafx')
-
+      error = _format_error(e, exc_source='vars.yml')
     else:
-      error = _format_error(e, exc_source, 'template code', '_jinjafx')
+      error = _format_error(e, 'template code', '_jinjafx', exc_source=exc_source)
 
     print(error.replace('__init__.py:', 'jinjafx.py:'), file=sys.stderr)
     sys.exit(-2)
 
 
-def _format_error(e, exc_source=None, *args):
+def _format_error(e, *args, exc_source=None):
   tb = e.__traceback__
   msg = str(e)
   stack = []
@@ -473,6 +472,9 @@ def _format_error(e, exc_source=None, *args):
 
     return f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {msg}'
 
+  elif exc_source == 'vars.yml':
+    return f'error[{exc_source}]: {type(e).__name__}: {e.message}'
+    
   else:
     return f'error[{exc_source}]: {type(e).__name__}: {msg}'
 
@@ -747,18 +749,8 @@ class JinjaFx():
           raise Exception('not enough data rows - need at least two')
 
     if 'jinjafx_schema' in gvars and gvars['jinjafx_schema']:
-      try:
-        d2v =  { k: v for k, v in gvars.items() if not k.startswith(('jinjafx_', 'jinja2_'))}
-        print(str(type(d2v)))
-        print(str(type(gvars['jinjafx_schema'])))
-        jsonschema.validate(instance=d2v, schema=gvars['jinjafx_schema'])
-
-      except jsonschema.ValidationError as e:
-        raise jsonschema.ValidationError(e.message)
-
-      except Exception as e:
-        import traceback
-        traceback.print_exc()
+      d2v =  { k: v for k, v in gvars.items() if not k.startswith(('jinjafx_', 'jinja2_'))}
+      jsonschema.validate(instance=json.loads(json.dumps(d2v)), schema=gvars['jinjafx_schema'])
 
     if 'jinjafx_sort' in gvars and gvars['jinjafx_sort']:
       for field in reversed(gvars['jinjafx_sort']):
