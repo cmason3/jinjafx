@@ -22,13 +22,6 @@ from jinjafx import JinjaFx, Vaulty
 
 import os, base64, random, re, hashlib, ipaddress
 
-try:
-  from lxml import etree
-  lxml = True
-
-except:
-  lxml = False
-
 class plugin(Extension):
   def __init__(self, environment):
     Extension.__init__(self, environment)
@@ -50,7 +43,6 @@ class plugin(Extension):
     environment.filters['junos6hash'] = self.__junos6hash
     environment.filters['ipsort'] = self.__ipsort
     environment.filters['summarize_address_range'] = self.__summarize_address_range
-    environment.filters['xpath'] = self.__xpath
     environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
 
@@ -307,26 +299,3 @@ class plugin(Extension):
     start, end = r.split('-', 2)
     clist = ipaddress.summarize_address_range(ipaddress.ip_address(start.strip()), ipaddress.ip_address(end.strip()))
     return list(map(str, clist))
-
-  def __xpath(self, s_xml, s_path):
-    if lxml:
-      s_xml = re.sub(r'>\s+<', '><', s_xml.strip())
-      p_xml = etree.fromstring(s_xml, parser=etree.XMLParser(remove_comments=True, remove_pis=True))
-      nsmap = {}
-
-      for k in p_xml.nsmap:
-        if k is not None:
-          nsmap[k] = p_xml.nsmap[k]
-      
-      xml = p_xml.xpath(s_path, namespaces=nsmap)
-
-      r = []
-      for x in xml:
-        if isinstance(x, str):
-          r.append(x.strip())
-        else:
-          r.append(etree.tostring(x, pretty_print=True).decode('utf-8').strip())
-      return r
-
-    else:
-      raise JinjaFx.TemplateError("'xpath' filter requires the 'lxml' python module")

@@ -749,10 +749,16 @@ class JinjaFx():
     if 'jinjafx_schema' in gvars and gvars['jinjafx_schema']:
       try:
         d2v =  { k: v for k, v in gvars.items() if not k.startswith(('jinjafx_', 'jinja2_'))}
+        print(str(type(d2v)))
+        print(str(type(gvars['jinjafx_schema'])))
         jsonschema.validate(instance=d2v, schema=gvars['jinjafx_schema'])
 
       except jsonschema.ValidationError as e:
         raise jsonschema.ValidationError(e.message)
+
+      except Exception as e:
+        import traceback
+        traceback.print_exc()
 
     if 'jinjafx_sort' in gvars and gvars['jinjafx_sort']:
       for field in reversed(gvars['jinjafx_sort']):
