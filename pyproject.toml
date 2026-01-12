@@ -1,2 +1,31 @@
+[project]
+name = "jinjafx"
+dynamic = ["version"]
+requires-python = ">= 3.10"
+dependencies = ["jinja2>=3.0", "pyyaml", "cryptography>=3.1", "netaddr", "jsonschema"]
+authors = [{ name = "Chris Mason", email = "chris@netnix.org" }]
+description = "JinjaFx - Jinja2 Templating Tool"
+readme = "README.md"
+license = "MIT"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python :: 3"
+]
+
+[project.urls]
+Repository = "https://github.com/cmason3/jinjafx.git"
+Issues = "https://github.com/cmason3/jinjafx/issues"
+Changelog = "https://github.com/cmason3/jinjafx/blob/main/CHANGELOG.md"
+
+[project.scripts]
+jinjafx = "jinjafx:main"
+
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["jinjafx", "jinjafx.extensions"]
+
+[tool.setuptools.dynamic]
+version = { attr = "jinjafx.__version__" }

@@ -1,8 +1,8 @@
 [![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
 ![Python](https://img.shields.io/badge/python-≥&nbsp;3.10-brightgreen)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
-&nbsp;
-<h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
+
+# JinjaFx - Jinja2 Templating Tool
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 
@@ -403,6 +403,26 @@ By default JinjaFx will fail with "invalid ansible vault password" if the provid
 - <code><b>jinjafx_disable_dataloop</b></code>
 
 If set to `True`, JinjaFx won't loop through `data.csv` row by row - the data will only be accessible via `jinjafx.data()` and similar methods. The template will only be processed once as opposed to once per row within `data.csv`.
+
+- <code><b>jinjafx_schema</b></code>
+
+Using `jsonschema` we support the ability to validate the data that has been provided in `vars.yml` against a schema, e.g:
+
+```yaml
+---
+name: "Chris"
+gender: "Male"
+
+jinjafx_schema:
+  unevaluatedProperties: False
+  required: ["name", "gender"]
+  properties:
+    name: { type: "string" }
+    gender: { type: "string", enum: ["Male", "Female"] }
+    age: { type: "integer", minimum: 1, maximum: 100 }
+```
+
+Any variables within `vars.yml` that start with "jinjafx_" or "jinja2_" are excluded from the validation. 
 
 - <code><b>jinjafx_filter</b></code> and <code><b>jinjafx_sort</b></code>
 
