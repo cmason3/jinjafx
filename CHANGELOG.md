@@ -2,6 +2,7 @@
 
 ### [1.27.1] - In Development
 - Replaced `setup.py` with `pyproject.toml`
+- Added support for `jinjafx_schema` to validate `data.yml` using `jsonschema`
 
 ### [1.27.0] - December 14, 2025
 - Dropped support for Python 3.9

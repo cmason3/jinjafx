@@ -404,6 +404,26 @@ By default JinjaFx will fail with "invalid ansible vault password" if the provid
 
 If set to `True`, JinjaFx won't loop through `data.csv` row by row - the data will only be accessible via `jinjafx.data()` and similar methods. The template will only be processed once as opposed to once per row within `data.csv`.
 
+- <code><b>jinjafx_schema</b></code>
+
+Using `jsonschema` we support the ability to validate the data that has been provided in `vars.yml` against a schema, e.g:
+
+```yaml
+---
+name: "Chris"
+gender: "Male"
+
+jinjafx_schema:
+  unevaluatedProperties: False
+  required: ["name", "gender"]
+  properties:
+    name: { type: "string" }
+    gender: { type: "string", enum: ["Male", "Female"] }
+    age: { type: "integer", minimum: 1, maximum: 100 }
+```
+
+Any variables within `vars.yml` that start with "jinjafx_" or "jinja2_" are excluded from the validation. 
+
 - <code><b>jinjafx_filter</b></code> and <code><b>jinjafx_sort</b></code>
 
 JinjaFx supports the ability to filter as well as sort the data within `data.csv` before it is passed to the templating engine. From a filtering perspective, while you could include and exclude certain rows within your `template.j2` with a conditional `if` statement, it won't allow you to use `jinjafx.first()` and `jinjafx.last()` on the reduced data set. This is where the `jinjafx_filter` key which can be specified in `vars.yml` comes into play - it lets you specify using regular expressions what field values you wish to include in your data, e.g:

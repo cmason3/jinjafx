@@ -20,7 +20,7 @@ if sys.version_info < (3, 10):
   sys.exit('Requires Python >= 3.10')
 
 import os, io, importlib.util, importlib.metadata, argparse, re, getpass, datetime, copy
-import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile, shutil
+import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile, shutil, jsonschema
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -385,7 +385,7 @@ Environment Variables:
         gvars['jinjafx_input'] = jinjafx_input
 
       args.ed = [os.getcwd(), os.getenv('HOME', '') + '/.jinjafx'] + args.ed
-      outputs = JinjaFx()._jinjafx(args.t, data, gvars, args.o, args.ed)
+      outputs = JinjaFx()._jinjafx(args.t, data, gvars, args.o, exts_dirs=args.ed)
       ocount = 0
 
       if args.od is not None:
@@ -442,30 +442,34 @@ Environment Variables:
     sys.exit(-2)
 
   except Exception as e:
-    error = _format_error(e, 'template code', '_jinjafx')
+    error = _format_error(e, exc_source, 'template code', '_jinjafx')
     print(error.replace('__init__.py:', 'jinjafx.py:'), file=sys.stderr)
     sys.exit(-2)
 
 
-def _format_error(e, *args):
+def _format_error(e, exc_source=None, *args):
   tb = e.__traceback__
-  stack = []
   msg = str(e)
+  stack = []
 
-  if isinstance(e, jinja2.TemplateNotFound):
-    if ' in search path' in msg:
-      msg = msg[:msg.index(' in search path')]
+  if exc_source is None:
+    if isinstance(e, jinja2.TemplateNotFound):
+      if ' in search path' in msg:
+        msg = msg[:msg.index(' in search path')]
 
-  while tb is not None:
-    stack.append([tb.tb_frame.f_code.co_filename, tb.tb_frame.f_code.co_name, tb.tb_lineno])
-    tb = tb.tb_next
+    while tb is not None:
+      stack.append([tb.tb_frame.f_code.co_filename, tb.tb_frame.f_code.co_name, tb.tb_lineno])
+      tb = tb.tb_next
 
-  for a in args:
-    for s in reversed(stack):
-      if a in s[1]:
-        return f'error[{os.path.basename(s[0])}:{s[2]}]: {type(e).__name__}: {msg}'
+    for a in args:
+      for s in reversed(stack):
+        if a in s[1]:
+          return f'error[{os.path.basename(s[0])}:{s[2]}]: {type(e).__name__}: {msg}'
 
-  return f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {msg}'
+    return f'error[{os.path.basename(stack[0][0])}:{stack[0][2]}]: {type(e).__name__}: {msg}'
+
+  else:
+    return f'error[{exc_source}]: {type(e).__name__}: {msg}'
 
 
 def __decrypt_vault(vpw, string, return_none=False):
@@ -736,6 +740,14 @@ class JinjaFx():
 
         if len(self.__g_datarows) <= 1:
           raise Exception('not enough data rows - need at least two')
+
+    if 'jinjafx_schema' in gvars and gvars['jinjafx_schema']:
+      try:
+        d2v =  { k: v for k, v in gvars.items() if not k.startswith(('jinjafx_', 'jinja2_'))}
+        jsonschema.validate(instance=d2v, schema=gvars['jinjafx_schema'])
+
+      except jsonschema.ValidationError as e:
+        raise jsonschema.ValidationError(f'[data.yml] {e.message}')
 
     if 'jinjafx_sort' in gvars and gvars['jinjafx_sort']:
       for field in reversed(gvars['jinjafx_sort']):
