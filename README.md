@@ -1,8 +1,8 @@
 [![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
 ![Python](https://img.shields.io/badge/python-≥&nbsp;3.10-brightgreen)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
-&nbsp;
-<h1 align="center">JinjaFx - Jinja2 Templating Tool</h1>
+
+# JinjaFx - Jinja2 Templating Tool
 
 <p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 

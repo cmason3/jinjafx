@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.27.1] - In Development
+- Replaced `setup.py` with `pyproject.toml`
+
 ### [1.27.0] - December 14, 2025
 - Dropped support for Python 3.9
 - Updated copyright notices in preparation for 2026
@@ -616,6 +619,7 @@ Would result in the following:
 - Initial release
 
 
+[1.27.1]: https://github.com/cmason3/jinjafx/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/cmason3/jinjafx/compare/v1.26.1...v1.27.0
 [1.26.1]: https://github.com/cmason3/jinjafx/compare/v1.26.0...v1.26.1
 [1.26.0]: https://github.com/cmason3/jinjafx/compare/v1.25.4...v1.26.0

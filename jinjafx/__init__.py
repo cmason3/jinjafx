@@ -1,1 +1,1 @@
-../jinjafx.py
+jinjafx.py
