@@ -25,10 +25,7 @@ requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["jinjafx"]
-
-[tool.setuptools.package-data]
-jinjafx = ["extensions/*.py"]
+packages = ["jinjafx", "jinjafx.extensions"]
 
 [tool.setuptools.dynamic]
 version = { attr = "jinjafx.__version__" }
