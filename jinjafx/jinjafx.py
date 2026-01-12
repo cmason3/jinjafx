@@ -442,7 +442,12 @@ Environment Variables:
     sys.exit(-2)
 
   except Exception as e:
-    error = _format_error(e, exc_source, 'template code', '_jinjafx')
+    if isinstance(e, jsonschema.ValidationError):
+      error = _format_error(e, 'vars.yml', 'template code', '_jinjafx')
+
+    else:
+      error = _format_error(e, exc_source, 'template code', '_jinjafx')
+
     print(error.replace('__init__.py:', 'jinjafx.py:'), file=sys.stderr)
     sys.exit(-2)
 
@@ -747,7 +752,7 @@ class JinjaFx():
         jsonschema.validate(instance=d2v, schema=gvars['jinjafx_schema'])
 
       except jsonschema.ValidationError as e:
-        raise jsonschema.ValidationError(f'[data.yml] {e.message}')
+        raise jsonschema.ValidationError(e.message)
 
     if 'jinjafx_sort' in gvars and gvars['jinjafx_sort']:
       for field in reversed(gvars['jinjafx_sort']):
