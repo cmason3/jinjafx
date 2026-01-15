@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.27.2'
+__version__ = '1.27.3'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -543,7 +543,7 @@ class __ArgumentParser(argparse.ArgumentParser):
   def error(self, message):
     if '-q' not in sys.argv:
       print('URL:\n  https://github.com/cmason3/jinjafx\n', file=sys.stderr)
-      print(f'Usage:\n {self.format_usage().replace('usage:', '')}', file=sys.stderr)
+      print(f'Usage:\n {self.format_usage().replace("usage:", "")}', file=sys.stderr)
     raise Exception(message)
 
 
