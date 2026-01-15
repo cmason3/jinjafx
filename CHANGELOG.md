@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.27.3] - January 15, 2026
+- Fixed an issue with f-strings on usage output - changed from single quotes to double quotes
+
 ### [1.27.2] - January 12, 2026
 - Use `json` to convert integer keys into strings in `vars.yml` before passing to `jsonschema`
 
@@ -623,6 +626,7 @@ Would result in the following:
 - Initial release
 
 
+[1.27.3]: https://github.com/cmason3/jinjafx/compare/v1.27.2...v1.27.3
 [1.27.2]: https://github.com/cmason3/jinjafx/compare/v1.27.1...v1.27.2
 [1.27.1]: https://github.com/cmason3/jinjafx/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/cmason3/jinjafx/compare/v1.26.1...v1.27.0
