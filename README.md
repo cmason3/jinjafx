@@ -363,13 +363,14 @@ This allows you to call a filter dynamically, e.g:
 
 The variables you define within `vars.yml` are equivalent to Ansible's `group_vars` and the column headers you define within `data.csv` are equivalent to Ansible's `hostvars`. JinjaFx has been designed in such a way that you should be able to re-use your Jinja2 templates in both JinjaFx and Ansible with little to no changes. In this scenario you should treat `data.csv` as your Ansible inventory where you define host specific variables, e.g:
 
-| inventory_hostname | [group_names] | mgmt_ip |
-| - | - | - |
-| spine-01 | fabric; spine | 192.0.2.1 |
-| spine-02 | fabric; spine | 192.0.2.2 |
-| spine-03 | fabric; spine | 192.0.2.3 |
-| leaf-01a | fabric; leaf | 192.0.2.4 |
-| leaf-01b | fabric; leaf | 192.0.2.5 |
+```
+inventory_hostname, [group_names], mgmt_ip
+spine-01, fabric; spine, 192.0.2.1
+spine-02, fabric; spine, 192.0.2.2
+spine-03, fabric; spine, 192.0.2.3
+leaf-01a, fabric; leaf, 192.0.2.4
+leaf-01b, fabric; leaf, 192.0.2.5
+```
 
 If JinjaFx detects that you have defined `inventory_hostname` within `data.csv` then it will construct the variable `hostvars` using the information in `data.csv`, e.g:
 
