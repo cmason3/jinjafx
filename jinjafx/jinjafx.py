@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.27.3'
+__version__ = '1.27.4'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -749,8 +749,8 @@ class JinjaFx():
           raise Exception('not enough data rows - need at least two')
 
     if 'jinjafx_schema' in gvars and gvars['jinjafx_schema']:
-      d2v =  { k: v for k, v in gvars.items() if not k.startswith(('jinjafx_', 'jinja2_'))}
-      jsonschema.validate(instance=json.loads(json.dumps(d2v)), schema=gvars['jinjafx_schema'])
+      group_vars = { k: v for k, v in gvars.items() if not k.startswith(('jinjafx_', 'jinja2_'))}
+      jsonschema.validate(instance=json.loads(json.dumps(group_vars)), schema=gvars['jinjafx_schema'])
 
     if 'jinjafx_sort' in gvars and gvars['jinjafx_sort']:
       for field in reversed(gvars['jinjafx_sort']):
@@ -768,6 +768,25 @@ class JinjaFx():
           r = True if field.startswith('-') else False
           self.__g_datarows[1:] = sorted(self.__g_datarows[1:], key=lambda n: n[self.__g_datarows[0].index(field.lstrip('+-')) + 1], reverse=r)
 
+    if 'inventory_hostname' in self.__g_datarows[0]:
+      idx = self.__g_datarows[0].index('inventory_hostname') + 1
+      groups = { 'all': [] }
+
+      hostvars = {}
+      for r in range(1, len(self.__g_datarows)):
+        hvp = hostvars[self.__g_datarows[r][idx]] = { 'groups': groups }
+        groups['all'].append(self.__g_datarows[r][idx])
+
+        for c in range(len(self.__g_datarows[0])):
+          hvp.update({ self.__g_datarows[0][c]: self.__g_datarows[r][c + 1] })
+
+          if self.__g_datarows[0][c] == 'group_names' and isinstance(self.__g_datarows[r][c + 1], list):
+            for g in self.__g_datarows[r][c + 1]:
+              groups.setdefault(g, []).append(self.__g_datarows[r][idx])
+
+    import json
+    print(json.dumps(hostvars, indent=2))
+        
     if exts_dirs is not None:
       sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
     else:
@@ -848,7 +867,8 @@ class JinjaFx():
       },
         'lookup': self.__jfx_lookup,
         'vars': self.__jfx_lookup_vars,
-        'varnames': self.__jfx_lookup_varnames
+        'varnames': self.__jfx_lookup_varnames,
+        'hostvars': { 'test': 'test' }
       })
 
       self.__g_filters = env.filters
