@@ -780,9 +780,17 @@ class JinjaFx():
         for c in range(len(self.__g_datarows[0])):
           hvp.update({ self.__g_datarows[0][c]: self.__g_datarows[r][c + 1] })
 
-          if self.__g_datarows[0][c] == 'group_names' and isinstance(self.__g_datarows[r][c + 1], list):
-            for g in self.__g_datarows[r][c + 1]:
-              groups.setdefault(g, []).append(self.__g_datarows[r][idx])
+          if self.__g_datarows[0][c] == 'group_names':
+            if isinstance(self.__g_datarows[r][c + 1], list):
+              for g in self.__g_datarows[r][c + 1]:
+                groups.setdefault(g, []).append(self.__g_datarows[r][idx])
+
+            else:
+              groups.setdefault(hvp['group_names'], []).append(self.__g_datarows[r][idx])
+              hvp['group_names'] = [hvp['group_names']]
+
+        if 'group_names' not in hvp:
+          hvp.update({ 'group_names': [] })
 
     if exts_dirs is not None:
       sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs

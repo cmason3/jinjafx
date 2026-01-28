@@ -1,6 +1,7 @@
 ## CHANGELOG
 
 ### [1.27.6] - In Development
+- Fixed an issue if `group_names` wasn't defined alongside `inventory_hostname`
 - Don't import `vars.yml` into `hostvars`
 
 ### [1.27.5] - January 28, 2026
