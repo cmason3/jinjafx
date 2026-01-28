@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.27.5'
+__version__ = '1.27.6'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -749,9 +749,8 @@ class JinjaFx():
         if len(self.__g_datarows) <= 1:
           raise Exception('not enough data rows - need at least two')
 
-    group_vars = { k: v for k, v in gvars.items() if not k.startswith(('jinjafx_', 'jinja2_'))}
-
     if 'jinjafx_schema' in gvars and gvars['jinjafx_schema']:
+      group_vars = { k: v for k, v in gvars.items() if not k.startswith(('jinjafx_', 'jinja2_'))}
       jsonschema.validate(instance=json.loads(json.dumps(group_vars)), schema=gvars['jinjafx_schema'])
 
     if 'jinjafx_sort' in gvars and gvars['jinjafx_sort']:
@@ -777,14 +776,21 @@ class JinjaFx():
       for r in range(1, len(self.__g_datarows)):
         hvp = self.__g_hostvars[self.__g_datarows[r][idx]] = { 'groups': groups }
         groups['all'].append(self.__g_datarows[r][idx])
-        hvp.update(group_vars)
 
         for c in range(len(self.__g_datarows[0])):
           hvp.update({ self.__g_datarows[0][c]: self.__g_datarows[r][c + 1] })
 
-          if self.__g_datarows[0][c] == 'group_names' and isinstance(self.__g_datarows[r][c + 1], list):
-            for g in self.__g_datarows[r][c + 1]:
-              groups.setdefault(g, []).append(self.__g_datarows[r][idx])
+          if self.__g_datarows[0][c] == 'group_names':
+            if isinstance(self.__g_datarows[r][c + 1], list):
+              for g in self.__g_datarows[r][c + 1]:
+                groups.setdefault(g, []).append(self.__g_datarows[r][idx])
+
+            else:
+              groups.setdefault(hvp['group_names'], []).append(self.__g_datarows[r][idx])
+              hvp['group_names'] = [hvp['group_names']]
+
+        if 'group_names' not in hvp:
+          hvp.update({ 'group_names': [] })
 
     if exts_dirs is not None:
       sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs

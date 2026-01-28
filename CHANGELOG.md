@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### [1.27.6] - January 28, 2026
+- Fixed an issue if `group_names` wasn't defined alongside `inventory_hostname`
+- Don't import `vars.yml` into `hostvars`
+
 ### [1.27.5] - January 28, 2026
 - Added Ansible style `hostvars` if `inventory_hostname` is included within `data.csv`
 
@@ -629,6 +633,7 @@ Would result in the following:
 - Initial release
 
 
+[1.27.6]: https://github.com/cmason3/jinjafx/compare/v1.27.5...v1.27.6
 [1.27.5]: https://github.com/cmason3/jinjafx/compare/v1.27.3...v1.27.5
 [1.27.3]: https://github.com/cmason3/jinjafx/compare/v1.27.2...v1.27.3
 [1.27.2]: https://github.com/cmason3/jinjafx/compare/v1.27.1...v1.27.2
