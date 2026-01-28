@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.27.4] - January 28, 2026
+- Added Ansible style `hostvars` if `inventory_hostname` is included within `data.csv`
+
 ### [1.27.3] - January 15, 2026
 - Fixed an issue with f-strings on usage output - changed from single quotes to double quotes
 
@@ -626,6 +629,7 @@ Would result in the following:
 - Initial release
 
 
+[1.27.4]: https://github.com/cmason3/jinjafx/compare/v1.27.3...v1.27.4
 [1.27.3]: https://github.com/cmason3/jinjafx/compare/v1.27.2...v1.27.3
 [1.27.2]: https://github.com/cmason3/jinjafx/compare/v1.27.1...v1.27.2
 [1.27.1]: https://github.com/cmason3/jinjafx/compare/v1.27.0...v1.27.1
