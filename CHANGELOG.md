@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.27.4] - In Development
+### [1.27.4] - January 28, 2026
 - Added Ansible style `hostvars` if `inventory_hostname` is included within `data.csv`
 
 ### [1.27.3] - January 15, 2026
