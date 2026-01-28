@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.27.4'
+__version__ = '1.27.5'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -770,7 +770,7 @@ class JinjaFx():
           r = True if field.startswith('-') else False
           self.__g_datarows[1:] = sorted(self.__g_datarows[1:], key=lambda n: n[self.__g_datarows[0].index(field.lstrip('+-')) + 1], reverse=r)
 
-    if 'inventory_hostname' in self.__g_datarows[0]:
+    if (len(self.__g_datarows) > 1) and ('inventory_hostname' in self.__g_datarows[0]):
       idx = self.__g_datarows[0].index('inventory_hostname') + 1
       groups = { 'all': [] }
 
