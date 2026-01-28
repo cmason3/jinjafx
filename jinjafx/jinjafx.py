@@ -554,6 +554,7 @@ class JinjaFx():
     self.__g_row = 0
     self.__g_vars = {}
     self.__g_filters = {}
+    self.__g_hostvars = {}
     self.__g_warnings = []
     self.__g_xlimit = 5000 if sandbox else 0
     self.__g_hcounter = re.compile(r'(?:[A-Z]\.)+$', re.IGNORECASE)
@@ -772,9 +773,8 @@ class JinjaFx():
       idx = self.__g_datarows[0].index('inventory_hostname') + 1
       groups = { 'all': [] }
 
-      hostvars = {}
       for r in range(1, len(self.__g_datarows)):
-        hvp = hostvars[self.__g_datarows[r][idx]] = { 'groups': groups }
+        hvp = self.__g_hostvars[self.__g_datarows[r][idx]] = { 'groups': groups }
         groups['all'].append(self.__g_datarows[r][idx])
 
         for c in range(len(self.__g_datarows[0])):
@@ -784,9 +784,6 @@ class JinjaFx():
             for g in self.__g_datarows[r][c + 1]:
               groups.setdefault(g, []).append(self.__g_datarows[r][idx])
 
-    import json
-    print(json.dumps(hostvars, indent=2))
-        
     if exts_dirs is not None:
       sys.path += [os.path.abspath(os.path.dirname(__file__)) + '/extensions'] + exts_dirs
     else:
@@ -867,9 +864,11 @@ class JinjaFx():
       },
         'lookup': self.__jfx_lookup,
         'vars': self.__jfx_lookup_vars,
-        'varnames': self.__jfx_lookup_varnames,
-        'hostvars': { 'test': 'test' }
+        'varnames': self.__jfx_lookup_varnames
       })
+
+      if self.__g_hostvars:
+        env.globals.update({ 'hostvars': self.__g_hostvars })
 
       self.__g_filters = env.filters
 
