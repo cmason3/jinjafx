@@ -22,7 +22,7 @@ jobs:
       - run: "python3 -m pip install build --user"
       - run: "python3 -m build"
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: "python-package-distributions"
           path: "dist/"
