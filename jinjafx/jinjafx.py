@@ -16,8 +16,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import sys
-if sys.version_info < (3, 10):
-  sys.exit('Requires Python >= 3.10')
+if sys.version_info < (3, 11):
+  sys.exit('Requires Python >= 3.11')
 
 import os, io, importlib.util, importlib.metadata, argparse, re, getpass, datetime, copy
 import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile, shutil, json, jsonschema
@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.27.6'
+__version__ = '1.28.0'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 

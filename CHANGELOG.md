@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### [1.28.0] - In Development
+- Added support for JinjaFx Vault
+- Dropped support for Python 3.10
+
 ### [1.27.6] - January 28, 2026
 - Fixed an issue if `group_names` wasn't defined alongside `inventory_hostname`
 - Don't import `vars.yml` into `hostvars`
@@ -633,6 +637,7 @@ Would result in the following:
 - Initial release
 
 
+[1.28.0]: https://github.com/cmason3/jinjafx/compare/v1.27.6...v1.28.0
 [1.27.6]: https://github.com/cmason3/jinjafx/compare/v1.27.5...v1.27.6
 [1.27.5]: https://github.com/cmason3/jinjafx/compare/v1.27.3...v1.27.5
 [1.27.3]: https://github.com/cmason3/jinjafx/compare/v1.27.2...v1.27.3

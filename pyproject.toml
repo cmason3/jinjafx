@@ -1,7 +1,7 @@
 [project]
 name = "jinjafx"
 dynamic = ["version"]
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 dependencies = ["jinja2>=3.0", "pyyaml", "cryptography>=3.1", "netaddr", "jsonschema"]
 authors = [{ name = "Chris Mason", email = "chris@netnix.org" }]
 description = "JinjaFx - Jinja2 Templating Tool"
