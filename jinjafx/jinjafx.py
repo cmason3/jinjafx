@@ -16,11 +16,11 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import sys
-if sys.version_info < (3, 10):
-  sys.exit('Requires Python >= 3.10')
+if sys.version_info < (3, 11):
+  sys.exit('Requires Python >= 3.11')
 
 import os, io, importlib.util, importlib.metadata, argparse, re, getpass, datetime, copy
-import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile, shutil, json, jsonschema
+import jinja2, jinja2.sandbox, yaml, zoneinfo, base64, tempfile, shutil, json, jsonschema, requests
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.27.6'
+__version__ = '1.28.0'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -225,9 +225,13 @@ Environment Variables:
 
           if gv:
             try:
-              if 'jinjafx_vault_undefined' in gv:
+              if 'jinjafx_vault_undefined' in gv: # DEPRECATED
                 if y := yaml.load(gv, Loader=yaml.SafeLoader):
                   vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
+
+              if 'jinjafx_ansible_vault_undefined' in gv:
+                if y := yaml.load(gv, Loader=yaml.SafeLoader):
+                  vault_undef = y.get('jinjafx_ansible_vault_undefined', vault_undef)
 
             except Exception as e:
               exc_source = 'dt:global'
@@ -235,9 +239,13 @@ Environment Variables:
 
           if 'vars' in dt:
             try:
-              if 'jinjafx_vault_undefined' in dt['vars']:
+              if 'jinjafx_vault_undefined' in dt['vars']: # DEPRECATED
                 if y := yaml.load(dt['vars'], Loader=yaml.SafeLoader):
                   vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
+
+              if 'jinjafx_ansible_vault_undefined' in dt['vars']:
+                if y := yaml.load(dt['vars'], Loader=yaml.SafeLoader):
+                  vault_undef = y.get('jinjafx_ansible_vault_undefined', vault_undef)
 
             except Exception as e:
               exc_source = 'dt:vars'
@@ -299,9 +307,13 @@ Environment Variables:
             fcontents[g.name] = __decrypt_vault(vpw, f.read())
 
           try:
-            if b'jinjafx_vault_undefined' in fcontents[g.name]:
+            if b'jinjafx_vault_undefined' in fcontents[g.name]: # DEPRECATED
               if y := yaml.load(fcontents[g.name], Loader=yaml.SafeLoader):
                 vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
+
+            if b'jinjafx_ansible_vault_undefined' in fcontents[g.name]:
+              if y := yaml.load(fcontents[g.name], Loader=yaml.SafeLoader):
+                vault_undef = y.get('jinjafx_ansible_vault_undefined', vault_undef)
 
           except Exception as e:
             exc_source = g.name
@@ -852,6 +864,20 @@ class JinjaFx():
       else:
         jinjafx_disable_dataloop = False
 
+      if 'jinjafx_vault' in gvars and gvars['jinjafx_vault']:
+        if not (verify := gvars['jinjafx_vault'].get('verify', True)):
+          requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+
+        if (r := requests.post(gvars['jinjafx_vault']['url'] + '/v1/login', json=gvars['jinjafx_vault'], verify=verify, timeout=5)).status_code == 200:
+          env.globals.update({ '_jinjafx_vault': {
+            'url': gvars['jinjafx_vault']['url'],
+            'token': json.loads(r.text)['token'],
+            'verify': gvars['jinjafx_vault'].get('verify', False)
+          }})
+
+        else:
+          raise Exception('jinjafx vault - failed to login')
+
       env.globals.update({ 'jinjafx': {
         'version': __version__,
         'jinja2_version': importlib.metadata.version('jinja2'),
@@ -860,6 +886,7 @@ class JinjaFx():
         'counter': self.__jfx_counter,
         'exception': self.__jfx_exception,
         'warning': self.__jfx_warning,
+        'vault': self.__jfx_vault,
         'first': self.__jfx_first,
         'last': self.__jfx_last,
         'fields': self.__jfx_fields,
@@ -868,7 +895,7 @@ class JinjaFx():
         'setg': self.__jfx_setg,
         'getg': self.__jfx_getg,
         'now': self.__jfx_now,
-        'rows': max([0, len(self.__g_datarows) - 1]),
+        'rows': max([0, len(self.__g_datarows) - 1])
       },
         'lookup': self.__jfx_lookup,
         'vars': self.__jfx_lookup_vars,
@@ -1005,6 +1032,10 @@ class JinjaFx():
       return outputs
 
     finally:
+      if '_jinjafx_vault' in env.globals:
+        headers = { 'X-Vault-Token': env.globals['_jinjafx_vault']['token'] }
+        requests.post(env.globals['_jinjafx_vault']['url'] + '/v1/logout', headers=headers, verify=env.globals['_jinjafx_vault']['verify'], timeout=5)
+
       if tempdir is not None:
         shutil.rmtree(tempdir)
 
@@ -1031,6 +1062,16 @@ class JinjaFx():
 
     template = context.eval_ctx.environment.from_string(value)
     return template.render(context, **kwargs)
+
+
+  @jinja2.pass_context
+  def __jfx_vault(self, context, namespace, variable):
+    headers = { 'X-Vault-Token': context.get('_jinjafx_vault')['token'] }
+    if (r := requests.get(context.get('_jinjafx_vault')['url'] + f'/v1/data/{namespace}/{variable}', headers=headers, verify=False, timeout=5)).status_code == 200:
+      return json.loads(r.text)['data']
+
+    else:
+      raise JinjaFx.TemplateError(f'unable to obtain jinjafx vault variable \'{variable}\' within namespace \'{namespace}\'')
 
 
   def __jfx_lookup(self, method, *args):

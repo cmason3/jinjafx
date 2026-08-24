@@ -1,5 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/jinjafx.svg)](https://pypi.python.org/pypi/jinjafx/)
-![Python](https://img.shields.io/badge/python-≥&nbsp;3.10-brightgreen)
+![Python](https://img.shields.io/badge/python-≥&nbsp;3.11-brightgreen)
 [<img src="https://img.shields.io/badge/url-https%3A%2F%2Fjinjafx.io-blue" align="right">](https://jinjafx.io)
 
 # JinjaFx - Jinja2 Templating Tool
@@ -409,9 +409,9 @@ There might be some situations where you can't control the format of the header 
 jinjafx_adjust_headers: "yes" | "no" | "upper" | "lower"
 ```
 
-- <code><b>jinjafx_vault_undefined</b></code>
+- <code><b>jinjafx_ansible_vault_undefined</b></code>
 
-By default JinjaFx will fail with "invalid ansible vault password" if the provided Ansible Vault password is empty or missing. The `jinjafx_vault_undefined` variable allows you to change this behaviour - if set to `True` then it will proceed to process the template, but if it can't decrypt a vaulted variable due to a missing password then the variable won't be defined - you can then test this within your template, e.g:
+By default JinjaFx will fail with "invalid ansible vault password" if the provided Ansible Vault password is empty or missing. The `jinjafx_ansible_vault_undefined` variable allows you to change this behaviour - if set to `True` then it will proceed to process the template, but if it can't decrypt a vaulted variable due to a missing password then the variable won't be defined - you can then test this within your template, e.g:
 
 ```jinja2
 {% if vaulted_variable is defined %}
@@ -422,6 +422,25 @@ By default JinjaFx will fail with "invalid ansible vault password" if the provid
 - <code><b>jinjafx_disable_dataloop</b></code>
 
 If set to `True`, JinjaFx won't loop through `data.csv` row by row - the data will only be accessible via `jinjafx.data()` and similar methods. The template will only be processed once as opposed to once per row within `data.csv`.
+
+- <code><b>jinjafx_vault</b></code>
+
+This provides integration with [JinjaFx Vault](https://github.com/cmason3/jinjafx_vault), which is a separate Secrets Manager that is used to store credentials in a secure vault. It is recommended the `user` and `password` fields are requested using `jinjafx_input` or are Ansible Vault encrypted. By default it will attempt to verify the TLS Certificate is valid, but this check can be skipped by setting `verify` to `false`.
+
+```yaml
+---
+jinjafx_vault:
+  url: "<jinjafx vault url>"
+  user: "<jinjafx vault user>"
+  password: "<jinjafx vault password>"
+  verify: true
+```
+
+To access secure variables within the vault there is a `jinjafx.vault(namespace, variable)` function, which can be used within templates, e.g:
+
+```jinja2
+{{ jinjafx.vault("namespace", "variable") }}
+```
 
 - <code><b>jinjafx_schema</b></code>
 
