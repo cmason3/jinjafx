@@ -4,7 +4,7 @@
 
 # JinjaFx - Jinja2 Templating Tool
 
-<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinjafx-vault">JinjaFx Vault</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
+<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a> || <a href="#jinjafx-input">JinjaFx Input</a><br /><a href="#jinjafx-vault">JinjaFx Vault</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 
 JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.1.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it only requires a couple of Python modules that aren't in the base install - [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [cryptography](https://pypi.org/project/cryptography/) for Ansible Vault.
 
