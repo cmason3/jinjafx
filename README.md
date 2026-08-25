@@ -521,7 +521,7 @@ JinjaFx supports integration with [JinjaFx Vault](https://github.com/cmason3/jin
 jinjafx_input:
   prompt:
     user:
-      text: "Username"
+      text: "Vault User"
       required: True
     password:
       text: "Password"
