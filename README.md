@@ -529,7 +529,7 @@ jinjafx_input:
       required: True
 
 jinjafx_vault:
-  url: "https://jinjafx.vault.url"
+  url: "https://jinjafx.vault.url:8443"
   user: "{{ jinjafx_input.user }}"
   password: "{{ jinjafx_input.password }}"
 ```
