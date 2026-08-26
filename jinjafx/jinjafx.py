@@ -872,7 +872,7 @@ class JinjaFx():
           env.globals.update({ '_jinjafx_vault': {
             'url': gvars['jinjafx_vault']['url'],
             'token': json.loads(r.text)['token'],
-            'verify': gvars['jinjafx_vault'].get('verify', False)
+            'verify': verify
           }})
 
         else:
@@ -1066,12 +1066,15 @@ class JinjaFx():
 
   @jinja2.pass_context
   def __jfx_vault(self, context, namespace, variable):
-    headers = { 'X-Vault-Token': context.get('_jinjafx_vault')['token'] }
-    if (r := requests.get(context.get('_jinjafx_vault')['url'] + f'/v1/data/{namespace}/{variable}', headers=headers, verify=False, timeout=5)).status_code == 200:
-      return json.loads(r.text)['data']
+    if v := context.get('_jinjafx_vault'):
+      headers = { 'X-Vault-Token': v['token'] }
+      if (r := requests.get(v['url'] + f'/v1/data/{namespace}/{variable}', headers=headers, verify=v['verify'], timeout=5)).status_code == 200:
+        return json.loads(r.text)['data']
 
-    else:
-      raise JinjaFx.TemplateError(f'unable to obtain jinjafx vault variable \'{variable}\' within namespace \'{namespace}\'')
+      else:
+        raise JinjaFx.TemplateError(f'unable to obtain jinjafx vault variable \'{variable}\' within namespace \'{namespace}\'')
+
+    raise JinjaFx.TemplateError('jinjafx vault - not logged in')
 
 
   def __jfx_lookup(self, method, *args):

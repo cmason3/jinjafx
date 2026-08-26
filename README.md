@@ -4,7 +4,7 @@
 
 # JinjaFx - Jinja2 Templating Tool
 
-<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a><br /><a href="#jinjafx-input">JinjaFx Input</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
+<p align="center"><a href="#jinjafx-usage">JinjaFx Usage</a> || <a href="#jinjafx-templates">JinjaFx Templates</a> || <a href="#ansible-filters">Ansible Filters</a> || <a href="#jinjafx-variables">JinjaFx Variables</a> || <a href="#jinjafx-input">JinjaFx Input</a><br /><a href="#jinjafx-vault">JinjaFx Vault</a> || <a href="#jinjafx-datatemplates">JinjaFx DataTemplates</a> || <a href="#jinja2-extensions">Jinja2 Extensions</a> || <a href="#jinjafx-built-ins">JinjaFx Built-Ins</a> || <a href="#jinjafx-filters">JinjaFx Filters</a></p>
 
 JinjaFx is a Templating Tool that uses [Jinja2](https://jinja.palletsprojects.com/en/3.1.x/templates/) as the templating engine. It is written in Python and is extremely lightweight and hopefully simple - it only requires a couple of Python modules that aren't in the base install - [jinja2](https://pypi.org/project/Jinja2/) for obvious reasons and [cryptography](https://pypi.org/project/cryptography/) for Ansible Vault.
 
@@ -423,25 +423,6 @@ By default JinjaFx will fail with "invalid ansible vault password" if the provid
 
 If set to `True`, JinjaFx won't loop through `data.csv` row by row - the data will only be accessible via `jinjafx.data()` and similar methods. The template will only be processed once as opposed to once per row within `data.csv`.
 
-- <code><b>jinjafx_vault</b></code>
-
-This provides integration with [JinjaFx Vault](https://github.com/cmason3/jinjafx_vault), which is a separate Secrets Manager that is used to store credentials in a secure vault. It is recommended the `user` and `password` fields are requested using `jinjafx_input` or are Ansible Vault encrypted. By default it will attempt to verify the TLS Certificate is valid, but this check can be skipped by setting `verify` to `false`.
-
-```yaml
----
-jinjafx_vault:
-  url: "<jinjafx vault url>"
-  user: "<jinjafx vault user>"
-  password: "<jinjafx vault password>"
-  verify: true
-```
-
-To access secure variables within the vault there is a `jinjafx.vault(namespace, variable)` function, which can be used within templates, e.g:
-
-```jinja2
-{{ jinjafx.vault("namespace", "variable") }}
-```
-
 - <code><b>jinjafx_schema</b></code>
 
 Using `jsonschema` we support the ability to validate the data that has been provided in `vars.yml` against a schema, e.g:
@@ -530,6 +511,40 @@ Under the field the `text` key is always mandatory, but the following optional k
 - `pattern` - a regular expression that the input value must match
 
 - `type` - if set to "password" then echo is turned off - used for inputting sensitive values
+
+### JinjaFx Vault
+
+JinjaFx supports integration with [JinjaFx Vault](https://github.com/cmason3/jinjafx_vault), which is a separate Secrets Manager that is used to store credentials in a secure vault. To integrate JinjaFx Vault in your template you need to define `jinjafx_vault` within `vars.yml`, with the location of the JinjaFx Vault server and your login credentials, e.g:
+
+```yaml
+---
+jinjafx_input:
+  prompt:
+    user:
+      text: "Vault User"
+      required: True
+    password:
+      text: "Password"
+      type: "password"
+      required: True
+
+jinjafx_vault:
+  url: "https://jinjafx.vault.url:8443"
+  user: "{{ jinjafx_input.user }}"
+  password: "{{ jinjafx_input.password }}"
+```
+
+By default JinjaFx will attempt to verify the TLS Certificate is valid, but this check can be skipped by setting the key `verify` to `false` (not recommended). It is recommended the `user` and `password` fields are requested using `jinjafx_input` (as above) or are Ansible Vault encrypted.
+
+The `jinjafx_vault` syntax within `vars.yml` is used to login to JinjaFx Vault before your Jinja2 template is processed. To access variables stored within the vault you can use the `jinjafx.vault()` function within your template.
+
+<code><b>jinjafx.vault(namespace</b>: String<b>, variable</b>: String<b>)</b> -> String</code>
+
+JinjaFx Vault uses namespaces - variables can only exist within namespaces, so when you request a variable you need to specify the namespace alongside the variable - if your user has access to the namespace then it will insert the value of the variable within your template, e.g:
+
+```jinja2
+{{ jinjafx.vault("namespace", "variable") }}
+```
 
 ### Keyless YAML ###
 
