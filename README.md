@@ -532,18 +532,20 @@ jinjafx_vault:
   url: "https://jinjafx.vault.url:8443"
   user: "{{ jinjafx_input.user }}"
   password: "{{ jinjafx_input.password }}"
+  timeout: 5 # default
+  verify: True # default
 ```
 
 By default JinjaFx will attempt to verify the TLS Certificate is valid, but this check can be skipped by setting the key `verify` to `false` (not recommended). It is recommended the `user` and `password` fields are requested using `jinjafx_input` (as above) or are Ansible Vault encrypted.
 
-The `jinjafx_vault` syntax within `vars.yml` is used to login to JinjaFx Vault before your Jinja2 template is processed. To access variables stored within the vault you can use the `jinjafx.vault()` function within your template.
+The `jinjafx_vault` syntax within `vars.yml` is used to login to JinjaFx Vault before your Jinja2 template is processed. To access variables stored within the vault you can use the `lookup("jinjafx_vault", ...)` lookup function within your template.
 
-<code><b>jinjafx.vault(namespace</b>: String<b>, variable</b>: String<b>)</b> -> String</code>
+<code><b>lookup("jinjafx_vault", namespace</b>: String<b>, variable</b>: String<b>)</b> -> Any</code>
 
 JinjaFx Vault uses namespaces - variables can only exist within namespaces, so when you request a variable you need to specify the namespace alongside the variable - if your user has access to the namespace then it will insert the value of the variable within your template, e.g:
 
 ```jinja2
-{{ jinjafx.vault("namespace", "variable") }}
+{{ lookup("jinjafx_vault", "namespace", "variable") }}
 ```
 
 ### Keyless YAML ###
