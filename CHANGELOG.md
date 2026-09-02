@@ -2,7 +2,7 @@
 
 ### [1.28.0] - In Development
 - Dropped support for Python 3.10
-- Added support for JinjaFx Vault via `jinjafx_vault` and `jinjafx.vault()`
+- Added support for JinjaFx Vault via `jinjafx_vault` and `lookup("jinjafx_vault", ...)`
 - Deprecated `jinjafx_vault_undefined` in favour of `jinjafx_ansible_vault_undefined`
 
 ### [1.27.6] - January 28, 2026
