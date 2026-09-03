@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.28.1] - September 3, 2026
+- Added `vault_undefined` to `jinjafx_vault` to behave similar to `jinjafx_ansible_vault_undefined`
+
 ### [1.28.0] - September 2, 2026
 - Dropped support for Python 3.10
 - Added support for JinjaFx Vault via `jinjafx_vault` and `lookup("jinjafx_vault", ...)`
@@ -638,6 +641,7 @@ Would result in the following:
 - Initial release
 
 
+[1.28.1]: https://github.com/cmason3/jinjafx/compare/v1.28.0...v1.28.1
 [1.28.0]: https://github.com/cmason3/jinjafx/compare/v1.27.6...v1.28.0
 [1.27.6]: https://github.com/cmason3/jinjafx/compare/v1.27.5...v1.27.6
 [1.27.5]: https://github.com/cmason3/jinjafx/compare/v1.27.3...v1.27.5

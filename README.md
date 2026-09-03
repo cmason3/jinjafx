@@ -529,6 +529,7 @@ jinjafx_input:
       required: True
 
 jinjafx_vault:
+  vault_undefined: False # default
   url: "https://jinjafx.vault.url:8443"
   user: "{{ jinjafx_input.user }}"
   password: "{{ jinjafx_input.password }}"
@@ -547,6 +548,27 @@ JinjaFx Vault uses namespaces - variables can only exist within namespaces, so w
 ```jinja2
 {{ lookup("jinjafx_vault", "namespace", "variable") }}
 ```
+
+Similar to `jinjafx_ansible_vault_undefined` if you define the key `vault_undefined` under `jinjafx_vault` and the password is empty or missing then the lookup function will return undefined, which you are able to test for, e.g:
+
+```jinja2
+{{ lookup("jinjafx_vault", "namespace", "variable")|default("placeholder") }}
+```
+
+This can be used on conjunction with Ansible Vault to encrypt the password, e.g:
+
+```yaml
+jinjafx_ansible_vault_undefined: True
+
+jinjafx_vault:
+  vault_undefined: True
+  ...
+  password: !vault |2
+    $ANSIBLE_VAULT;1.1;AES256
+    3236346333343.....
+```
+
+If you omit the Ansible Vault password then `jinjafx_vault.password` will be undefined, which will result in the lookup returning undefined.
 
 ### Keyless YAML ###
 

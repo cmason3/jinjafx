@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.28.0'
+__version__ = '1.28.1'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -865,21 +865,30 @@ class JinjaFx():
         jinjafx_disable_dataloop = False
 
       if 'jinjafx_vault' in gvars and gvars['jinjafx_vault']:
+        vault_undefined = gvars['jinjafx_vault'].get('vault_undefined', False)
+        password = gvars['jinjafx_vault'].get('password', '')
         timeout = gvars['jinjafx_vault'].get('timeout', 5)
 
-        if not (verify := gvars['jinjafx_vault'].get('verify', True)):
-          requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
-
-        if (r := requests.post(gvars['jinjafx_vault']['url'] + '/v1/login', json=gvars['jinjafx_vault'], verify=verify, timeout=timeout)).status_code == 200:
+        if vault_undefined and not password:
           env.globals.update({ '_jinjafx_vault': {
-            'url': gvars['jinjafx_vault']['url'],
-            'token': json.loads(r.text)['token'],
-            'verify': verify,
-            'timeout': timeout
+            'skip': True
           }})
 
         else:
-          raise Exception('jinjafx vault - failed to login')
+          if not (verify := gvars['jinjafx_vault'].get('verify', True)):
+            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+
+          if (r := requests.post(gvars['jinjafx_vault']['url'] + '/v1/login', json=gvars['jinjafx_vault'], verify=verify, timeout=timeout)).status_code == 200:
+            env.globals.update({ '_jinjafx_vault': {
+              'url': gvars['jinjafx_vault']['url'],
+              'token': json.loads(r.text)['token'],
+              'verify': verify,
+              'timeout': timeout,
+              'skip': False
+            }})
+
+          else:
+            raise Exception('jinjafx vault - failed to login')
 
       env.globals.update({ 'jinjafx': {
         'version': __version__,
@@ -1036,8 +1045,10 @@ class JinjaFx():
     finally:
       if '_jinjafx_vault' in env.globals:
         _jinjafx_vault = env.globals['_jinjafx_vault']
-        headers = { 'X-Vault-Token': env.globals['_jinjafx_vault']['token'] }
-        requests.post(env.globals['_jinjafx_vault']['url'] + '/v1/logout', headers=headers, verify=_jinjafx_vault['verify'], timeout=_jinjafx_vault['timeout'])
+
+        if not _jinjafx_vault['skip']:
+          headers = { 'X-Vault-Token': env.globals['_jinjafx_vault']['token'] }
+          requests.post(env.globals['_jinjafx_vault']['url'] + '/v1/logout', headers=headers, verify=_jinjafx_vault['verify'], timeout=_jinjafx_vault['timeout'])
 
       if tempdir is not None:
         shutil.rmtree(tempdir)
@@ -1122,18 +1133,22 @@ class JinjaFx():
     elif method == 'jinjafx_vault':
       if v:= context.get('_jinjafx_vault'):
         if len(args) == 2:
-          headers = { 'X-Vault-Token': v['token'] }
-          if (r := requests.get(v['url'] + f'/v1/data/{args[0]}/{args[1]}', headers=headers, verify=v['verify'], timeout=v['timeout'])).status_code == 200:
-            return json.loads(r.text)['data']
+          if v['skip']:
+            return context.environment.undefined(name=f'lookup("jinjafx_vault", "{args[0]}", "{args[1]}")')
 
           else:
-            raise JinjaFx.TemplateError(f'unable to obtain jinjafx vault variable \'{variable}\' within namespace \'{namespace}\'')
+            headers = { 'X-Vault-Token': v['token'] }
+            if (r := requests.get(v['url'] + f'/v1/data/{args[0]}/{args[1]}', headers=headers, verify=v['verify'], timeout=v['timeout'])).status_code == 200:
+              return json.loads(r.text)['data']
+
+            else:
+              raise JinjaFx.TemplateError(f'unable to obtain jinjafx vault variable \'{args[1]}\' within namespace \'{args[0]}\'')
 
         else:
           raise JinjaFx.TemplateError('jinjafx vault - not enough arguments to lookup function')
 
       else:
-        raise JinjaFx.TemplateError('jinjafx vault - not logged in')
+        raise JinjaFx.TemplateError('jinjafx vault - missing \'jinjafx_vault\' in \'vars.yml\'')
 
     else:
       raise JinjaFx.TemplateError(f'\'lookup\' method \'{method}\' is undefined')
