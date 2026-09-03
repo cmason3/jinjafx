@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.28.1'
+__version__ = '1.28.2'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -856,14 +856,6 @@ class JinjaFx():
       env = jinja2env(extensions=gvars['jinja2_extensions'], loader=jinja2.FileSystemLoader(os.path.dirname(template.name)), **jinja2_options)
       rtemplate = env.get_template(os.path.basename(template.name))
 
-      if gvars:
-        jinjafx_disable_dataloop = gvars.get('jinjafx_disable_dataloop', False)
-        gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
-        gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
-
-      else:
-        jinjafx_disable_dataloop = False
-
       if 'jinjafx_vault' in gvars and gvars['jinjafx_vault']:
         vault_undefined = gvars['jinjafx_vault'].get('vault_undefined', False)
         password = gvars['jinjafx_vault'].get('password', '')
@@ -913,10 +905,18 @@ class JinjaFx():
         'varnames': self.__jfx_lookup_varnames
       })
 
+      self.__g_filters = env.filters
+
+      if gvars:
+        jinjafx_disable_dataloop = gvars.get('jinjafx_disable_dataloop', False)
+        gyaml = env.from_string(yaml.dump(gvars, sort_keys=False)).render(gvars)
+        gvars = yaml.load(gyaml, Loader=yaml.SafeLoader)
+
+      else:
+        jinjafx_disable_dataloop = False
+
       if self.__g_hostvars:
         env.globals.update({ 'hostvars': self.__g_hostvars })
-
-      self.__g_filters = env.filters
 
       routput = env.from_string(output)
       blanks = {}
