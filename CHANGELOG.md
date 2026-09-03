@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.28.2] - September 3, 2026
+- Fixed an issue where you couldn't use `lookup("jinjafx_vault", ...)` in `vars.yml`
+
 ### [1.28.1] - September 3, 2026
 - Added `vault_undefined` to `jinjafx_vault` to behave similar to `jinjafx_ansible_vault_undefined`
 
@@ -641,6 +644,7 @@ Would result in the following:
 - Initial release
 
 
+[1.28.2]: https://github.com/cmason3/jinjafx/compare/v1.28.1...v1.28.2
 [1.28.1]: https://github.com/cmason3/jinjafx/compare/v1.28.0...v1.28.1
 [1.28.0]: https://github.com/cmason3/jinjafx/compare/v1.27.6...v1.28.0
 [1.27.6]: https://github.com/cmason3/jinjafx/compare/v1.27.5...v1.27.6
