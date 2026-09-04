@@ -229,9 +229,9 @@ Environment Variables:
                 if y := yaml.load(gv, Loader=yaml.SafeLoader):
                   vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
 
-              if 'jinjafx_ansible_vault_undefined' in gv:
+              if 'jinjafx_ansible_vault_undef_nopass' in gv:
                 if y := yaml.load(gv, Loader=yaml.SafeLoader):
-                  vault_undef = y.get('jinjafx_ansible_vault_undefined', vault_undef)
+                  vault_undef = y.get('jinjafx_ansible_vault_undef_nopass', vault_undef)
 
             except Exception as e:
               exc_source = 'dt:global'
@@ -243,9 +243,9 @@ Environment Variables:
                 if y := yaml.load(dt['vars'], Loader=yaml.SafeLoader):
                   vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
 
-              if 'jinjafx_ansible_vault_undefined' in dt['vars']:
+              if 'jinjafx_ansible_vault_undef_nopass' in dt['vars']:
                 if y := yaml.load(dt['vars'], Loader=yaml.SafeLoader):
-                  vault_undef = y.get('jinjafx_ansible_vault_undefined', vault_undef)
+                  vault_undef = y.get('jinjafx_ansible_vault_undef_nopass', vault_undef)
 
             except Exception as e:
               exc_source = 'dt:vars'
@@ -311,9 +311,9 @@ Environment Variables:
               if y := yaml.load(fcontents[g.name], Loader=yaml.SafeLoader):
                 vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
 
-            if b'jinjafx_ansible_vault_undefined' in fcontents[g.name]:
+            if b'jinjafx_ansible_vault_undef_nopass' in fcontents[g.name]:
               if y := yaml.load(fcontents[g.name], Loader=yaml.SafeLoader):
-                vault_undef = y.get('jinjafx_ansible_vault_undefined', vault_undef)
+                vault_undef = y.get('jinjafx_ansible_vault_undef_nopass', vault_undef)
 
           except Exception as e:
             exc_source = g.name
@@ -859,11 +859,11 @@ class JinjaFx():
       if 'jinjafx_vault' in gvars and gvars['jinjafx_vault']:
         jinjafx_vault = env.from_string(yaml.dump(gvars['jinjafx_vault'], sort_keys=False)).render({'jinjafx_input': gvars.get('jinjafx_input', {})})
         jinjafx_vault = yaml.load(jinjafx_vault, Loader=yaml.SafeLoader)
-        vault_undefined = jinjafx_vault.get('vault_undefined', False)
+        vault_undef_nopass = jinjafx_vault.get('vault_undef_nopass', False)
         password = jinjafx_vault.get('password', '')
         timeout = jinjafx_vault.get('timeout', 5)
 
-        if vault_undefined and not password:
+        if vault_undef_nopass and not password:
           env.globals.update({ '_jinjafx_vault': {
             'skip': True
           }})
