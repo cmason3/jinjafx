@@ -409,9 +409,9 @@ There might be some situations where you can't control the format of the header 
 jinjafx_adjust_headers: "yes" | "no" | "upper" | "lower"
 ```
 
-- <code><b>jinjafx_ansible_vault_undefined</b></code>
+- <code><b>jinjafx_ansible_vault_undef_nopass</b></code>
 
-By default JinjaFx will fail with "invalid ansible vault password" if the provided Ansible Vault password is empty or missing. The `jinjafx_ansible_vault_undefined` variable allows you to change this behaviour - if set to `True` then it will proceed to process the template, but if it can't decrypt a vaulted variable due to a missing password then the variable won't be defined - you can then test this within your template, e.g:
+By default JinjaFx will fail with "invalid ansible vault password" if the provided Ansible Vault password is empty or missing. The `jinjafx_ansible_vault_undef_nopass` variable allows you to change this behaviour - if set to `True` then it will proceed to process the template, but if it can't decrypt a vaulted variable due to a missing password then the variable won't be defined - you can then test this within your template, e.g:
 
 ```jinja2
 {% if vaulted_variable is defined %}
@@ -529,7 +529,7 @@ jinjafx_input:
       required: True
 
 jinjafx_vault:
-  vault_undefined: False # default
+  vault_undef_nopass: False # default
   url: "https://jinjafx.vault.url:8443"
   user: "{{ jinjafx_input.user }}"
   password: "{{ jinjafx_input.password }}"
@@ -549,7 +549,7 @@ JinjaFx Vault uses namespaces - variables can only exist within namespaces, so w
 {{ lookup("jinjafx_vault", "namespace", "variable") }}
 ```
 
-Similar to `jinjafx_ansible_vault_undefined` if you define the key `vault_undefined` under `jinjafx_vault` and the password is empty or missing then the lookup function will return undefined, which you are able to test for, e.g:
+Similar to `jinjafx_ansible_vault_undef_nopass` if you define the key `vault_undef_nopass` under `jinjafx_vault` and the password is empty or missing then the lookup function will return undefined, which you are able to test for, e.g:
 
 ```jinja2
 {{ lookup("jinjafx_vault", "namespace", "variable")|default("placeholder") }}
@@ -558,10 +558,10 @@ Similar to `jinjafx_ansible_vault_undefined` if you define the key `vault_undefi
 This can be used on conjunction with Ansible Vault to encrypt the password, e.g:
 
 ```yaml
-jinjafx_ansible_vault_undefined: True
+jinjafx_ansible_vault_undef_nopass: True
 
 jinjafx_vault:
-  vault_undefined: True
+  vault_undef_nopass: True
   ...
   password: !vault |2
     $ANSIBLE_VAULT;1.1;AES256
