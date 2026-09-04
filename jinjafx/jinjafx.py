@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.28.2'
+__version__ = '1.28.3'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -857,9 +857,11 @@ class JinjaFx():
       rtemplate = env.get_template(os.path.basename(template.name))
 
       if 'jinjafx_vault' in gvars and gvars['jinjafx_vault']:
-        vault_undefined = gvars['jinjafx_vault'].get('vault_undefined', False)
-        password = gvars['jinjafx_vault'].get('password', '')
-        timeout = gvars['jinjafx_vault'].get('timeout', 5)
+        jinjafx_vault = env.from_string(yaml.dump(gvars['jinjafx_vault'], sort_keys=False)).render({'jinjafx_input': gvars.get('jinjafx_input', {})})
+        jinjafx_vault = yaml.load(jinjafx_vault, Loader=yaml.SafeLoader)
+        vault_undefined = jinjafx_vault.get('vault_undefined', False)
+        password = jinjafx_vault.get('password', '')
+        timeout = jinjafx_vault.get('timeout', 5)
 
         if vault_undefined and not password:
           env.globals.update({ '_jinjafx_vault': {
@@ -867,12 +869,12 @@ class JinjaFx():
           }})
 
         else:
-          if not (verify := gvars['jinjafx_vault'].get('verify', True)):
+          if not (verify := jinjafx_vault.get('verify', True)):
             requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
-          if (r := requests.post(gvars['jinjafx_vault']['url'] + '/v1/login', json=gvars['jinjafx_vault'], verify=verify, timeout=timeout)).status_code == 200:
+          if (r := requests.post(jinjafx_vault['url'] + '/v1/login', json=jinjafx_vault, verify=verify, timeout=timeout)).status_code == 200:
             env.globals.update({ '_jinjafx_vault': {
-              'url': gvars['jinjafx_vault']['url'],
+              'url': jinjafx_vault['url'],
               'token': json.loads(r.text)['token'],
               'verify': verify,
               'timeout': timeout,
