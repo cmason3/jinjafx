@@ -3,6 +3,8 @@
 ### [1.28.4] - In Development
 - Renamed `jinjafx_ansible_vault_undefined` to `jinjafx_ansible_vault_undef_nopass`
 - Renamed `jinjafx_vault.vault_undefined` to `jinjafx_vault.vault_undef_nopass`
+- Argument `variable` is now optional in `jinjafx_vault` lookup
+- Added `nsvars` variable to `jinjafx_vault`
 
 ### [1.28.3] - September 4, 2026
 - Fixed an issue where you couldn't use `jinjafx_input` values in `jinjafx_vault` in `vars.yml`

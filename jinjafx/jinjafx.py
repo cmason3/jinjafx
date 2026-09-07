@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.28.4-dev'
+__version__ = '1.28.4'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -881,6 +881,22 @@ class JinjaFx():
               'skip': False
             }})
 
+            if 'nsvars' in jinjafx_vault and jinjafx_vault['nsvars']:
+              headers = { 'X-Vault-Token': env.globals['_jinjafx_vault']['token'] }
+
+              for var, ns in jinjafx_vault.get('nsvars', {}).items():
+                if (r := requests.get(jinjafx_vault['url'] + f'/v1/data/{ns}', headers=headers, verify=verify, timeout=timeout)).status_code == 200:
+                  obj = json.loads(r.text)
+                  result = {}
+
+                  for k, v in obj.items():
+                    result[k] = v['data']
+
+                  env.globals.update({ var: result })
+
+                else:
+                  raise JinjaFx.TemplateError(f'jinjafx vault - unable to get namespace \'{ns}\'')
+
           else:
             raise Exception('jinjafx vault - failed to login')
 
@@ -1146,15 +1162,17 @@ class JinjaFx():
             else:
               raise JinjaFx.TemplateError(f'jinjafx_vault - unable to get variable \'{args[1]}\' within namespace \'{args[0]}\'')
 
-        else if len(args) == 1:
+        elif len(args) == 1:
           if v['skip']:
             return context.environment.undefined(name=f'lookup("jinjafx_vault", "{args[0]}")')
 
           else:
             headers = { 'X-Vault-Token': v['token'] }
             if (r := requests.get(v['url'] + f'/v1/data/{args[0]}', headers=headers, verify=v['verify'], timeout=v['timeout'])).status_code == 200:
+              obj = json.loads(r.text)
               result = {}
-              for k, v in json.loads(r.text):
+
+              for k, v in obj.items():
                 result[k] = v['data']
 
               return result
