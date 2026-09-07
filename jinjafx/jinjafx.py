@@ -857,7 +857,7 @@ class JinjaFx():
       rtemplate = env.get_template(os.path.basename(template.name))
 
       if 'jinjafx_vault' in gvars and gvars['jinjafx_vault']:
-        jinjafx_vault = env.from_string(yaml.dump(gvars['jinjafx_vault'], sort_keys=False)).render({'jinjafx_input': gvars.get('jinjafx_input', {})})
+        jinjafx_vault = env.from_string(yaml.dump(gvars['jinjafx_vault'], sort_keys=False)).render(gvars)
         jinjafx_vault = yaml.load(jinjafx_vault, Loader=yaml.SafeLoader)
         vault_undef_nopass = jinjafx_vault.get('vault_undef_nopass', False)
         password = jinjafx_vault.get('password', '')
