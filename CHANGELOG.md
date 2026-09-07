@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.28.4] - In Development
+### [1.28.4] - September 7, 2026
 - Renamed `jinjafx_ansible_vault_undefined` to `jinjafx_ansible_vault_undef_nopass`
 - Renamed `jinjafx_vault.vault_undefined` to `jinjafx_vault.vault_undef_nopass`
 - Argument `variable` is now optional in `jinjafx_vault` lookup
