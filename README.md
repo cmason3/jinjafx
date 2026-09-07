@@ -558,6 +558,18 @@ JinjaFx Vault uses namespaces - variables can only exist within namespaces, so w
 {{ vault["variable"] }}
 ```
 
+Alternatively you can define `nsvars` under `jinjafx_vault`, which injects a variable into your environment that contains all the variables within your namespace. Retrieving the whole namespace is more efficient, as it only requires a single HTTP request to JinjaFx Vault, as opposed to a request per lookup, e.g:
+
+```yaml
+jinjafx_vault:
+  nsvars:
+    vault: "<namespace>"
+```
+
+```jinja2
+{{ vault["<variable>"] }}
+```
+
 Similar to `jinjafx_ansible_vault_undef_nopass` if you define the key `vault_undef_nopass` under `jinjafx_vault` and the password is empty or missing then the lookup function will return undefined, which you are able to test for, e.g:
 
 ```jinja2
