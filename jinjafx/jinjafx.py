@@ -1144,13 +1144,29 @@ class JinjaFx():
               return json.loads(r.text)['data']
 
             else:
-              raise JinjaFx.TemplateError(f'unable to obtain jinjafx vault variable \'{args[1]}\' within namespace \'{args[0]}\'')
+              raise JinjaFx.TemplateError(f'jinjafx_vault - unable to get variable \'{args[1]}\' within namespace \'{args[0]}\'')
+
+        else if len(args) == 1:
+          if v['skip']:
+            return context.environment.undefined(name=f'lookup("jinjafx_vault", "{args[0]}")')
+
+          else:
+            headers = { 'X-Vault-Token': v['token'] }
+            if (r := requests.get(v['url'] + f'/v1/data/{args[0]}', headers=headers, verify=v['verify'], timeout=v['timeout'])).status_code == 200:
+              result = {}
+              for k, v in json.loads(r.text):
+                result[k] = v['data']
+
+              return result
+
+            else:
+              raise JinjaFx.TemplateError(f'jinjafx vault - unable to get namespace \'{args[0]}\'')
 
         else:
-          raise JinjaFx.TemplateError('jinjafx vault - not enough arguments to lookup function')
+          raise JinjaFx.TemplateError('jinjafx vault - invalid arguments to lookup function')
 
       else:
-        raise JinjaFx.TemplateError('jinjafx vault - missing \'jinjafx_vault\' in \'vars.yml\'')
+        raise JinjaFx.TemplateError('jinjafx vault - missing \'jinjafx_vault\' definition in \'vars.yml\'')
 
     else:
       raise JinjaFx.TemplateError(f'\'lookup\' method \'{method}\' is undefined')
