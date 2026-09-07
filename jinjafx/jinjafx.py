@@ -1181,7 +1181,7 @@ class JinjaFx():
               raise JinjaFx.TemplateError(f'jinjafx vault - unable to get namespace \'{args[0]}\'')
 
         else:
-          raise JinjaFx.TemplateError('jinjafx vault - invalid arguments to lookup function')
+          raise JinjaFx.TemplateError('jinjafx vault - invalid arguments provided to lookup function')
 
       else:
         raise JinjaFx.TemplateError('jinjafx vault - missing \'jinjafx_vault\' definition in \'vars.yml\'')
