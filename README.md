@@ -558,7 +558,7 @@ JinjaFx Vault uses namespaces - variables can only exist within namespaces, so w
 {{ vault["variable"] }}
 ```
 
-Alternatively you can define `nsvars` under `jinjafx_vault`, which injects a variable into your environment that contains all the variables within your namespace. Retrieving the whole namespace is more efficient, as it only requires a single HTTP request to JinjaFx Vault, as opposed to a request per lookup, e.g:
+Alternatively you can define `nsvars` under `jinjafx_vault`, which injects a variable into your environment that contains all the variables within your namespace. Retrieving the whole namespace is more efficient, as it only requires a single HTTP request to JinjaFx Vault, as opposed to a request per variable, e.g:
 
 ```yaml
 jinjafx_vault:
