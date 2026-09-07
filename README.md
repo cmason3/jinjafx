@@ -529,10 +529,10 @@ jinjafx_input:
       required: True
 
 jinjafx_vault:
-  vault_undef_nopass: False # default
   url: "https://jinjafx.vault.url:8443"
   user: "{{ jinjafx_input.user }}"
   password: "{{ jinjafx_input.password }}"
+  vault_undef_nopass: False # default
   timeout: 5 # default
   verify: True # default
   nsvars:
