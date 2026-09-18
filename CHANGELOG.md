@@ -1,5 +1,10 @@
 ## CHANGELOG
 
+### [1.29.0] - September 18, 2026
+- Updated JinjaFx Vault integration to align with Ansible using the same methodology and variables
+- Removed `nsvars` variable from `jinjafx_vault` and removed `jinjafx_vault` lookup
+- Removed deprecated variable `jinjafx_vault_undefined`
+
 ### [1.28.4] - September 7, 2026
 - Renamed `jinjafx_ansible_vault_undefined` to `jinjafx_ansible_vault_undef_nopass`
 - Renamed `jinjafx_vault.vault_undefined` to `jinjafx_vault.vault_undef_nopass`
@@ -653,6 +658,7 @@ Would result in the following:
 - Initial release
 
 
+[1.29.0]: https://github.com/cmason3/jinjafx/compare/v1.28.4...v1.29.0
 [1.28.4]: https://github.com/cmason3/jinjafx/compare/v1.28.3...v1.28.4
 [1.28.3]: https://github.com/cmason3/jinjafx/compare/v1.28.2...v1.28.3
 [1.28.2]: https://github.com/cmason3/jinjafx/compare/v1.28.1...v1.28.2
