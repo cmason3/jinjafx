@@ -560,7 +560,7 @@ jinjafx_ansible_vault_undef_nopass: True
 jinjafx_vault:
   vault_undef_nopass: True
   ...
-  password: !vault |2
+  vault_password: !vault |2
     $ANSIBLE_VAULT;1.1;AES256
     3236346333343.....
 ```
