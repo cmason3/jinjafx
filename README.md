@@ -533,9 +533,9 @@ jinjafx_vault:
   vault_user: "{{ jinjafx_input.user }}"
   vault_password: "{{ jinjafx_input.password }}"
   vault_undef_nopass: False # default
+  vault_namespace: "<namespace>"
   vault_timeout: 5 # default
   vault_verify: True # default
-  vault_namespace: "<namespace>"
 ```
 
 By default JinjaFx will attempt to verify the TLS Certificate is valid, but this check can be skipped by setting the key `vault_verify` to `false` (not recommended). It is recommended the `vault_user` and `vault_password` fields are requested using `jinjafx_input` (as above) or are Ansible Vault encrypted.
