@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.28.4'
+__version__ = '1.29.0'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -225,10 +225,6 @@ Environment Variables:
 
           if gv:
             try:
-              if 'jinjafx_vault_undefined' in gv: # DEPRECATED
-                if y := yaml.load(gv, Loader=yaml.SafeLoader):
-                  vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
-
               if 'jinjafx_ansible_vault_undef_nopass' in gv:
                 if y := yaml.load(gv, Loader=yaml.SafeLoader):
                   vault_undef = y.get('jinjafx_ansible_vault_undef_nopass', vault_undef)
@@ -239,10 +235,6 @@ Environment Variables:
 
           if 'vars' in dt:
             try:
-              if 'jinjafx_vault_undefined' in dt['vars']: # DEPRECATED
-                if y := yaml.load(dt['vars'], Loader=yaml.SafeLoader):
-                  vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
-
               if 'jinjafx_ansible_vault_undef_nopass' in dt['vars']:
                 if y := yaml.load(dt['vars'], Loader=yaml.SafeLoader):
                   vault_undef = y.get('jinjafx_ansible_vault_undef_nopass', vault_undef)
@@ -307,10 +299,6 @@ Environment Variables:
             fcontents[g.name] = __decrypt_vault(vpw, f.read())
 
           try:
-            if b'jinjafx_vault_undefined' in fcontents[g.name]: # DEPRECATED
-              if y := yaml.load(fcontents[g.name], Loader=yaml.SafeLoader):
-                vault_undef = y.get('jinjafx_vault_undefined', vault_undef)
-
             if b'jinjafx_ansible_vault_undef_nopass' in fcontents[g.name]:
               if y := yaml.load(fcontents[g.name], Loader=yaml.SafeLoader):
                 vault_undef = y.get('jinjafx_ansible_vault_undef_nopass', vault_undef)
@@ -860,42 +848,43 @@ class JinjaFx():
         jinjafx_vault = env.from_string(yaml.dump(gvars['jinjafx_vault'], sort_keys=False)).render(gvars)
         jinjafx_vault = yaml.load(jinjafx_vault, Loader=yaml.SafeLoader)
         vault_undef_nopass = jinjafx_vault.get('vault_undef_nopass', False)
-        password = jinjafx_vault.get('password', '')
-        timeout = jinjafx_vault.get('timeout', 5)
+        password = jinjafx_vault.get('vault_password', '')
+        timeout = jinjafx_vault.get('vault_timeout', 5)
+        del gvars['jinjafx_vault']
 
         if vault_undef_nopass and not password:
+          env.globals['jinjafx_vault'] = {}
           env.globals.update({ '_jinjafx_vault': {
             'skip': True
           }})
 
         else:
-          if not (verify := jinjafx_vault.get('verify', True)):
+          if not (verify := jinjafx_vault.get('vault_verify', True)):
             requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
-          if (r := requests.post(jinjafx_vault['url'] + '/v1/login', json=jinjafx_vault, verify=verify, timeout=timeout)).status_code == 200:
+          data = { 'user': jinjafx_vault['vault_user'], 'password': password }
+          if (r := requests.post(jinjafx_vault['vault_url'] + '/v1/login', json=data, verify=verify, timeout=timeout)).status_code == 200:
             env.globals.update({ '_jinjafx_vault': {
-              'url': jinjafx_vault['url'],
+              'url': jinjafx_vault['vault_url'],
               'token': json.loads(r.text)['token'],
               'verify': verify,
               'timeout': timeout,
               'skip': False
             }})
 
-            if 'nsvars' in jinjafx_vault and jinjafx_vault['nsvars']:
-              headers = { 'X-Vault-Token': env.globals['_jinjafx_vault']['token'] }
+            headers = { 'X-Vault-Token': env.globals['_jinjafx_vault']['token'] }
+           
+            if (r := requests.get(jinjafx_vault['vault_url'] + '/v1/data/' + jinjafx_vault['vault_namespace'], headers=headers, verify=verify, timeout=timeout)).status_code == 200:
+              obj = json.loads(r.text)
+              result = {}
 
-              for var, ns in jinjafx_vault.get('nsvars', {}).items():
-                if (r := requests.get(jinjafx_vault['url'] + f'/v1/data/{ns}', headers=headers, verify=verify, timeout=timeout)).status_code == 200:
-                  obj = json.loads(r.text)
-                  result = {}
+              for k, v in obj.items():
+                result[k] = v['data']
 
-                  for k, v in obj.items():
-                    result[k] = v['data']
+              env.globals['jinjafx_vault'] = result
 
-                  env.globals.update({ var: result })
-
-                else:
-                  raise JinjaFx.TemplateError(f'jinjafx vault - unable to get namespace \'{ns}\'')
+            else:
+              raise JinjaFx.TemplateError('jinjafx vault - unable to get namespace \'' + jinjafx_vault['vault_namespace'] + '\'')
 
           else:
             raise Exception('jinjafx vault - failed to login')
@@ -1147,44 +1136,6 @@ class JinjaFx():
 
       else:
         raise JinjaFx.TemplateError(f'\'lookup\' method doesn\'t have enough arguments')
-
-    elif method == 'jinjafx_vault':
-      if v:= context.get('_jinjafx_vault'):
-        if len(args) == 2:
-          if v['skip']:
-            return context.environment.undefined(name=f'lookup("jinjafx_vault", "{args[0]}", "{args[1]}")')
-
-          else:
-            headers = { 'X-Vault-Token': v['token'] }
-            if (r := requests.get(v['url'] + f'/v1/data/{args[0]}/{args[1]}', headers=headers, verify=v['verify'], timeout=v['timeout'])).status_code == 200:
-              return json.loads(r.text)['data']
-
-            else:
-              raise JinjaFx.TemplateError(f'jinjafx_vault - unable to get variable \'{args[1]}\' within namespace \'{args[0]}\'')
-
-        elif len(args) == 1:
-          if v['skip']:
-            return context.environment.undefined(name=f'lookup("jinjafx_vault", "{args[0]}")')
-
-          else:
-            headers = { 'X-Vault-Token': v['token'] }
-            if (r := requests.get(v['url'] + f'/v1/data/{args[0]}', headers=headers, verify=v['verify'], timeout=v['timeout'])).status_code == 200:
-              obj = json.loads(r.text)
-              result = {}
-
-              for k, v in obj.items():
-                result[k] = v['data']
-
-              return result
-
-            else:
-              raise JinjaFx.TemplateError(f'jinjafx vault - unable to get namespace \'{args[0]}\'')
-
-        else:
-          raise JinjaFx.TemplateError('jinjafx vault - invalid arguments provided to lookup function')
-
-      else:
-        raise JinjaFx.TemplateError('jinjafx vault - missing \'jinjafx_vault\' definition in \'vars.yml\'')
 
     else:
       raise JinjaFx.TemplateError(f'\'lookup\' method \'{method}\' is undefined')

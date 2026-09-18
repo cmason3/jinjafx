@@ -514,7 +514,7 @@ Under the field the `text` key is always mandatory, but the following optional k
 
 ### JinjaFx Vault
 
-JinjaFx supports integration with [JinjaFx Vault](https://github.com/cmason3/jinjafx_vault), which is a separate Secrets Manager that is used to store credentials in a secure vault. To integrate JinjaFx Vault in your template you need to define `jinjafx_vault` within `vars.yml`, with the location of the JinjaFx Vault server and your login credentials, e.g:
+JinjaFx supports integration with [JinjaFx Vault](https://github.com/cmason3/jinjafx_vault), which is a separate Secrets Manager that is used to store credentials in a secure vault. To integrate JinjaFx Vault in your template you need to define `jinjafx_vault` within `vars.yml`, with the location of the JinjaFx Vault server, your login credentials, as well as the required namespace, e.g:
 
 ```yaml
 ---
@@ -529,54 +529,30 @@ jinjafx_input:
       required: True
 
 jinjafx_vault:
-  url: "https://jinjafx.vault.url:8443"
-  user: "{{ jinjafx_input.user }}"
-  password: "{{ jinjafx_input.password }}"
+  vault_url: "https://jinjafx.vault.url:8443"
+  vault_user: "{{ jinjafx_input.user }}"
+  vault_password: "{{ jinjafx_input.password }}"
   vault_undef_nopass: False # default
-  timeout: 5 # default
-  verify: True # default
-  nsvars:
-    <var>: "<namespace>"
+  vault_timeout: 5 # default
+  vault_verify: True # default
+  vault_namespace: "<namespace>"
 ```
 
-By default JinjaFx will attempt to verify the TLS Certificate is valid, but this check can be skipped by setting the key `verify` to `false` (not recommended). It is recommended the `user` and `password` fields are requested using `jinjafx_input` (as above) or are Ansible Vault encrypted.
+By default JinjaFx will attempt to verify the TLS Certificate is valid, but this check can be skipped by setting the key `vault_verify` to `false` (not recommended). It is recommended the `vault_user` and `vault_password` fields are requested using `jinjafx_input` (as above) or are Ansible Vault encrypted.
 
-The `jinjafx_vault` syntax within `vars.yml` is used to login to JinjaFx Vault before your Jinja2 template is processed. There are two methods to access variables, the first is using the `lookup("jinjafx_vault", ...)` lookup function within your template and the second is by setting `nsvars` in `jinjafx_vault`.
-
-<code><b>lookup("jinjafx_vault", namespace</b>: String<b>, variable</b>: Optional[String]<b>)</b> -> Any</code>
-
-JinjaFx Vault uses namespaces - variables can only exist within namespaces, so when you request a variable you need to specify the namespace alongside the variable (if you omit the variable it returns all variables within the namespace as a dictionary) - if your user has access to the namespace then it will insert the value of the variable within your template, e.g:
+The `jinjafx_vault` syntax within `vars.yml` is used to login to JinjaFx Vault before your Jinja2 template is processed. The `vault_namespace` variable tells JinjaFx which namespace to import into the `jinjafx_vault` dict that is then accessible from your template, e.g:
 
 ```jinja2
-{{ lookup("jinjafx_vault", "namespace", "variable") }}
+{{ jinjafx_vault["<variable>"] }}
 ```
 
- or
+Similar to `jinjafx_ansible_vault_undef_nopass` if you define the key `vault_undef_nopass` under `jinjafx_vault` and the password is empty or missing then `jinjafx_vault` will be empty, which you are able to test for, e.g:
 
 ```jinja2
-{% set vault = lookup("jinjafx_vault", "namespace") %}
-{{ vault["variable"] }}
+{{ jinjafx_vault["<variable>"]|default("<variable>") }}
 ```
 
-Alternatively you can define `nsvars` under `jinjafx_vault`, which injects a variable into your environment that contains all the variables within your namespace. Retrieving the whole namespace is more efficient, as it only requires a single HTTP request to JinjaFx Vault, as opposed to a request per variable, e.g:
-
-```yaml
-jinjafx_vault:
-  nsvars:
-    vault: "<namespace>"
-```
-
-```jinja2
-{{ vault["<variable>"] }}
-```
-
-Similar to `jinjafx_ansible_vault_undef_nopass` if you define the key `vault_undef_nopass` under `jinjafx_vault` and the password is empty or missing then the lookup function will return undefined, which you are able to test for, e.g:
-
-```jinja2
-{{ lookup("jinjafx_vault", "namespace", "variable")|default("placeholder") }}
-```
-
-This can be used on conjunction with Ansible Vault to encrypt the password, e.g:
+This can be used in conjunction with Ansible Vault to encrypt the password, e.g:
 
 ```yaml
 jinjafx_ansible_vault_undef_nopass: True
@@ -589,7 +565,7 @@ jinjafx_vault:
     3236346333343.....
 ```
 
-If you omit the Ansible Vault password then `jinjafx_vault.password` will be undefined, which will result in the lookup returning undefined.
+If you omit the Ansible Vault password then `vault_password` will be undefined, which will result in `jinjafx_vault` being empty.
 
 ### Keyless YAML ###
 
