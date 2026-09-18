@@ -538,7 +538,7 @@ jinjafx_vault:
   vault_verify: True # default
 ```
 
-By default JinjaFx will attempt to verify the TLS Certificate is valid, but this check can be skipped by setting the key `vault_verify` to `false` (not recommended). It is recommended the `vault_user` and `vault_password` fields are requested using `jinjafx_input` (as above) or are Ansible Vault encrypted.
+By default JinjaFx will attempt to verify the TLS Certificate is valid, but this check can be skipped by setting the key `vault_verify` to `False` (not recommended). It is recommended the `vault_user` and `vault_password` fields are requested using `jinjafx_input` (as above) or are Ansible Vault encrypted.
 
 The `jinjafx_vault` syntax within `vars.yml` is used to login to JinjaFx Vault before your Jinja2 template is processed. The `vault_namespace` variable tells JinjaFx which namespace to import into the `jinjafx_vault` dict that is then accessible from your template, e.g:
 
