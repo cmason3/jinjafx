@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.29.1] - September 21, 2026
+- Rewrote and simplified the JinjaFx Vault logic
+
 ### [1.29.0] - September 18, 2026
 - Updated JinjaFx Vault integration to align with Ansible using the same methodology and variables
 - Removed `nsvars` variable from `jinjafx_vault` and removed `jinjafx_vault` lookup
@@ -658,6 +661,7 @@ Would result in the following:
 - Initial release
 
 
+[1.29.1]: https://github.com/cmason3/jinjafx/compare/v1.29.0...v1.29.1
 [1.29.0]: https://github.com/cmason3/jinjafx/compare/v1.28.4...v1.29.0
 [1.28.4]: https://github.com/cmason3/jinjafx/compare/v1.28.3...v1.28.4
 [1.28.3]: https://github.com/cmason3/jinjafx/compare/v1.28.2...v1.28.3
