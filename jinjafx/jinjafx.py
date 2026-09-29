@@ -34,7 +34,7 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.exceptions import InvalidSignature
 from cryptography.exceptions import InvalidTag
 
-__version__ = '1.29.1'
+__version__ = '1.29.2'
 
 __all__ = ['JinjaFx', 'AnsibleVault', 'Vaulty']
 
@@ -93,9 +93,6 @@ Environment Variables:
 
     if args.m and args.g is None:
       parser.error('argument -m: only allowed with argument -g')
-
-    if args.od is not None and not os.access(args.od, os.W_OK):
-      parser.error('argument -od: unable to write to output directory')
 
     gvars = {}
     data = None
