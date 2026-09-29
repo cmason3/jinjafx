@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### [1.29.2] - September 29, 2026
+- Argument `-od` no longer checks to make sure the directory is writable
+
 ### [1.29.1] - September 21, 2026
 - Rewrote and simplified the JinjaFx Vault logic
 
@@ -661,6 +664,7 @@ Would result in the following:
 - Initial release
 
 
+[1.29.2]: https://github.com/cmason3/jinjafx/compare/v1.29.1...v1.29.2
 [1.29.1]: https://github.com/cmason3/jinjafx/compare/v1.29.0...v1.29.1
 [1.29.0]: https://github.com/cmason3/jinjafx/compare/v1.28.4...v1.29.0
 [1.28.4]: https://github.com/cmason3/jinjafx/compare/v1.28.3...v1.28.4
