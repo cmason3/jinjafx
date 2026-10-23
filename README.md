@@ -886,7 +886,7 @@ This function is used to return a unique list of non-empty field values for a sp
 
 This function is used to set a global variable that will persist throughout the processing of all rows.
 
-- <code><b>jinjafx.getg(key</b>: String<b>, default</b>: Optional[String | Integer | Boolean])</b> -> String | Integer | Boolean</code>
+- <code><b>jinjafx.getg(key</b>: String<b>, default</b>: Optional[String | Integer | Boolean]<b>)</b> -> String | Integer | Boolean</code>
 
 This function is used to get a global variable that has been set with `jinjafx.setg()` - optionally you can specify a default value that is returned if the `key` doesn't exist.
 
