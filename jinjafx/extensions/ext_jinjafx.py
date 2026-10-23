@@ -20,7 +20,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from jinjafx import JinjaFx, Vaulty
 
-import os, base64, random, re, hashlib, ipaddress
+import os, base64, random, re, hashlib, ipaddress, string
 
 class plugin(Extension):
   def __init__(self, environment):
@@ -31,6 +31,7 @@ class plugin(Extension):
     self.__mod_b64chars = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     self.__mod_b64table = str.maketrans(self.__std_b64chars, self.__mod_b64chars)
     
+    environment.filters['idempotent_salt'] = self.__idempotent_salt
     environment.filters['cisco_snmpv3_key'] = self.__cisco_snmpv3_key
     environment.filters['arista_snmpv3_key'] = self.__arista_snmpv3_key
     environment.filters['junos_snmpv3_key'] = self.__junos_snmpv3_key
@@ -45,6 +46,10 @@ class plugin(Extension):
     environment.filters['summarize_address_range'] = self.__summarize_address_range
     environment.filters['vaulty_encrypt'] = self.__vaulty.encrypt
     environment.filters['vaulty_decrypt'] = self.__vaulty.decrypt
+
+  def __idempotent_salt(self, seed, length):
+    g = random.Random(seed)
+    return ''.join(g.choice(string.ascii_letters + string.digits) for _ in range(length))
 
   def __expand_snmpv3_key(self, password, algorithm):
     h = hashlib.new(algorithm)
