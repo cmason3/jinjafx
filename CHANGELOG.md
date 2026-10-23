@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [1.29.3] - In Development
+### [1.29.3] - October 23, 2026
 - Added support for `idempotent_salt` filter
 
 ### [1.29.2] - September 29, 2026
