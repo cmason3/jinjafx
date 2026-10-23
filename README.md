@@ -882,18 +882,25 @@ This function is used to determine whether this is the last row where you have s
 
 This function is used to return a unique list of non-empty field values for a specific header field. It also allows the ability to limit what values are included in the list by specifying an optional `filter_fields` argument that allows you to filter the data using a regular expression to match certain rows.
 
-- <code><b>jinjafx.setg(key</b>: String<b>, value</b>: String | Integer | Boolean]<b>)</b> -> NoReturn</code>
+- <code><b>jinjafx.setg(key</b>: String<b>, value</b>: String | Integer | Boolean<b>)</b> -> NoReturn</code>
 
 This function is used to set a global variable that will persist throughout the processing of all rows.
 
-- <code><b>jinjafx.getg(key</b>: String<b>, default</b>: Optional[String | Integer | Boolean])</b> -> String | Integer | Boolean</code>
+- <code><b>jinjafx.getg(key</b>: String<b>, default</b>: Optional[String | Integer | Boolean]<b>)</b> -> String | Integer | Boolean</code>
 
 This function is used to get a global variable that has been set with `jinjafx.setg()` - optionally you can specify a default value that is returned if the `key` doesn't exist.
 
 ### JinjaFx Filters
 
-
 JinjaFx comes with a custom Jinja2 Extension (`extensions/ext_jinjafx.py`) that is enabled by default, which provides the following custom filters:
+
+- <code><b>idempotent_salt(seed</b>: String<b>, length</b>: Integer<b>)</b> -> String</code>
+
+This filter is used to generate an idempotent salt that can be passed to the various password hashing functions to generate an idempotent password hash that is still unique per device, e.g:
+
+```jinja2
+{{ "password"|cisco8hash(inventory_hostname|idempotent_salt(14)) }}
+```
 
 - <code><b>cisco_snmpv3_key(engineid</b>: String<b>, algorithm</b>: Optional[String]<b>="sha1")</b> -> String</code>
 
